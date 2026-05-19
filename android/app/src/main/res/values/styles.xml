@@ -12,4 +12,9 @@
     <item name="postSplashScreenTheme">@style/AppTheme</item>
     <item name="android:windowSplashScreenBehavior">icon_preferred</item>
   </style>
+  <style name="BootTheme" parent="Theme.BootSplash.EdgeToEdge">
+    <item name="postBootSplashTheme">@style/AppTheme</item>
+    <item name="bootSplashBackground">@color/bootsplash_background</item>
+    <item name="bootSplashLogo">@drawable/bootsplash_logo</item>
+  </style>
 </resources>

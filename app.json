@@ -1,24 +1,20 @@
 {
   "expo": {
-    "name": "yambi",
+    "name": "Yambi",
     "slug": "yambi",
     "version": "2.46.28",
     "scheme": "yambi",
     "orientation": "portrait",
-    "icon": "./src/assets/logo.png",
+    "icon": "./assets/generated/app-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "assetBundlePatterns": [
       "**/*"
     ],
-    "splash": {
-      "image": "./src/assets/logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yambi.app",
+      "googleServicesFile": "GoogleService-Info.plist",
       "associatedDomains": [
         "applinks:app.yambi.net"
       ]
@@ -84,6 +80,16 @@
       "favicon": "./src/assets/logo1.png"
     },
     "plugins": [
+      "./plugins/withYambiNative.js",
+      [
+        "react-native-bootsplash",
+        {
+          "assetsDir": "assets/bootsplash",
+          "android": {
+            "parentTheme": "EdgeToEdge"
+          }
+        }
+      ],
       "./plugins/withReactNativeVectorIcons.js",
       [
         "expo-av",
