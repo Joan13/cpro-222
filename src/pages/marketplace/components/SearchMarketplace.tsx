@@ -70,7 +70,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background, marginTop: 30 }}>
             {/* Search Bar */}
             <View style={{
                 flexDirection: 'row',
