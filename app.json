@@ -2,29 +2,107 @@
   "expo": {
     "name": "yambi",
     "slug": "yambi",
-    "version": "1.0.0",
+    "version": "2.46.28",
+    "scheme": "yambi",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./src/assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./src/assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yambi.app",
+      "associatedDomains": [
+        "applinks:app.yambi.net"
+      ]
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./src/assets/ic_launcher_round.png",
         "backgroundColor": "#ffffff"
       },
+      "softwareKeyboardLayoutMode": "resize",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.yambi.app",
+      "googleServicesFile": "./android/app/google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.yambi.net",
+              "pathPrefix": "/post"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.yambi.net",
+              "pathPrefix": "/item"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.yambi.net",
+              "pathPrefix": "/business"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./src/assets/logo1.png"
+    },
+    "plugins": [
+      "./plugins/withReactNativeVectorIcons.js",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Yambi a besoin du microphone pour les messages vocaux et l’audio dans le chat."
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-community/datetimepicker",
+      "@react-native-firebase/messaging",
+      "@react-native-google-signin/google-signin",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.yambi",
+          "enableGooglePay": true
+        }
+      ]
+    ]
   }
 }

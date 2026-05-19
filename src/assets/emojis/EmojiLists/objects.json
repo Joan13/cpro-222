@@ -1,0 +1,1841 @@
+[
+    {
+        "code":"1f453",
+        "emoji": "👓",
+        "name": "glasses",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f576",
+        "emoji": "🕶",
+        "name": "sunglasses",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f97d",
+        "emoji": "🥽",
+        "name": "goggles",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f97c",
+        "emoji": "🥼",
+        "name": "lab coat",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f9ba",
+        "emoji": "🦺",
+        "name": "safety vest",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f454",
+        "emoji": "👔",
+        "name": "necktie",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f455",
+        "emoji": "👕",
+        "name": "t-shirt",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f456",
+        "emoji": "👖",
+        "name": "jeans",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f9e3",
+        "emoji": "🧣",
+        "name": "scarf",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f9e4",
+        "emoji": "🧤",
+        "name": "gloves",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f9e5",
+        "emoji": "🧥",
+        "name": "coat",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f9e6",
+        "emoji": "🧦",
+        "name": "socks",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f457",
+        "emoji": "👗",
+        "name": "dress",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f458",
+        "emoji": "👘",
+        "name": "kimono",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f97b",
+        "emoji": "🥻",
+        "name": "sari",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1fa71",
+        "emoji": "🩱",
+        "name": "one-piece swimsuit",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1fa72",
+        "emoji": "🩲",
+        "name": "briefs",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1fa73",
+        "emoji": "🩳",
+        "name": "shorts",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f459",
+        "emoji": "👙",
+        "name": "bikini",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f45a",
+        "emoji": "👚",
+        "name": "woman’s clothes",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1faad",
+        "emoji": "🪭",
+        "name": "⊛ folding hand fan",
+        "category": "Objects",
+        "subcategory": "clothing",
+        "support": {
+            "apple": true
+        }
+    },
+    {
+        "code":"1f45b",
+        "emoji": "👛",
+        "name": "purse",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f45c",
+        "emoji": "👜",
+        "name": "handbag",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f45d",
+        "emoji": "👝",
+        "name": "clutch bag",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f6cd",
+        "emoji": "🛍",
+        "name": "shopping bags",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f392",
+        "emoji": "🎒",
+        "name": "backpack",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1fa74",
+        "emoji": "🩴",
+        "name": "thong sandal",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f45e",
+        "emoji": "👞",
+        "name": "man’s shoe",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f45f",
+        "emoji": "👟",
+        "name": "running shoe",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f97e",
+        "emoji": "🥾",
+        "name": "hiking boot",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f97f",
+        "emoji": "🥿",
+        "name": "flat shoe",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f460",
+        "emoji": "👠",
+        "name": "high-heeled shoe",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f461",
+        "emoji": "👡",
+        "name": "woman’s sandal",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1fa70",
+        "emoji": "🩰",
+        "name": "ballet shoes",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f462",
+        "emoji": "👢",
+        "name": "woman’s boot",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1faae",
+        "emoji": "🪮",
+        "name": "⊛ hair pick",
+        "category": "Objects",
+        "subcategory": "clothing",
+        "support": {
+            "apple": true
+        }
+    },
+    {
+        "code":"1f451",
+        "emoji": "👑",
+        "name": "crown",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f452",
+        "emoji": "👒",
+        "name": "woman’s hat",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f3a9",
+        "emoji": "🎩",
+        "name": "top hat",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f393",
+        "emoji": "🎓",
+        "name": "graduation cap",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f9e2",
+        "emoji": "🧢",
+        "name": "billed cap",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1fa96",
+        "emoji": "🪖",
+        "name": "military helmet",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"26d1",
+        "emoji": "⛑",
+        "name": "rescue worker’s helmet",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f4ff",
+        "emoji": "📿",
+        "name": "prayer beads",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f484",
+        "emoji": "💄",
+        "name": "lipstick",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f48d",
+        "emoji": "💍",
+        "name": "ring",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f48e",
+        "emoji": "💎",
+        "name": "gem stone",
+        "category": "Objects",
+        "subcategory": "clothing"
+    },
+    {
+        "code":"1f507",
+        "emoji": "🔇",
+        "name": "muted speaker",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f508",
+        "emoji": "🔈",
+        "name": "speaker low volume",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f509",
+        "emoji": "🔉",
+        "name": "speaker medium volume",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f50a",
+        "emoji": "🔊",
+        "name": "speaker high volume",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f4e2",
+        "emoji": "📢",
+        "name": "loudspeaker",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f4e3",
+        "emoji": "📣",
+        "name": "megaphone",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f4ef",
+        "emoji": "📯",
+        "name": "postal horn",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f514",
+        "emoji": "🔔",
+        "name": "bell",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f515",
+        "emoji": "🔕",
+        "name": "bell with slash",
+        "category": "Objects",
+        "subcategory": "sound"
+    },
+    {
+        "code":"1f3bc",
+        "emoji": "🎼",
+        "name": "musical score",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f3b5",
+        "emoji": "🎵",
+        "name": "musical note",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f3b6",
+        "emoji": "🎶",
+        "name": "musical notes",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f399",
+        "emoji": "🎙",
+        "name": "studio microphone",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f39a",
+        "emoji": "🎚",
+        "name": "level slider",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f39b",
+        "emoji": "🎛",
+        "name": "control knobs",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f3a4",
+        "emoji": "🎤",
+        "name": "microphone",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f3a7",
+        "emoji": "🎧",
+        "name": "headphone",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f4fb",
+        "emoji": "📻",
+        "name": "radio",
+        "category": "Objects",
+        "subcategory": "music"
+    },
+    {
+        "code":"1f3b7",
+        "emoji": "🎷",
+        "name": "saxophone",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1fa97",
+        "emoji": "🪗",
+        "name": "accordion",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1f3b8",
+        "emoji": "🎸",
+        "name": "guitar",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1f3b9",
+        "emoji": "🎹",
+        "name": "musical keyboard",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1f3ba",
+        "emoji": "🎺",
+        "name": "trumpet",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1f3bb",
+        "emoji": "🎻",
+        "name": "violin",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1fa95",
+        "emoji": "🪕",
+        "name": "banjo",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1f941",
+        "emoji": "🥁",
+        "name": "drum",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1fa98",
+        "emoji": "🪘",
+        "name": "long drum",
+        "category": "Objects",
+        "subcategory": "musical-instrument"
+    },
+    {
+        "code":"1fa87",
+        "emoji": "🪇",
+        "name": "⊛ maracas",
+        "category": "Objects",
+        "subcategory": "musical-instrument",
+        "support": {
+            "apple": true
+        }
+    },
+    {
+        "code":"1fa88",
+        "emoji": "🪈",
+        "name": "⊛ flute",
+        "category": "Objects",
+        "subcategory": "musical-instrument",
+        "support": {
+            "apple": true
+        }
+    },
+    {
+        "code":"1f4f1",
+        "emoji": "📱",
+        "name": "mobile phone",
+        "category": "Objects",
+        "subcategory": "phone"
+    },
+    {
+        "code":"1f4f2",
+        "emoji": "📲",
+        "name": "mobile phone with arrow",
+        "category": "Objects",
+        "subcategory": "phone"
+    },
+    {
+        "code":"260e",
+        "emoji": "☎",
+        "name": "telephone",
+        "category": "Objects",
+        "subcategory": "phone"
+    },
+    {
+        "code":"1f4de",
+        "emoji": "📞",
+        "name": "telephone receiver",
+        "category": "Objects",
+        "subcategory": "phone"
+    },
+    {
+        "code":"1f4df",
+        "emoji": "📟",
+        "name": "pager",
+        "category": "Objects",
+        "subcategory": "phone"
+    },
+    {
+        "code":"1f4e0",
+        "emoji": "📠",
+        "name": "fax machine",
+        "category": "Objects",
+        "subcategory": "phone"
+    },
+    {
+        "code":"1f50b",
+        "emoji": "🔋",
+        "name": "battery",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1faab",
+        "emoji": "🪫",
+        "name": "low battery",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f50c",
+        "emoji": "🔌",
+        "name": "electric plug",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f4bb",
+        "emoji": "💻",
+        "name": "laptop",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f5a5",
+        "emoji": "🖥",
+        "name": "desktop computer",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f5a8",
+        "emoji": "🖨",
+        "name": "printer",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"2328",
+        "emoji": "⌨",
+        "name": "keyboard",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f5b1",
+        "emoji": "🖱",
+        "name": "computer mouse",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f5b2",
+        "emoji": "🖲",
+        "name": "trackball",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f4bd",
+        "emoji": "💽",
+        "name": "computer disk",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f4be",
+        "emoji": "💾",
+        "name": "floppy disk",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f4bf",
+        "emoji": "💿",
+        "name": "optical disk",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f4c0",
+        "emoji": "📀",
+        "name": "dvd",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f9ee",
+        "emoji": "🧮",
+        "name": "abacus",
+        "category": "Objects",
+        "subcategory": "computer"
+    },
+    {
+        "code":"1f3a5",
+        "emoji": "🎥",
+        "name": "movie camera",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f39e",
+        "emoji": "🎞",
+        "name": "film frames",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4fd",
+        "emoji": "📽",
+        "name": "film projector",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f3ac",
+        "emoji": "🎬",
+        "name": "clapper board",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4fa",
+        "emoji": "📺",
+        "name": "television",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4f7",
+        "emoji": "📷",
+        "name": "camera",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4f8",
+        "emoji": "📸",
+        "name": "camera with flash",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4f9",
+        "emoji": "📹",
+        "name": "video camera",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4fc",
+        "emoji": "📼",
+        "name": "videocassette",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f50d",
+        "emoji": "🔍",
+        "name": "magnifying glass tilted left",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f50e",
+        "emoji": "🔎",
+        "name": "magnifying glass tilted right",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f56f",
+        "emoji": "🕯",
+        "name": "candle",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4a1",
+        "emoji": "💡",
+        "name": "light bulb",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f526",
+        "emoji": "🔦",
+        "name": "flashlight",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f3ee",
+        "emoji": "🏮",
+        "name": "red paper lantern",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1fa94",
+        "emoji": "🪔",
+        "name": "diya lamp",
+        "category": "Objects",
+        "subcategory": "light & video"
+    },
+    {
+        "code":"1f4d4",
+        "emoji": "📔",
+        "name": "notebook with decorative cover",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d5",
+        "emoji": "📕",
+        "name": "closed book",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d6",
+        "emoji": "📖",
+        "name": "open book",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d7",
+        "emoji": "📗",
+        "name": "green book",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d8",
+        "emoji": "📘",
+        "name": "blue book",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d9",
+        "emoji": "📙",
+        "name": "orange book",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4da",
+        "emoji": "📚",
+        "name": "books",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d3",
+        "emoji": "📓",
+        "name": "notebook",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d2",
+        "emoji": "📒",
+        "name": "ledger",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4c3",
+        "emoji": "📃",
+        "name": "page with curl",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4dc",
+        "emoji": "📜",
+        "name": "scroll",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4c4",
+        "emoji": "📄",
+        "name": "page facing up",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4f0",
+        "emoji": "📰",
+        "name": "newspaper",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f5de",
+        "emoji": "🗞",
+        "name": "rolled-up newspaper",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4d1",
+        "emoji": "📑",
+        "name": "bookmark tabs",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f516",
+        "emoji": "🔖",
+        "name": "bookmark",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f3f7",
+        "emoji": "🏷",
+        "name": "label",
+        "category": "Objects",
+        "subcategory": "book-paper"
+    },
+    {
+        "code":"1f4b0",
+        "emoji": "💰",
+        "name": "money bag",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1fa99",
+        "emoji": "🪙",
+        "name": "coin",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b4",
+        "emoji": "💴",
+        "name": "yen banknote",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b5",
+        "emoji": "💵",
+        "name": "dollar banknote",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b6",
+        "emoji": "💶",
+        "name": "euro banknote",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b7",
+        "emoji": "💷",
+        "name": "pound banknote",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b8",
+        "emoji": "💸",
+        "name": "money with wings",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b3",
+        "emoji": "💳",
+        "name": "credit card",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f9fe",
+        "emoji": "🧾",
+        "name": "receipt",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"1f4b9",
+        "emoji": "💹",
+        "name": "chart increasing with yen",
+        "category": "Objects",
+        "subcategory": "money"
+    },
+    {
+        "code":"2709",
+        "emoji": "✉",
+        "name": "envelope",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4e7",
+        "emoji": "📧",
+        "name": "e-mail",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4e8",
+        "emoji": "📨",
+        "name": "incoming envelope",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4e9",
+        "emoji": "📩",
+        "name": "envelope with arrow",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4e4",
+        "emoji": "📤",
+        "name": "outbox tray",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4e5",
+        "emoji": "📥",
+        "name": "inbox tray",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4e6",
+        "emoji": "📦",
+        "name": "package",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4eb",
+        "emoji": "📫",
+        "name": "closed mailbox with raised flag",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4ea",
+        "emoji": "📪",
+        "name": "closed mailbox with lowered flag",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4ec",
+        "emoji": "📬",
+        "name": "open mailbox with raised flag",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4ed",
+        "emoji": "📭",
+        "name": "open mailbox with lowered flag",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f4ee",
+        "emoji": "📮",
+        "name": "postbox",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"1f5f3",
+        "emoji": "🗳",
+        "name": "ballot box with ballot",
+        "category": "Objects",
+        "subcategory": "mail"
+    },
+    {
+        "code":"270f",
+        "emoji": "✏",
+        "name": "pencil",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"2712",
+        "emoji": "✒",
+        "name": "black nib",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"1f58b",
+        "emoji": "🖋",
+        "name": "fountain pen",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"1f58a",
+        "emoji": "🖊",
+        "name": "pen",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"1f58c",
+        "emoji": "🖌",
+        "name": "paintbrush",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"1f58d",
+        "emoji": "🖍",
+        "name": "crayon",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"1f4dd",
+        "emoji": "📝",
+        "name": "memo",
+        "category": "Objects",
+        "subcategory": "writing"
+    },
+    {
+        "code":"1f4bc",
+        "emoji": "💼",
+        "name": "briefcase",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c1",
+        "emoji": "📁",
+        "name": "file folder",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c2",
+        "emoji": "📂",
+        "name": "open file folder",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f5c2",
+        "emoji": "🗂",
+        "name": "card index dividers",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c5",
+        "emoji": "📅",
+        "name": "calendar",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c6",
+        "emoji": "📆",
+        "name": "tear-off calendar",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f5d2",
+        "emoji": "🗒",
+        "name": "spiral notepad",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f5d3",
+        "emoji": "🗓",
+        "name": "spiral calendar",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c7",
+        "emoji": "📇",
+        "name": "card index",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c8",
+        "emoji": "📈",
+        "name": "chart increasing",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4c9",
+        "emoji": "📉",
+        "name": "chart decreasing",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4ca",
+        "emoji": "📊",
+        "name": "bar chart",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4cb",
+        "emoji": "📋",
+        "name": "clipboard",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4cc",
+        "emoji": "📌",
+        "name": "pushpin",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4cd",
+        "emoji": "📍",
+        "name": "round pushpin",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4ce",
+        "emoji": "📎",
+        "name": "paperclip",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f587",
+        "emoji": "🖇",
+        "name": "linked paperclips",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4cf",
+        "emoji": "📏",
+        "name": "straight ruler",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f4d0",
+        "emoji": "📐",
+        "name": "triangular ruler",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"2702",
+        "emoji": "✂",
+        "name": "scissors",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f5c3",
+        "emoji": "🗃",
+        "name": "card file box",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f5c4",
+        "emoji": "🗄",
+        "name": "file cabinet",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f5d1",
+        "emoji": "🗑",
+        "name": "wastebasket",
+        "category": "Objects",
+        "subcategory": "office"
+    },
+    {
+        "code":"1f512",
+        "emoji": "🔒",
+        "name": "locked",
+        "category": "Objects",
+        "subcategory": "lock"
+    },
+    {
+        "code":"1f513",
+        "emoji": "🔓",
+        "name": "unlocked",
+        "category": "Objects",
+        "subcategory": "lock"
+    },
+    {
+        "code":"1f50f",
+        "emoji": "🔏",
+        "name": "locked with pen",
+        "category": "Objects",
+        "subcategory": "lock"
+    },
+    {
+        "code":"1f510",
+        "emoji": "🔐",
+        "name": "locked with key",
+        "category": "Objects",
+        "subcategory": "lock"
+    },
+    {
+        "code":"1f511",
+        "emoji": "🔑",
+        "name": "key",
+        "category": "Objects",
+        "subcategory": "lock"
+    },
+    {
+        "code":"1f5dd",
+        "emoji": "🗝",
+        "name": "old key",
+        "category": "Objects",
+        "subcategory": "lock"
+    },
+    {
+        "code":"1f528",
+        "emoji": "🔨",
+        "name": "hammer",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1fa93",
+        "emoji": "🪓",
+        "name": "axe",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"26cf",
+        "emoji": "⛏",
+        "name": "pick",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"2692",
+        "emoji": "⚒",
+        "name": "hammer and pick",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f6e0",
+        "emoji": "🛠",
+        "name": "hammer and wrench",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f5e1",
+        "emoji": "🗡",
+        "name": "dagger",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"2694",
+        "emoji": "⚔",
+        "name": "crossed swords",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f4a3",
+        "emoji": "💣",
+        "name": "bomb",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1fa83",
+        "emoji": "🪃",
+        "name": "boomerang",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f3f9",
+        "emoji": "🏹",
+        "name": "bow and arrow",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f6e1",
+        "emoji": "🛡",
+        "name": "shield",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1fa9a",
+        "emoji": "🪚",
+        "name": "carpentry saw",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f527",
+        "emoji": "🔧",
+        "name": "wrench",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1fa9b",
+        "emoji": "🪛",
+        "name": "screwdriver",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f529",
+        "emoji": "🔩",
+        "name": "nut and bolt",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"2699",
+        "emoji": "⚙",
+        "name": "gear",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f5dc",
+        "emoji": "🗜",
+        "name": "clamp",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"2696",
+        "emoji": "⚖",
+        "name": "balance scale",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f9af",
+        "emoji": "🦯",
+        "name": "white cane",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f517",
+        "emoji": "🔗",
+        "name": "link",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"26d3",
+        "emoji": "⛓",
+        "name": "chains",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1fa9d",
+        "emoji": "🪝",
+        "name": "hook",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f9f0",
+        "emoji": "🧰",
+        "name": "toolbox",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1f9f2",
+        "emoji": "🧲",
+        "name": "magnet",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"1fa9c",
+        "emoji": "🪜",
+        "name": "ladder",
+        "category": "Objects",
+        "subcategory": "tool"
+    },
+    {
+        "code":"2697",
+        "emoji": "⚗",
+        "name": "alembic",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f9ea",
+        "emoji": "🧪",
+        "name": "test tube",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f9eb",
+        "emoji": "🧫",
+        "name": "petri dish",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f9ec",
+        "emoji": "🧬",
+        "name": "dna",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f52c",
+        "emoji": "🔬",
+        "name": "microscope",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f52d",
+        "emoji": "🔭",
+        "name": "telescope",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f4e1",
+        "emoji": "📡",
+        "name": "satellite antenna",
+        "category": "Objects",
+        "subcategory": "science"
+    },
+    {
+        "code":"1f489",
+        "emoji": "💉",
+        "name": "syringe",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1fa78",
+        "emoji": "🩸",
+        "name": "drop of blood",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1f48a",
+        "emoji": "💊",
+        "name": "pill",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1fa79",
+        "emoji": "🩹",
+        "name": "adhesive bandage",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1fa7c",
+        "emoji": "🩼",
+        "name": "crutch",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1fa7a",
+        "emoji": "🩺",
+        "name": "stethoscope",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1fa7b",
+        "emoji": "🩻",
+        "name": "x-ray",
+        "category": "Objects",
+        "subcategory": "medical"
+    },
+    {
+        "code":"1f6aa",
+        "emoji": "🚪",
+        "name": "door",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6d7",
+        "emoji": "🛗",
+        "name": "elevator",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1fa9e",
+        "emoji": "🪞",
+        "name": "mirror",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1fa9f",
+        "emoji": "🪟",
+        "name": "window",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6cf",
+        "emoji": "🛏",
+        "name": "bed",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6cb",
+        "emoji": "🛋",
+        "name": "couch and lamp",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1fa91",
+        "emoji": "🪑",
+        "name": "chair",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6bd",
+        "emoji": "🚽",
+        "name": "toilet",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1faa0",
+        "emoji": "🪠",
+        "name": "plunger",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6bf",
+        "emoji": "🚿",
+        "name": "shower",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6c1",
+        "emoji": "🛁",
+        "name": "bathtub",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1faa4",
+        "emoji": "🪤",
+        "name": "mouse trap",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1fa92",
+        "emoji": "🪒",
+        "name": "razor",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9f4",
+        "emoji": "🧴",
+        "name": "lotion bottle",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9f7",
+        "emoji": "🧷",
+        "name": "safety pin",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9f9",
+        "emoji": "🧹",
+        "name": "broom",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9fa",
+        "emoji": "🧺",
+        "name": "basket",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9fb",
+        "emoji": "🧻",
+        "name": "roll of paper",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1faa3",
+        "emoji": "🪣",
+        "name": "bucket",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9fc",
+        "emoji": "🧼",
+        "name": "soap",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1fae7",
+        "emoji": "🫧",
+        "name": "bubbles",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1faa5",
+        "emoji": "🪥",
+        "name": "toothbrush",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9fd",
+        "emoji": "🧽",
+        "name": "sponge",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f9ef",
+        "emoji": "🧯",
+        "name": "fire extinguisher",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6d2",
+        "emoji": "🛒",
+        "name": "shopping cart",
+        "category": "Objects",
+        "subcategory": "household"
+    },
+    {
+        "code":"1f6ac",
+        "emoji": "🚬",
+        "name": "cigarette",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"26b0",
+        "emoji": "⚰",
+        "name": "coffin",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"1faa6",
+        "emoji": "🪦",
+        "name": "headstone",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"26b1",
+        "emoji": "⚱",
+        "name": "funeral urn",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"1f9ff",
+        "emoji": "🧿",
+        "name": "nazar amulet",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"1faac",
+        "emoji": "🪬",
+        "name": "hamsa",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"1f5ff",
+        "emoji": "🗿",
+        "name": "moai",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"1faa7",
+        "emoji": "🪧",
+        "name": "placard",
+        "category": "Objects",
+        "subcategory": "other-object"
+    },
+    {
+        "code":"1faaa",
+        "emoji": "🪪",
+        "name": "identification card",
+        "category": "Objects",
+        "subcategory": "other-object"
+    }
+]

@@ -1,0 +1,597 @@
+[
+    {
+        "code": "1f383",
+        "emoji": "🎃",
+        "name": "jack-o-lantern",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f384",
+        "emoji": "🎄",
+        "name": "christmas tree",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f386",
+        "emoji": "🎆",
+        "name": "fireworks",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f387",
+        "emoji": "🎇",
+        "name": "sparkler",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f9e8",
+        "emoji": "🧨",
+        "name": "firecracker",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "2728",
+        "emoji": "✨",
+        "name": "sparkles",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f388",
+        "emoji": "🎈",
+        "name": "balloon",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f389",
+        "emoji": "🎉",
+        "name": "party popper",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f38a",
+        "emoji": "🎊",
+        "name": "confetti ball",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f38b",
+        "emoji": "🎋",
+        "name": "tanabata tree",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f38d",
+        "emoji": "🎍",
+        "name": "pine decoration",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f38e",
+        "emoji": "🎎",
+        "name": "Japanese dolls",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f38f",
+        "emoji": "🎏",
+        "name": "carp streamer",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f390",
+        "emoji": "🎐",
+        "name": "wind chime",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f391",
+        "emoji": "🎑",
+        "name": "moon viewing ceremony",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f9e7",
+        "emoji": "🧧",
+        "name": "red envelope",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f380",
+        "emoji": "🎀",
+        "name": "ribbon",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f381",
+        "emoji": "🎁",
+        "name": "wrapped gift",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f397",
+        "emoji": "🎗",
+        "name": "reminder ribbon",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f39f",
+        "emoji": "🎟",
+        "name": "admission tickets",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f3ab",
+        "emoji": "🎫",
+        "name": "ticket",
+        "category": "activities",
+        "subcategory": "event"
+    },
+    {
+        "code": "1f396",
+        "emoji": "🎖",
+        "name": "military medal",
+        "category": "activities",
+        "subcategory": "award-medal"
+    },
+    {
+        "code": "1f3c6",
+        "emoji": "🏆",
+        "name": "trophy",
+        "category": "activities",
+        "subcategory": "award-medal"
+    },
+    {
+        "code": "1f3c5",
+        "emoji": "🏅",
+        "name": "sports medal",
+        "category": "activities",
+        "subcategory": "award-medal"
+    },
+    {
+        "code": "1f947",
+        "emoji": "🥇",
+        "name": "1st place medal",
+        "category": "activities",
+        "subcategory": "award-medal"
+    },
+    {
+        "code": "1f948",
+        "emoji": "🥈",
+        "name": "2nd place medal",
+        "category": "activities",
+        "subcategory": "award-medal"
+    },
+    {
+        "code": "1f949",
+        "emoji": "🥉",
+        "name": "3rd place medal",
+        "category": "activities",
+        "subcategory": "award-medal"
+    },
+    {
+        "code": "26bd",
+        "emoji": "⚽",
+        "name": "soccer ball",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "26be",
+        "emoji": "⚾",
+        "name": "baseball",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f94e",
+        "emoji": "🥎",
+        "name": "softball",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3c0",
+        "emoji": "🏀",
+        "name": "basketball",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3d0",
+        "emoji": "🏐",
+        "name": "volleyball",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3c8",
+        "emoji": "🏈",
+        "name": "american football",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3c9",
+        "emoji": "🏉",
+        "name": "rugby football",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3be",
+        "emoji": "🎾",
+        "name": "tennis",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f94f",
+        "emoji": "🥏",
+        "name": "flying disc",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3b3",
+        "emoji": "🎳",
+        "name": "bowling",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3cf",
+        "emoji": "🏏",
+        "name": "cricket game",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3d1",
+        "emoji": "🏑",
+        "name": "field hockey",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3d2",
+        "emoji": "🏒",
+        "name": "ice hockey",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f94d",
+        "emoji": "🥍",
+        "name": "lacrosse",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3d3",
+        "emoji": "🏓",
+        "name": "ping pong",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3f8",
+        "emoji": "🏸",
+        "name": "badminton",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f94a",
+        "emoji": "🥊",
+        "name": "boxing glove",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f94b",
+        "emoji": "🥋",
+        "name": "martial arts uniform",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f945",
+        "emoji": "🥅",
+        "name": "goal net",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "26f3",
+        "emoji": "⛳",
+        "name": "flag in hole",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "26f8",
+        "emoji": "⛸",
+        "name": "ice skate",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3a3",
+        "emoji": "🎣",
+        "name": "fishing pole",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f93f",
+        "emoji": "🤿",
+        "name": "diving mask",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3bd",
+        "emoji": "🎽",
+        "name": "running shirt",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3bf",
+        "emoji": "🎿",
+        "name": "skis",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f6f7",
+        "emoji": "🛷",
+        "name": "sled",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f94c",
+        "emoji": "🥌",
+        "name": "curling stone",
+        "category": "activities",
+        "subcategory": "sport"
+    },
+    {
+        "code": "1f3af",
+        "emoji": "🎯",
+        "name": "bullseye",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1fa80",
+        "emoji": "🪀",
+        "name": "yo-yo",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1fa81",
+        "emoji": "🪁",
+        "name": "kite",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f52b",
+        "emoji": "🔫",
+        "name": "water pistol",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f3b1",
+        "emoji": "🎱",
+        "name": "pool 8 ball",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f52e",
+        "emoji": "🔮",
+        "name": "crystal ball",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1fa84",
+        "emoji": "🪄",
+        "name": "magic wand",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f3ae",
+        "emoji": "🎮",
+        "name": "video game",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f579",
+        "emoji": "🕹",
+        "name": "joystick",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f3b0",
+        "emoji": "🎰",
+        "name": "slot machine",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f3b2",
+        "emoji": "🎲",
+        "name": "game die",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f9e9",
+        "emoji": "🧩",
+        "name": "puzzle piece",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f9f8",
+        "emoji": "🧸",
+        "name": "teddy bear",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1fa85",
+        "emoji": "🪅",
+        "name": "piñata",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1faa9",
+        "emoji": "🪩",
+        "name": "mirror ball",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1fa86",
+        "emoji": "🪆",
+        "name": "nesting dolls",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "2660",
+        "emoji": "♠",
+        "name": "spade suit",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "2665",
+        "emoji": "♥",
+        "name": "heart suit",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "2666",
+        "emoji": "♦",
+        "name": "diamond suit",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "2663",
+        "emoji": "♣",
+        "name": "club suit",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "265f",
+        "emoji": "♟",
+        "name": "chess pawn",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f0cf",
+        "emoji": "🃏",
+        "name": "joker",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f004",
+        "emoji": "🀄",
+        "name": "mahjong red dragon",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f3b4",
+        "emoji": "🎴",
+        "name": "flower playing cards",
+        "category": "activities",
+        "subcategory": "game"
+    },
+    {
+        "code": "1f3ad",
+        "emoji": "🎭",
+        "name": "performing arts",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    },
+    {
+        "code": "1f5bc",
+        "emoji": "🖼",
+        "name": "framed picture",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    },
+    {
+        "code": "1f3a8",
+        "emoji": "🎨",
+        "name": "artist palette",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    },
+    {
+        "code": "1f9f5",
+        "emoji": "🧵",
+        "name": "thread",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    },
+    {
+        "code": "1faa1",
+        "emoji": "🪡",
+        "name": "sewing needle",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    },
+    {
+        "code": "1f9f6",
+        "emoji": "🧶",
+        "name": "yarn",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    },
+    {
+        "code": "1faa2",
+        "emoji": "🪢",
+        "name": "knot",
+        "category": "activities",
+        "subcategory": "arts & crafts"
+    }
+]

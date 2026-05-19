@@ -1,0 +1,1569 @@
+[
+    {
+        "code": "1f3e7",
+        "emoji": "🏧",
+        "name": "aTM sign",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6ae",
+        "emoji": "🚮",
+        "name": "litter in bin sign",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6b0",
+        "emoji": "🚰",
+        "name": "potable water",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "267f",
+        "emoji": "♿",
+        "name": "wheelchair symbol",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6b9",
+        "emoji": "🚹",
+        "name": "men’s room",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6ba",
+        "emoji": "🚺",
+        "name": "women’s room",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6bb",
+        "emoji": "🚻",
+        "name": "restroom",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6bc",
+        "emoji": "🚼",
+        "name": "baby symbol",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6be",
+        "emoji": "🚾",
+        "name": "water closet",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6c2",
+        "emoji": "🛂",
+        "name": "passport control",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6c3",
+        "emoji": "🛃",
+        "name": "customs",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6c4",
+        "emoji": "🛄",
+        "name": "baggage claim",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "1f6c5",
+        "emoji": "🛅",
+        "name": "left luggage",
+        "category": "Symbols",
+        "subcategory": "transport-sign"
+    },
+    {
+        "code": "26a0",
+        "emoji": "⚠",
+        "name": "warning",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6b8",
+        "emoji": "🚸",
+        "name": "children crossing",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "26d4",
+        "emoji": "⛔",
+        "name": "no entry",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6ab",
+        "emoji": "🚫",
+        "name": "prohibited",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6b3",
+        "emoji": "🚳",
+        "name": "no bicycles",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6ad",
+        "emoji": "🚭",
+        "name": "no smoking",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6af",
+        "emoji": "🚯",
+        "name": "no littering",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6b1",
+        "emoji": "🚱",
+        "name": "non-potable water",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f6b7",
+        "emoji": "🚷",
+        "name": "no pedestrians",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f4f5",
+        "emoji": "📵",
+        "name": "no mobile phones",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "1f51e",
+        "emoji": "🔞",
+        "name": "no one under eighteen",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "2622",
+        "emoji": "☢",
+        "name": "radioactive",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "2623",
+        "emoji": "☣",
+        "name": "biohazard",
+        "category": "Symbols",
+        "subcategory": "warning"
+    },
+    {
+        "code": "2b06",
+        "emoji": "⬆",
+        "name": "up arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2197",
+        "emoji": "↗",
+        "name": "up-right arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "27a1",
+        "emoji": "➡",
+        "name": "right arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2198",
+        "emoji": "↘",
+        "name": "down-right arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2b07",
+        "emoji": "⬇",
+        "name": "down arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2199",
+        "emoji": "↙",
+        "name": "down-left arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2b05",
+        "emoji": "⬅",
+        "name": "left arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2196",
+        "emoji": "↖",
+        "name": "up-left arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2195",
+        "emoji": "↕",
+        "name": "up-down arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2194",
+        "emoji": "↔",
+        "name": "left-right arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "21a9",
+        "emoji": "↩",
+        "name": "right arrow curving left",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "21aa",
+        "emoji": "↪",
+        "name": "left arrow curving right",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2934",
+        "emoji": "⤴",
+        "name": "right arrow curving up",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "2935",
+        "emoji": "⤵",
+        "name": "right arrow curving down",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f503",
+        "emoji": "🔃",
+        "name": "clockwise vertical arrows",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f504",
+        "emoji": "🔄",
+        "name": "counterclockwise arrows button",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f519",
+        "emoji": "🔙",
+        "name": "bacK arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f51a",
+        "emoji": "🔚",
+        "name": "eNd arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f51b",
+        "emoji": "🔛",
+        "name": "ON! arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f51c",
+        "emoji": "🔜",
+        "name": "SOON arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f51d",
+        "emoji": "🔝",
+        "name": "TOP arrow",
+        "category": "Symbols",
+        "subcategory": "arrow"
+    },
+    {
+        "code": "1f6d0",
+        "emoji": "🛐",
+        "name": "place of worship",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "269b",
+        "emoji": "⚛",
+        "name": "atom symbol",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "1f549",
+        "emoji": "🕉",
+        "name": "om",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "2721",
+        "emoji": "✡",
+        "name": "star of david",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "2638",
+        "emoji": "☸",
+        "name": "wheel of dharma",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "262f",
+        "emoji": "☯",
+        "name": "yin yang",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "271d",
+        "emoji": "✝",
+        "name": "latin cross",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "2626",
+        "emoji": "☦",
+        "name": "orthodox cross",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "262a",
+        "emoji": "☪",
+        "name": "star and crescent",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "262e",
+        "emoji": "☮",
+        "name": "peace symbol",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "1f54e",
+        "emoji": "🕎",
+        "name": "menorah",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "1f52f",
+        "emoji": "🔯",
+        "name": "dotted six-pointed star",
+        "category": "Symbols",
+        "subcategory": "religion"
+    },
+    {
+        "code": "1faaf",
+        "emoji": "🪯",
+        "name": "⊛ khanda",
+        "category": "Symbols",
+        "subcategory": "religion",
+        "support": {
+            "apple": true
+        }
+    },
+    {
+        "code": "2648",
+        "emoji": "♈",
+        "name": "aries",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "2649",
+        "emoji": "♉",
+        "name": "Taurus",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "264a",
+        "emoji": "♊",
+        "name": "Gemini",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "264b",
+        "emoji": "♋",
+        "name": "cancer",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "264c",
+        "emoji": "♌",
+        "name": "Leo",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "264d",
+        "emoji": "♍",
+        "name": "Virgo",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "264e",
+        "emoji": "♎",
+        "name": "Libra",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "264f",
+        "emoji": "♏",
+        "name": "Scorpio",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "2650",
+        "emoji": "♐",
+        "name": "Sagittarius",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "2651",
+        "emoji": "♑",
+        "name": "capricorn",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "2652",
+        "emoji": "♒",
+        "name": "aquarius",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "2653",
+        "emoji": "♓",
+        "name": "Pisces",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "26ce",
+        "emoji": "⛎",
+        "name": "Ophiuchus",
+        "category": "Symbols",
+        "subcategory": "zodiac"
+    },
+    {
+        "code": "1f500",
+        "emoji": "🔀",
+        "name": "shuffle tracks button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f501",
+        "emoji": "🔁",
+        "name": "repeat button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f502",
+        "emoji": "🔂",
+        "name": "repeat single button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "25b6",
+        "emoji": "▶",
+        "name": "play button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23e9",
+        "emoji": "⏩",
+        "name": "fast-forward button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23ed",
+        "emoji": "⏭",
+        "name": "next track button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23ef",
+        "emoji": "⏯",
+        "name": "play or pause button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "25c0",
+        "emoji": "◀",
+        "name": "reverse button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23ea",
+        "emoji": "⏪",
+        "name": "fast reverse button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23ee",
+        "emoji": "⏮",
+        "name": "last track button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f53c",
+        "emoji": "🔼",
+        "name": "upwards button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23eb",
+        "emoji": "⏫",
+        "name": "fast up button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f53d",
+        "emoji": "🔽",
+        "name": "downwards button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23ec",
+        "emoji": "⏬",
+        "name": "fast down button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23f8",
+        "emoji": "⏸",
+        "name": "pause button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23f9",
+        "emoji": "⏹",
+        "name": "stop button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23fa",
+        "emoji": "⏺",
+        "name": "record button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "23cf",
+        "emoji": "⏏",
+        "name": "eject button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f3a6",
+        "emoji": "🎦",
+        "name": "cinema",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f505",
+        "emoji": "🔅",
+        "name": "dim button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f506",
+        "emoji": "🔆",
+        "name": "bright button",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f4f6",
+        "emoji": "📶",
+        "name": "antenna bars",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f6dc",
+        "emoji": "🛜",
+        "name": "⊛ wireless",
+        "category": "Symbols",
+        "subcategory": "av-symbol",
+        "support": {
+            "apple": true
+        }
+    },
+    {
+        "code": "1f4f3",
+        "emoji": "📳",
+        "name": "vibration mode",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "1f4f4",
+        "emoji": "📴",
+        "name": "mobile phone off",
+        "category": "Symbols",
+        "subcategory": "av-symbol"
+    },
+    {
+        "code": "2640",
+        "emoji": "♀",
+        "name": "female sign",
+        "category": "Symbols",
+        "subcategory": "gender"
+    },
+    {
+        "code": "2642",
+        "emoji": "♂",
+        "name": "male sign",
+        "category": "Symbols",
+        "subcategory": "gender"
+    },
+    {
+        "code": "26a7",
+        "emoji": "⚧",
+        "name": "transgender symbol",
+        "category": "Symbols",
+        "subcategory": "gender"
+    },
+    {
+        "code": "2716",
+        "emoji": "✖",
+        "name": "multiply",
+        "category": "Symbols",
+        "subcategory": "math"
+    },
+    {
+        "code": "2795",
+        "emoji": "➕",
+        "name": "plus",
+        "category": "Symbols",
+        "subcategory": "math"
+    },
+    {
+        "code": "2796",
+        "emoji": "➖",
+        "name": "minus",
+        "category": "Symbols",
+        "subcategory": "math"
+    },
+    {
+        "code": "2797",
+        "emoji": "➗",
+        "name": "divide",
+        "category": "Symbols",
+        "subcategory": "math"
+    },
+    {
+        "code": "1f7f0",
+        "emoji": "🟰",
+        "name": "heavy equals sign",
+        "category": "Symbols",
+        "subcategory": "math"
+    },
+    {
+        "code": "267e",
+        "emoji": "♾",
+        "name": "infinity",
+        "category": "Symbols",
+        "subcategory": "math"
+    },
+    {
+        "code": "203c",
+        "emoji": "‼",
+        "name": "double exclamation mark",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "2049",
+        "emoji": "⁉",
+        "name": "exclamation question mark",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "2753",
+        "emoji": "❓",
+        "name": "red question mark",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "2754",
+        "emoji": "❔",
+        "name": "white question mark",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "2755",
+        "emoji": "❕",
+        "name": "white exclamation mark",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "2757",
+        "emoji": "❗",
+        "name": "red exclamation mark",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "3030",
+        "emoji": "〰",
+        "name": "wavy dash",
+        "category": "Symbols",
+        "subcategory": "punctuation"
+    },
+    {
+        "code": "1f4b1",
+        "emoji": "💱",
+        "name": "currency exchange",
+        "category": "Symbols",
+        "subcategory": "currency"
+    },
+    {
+        "code": "1f4b2",
+        "emoji": "💲",
+        "name": "heavy dollar sign",
+        "category": "Symbols",
+        "subcategory": "currency"
+    },
+    {
+        "code": "2695",
+        "emoji": "⚕",
+        "name": "medical symbol",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "267b",
+        "emoji": "♻",
+        "name": "recycling symbol",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "269c",
+        "emoji": "⚜",
+        "name": "fleur-de-lis",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "1f531",
+        "emoji": "🔱",
+        "name": "trident emblem",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "1f4db",
+        "emoji": "📛",
+        "name": "name badge",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "1f530",
+        "emoji": "🔰",
+        "name": "Japanese symbol for beginner",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2b55",
+        "emoji": "⭕",
+        "name": "hollow red circle",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2705",
+        "emoji": "✅",
+        "name": "check mark button",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2611",
+        "emoji": "☑",
+        "name": "check box with check",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2714",
+        "emoji": "✔",
+        "name": "check mark",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "274c",
+        "emoji": "❌",
+        "name": "cross mark",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "274e",
+        "emoji": "❎",
+        "name": "cross mark button",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "27b0",
+        "emoji": "➰",
+        "name": "curly loop",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "27bf",
+        "emoji": "➿",
+        "name": "double curly loop",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "303d",
+        "emoji": "〽",
+        "name": "part alternation mark",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2733",
+        "emoji": "✳",
+        "name": "eight-spoked asterisk",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2734",
+        "emoji": "✴",
+        "name": "eight-pointed star",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2747",
+        "emoji": "❇",
+        "name": "sparkle",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "00a9",
+        "emoji": "©",
+        "name": "copyright",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "00ae",
+        "emoji": "®",
+        "name": "registered",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "2122",
+        "emoji": "™",
+        "name": "trade mark",
+        "category": "Symbols",
+        "subcategory": "other-symbol"
+    },
+    {
+        "code": "0023-fe0f-20e3",
+        "emoji": "#️⃣",
+        "name": "keycap: #",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "002a-fe0f-20e3",
+        "emoji": "*️⃣",
+        "name": "keycap: *",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0030-fe0f-20e3",
+        "emoji": "0️⃣",
+        "name": "keycap: 0",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0031-fe0f-20e3",
+        "emoji": "1️⃣",
+        "name": "keycap: 1",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0032-fe0f-20e3",
+        "emoji": "2️⃣",
+        "name": "keycap: 2",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0033-fe0f-20e3",
+        "emoji": "3️⃣",
+        "name": "keycap: 3",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0034-fe0f-20e3",
+        "emoji": "4️⃣",
+        "name": "keycap: 4",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0035-fe0f-20e3",
+        "emoji": "5️⃣",
+        "name": "keycap: 5",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0036-fe0f-20e3",
+        "emoji": "6️⃣",
+        "name": "keycap: 6",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0037-fe0f-20e3",
+        "emoji": "7️⃣",
+        "name": "keycap: 7",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0038-fe0f-20e3",
+        "emoji": "8️⃣",
+        "name": "keycap: 8",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "0039-fe0f-20e3",
+        "emoji": "9️⃣",
+        "name": "keycap: 9",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "1f51f",
+        "emoji": "🔟",
+        "name": "keycap: 10",
+        "category": "Symbols",
+        "subcategory": "keycap"
+    },
+    {
+        "code": "1f520",
+        "emoji": "🔠",
+        "name": "input latin uppercase",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f521",
+        "emoji": "🔡",
+        "name": "input latin lowercase",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f522",
+        "emoji": "🔢",
+        "name": "input numbers",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f523",
+        "emoji": "🔣",
+        "name": "input symbols",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f524",
+        "emoji": "🔤",
+        "name": "input latin letters",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f170",
+        "emoji": "🅰",
+        "name": "a button (blood type)",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f18e",
+        "emoji": "🆎",
+        "name": "ab button (blood type)",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f171",
+        "emoji": "🅱",
+        "name": "b button (blood type)",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f191",
+        "emoji": "🆑",
+        "name": "cL button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f192",
+        "emoji": "🆒",
+        "name": "cOOL button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f193",
+        "emoji": "🆓",
+        "name": "fRee button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "2139",
+        "emoji": "ℹ",
+        "name": "information",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f194",
+        "emoji": "🆔",
+        "name": "Id button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "24c2",
+        "emoji": "Ⓜ",
+        "name": "circled M",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f195",
+        "emoji": "🆕",
+        "name": "NeW button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f196",
+        "emoji": "🆖",
+        "name": "NG button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f17e",
+        "emoji": "🅾",
+        "name": "O button (blood type)",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f197",
+        "emoji": "🆗",
+        "name": "OK button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f17f",
+        "emoji": "🅿",
+        "name": "P button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f198",
+        "emoji": "🆘",
+        "name": "SOS button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f199",
+        "emoji": "🆙",
+        "name": "UP! button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f19a",
+        "emoji": "🆚",
+        "name": "VS button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f201",
+        "emoji": "🈁",
+        "name": "Japanese “here” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f202",
+        "emoji": "🈂",
+        "name": "Japanese “service charge” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f237",
+        "emoji": "🈷",
+        "name": "Japanese “monthly amount” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f236",
+        "emoji": "🈶",
+        "name": "Japanese “not free of charge” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f22f",
+        "emoji": "🈯",
+        "name": "Japanese “reserved” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f250",
+        "emoji": "🉐",
+        "name": "Japanese “bargain” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f239",
+        "emoji": "🈹",
+        "name": "Japanese “discount” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f21a",
+        "emoji": "🈚",
+        "name": "Japanese “free of charge” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f232",
+        "emoji": "🈲",
+        "name": "Japanese “prohibited” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f251",
+        "emoji": "🉑",
+        "name": "Japanese “acceptable” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f238",
+        "emoji": "🈸",
+        "name": "Japanese “application” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f234",
+        "emoji": "🈴",
+        "name": "Japanese “passing grade” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f233",
+        "emoji": "🈳",
+        "name": "Japanese “vacancy” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "3297",
+        "emoji": "㊗",
+        "name": "Japanese “congratulations” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "3299",
+        "emoji": "㊙",
+        "name": "Japanese “secret” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f23a",
+        "emoji": "🈺",
+        "name": "Japanese “open for business” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f235",
+        "emoji": "🈵",
+        "name": "Japanese “no vacancy” button",
+        "category": "Symbols",
+        "subcategory": "alphanum"
+    },
+    {
+        "code": "1f534",
+        "emoji": "🔴",
+        "name": "red circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e0",
+        "emoji": "🟠",
+        "name": "orange circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e1",
+        "emoji": "🟡",
+        "name": "yellow circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e2",
+        "emoji": "🟢",
+        "name": "green circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f535",
+        "emoji": "🔵",
+        "name": "blue circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e3",
+        "emoji": "🟣",
+        "name": "purple circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e4",
+        "emoji": "🟤",
+        "name": "brown circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "26ab",
+        "emoji": "⚫",
+        "name": "black circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "26aa",
+        "emoji": "⚪",
+        "name": "white circle",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e5",
+        "emoji": "🟥",
+        "name": "red square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e7",
+        "emoji": "🟧",
+        "name": "orange square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e8",
+        "emoji": "🟨",
+        "name": "yellow square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e9",
+        "emoji": "🟩",
+        "name": "green square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7e6",
+        "emoji": "🟦",
+        "name": "blue square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7ea",
+        "emoji": "🟪",
+        "name": "purple square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f7eb",
+        "emoji": "🟫",
+        "name": "brown square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "2b1b",
+        "emoji": "⬛",
+        "name": "black large square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "2b1c",
+        "emoji": "⬜",
+        "name": "white large square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "25fc",
+        "emoji": "◼",
+        "name": "black medium square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "25fb",
+        "emoji": "◻",
+        "name": "white medium square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "25fe",
+        "emoji": "◾",
+        "name": "black medium-small square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "25fd",
+        "emoji": "◽",
+        "name": "white medium-small square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "25aa",
+        "emoji": "▪",
+        "name": "black small square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "25ab",
+        "emoji": "▫",
+        "name": "white small square",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f536",
+        "emoji": "🔶",
+        "name": "large orange diamond",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f537",
+        "emoji": "🔷",
+        "name": "large blue diamond",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f538",
+        "emoji": "🔸",
+        "name": "small orange diamond",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f539",
+        "emoji": "🔹",
+        "name": "small blue diamond",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f53a",
+        "emoji": "🔺",
+        "name": "red triangle pointed up",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f53b",
+        "emoji": "🔻",
+        "name": "red triangle pointed down",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f4a0",
+        "emoji": "💠",
+        "name": "diamond with a dot",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f518",
+        "emoji": "🔘",
+        "name": "radio button",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f533",
+        "emoji": "🔳",
+        "name": "white square button",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    },
+    {
+        "code": "1f532",
+        "emoji": "🔲",
+        "name": "black square button",
+        "category": "Symbols",
+        "subcategory": "geometric"
+    }
+]

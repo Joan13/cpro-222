@@ -1,0 +1,1528 @@
+[
+    {
+        "code": "1f30d",
+        "emoji": "🌍",
+        "name": "globe showing europe-africa",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f30e",
+        "emoji": "🌎",
+        "name": "globe showing americas",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f30f",
+        "emoji": "🌏",
+        "name": "globe showing asia-australia",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f310",
+        "emoji": "🌐",
+        "name": "globe with meridians",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f5fa",
+        "emoji": "🗺",
+        "name": "world map",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f5fe",
+        "emoji": "🗾",
+        "name": "map of Japan",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f9ed",
+        "emoji": "🧭",
+        "name": "compass",
+        "category": "Travel & Places",
+        "subcategory": "place-map"
+    },
+    {
+        "code": "1f3d4",
+        "emoji": "🏔",
+        "name": "snow-capped mountain",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "26f0",
+        "emoji": "⛰",
+        "name": "mountain",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f30b",
+        "emoji": "🌋",
+        "name": "volcano",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f5fb",
+        "emoji": "🗻",
+        "name": "mount fuji",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f3d5",
+        "emoji": "🏕",
+        "name": "camping",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f3d6",
+        "emoji": "🏖",
+        "name": "beach with umbrella",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f3dc",
+        "emoji": "🏜",
+        "name": "desert",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f3dd",
+        "emoji": "🏝",
+        "name": "desert island",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f3de",
+        "emoji": "🏞",
+        "name": "national park",
+        "category": "Travel & Places",
+        "subcategory": "place-geographic"
+    },
+    {
+        "code": "1f3df",
+        "emoji": "🏟",
+        "name": "stadium",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3db",
+        "emoji": "🏛",
+        "name": "classical building",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3d7",
+        "emoji": "🏗",
+        "name": "building construction",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f9f1",
+        "emoji": "🧱",
+        "name": "brick",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1faa8",
+        "emoji": "🪨",
+        "name": "rock",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1fab5",
+        "emoji": "🪵",
+        "name": "wood",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f6d6",
+        "emoji": "🛖",
+        "name": "hut",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3d8",
+        "emoji": "🏘",
+        "name": "houses",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3da",
+        "emoji": "🏚",
+        "name": "derelict house",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e0",
+        "emoji": "🏠",
+        "name": "house",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e1",
+        "emoji": "🏡",
+        "name": "house with garden",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e2",
+        "emoji": "🏢",
+        "name": "office building",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e3",
+        "emoji": "🏣",
+        "name": "Japanese post office",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e4",
+        "emoji": "🏤",
+        "name": "post office",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e5",
+        "emoji": "🏥",
+        "name": "hospital",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e6",
+        "emoji": "🏦",
+        "name": "bank",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e8",
+        "emoji": "🏨",
+        "name": "hotel",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3e9",
+        "emoji": "🏩",
+        "name": "love hotel",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3ea",
+        "emoji": "🏪",
+        "name": "convenience store",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3eb",
+        "emoji": "🏫",
+        "name": "school",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3ec",
+        "emoji": "🏬",
+        "name": "department store",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3ed",
+        "emoji": "🏭",
+        "name": "factory",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3ef",
+        "emoji": "🏯",
+        "name": "Japanese castle",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f3f0",
+        "emoji": "🏰",
+        "name": "castle",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f492",
+        "emoji": "💒",
+        "name": "wedding",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f5fc",
+        "emoji": "🗼",
+        "name": "Tokyo tower",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "1f5fd",
+        "emoji": "🗽",
+        "name": "Statue of Liberty",
+        "category": "Travel & Places",
+        "subcategory": "place-building"
+    },
+    {
+        "code": "26ea",
+        "emoji": "⛪",
+        "name": "church",
+        "category": "Travel & Places",
+        "subcategory": "place-religious"
+    },
+    {
+        "code": "1f54c",
+        "emoji": "🕌",
+        "name": "mosque",
+        "category": "Travel & Places",
+        "subcategory": "place-religious"
+    },
+    {
+        "code": "1f6d5",
+        "emoji": "🛕",
+        "name": "hindu temple",
+        "category": "Travel & Places",
+        "subcategory": "place-religious"
+    },
+    {
+        "code": "1f54d",
+        "emoji": "🕍",
+        "name": "synagogue",
+        "category": "Travel & Places",
+        "subcategory": "place-religious"
+    },
+    {
+        "code": "26e9",
+        "emoji": "⛩",
+        "name": "shinto shrine",
+        "category": "Travel & Places",
+        "subcategory": "place-religious"
+    },
+    {
+        "code": "1f54b",
+        "emoji": "🕋",
+        "name": "kaaba",
+        "category": "Travel & Places",
+        "subcategory": "place-religious"
+    },
+    {
+        "code": "26f2",
+        "emoji": "⛲",
+        "name": "fountain",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "26fa",
+        "emoji": "⛺",
+        "name": "tent",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f301",
+        "emoji": "🌁",
+        "name": "foggy",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f303",
+        "emoji": "🌃",
+        "name": "night with stars",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f3d9",
+        "emoji": "🏙",
+        "name": "cityscape",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f304",
+        "emoji": "🌄",
+        "name": "sunrise over mountains",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f305",
+        "emoji": "🌅",
+        "name": "sunrise",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f306",
+        "emoji": "🌆",
+        "name": "cityscape at dusk",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f307",
+        "emoji": "🌇",
+        "name": "sunset",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f309",
+        "emoji": "🌉",
+        "name": "bridge at night",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "2668",
+        "emoji": "♨",
+        "name": "hot springs",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f3a0",
+        "emoji": "🎠",
+        "name": "carousel horse",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f6dd",
+        "emoji": "🛝",
+        "name": "playground slide",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f3a1",
+        "emoji": "🎡",
+        "name": "ferris wheel",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f3a2",
+        "emoji": "🎢",
+        "name": "roller coaster",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f488",
+        "emoji": "💈",
+        "name": "barber pole",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f3aa",
+        "emoji": "🎪",
+        "name": "circus tent",
+        "category": "Travel & Places",
+        "subcategory": "place-other"
+    },
+    {
+        "code": "1f682",
+        "emoji": "🚂",
+        "name": "locomotive",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f683",
+        "emoji": "🚃",
+        "name": "railway car",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f684",
+        "emoji": "🚄",
+        "name": "high-speed train",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f685",
+        "emoji": "🚅",
+        "name": "bullet train",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f686",
+        "emoji": "🚆",
+        "name": "train",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f687",
+        "emoji": "🚇",
+        "name": "metro",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f688",
+        "emoji": "🚈",
+        "name": "light rail",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f689",
+        "emoji": "🚉",
+        "name": "station",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f68a",
+        "emoji": "🚊",
+        "name": "tram",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f69d",
+        "emoji": "🚝",
+        "name": "monorail",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f69e",
+        "emoji": "🚞",
+        "name": "mountain railway",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f68b",
+        "emoji": "🚋",
+        "name": "tram car",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f68c",
+        "emoji": "🚌",
+        "name": "bus",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f68d",
+        "emoji": "🚍",
+        "name": "oncoming bus",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f68e",
+        "emoji": "🚎",
+        "name": "trolleybus",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f690",
+        "emoji": "🚐",
+        "name": "minibus",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f691",
+        "emoji": "🚑",
+        "name": "ambulance",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f692",
+        "emoji": "🚒",
+        "name": "fire engine",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f693",
+        "emoji": "🚓",
+        "name": "police car",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f694",
+        "emoji": "🚔",
+        "name": "oncoming police car",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f695",
+        "emoji": "🚕",
+        "name": "taxi",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f696",
+        "emoji": "🚖",
+        "name": "oncoming taxi",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f697",
+        "emoji": "🚗",
+        "name": "automobile",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f698",
+        "emoji": "🚘",
+        "name": "oncoming automobile",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f699",
+        "emoji": "🚙",
+        "name": "sport utility vehicle",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6fb",
+        "emoji": "🛻",
+        "name": "pickup truck",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f69a",
+        "emoji": "🚚",
+        "name": "delivery truck",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f69b",
+        "emoji": "🚛",
+        "name": "articulated lorry",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f69c",
+        "emoji": "🚜",
+        "name": "tractor",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f3ce",
+        "emoji": "🏎",
+        "name": "racing car",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f3cd",
+        "emoji": "🏍",
+        "name": "motorcycle",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6f5",
+        "emoji": "🛵",
+        "name": "motor scooter",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f9bd",
+        "emoji": "🦽",
+        "name": "manual wheelchair",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f9bc",
+        "emoji": "🦼",
+        "name": "motorized wheelchair",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6fa",
+        "emoji": "🛺",
+        "name": "auto rickshaw",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6b2",
+        "emoji": "🚲",
+        "name": "bicycle",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6f4",
+        "emoji": "🛴",
+        "name": "kick scooter",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6f9",
+        "emoji": "🛹",
+        "name": "skateboard",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6fc",
+        "emoji": "🛼",
+        "name": "roller skate",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f68f",
+        "emoji": "🚏",
+        "name": "bus stop",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6e3",
+        "emoji": "🛣",
+        "name": "motorway",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6e4",
+        "emoji": "🛤",
+        "name": "railway track",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6e2",
+        "emoji": "🛢",
+        "name": "oil drum",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "26fd",
+        "emoji": "⛽",
+        "name": "fuel pump",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6de",
+        "emoji": "🛞",
+        "name": "wheel",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6a8",
+        "emoji": "🚨",
+        "name": "police car light",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6a5",
+        "emoji": "🚥",
+        "name": "horizontal traffic light",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6a6",
+        "emoji": "🚦",
+        "name": "vertical traffic light",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6d1",
+        "emoji": "🛑",
+        "name": "stop sign",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "1f6a7",
+        "emoji": "🚧",
+        "name": "construction",
+        "category": "Travel & Places",
+        "subcategory": "transport-ground"
+    },
+    {
+        "code": "2693",
+        "emoji": "⚓",
+        "name": "anchor",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "1f6df",
+        "emoji": "🛟",
+        "name": "ring buoy",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "26f5",
+        "emoji": "⛵",
+        "name": "sailboat",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "1f6f6",
+        "emoji": "🛶",
+        "name": "canoe",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "1f6a4",
+        "emoji": "🚤",
+        "name": "speedboat",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "1f6f3",
+        "emoji": "🛳",
+        "name": "passenger ship",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "26f4",
+        "emoji": "⛴",
+        "name": "ferry",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "1f6e5",
+        "emoji": "🛥",
+        "name": "motor boat",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "1f6a2",
+        "emoji": "🚢",
+        "name": "ship",
+        "category": "Travel & Places",
+        "subcategory": "transport-water"
+    },
+    {
+        "code": "2708",
+        "emoji": "✈",
+        "name": "airplane",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6e9",
+        "emoji": "🛩",
+        "name": "small airplane",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6eb",
+        "emoji": "🛫",
+        "name": "airplane departure",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6ec",
+        "emoji": "🛬",
+        "name": "airplane arrival",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1fa82",
+        "emoji": "🪂",
+        "name": "parachute",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f4ba",
+        "emoji": "💺",
+        "name": "seat",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f681",
+        "emoji": "🚁",
+        "name": "helicopter",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f69f",
+        "emoji": "🚟",
+        "name": "suspension railway",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6a0",
+        "emoji": "🚠",
+        "name": "mountain cableway",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6a1",
+        "emoji": "🚡",
+        "name": "aerial tramway",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6f0",
+        "emoji": "🛰",
+        "name": "satellite",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f680",
+        "emoji": "🚀",
+        "name": "rocket",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6f8",
+        "emoji": "🛸",
+        "name": "flying saucer",
+        "category": "Travel & Places",
+        "subcategory": "transport-air"
+    },
+    {
+        "code": "1f6ce",
+        "emoji": "🛎",
+        "name": "bellhop bell",
+        "category": "Travel & Places",
+        "subcategory": "hotel"
+    },
+    {
+        "code": "1f9f3",
+        "emoji": "🧳",
+        "name": "luggage",
+        "category": "Travel & Places",
+        "subcategory": "hotel"
+    },
+    {
+        "code": "231b",
+        "emoji": "⌛",
+        "name": "hourglass done",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "23f3",
+        "emoji": "⏳",
+        "name": "hourglass not done",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "231a",
+        "emoji": "⌚",
+        "name": "watch",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "23f0",
+        "emoji": "⏰",
+        "name": "alarm clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "23f1",
+        "emoji": "⏱",
+        "name": "stopwatch",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "23f2",
+        "emoji": "⏲",
+        "name": "timer clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f570",
+        "emoji": "🕰",
+        "name": "mantelpiece clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f55b",
+        "emoji": "🕛",
+        "name": "twelve o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f567",
+        "emoji": "🕧",
+        "name": "twelve-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f550",
+        "emoji": "🕐",
+        "name": "one o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f55c",
+        "emoji": "🕜",
+        "name": "one-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f551",
+        "emoji": "🕑",
+        "name": "two o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f55d",
+        "emoji": "🕝",
+        "name": "two-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f552",
+        "emoji": "🕒",
+        "name": "three o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f55e",
+        "emoji": "🕞",
+        "name": "three-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f553",
+        "emoji": "🕓",
+        "name": "four o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f55f",
+        "emoji": "🕟",
+        "name": "four-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f554",
+        "emoji": "🕔",
+        "name": "five o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f560",
+        "emoji": "🕠",
+        "name": "five-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f555",
+        "emoji": "🕕",
+        "name": "six o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f561",
+        "emoji": "🕡",
+        "name": "six-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f556",
+        "emoji": "🕖",
+        "name": "seven o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f562",
+        "emoji": "🕢",
+        "name": "seven-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f557",
+        "emoji": "🕗",
+        "name": "eight o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f563",
+        "emoji": "🕣",
+        "name": "eight-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f558",
+        "emoji": "🕘",
+        "name": "nine o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f564",
+        "emoji": "🕤",
+        "name": "nine-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f559",
+        "emoji": "🕙",
+        "name": "ten o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f565",
+        "emoji": "🕥",
+        "name": "ten-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f55a",
+        "emoji": "🕚",
+        "name": "eleven o’clock",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f566",
+        "emoji": "🕦",
+        "name": "eleven-thirty",
+        "category": "Travel & Places",
+        "subcategory": "time"
+    },
+    {
+        "code": "1f311",
+        "emoji": "🌑",
+        "name": "new moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f312",
+        "emoji": "🌒",
+        "name": "waxing crescent moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f313",
+        "emoji": "🌓",
+        "name": "first quarter moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f314",
+        "emoji": "🌔",
+        "name": "waxing gibbous moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f315",
+        "emoji": "🌕",
+        "name": "full moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f316",
+        "emoji": "🌖",
+        "name": "waning gibbous moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f317",
+        "emoji": "🌗",
+        "name": "last quarter moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f318",
+        "emoji": "🌘",
+        "name": "waning crescent moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f319",
+        "emoji": "🌙",
+        "name": "crescent moon",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f31a",
+        "emoji": "🌚",
+        "name": "new moon face",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f31b",
+        "emoji": "🌛",
+        "name": "first quarter moon face",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f31c",
+        "emoji": "🌜",
+        "name": "last quarter moon face",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f321",
+        "emoji": "🌡",
+        "name": "thermometer",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2600",
+        "emoji": "☀",
+        "name": "sun",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f31d",
+        "emoji": "🌝",
+        "name": "full moon face",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f31e",
+        "emoji": "🌞",
+        "name": "sun with face",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1fa90",
+        "emoji": "🪐",
+        "name": "ringed planet",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2b50",
+        "emoji": "⭐",
+        "name": "star",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f31f",
+        "emoji": "🌟",
+        "name": "glowing star",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f320",
+        "emoji": "🌠",
+        "name": "shooting star",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f30c",
+        "emoji": "🌌",
+        "name": "milky way",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2601",
+        "emoji": "☁",
+        "name": "cloud",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "26c5",
+        "emoji": "⛅",
+        "name": "sun behind cloud",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "26c8",
+        "emoji": "⛈",
+        "name": "cloud with lightning and rain",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f324",
+        "emoji": "🌤",
+        "name": "sun behind small cloud",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f325",
+        "emoji": "🌥",
+        "name": "sun behind large cloud",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f326",
+        "emoji": "🌦",
+        "name": "sun behind rain cloud",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f327",
+        "emoji": "🌧",
+        "name": "cloud with rain",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f328",
+        "emoji": "🌨",
+        "name": "cloud with snow",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f329",
+        "emoji": "🌩",
+        "name": "cloud with lightning",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f32a",
+        "emoji": "🌪",
+        "name": "tornado",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f32b",
+        "emoji": "🌫",
+        "name": "fog",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f32c",
+        "emoji": "🌬",
+        "name": "wind face",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f300",
+        "emoji": "🌀",
+        "name": "cyclone",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f308",
+        "emoji": "🌈",
+        "name": "rainbow",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f302",
+        "emoji": "🌂",
+        "name": "closed umbrella",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2602",
+        "emoji": "☂",
+        "name": "umbrella",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2614",
+        "emoji": "☔",
+        "name": "umbrella with rain drops",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "26f1",
+        "emoji": "⛱",
+        "name": "umbrella on ground",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "26a1",
+        "emoji": "⚡",
+        "name": "high voltage",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2744",
+        "emoji": "❄",
+        "name": "snowflake",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2603",
+        "emoji": "☃",
+        "name": "snowman",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "26c4",
+        "emoji": "⛄",
+        "name": "snowman without snow",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "2604",
+        "emoji": "☄",
+        "name": "comet",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f525",
+        "emoji": "🔥",
+        "name": "fire",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f4a7",
+        "emoji": "💧",
+        "name": "droplet",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    },
+    {
+        "code": "1f30a",
+        "emoji": "🌊",
+        "name": "water wave",
+        "category": "Travel & Places",
+        "subcategory": "sky & weather"
+    }
+]
