@@ -29,10 +29,9 @@
         "backgroundColor": "#ffffff"
       },
       "softwareKeyboardLayoutMode": "resize",
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.yambi.app",
-      "googleServicesFile": "./android/app/google-services.json",
+      "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -102,7 +101,8 @@
           "merchantIdentifier": "merchant.com.yambi",
           "enableGooglePay": true
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }
