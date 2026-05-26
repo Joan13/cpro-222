@@ -1,16 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StatusBar, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Alert, FlatList, Image, Dimensions, TextInput, Platform, DevSettings, Pressable, SafeAreaView } from 'react-native';
-import Feather from 'react-native-vector-icons/Feather';
-import FontsAwesome from 'react-native-vector-icons/FontAwesome';
-import Animated from 'react-native-reanimated';
+import { useCallback, useState } from 'react';
+import { View, Text, Pressable, Modal, Image, TextInput, DevSettings  } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { useNavigation } from '@react-navigation/native';
 import StatusBarYambi from '../../components/app/StatusBar';
-import DocumentPicker, { pick } from 'react-native-document-picker';
 import ImagePicker from 'react-native-image-crop-picker';
-import FastImage from 'react-native-fast-image';
-import { updateUser, updateUserProfile } from '../../store/reducers/userSlice';
 import axios from 'axios';
 import ButtonNormal from '../../components/app/ButtonNormal';
 import { setContactsSelected, setLoadingButton } from '../../store/reducers/appSlice';
@@ -20,6 +14,7 @@ import { TUser, TUsers } from '../../types/types';
 import { FlashList } from '@shopify/flash-list';
 import { IconApp } from '../../components/app/IconApp';
 import { remote_host } from '../../../GlobalVariables';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const NewGroup = () => {
 
@@ -129,7 +124,7 @@ const NewGroup = () => {
     // },[contacts_selected]);
 
     return (
-        <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, paddingTop: 5, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, paddingTop: 5, borderColor: theme.colors.border, borderTopWidth: 1 }}>
 
             <StatusBarYambi />
 
@@ -299,7 +294,7 @@ const NewGroup = () => {
                 styles={{ marginBottom: 10, marginHorizontal: 30 }}
                 onPress={(createGroup)} />
 
-        </SafeAreaView>
+        </View>
     )
 }
 

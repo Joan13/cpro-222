@@ -1,4 +1,4 @@
-import { View, ScrollView, TouchableOpacity, Animated } from "react-native";
+import { View, ScrollView, Pressable, Animated } from "react-native";
 import { useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
 import { IconApp } from "../../components/app/IconApp";
@@ -186,7 +186,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                         style={{ fontSize: 16, fontWeight: '700', marginBottom: 3 }}
                                         bold
                                     />
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={async () => {
                                             // Group expenses by currency
                                             const expensesByCurrency: { [key: number]: any[] } = {};
@@ -363,7 +363,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                         }}
                                     >
                                         <IconApp pack="FI" name="printer" size={18} color={categoryColor} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                                 <YambiText
                                     text={`${filteredExpenses.length} ${strings.expenses || 'expenses'}`}
@@ -415,7 +415,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                     </View>
 
                     {/* Add Expense Button */}
-                    {/* <TouchableOpacity
+                    {/* <Pressable
                         onPress={() => navigation.navigate('AddExpense', { category_id })}
                         style={{
                             backgroundColor: theme.design_tip2,
@@ -436,10 +436,10 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             color="design"
                             style={{ fontWeight: '600' }}
                         />
-                    </TouchableOpacity> */}
+                    </Pressable> */}
 
                     {/* Filters Toggle */}
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => setShow_filters(!show_filters)}
                         style={{
                             flexDirection: 'row',
@@ -467,7 +467,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             )}
                         </View>
                         <IconApp pack="FI" name={show_filters ? "chevron-up" : "chevron-down"} size={20} color={theme.text} />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     {/* Filters */}
                     <Animated.View style={{
@@ -481,7 +481,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                     }}>
                         <View>
                             {/* Date Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setDate_selection_modal(true);
@@ -509,7 +509,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                         />
                                     </View>
                                     {date_start !== "" && date_end !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setDate_start("");
@@ -518,13 +518,13 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                             style={{ padding: 5 }}
                                         >
                                             <IconApp pack="FI" name="x" size={18} color={theme.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Currency Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setShow_currency_filter(true);
@@ -552,7 +552,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                         />
                                     </View>
                                     {currency_filter !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setCurrency_filter("");
@@ -560,13 +560,13 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                             style={{ padding: 5 }}
                                         >
                                             <IconApp pack="FI" name="x" size={18} color={theme.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Debt Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setShow_debt_filter(true);
@@ -596,7 +596,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                         />
                                     </View>
                                     {debt_filter !== -1 && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setDebt_filter(-1);
@@ -604,13 +604,13 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                             style={{ padding: 5 }}
                                         >
                                             <IconApp pack="FI" name="x" size={18} color={theme.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Payment Type Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setShow_payment_type_filter(true);
@@ -643,7 +643,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                         />
                                     </View>
                                     {payment_type_filter !== -1 && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setPayment_type_filter(-1);
@@ -651,10 +651,10 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                             style={{ padding: 5 }}
                                         >
                                             <IconApp pack="FI" name="x" size={18} color={theme.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </Animated.View>
 
@@ -771,7 +771,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                     title={strings.currency || "Currency"}
                 >
                     <View style={{ width: '100%' }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setCurrency_filter("");
                                 dispatch(setShowModalApp(false));
@@ -791,12 +791,12 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                        </TouchableOpacity>
+                        </Pressable>
                         <LegendList
                             data={global_currencies as never}
                             showsVerticalScrollIndicator={true}
                             renderItem={({ item, index }: { item: number, index: number }) => (
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         setCurrency_filter(item.toString());
                                         dispatch(setShowModalApp(false));
@@ -816,7 +816,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                 >
                                     <YambiText text={(index + 1) + "."} size="normal" color="default" style={{ width: 35 }} />
                                     <YambiText text={renderCurrency(item, true)} size="normal" color="default" style={{ flex: 1 }} />
-                                </TouchableOpacity>
+                                </Pressable>
                             )}
                         />
                     </View>
@@ -834,7 +834,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                     title={strings.debt || "Debt"}
                 >
                     <View style={{ width: '100%' }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setDebt_filter(-1);
                                 dispatch(setShowModalApp(false));
@@ -854,8 +854,8 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setDebt_filter(1);
                                 dispatch(setShowModalApp(false));
@@ -875,8 +875,8 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.debt || "Debt"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setDebt_filter(0);
                                 dispatch(setShowModalApp(false));
@@ -895,7 +895,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={(strings as any).no_debt || "No Debt"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </ModalApp>
             )}
@@ -911,7 +911,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                     title={strings.payment_type || "Payment Type"}
                 >
                     <View style={{ width: '100%' }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setPayment_type_filter(-1);
                                 dispatch(setShowModalApp(false));
@@ -931,8 +931,8 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setPayment_type_filter(0);
                                 dispatch(setShowModalApp(false));
@@ -952,8 +952,8 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={(strings as any).not_paid || "Not Paid"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setPayment_type_filter(1);
                                 dispatch(setShowModalApp(false));
@@ -973,8 +973,8 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.cash || "Cash"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setPayment_type_filter(2);
                                 dispatch(setShowModalApp(false));
@@ -994,8 +994,8 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.card || "Card"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setPayment_type_filter(3);
                                 dispatch(setShowModalApp(false));
@@ -1014,7 +1014,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             }}
                         >
                             <YambiText text={strings.bank || "Bank"} size="normal" color="default" style={{ flex: 1 }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </ModalApp>
             )}

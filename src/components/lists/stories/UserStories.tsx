@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, View, Image, Pressable } from "react-native";
+import {  Pressable } from "react-native";
 import { TChat, TStory, TUser } from "../../../types/types";
 import Animated from "react-native-reanimated";
 // import MessageText from "./ReturnMessage";
@@ -33,7 +33,7 @@ const UserStories = ({ item, index, GoStory }: { item: TStory, index: number, Go
     }
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={() => GoStory(item.phone_number)}
             style={{
                 flexDirection: 'row',
@@ -93,7 +93,7 @@ const UserStories = ({ item, index, GoStory }: { item: TStory, index: number, Go
                     <TextSmallYambiGray text={renderDateTime(item.lastDate, 1, false)} styles={{ marginBottom: 3 }} />
                 </View>
             </View> */}
-        </TouchableOpacity>
+        </Pressable>
     )
 };
 

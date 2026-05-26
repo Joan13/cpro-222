@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, SafeAreaView, Text, Platform } from 'react-native';
+import { View, TextInput, Pressable, Text, Platform } from 'react-native';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -32,6 +32,7 @@ import { UserChats, UserContacts, UsersMessages } from '../../store/database/Mod
 import { PlayActionSound, randomString, renderDateUpToMilliseconds, SocketApp } from '../../../GlobalVariables';
 import moment from 'moment';
 import AppActivityIndicator from '../app/AppActivityIndicator';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // import { SocketApp } from '../../../App';
 
 // const navigation = NativeStackScreenProps<RootStackParamList>();
@@ -270,7 +271,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
     const Add_component = () => {
         return (
             <View style={{ marginHorizontal: 15, borderColor: app_theme.colors.border, borderTopWidth: 0 }}>
-                <TouchableOpacity onPress={() => navigation.navigate("NewGroup")} style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center' }}>
+                <Pressable onPress={() => navigation.navigate("NewGroup")} style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center' }}>
                     <View style={{
                         width: 35,
                         height: 35,
@@ -292,12 +293,12 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                     }}>
                         <TextNormalYambi text={strings.new_group} />
                     </View>
-                </TouchableOpacity>
+                </Pressable>
 
                 <View style={{
                     flexDirection: 'row', justifyContent: 'center', alignItems: 'center'
                 }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
+                    <Pressable style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
                         <View style={{
                             width: 35,
                             height: 35,
@@ -319,9 +320,9 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                         }}>
                             <TextNormalYambi text={strings.new_blog} />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
-                    <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
+                    <Pressable style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
                         <View style={{
                             width: 35,
                             height: 35,
@@ -343,7 +344,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                         }}>
                             <TextNormalYambi text={strings.new_article} />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 {contacts.length > 0 ?
@@ -377,7 +378,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                             style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: app_theme.colors.background, backgroundColor: app_theme.colors.background, color: app_theme.colors.text }}
                         />
                         {text_contact_search !== "" ?
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setTextContactSearch(""));
                                     setIIItems(contacts as never);
@@ -389,7 +390,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                                     alignItems: 'center'
                                 }}>
                                 <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
-                            </TouchableOpacity> : null}
+                            </Pressable> : null}
                     </Animated.View> : null}
                 {/* renderItem={({ item, index }: { item: TMessage, index: number }) => ( */}
                 <FlashList
@@ -424,7 +425,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                         <TextNormalYambi text={phone_numbers_list.length <= 1 ? phone_numbers_list.length + " " + strings.contact_selected.toLowerCase() : phone_numbers_list.length + " " + strings.contacts_selected.toLowerCase()} />
                         <TextSmallYambiGray text={strings.from_your_contacts} />
                     </View>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={ForwardTheMessage}
                         style={{ height: 35, paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.design_tip2, borderRadius: 5, borderColor: app_theme.colors.border, borderWidth: 1 }}>
                         {!loading ?
@@ -433,7 +434,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                                 fontSize: app_description.general_font_size
                             }}>{strings.send}</Text> :
                             <AppActivityIndicator color={app_theme.colors.text_design2} />}
-                    </TouchableOpacity>
+                    </Pressable>
                 </Animated.View> : null}
         </SafeAreaView>
     );

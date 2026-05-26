@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from "react-native"
+import { View, Pressable } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
 import { NavProps } from "../../types/types";
 import { IconApp } from "../app/IconApp";
@@ -30,7 +30,7 @@ const HeaderBusiness = ({ navigation, route }: NavProps) => {
             alignItems: 'center',
             justifyContent: 'center',
         }}>
-            <TouchableOpacity
+            <Pressable
                 onPress={BusinessUserss}
                 style={{
                     height: 30,
@@ -40,9 +40,9 @@ const HeaderBusiness = ({ navigation, route }: NavProps) => {
                     marginRight: 10
                 }}>
                 <IconApp pack="FI" name="users" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
                 onPress={NewArticle}
                 style={{
                     height: 30,
@@ -52,7 +52,7 @@ const HeaderBusiness = ({ navigation, route }: NavProps) => {
                     marginLeft: 5
                 }}>
                 <IconApp pack="FA6" name="circle-plus" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

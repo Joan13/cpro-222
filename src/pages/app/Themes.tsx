@@ -1,14 +1,13 @@
 import React from 'react';
 import { DefaultTheme } from '@react-navigation/native';
-import { View, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, Text, Platform } from 'react-native';
+import { View, Pressable, ScrollView, Dimensions, Text, Platform } from 'react-native';
 import { strings } from '../../lang/lang';
-import { setRootViewBackgroundColor } from '@pnthach95/react-native-root-view-background';
+// import { setRootViewBackgroundColor } from '@pnthach95/react-native-root-view-background';
 import { TTheme } from '../../types/types';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
 import { setTheme } from '../../store/reducers/themeSlice';
 import { setThemeSet } from '../../store/reducers/persistedAppSlice';
-import * as NavigationBar from 'expo-navigation-bar';
 import { TextBigYambi } from '../../components/app/Text';
 import { IconApp } from '../../components/app/IconApp';
 
@@ -788,9 +787,8 @@ const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem
     const currentTheme = useAppSelector(state => state.app_theme);
     
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={onPress}
-            activeOpacity={0.7}
             style={{
                 width: cardWidth,
                 marginBottom: 16,
@@ -885,7 +883,7 @@ const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem
                     {themeItem.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </Text>
             </View>
-        </TouchableOpacity>
+        </Pressable>
     );
 };
 
@@ -915,12 +913,12 @@ const Themes = () => {
         dispatch(setTheme(theme_set));
         dispatch(setThemeSet(true));
 
-        setRootViewBackgroundColor(theme_set.colors.background);
+        // setRootViewBackgroundColor(theme_set.colors.background);
         
-        if(Platform.OS === 'android') {
-            NavigationBar.setBackgroundColorAsync(theme_set.colors.background);
-            NavigationBar.setButtonStyleAsync(theme_set.dark ? "light" : "dark");
-        }
+        // if(Platform.OS === 'android') {
+        //     NavigationBar.setBackgroundColorAsync(theme_set.colors.background);
+        //     NavigationBar.setButtonStyleAsync(theme_set.dark ? "light" : "dark");
+        // }
 
         let navTheme = DefaultTheme;
         navTheme.colors.background = theme_set.colors.background;
@@ -965,7 +963,7 @@ const Themes = () => {
     };
 
     return (
-        <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
 
             <ScrollView 
@@ -991,7 +989,7 @@ const Themes = () => {
                     {renderThemeGrid(darkThemes)}
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

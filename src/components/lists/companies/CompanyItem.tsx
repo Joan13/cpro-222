@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { TCompany } from "../../../types/types";
 import { useAppSelector } from "../../../store/app/hooks";
 import { YambiText } from "../../app/Text";
@@ -15,7 +15,7 @@ const CompanyItem = ({ item, showPostButtons = false }: { item: TCompany, showPo
     };
 
     return (
-        <TouchableOpacity onPress={openCompanyDetails} activeOpacity={0.8}>
+        <Pressable onPress={openCompanyDetails}>
             <View
             style={{
             backgroundColor: app_theme.colors.border + '30',
@@ -106,7 +106,7 @@ const CompanyItem = ({ item, showPostButtons = false }: { item: TCompany, showPo
                 </View>
                 )}
             </View>
-        </TouchableOpacity>
+        </Pressable>
     )
 }
 

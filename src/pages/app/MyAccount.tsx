@@ -1,4 +1,4 @@
-import { View, SafeAreaView,  TouchableOpacity } from 'react-native';
+import { View,  Pressable } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import RNRestart from 'react-native-restart';
@@ -12,6 +12,7 @@ import { setShowModalApp } from '../../store/reducers/appSlice';
 import AppActivityIndicator from '../../components/app/AppActivityIndicator';
 import { useRealm } from '@realm/react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MyAccount = () => {
 
@@ -155,7 +156,7 @@ const MyAccount = () => {
     }
 
     return (
-        <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             {showSignOut ?
                 <ModalApp
                     onCancel={() => { dispatch(setShowModalApp(false)); setShowSignOut(false) }}
@@ -172,25 +173,25 @@ const MyAccount = () => {
                         <AppActivityIndicator />}
                 </ModalApp> : null}
 
-            <TouchableOpacity
+            <Pressable
                 onPress={() => { dispatch(setShowModalApp(true)); setShowSignOut(true) }}
                 style={{ borderColor: theme.colors.border, borderWidth: 1, paddingVertical: 12, paddingHorizontal: 15, margin: 15, borderRadius: 10 }}>
                 <TextNormalYambi text={strings.signout} bold />
                 {/* <TextSmallYambiGray text={strings.signout_text} /> */}
-            </TouchableOpacity>
+            </Pressable>
 
             <View style={{ borderColor: theme.colors.border, borderTopWidth: 1 }}></View>
 
-            <TouchableOpacity
+            <Pressable
                 onPress={() => { dispatch(setShowModalApp(true)); setShowDeleteAccount(true) }}
                 style={{ borderColor: theme.colors.error + "50", borderWidth: 1, paddingVertical: 12, paddingHorizontal: 15, margin: 15, borderRadius: 10 }}>
                 <TextNormalYambiError text={strings.delete_account} bold />
                 {/* <TextSmallYambiGray text={strings.delete_account_text} /> */}
-            </TouchableOpacity>
+            </Pressable>
 
             <View style={{ flex: 1 }}></View>
             <TextSmallYambiGray text={strings.footer} styles={{ textAlign: 'center', color: 'gray', paddingBottom: 30 }} />
-        </SafeAreaView>
+        </View>
     )
 }
 // }

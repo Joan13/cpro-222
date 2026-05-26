@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Alert, Image, useWindowDimensions, TextInput } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, Text, Pressable, View, Alert, Image, useWindowDimensions, TextInput } from "react-native";
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from 'react';

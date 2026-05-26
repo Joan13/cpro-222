@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, StyleSheet, Pressable, Linking, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking, RefreshControl } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
@@ -14,9 +14,10 @@ import ModalApp from '../../components/app/ModalApp';
 import Animated from 'react-native-reanimated';
 import SwitchApp from '../../components/app/SwitchApp';
 import { UserChats, UserContacts, UsersMessages } from '../../store/database/Models';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // import React, { useState } from 'react';
-// import { View, Text, StyleSheet, Image, StatusBar, TouchableOpacity, SafeAreaView, Pressable } from 'react-native';
+// import { View, Text, StyleSheet, Image, StatusBar, Pressable, SafeAreaView, Pressable } from 'react-native';
 // import Animated, {
 //      FadeIn,
 //      FadeOut,
@@ -251,7 +252,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
      };
 
      return (
-          <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+          <View style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
 
                {showInternetError ?
                     <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
@@ -594,7 +595,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                          <View style={{ height: 20 }} />
                     </Animated.ScrollView>
                </View>
-          </SafeAreaView>
+          </View>
      )
 }
 
@@ -897,7 +898,7 @@ export default UserProfileInfo;
 //                          {/* <Text>{user_data.user_profile}</Text> */}
 
 //                          <View style={{ marginTop: 10 }}>
-//                               <TouchableOpacity style={{ flexDirection: 'row', paddingTop: 0, alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0, borderTopEndRadius: 15, borderTopStartRadius: 15 }} onPress={() => navigation.navigate("Languages" as never)}>
+//                               <Pressable style={{ flexDirection: 'row', paddingTop: 0, alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0, borderTopEndRadius: 15, borderTopStartRadius: 15 }} onPress={() => navigation.navigate("Languages" as never)}>
 //                                    <IconApp styles={{ marginLeft: 20 }} name="language-outline" pack='IO' size={20} color={theme.colors.gray} />
 //                                    <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderBottomWidth: 0, flex: 1, paddingVertical: 15, marginLeft: 20 }}>
 //                                         <View>
@@ -905,9 +906,9 @@ export default UserProfileInfo;
 //                                              <TextSmallYambiGray text={strings.change_language_settings_text} />
 //                                         </View>
 //                                    </View>
-//                               </TouchableOpacity>
+//                               </Pressable>
 
-//                               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate('Themes' as never)}>
+//                               <Pressable style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate('Themes' as never)}>
 //                                    <IconApp pack='FI' name="sun" size={20} color={theme.colors.gray} styles={{ marginRight: 20, marginLeft: 20 }} />
 //                                    <View style={{ flex: 1, paddingVertical: 15 }}>
 //                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginBottom: 5, marginRight: 20 }}>
@@ -916,9 +917,9 @@ export default UserProfileInfo;
 //                                         </View>
 //                                         <TextSmallYambiGray text={strings.themes_settings_text} styles={{ marginRight: 40 }} />
 //                                    </View>
-//                               </TouchableOpacity>
+//                               </Pressable>
 
-//                               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate('CustomizeBusiness')}>
+//                               <Pressable style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate('CustomizeBusiness')}>
 //                                    <IconApp pack='FI' name="edit" size={20} color={theme.colors.gray} styles={{ marginRight: 20, marginLeft: 20 }} />
 //                                    <View style={{ paddingVertical: 15, paddingRight: 20 }}>
 //                                         <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderBottomWidth: 0, flex: 1, marginRight: 20 }}>
@@ -928,20 +929,20 @@ export default UserProfileInfo;
 //                                    </View>
 
 //                                    {/* <Feather name="chevron-right" size={20} color={theme.colors.primary} /> */}
-//                               </TouchableOpacity>
+//                               </Pressable>
 
 //                               {/* <View style={{ flexDirection: 'row', marginTop: 20, marginBottom: 20 }}>
 //                                         <Text style={{ color: theme.colors.text, fontWeight: 'bold' }}>{strings.routes}</Text>
 //                                    </View> */}
 
-//                               {/* <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0, paddingHorizontal: 20 }} onPress={() => navigation.navigate("UserFollowers" as never)}>
+//                               {/* <Pressable style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0, paddingHorizontal: 20 }} onPress={() => navigation.navigate("UserFollowers" as never)}>
 //                                         <Feather name="user-plus" size={20} color={theme.colors.gray} style={{ marginRight: 20 }} />
 //                                         <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderBottomWidth: 0, flex: 1, paddingVertical: 15 }}>
 //                                              <TextNormalYambi text={strings.your_followers} />
 //                                         </View>
-//                                    </TouchableOpacity> */}
+//                                    </Pressable> */}
 
-//                               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate("MessageUs")}>
+//                               <Pressable style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate("MessageUs")}>
 //                                    <IconApp pack="FI" name="message-square" size={20} color={theme.colors.gray} styles={{ marginRight: 20, marginLeft: 20 }} />
 //                                    {/* <Text style={{ flex: 1, color: theme.colors.text }}>{strings.message_us}</Text> */}
 //                                    <View style={{ borderColor: theme.colors.border, borderBottomWidth: 0, flex: 1, paddingVertical: 15 }}>
@@ -950,9 +951,9 @@ export default UserProfileInfo;
 //                                    </View>
 
 //                                    {/* <Feather name="chevron-right" size={20} color={theme.colors.primary} /> */}
-//                               </TouchableOpacity>
+//                               </Pressable>
 
-//                               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate("MyAccount")}>
+//                               <Pressable style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomWidth: 0 }} onPress={() => navigation.navigate("MyAccount")}>
 //                                    <IconApp pack="FI" name="user" size={20} color={theme.colors.gray} styles={{ marginRight: 20, marginLeft: 20 }} />
 //                                    {/* <Text style={{ flex: 1, color: theme.colors.text }}>{strings.message_us}</Text> */}
 //                                    <View style={{ borderColor: theme.colors.border, borderBottomWidth: 0, flex: 1, paddingVertical: 15 }}>
@@ -961,9 +962,9 @@ export default UserProfileInfo;
 //                                    </View>
 
 //                                    {/* <Feather name="chevron-right" size={20} color={theme.colors.primary} /> */}
-//                               </TouchableOpacity>
+//                               </Pressable>
 
-//                               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomEndRadius: 15, borderBottomStartRadius: 15 }}
+//                               <Pressable style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.colors.border, borderWidth: 1, borderBottomEndRadius: 15, borderBottomStartRadius: 15 }}
 //                                    // onPress={() => Alert.alert("Information Yambi", "Yambi application" + "\n" + "Anaconda Alpha" + "\n" + "Version 2.0.5")}
 //                                    onPress={() => navigation.navigate("AboutYambi")}>
 //                                    <IconApp pack='FI' name="archive" size={18} color={theme.colors.gray} styles={{ marginRight: 20, marginLeft: 20 }} />
@@ -971,7 +972,7 @@ export default UserProfileInfo;
 //                                         <TextNormalYambi text={strings.about_yambi} />
 //                                         <TextSmallYambiGray text={strings.version + " " + packagee.version} />
 //                                    </View>
-//                               </TouchableOpacity>
+//                               </Pressable>
 //                          </View>
 //                     </View>
 
@@ -987,9 +988,9 @@ export default UserProfileInfo;
 //                          resizeMode="cover"
 //                     /> */}
 //                     {Array.from({ length: 30 }).map((_, i) => (
-//                          <TouchableOpacity key={i} style={styles.item}>
+//                          <Pressable key={i} style={styles.item}>
 //                               <Text>Item {i + 1}</Text>
-//                          </TouchableOpacity>
+//                          </Pressable>
 //                     ))}
 //                </Animated.ScrollView>
 

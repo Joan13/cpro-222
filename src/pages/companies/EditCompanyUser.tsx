@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, ScrollView, TextInput } from "react-native";
+import { Pressable, View, ScrollView, TextInput } from "react-native";
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -357,7 +357,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                         const isDisabled = currentUserLevel !== null && item.level < currentUserLevel;
                         
                         return (
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => selectRole(item)}
                                 disabled={isDisabled}
                                 style={{
@@ -376,7 +376,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                                     )}
                                 </View>
                                 <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} />
-                            </TouchableOpacity>
+                            </Pressable>
                         );
                     }}
                 />
@@ -539,7 +539,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                 {isCurrentUserAdmin && (
                     <View style={{ marginBottom: 15, marginTop: 10 }}>
                         <YambiText text={strings.user_details || strings.phone_number} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                        <TouchableOpacity 
+                        <Pressable 
                             onPress={() => { dispatch(setShowModalApp(true)); setShowUsers(true) }}
                             style={{
                                 backgroundColor: theme.border,
@@ -558,7 +558,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                                 style={{ flex: 1 }}
                             />
                             <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} styles={{ marginRight: 10 }} />
-                        </TouchableOpacity>
+                        </Pressable>
                         {!raiseAlert && phone_number !== "" && (
                             <YambiText text={strings.user_exists} size="small" color="error" style={{ marginTop: 5, marginLeft: 2 }} />
                         )}
@@ -599,7 +599,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                 {isCurrentUserAdmin && (
                     <View style={{ marginBottom: 15 }}>
                         <YambiText text={strings.role || "Role"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                        <TouchableOpacity 
+                        <Pressable 
                             onPress={() => { dispatch(setShowModalApp(true)); setShowRoles(true) }}
                             style={{
                                 backgroundColor: theme.border,
@@ -618,7 +618,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                                 style={{ flex: 1 }}
                             />
                             <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} styles={{ marginRight: 10 }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 )}
                 
@@ -682,7 +682,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                                     removeHashPrefix(normalizedTag).toLowerCase() === removeHashPrefix(mainTagNormalized).toLowerCase());
                                 
                                 return (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={index}
                                         onPress={() => toggleTag(tag)}
                                         disabled={isMainTag} // Main tag cannot be toggled
@@ -702,7 +702,7 @@ const EditCompanyUser = ({ navigation, route }: NavProps) => {
                                             <IconApp pack="FI" name="check" size={12} color={theme.high_color} styles={{ marginRight: 4 }} />
                                         )}
                                         <YambiText text={tag} size="small" color={isSelected ? "high" : "gray"} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 );
                             })}
                         </View>

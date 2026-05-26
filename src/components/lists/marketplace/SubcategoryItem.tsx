@@ -1,4 +1,4 @@
-import { TouchableOpacity } from "react-native";
+import { Pressable } from "react-native";
 import { useAppSelector } from "../../../store/app/hooks";
 import { memo } from 'react';
 import { YambiText } from "../../app/Text";
@@ -15,7 +15,7 @@ const SubcategoryItem = ({ item, onPress }: {
   const app_theme = useAppSelector(state => state.app_theme);
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       style={{
         paddingHorizontal: 12,
@@ -29,7 +29,7 @@ const SubcategoryItem = ({ item, onPress }: {
       }}
     >
       <YambiText size="small" color="high" text={item.name} />
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 export default memo(SubcategoryItem);

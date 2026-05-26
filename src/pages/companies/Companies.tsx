@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, TextInput, RefreshControl } from "react-native";
+import { Pressable, View, TextInput, RefreshControl } from "react-native";
 import Feather from 'react-native-vector-icons/Feather';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { TCompany } from "../../types/types";
@@ -214,7 +214,7 @@ const Companies = () => {
                         style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: theme.background, backgroundColor: theme.background, color: theme.text }}
                     />
                     {searchText !== "" ?
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setSearchText("");
                             }}
@@ -225,7 +225,7 @@ const Companies = () => {
                                 alignItems: 'center'
                             }}>
                             <Feather name="x" size={16} style={{ color: theme.text }} />
-                        </TouchableOpacity> : null}
+                        </Pressable> : null}
                 </View>
 
                 {loading ? (

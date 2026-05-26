@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, StyleSheet, View, BackHandler } from 'react-native';
+import { Text, Pressable, StyleSheet, View, BackHandler } from 'react-native';
 import StatusBarYambi from '../../components/app/StatusBar';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 // import { NavigationContainer } from '@react-navigation/native';
@@ -267,7 +267,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
             {/* </NavigationContainer> */}
 
             {showFloatingAction() ?
-                <TouchableOpacity
+                <Pressable
                     onPress={GoNew}
                     style={{
                         position: 'absolute',
@@ -288,11 +288,11 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
 
                     {title === strings.status ?
                         <IconApp name="camera" pack="FI" size={18} color={app_theme.colors.text_design2} /> : null}
-                </TouchableOpacity> : null}
+                </Pressable> : null}
 
             {title === strings.news ?
                 <View>
-                    {/* <TouchableOpacity
+                    {/* <Pressable
                         onPress={goNewChat}
                         style={{
                             position: 'absolute',
@@ -313,9 +313,9 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                             fontWeight: "900",
                             color: app_theme.colors.text_design1
                         }}>A</Text>
-                    </TouchableOpacity> */}
+                    </Pressable> */}
 
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => navigation.navigate('NewStory', { flag: 1 })}
                         style={{
                             position: 'absolute',
@@ -333,7 +333,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         }}>
                         {title === strings.news ?
                             <IconApp name="camera-plus" pack="MC" size={18} color={app_theme.colors.text_design2} /> : null}
-                    </TouchableOpacity>
+                    </Pressable>
                 </View> : null}
         </View>
     )

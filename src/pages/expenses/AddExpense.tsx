@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, ScrollView, TextInput } from "react-native";
+import { Pressable, View, ScrollView, TextInput } from "react-native";
 import { useState, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -232,7 +232,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity
+            <Pressable
                 style={{
                     backgroundColor: theme.background,
                     flex: 1,
@@ -248,7 +248,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
             >
                 <YambiText text={(index + 1) + "."} size="normal" color="default" style={{ width: 35 }} />
                 <YambiText text={renderCurrency(item, true)} size="normal" color="default" style={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
@@ -260,7 +260,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity
+            <Pressable
                 style={{
                     backgroundColor: theme.background,
                     flex: 1,
@@ -278,7 +278,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                     <YambiText text={item.name} size="normal" color="default" style={{ marginBottom: 4 }} />
                     <YambiText text={item.items} size="small" color="gray" />
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
@@ -290,7 +290,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity
+            <Pressable
                 style={{
                     backgroundColor: theme.background,
                     flex: 1,
@@ -306,7 +306,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
             >
                 <YambiText text={strings.wallet + " " + item} size="normal" color="default" style={{ flex: 1 }} />
                 {item === 1 && <YambiText text={"(" + strings.primary + ")"} size="small" color="gray" />}
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
@@ -320,7 +320,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity
+            <Pressable
                 style={{
                     backgroundColor: theme.background,
                     flex: 1,
@@ -335,7 +335,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                 onPress={pressBusiness}
             >
                 <YambiText text={item.business_name} size="normal" color="default" style={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
@@ -351,7 +351,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
         const business = allBusinesses.find(b => b._id === item.business_id);
 
         return (
-            <TouchableOpacity
+            <Pressable
                 style={{
                     backgroundColor: theme.background,
                     flex: 1,
@@ -371,7 +371,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                         <YambiText text={business.business_name} size="xsmall" color="gray" style={{ fontSize: 11 }} />
                     )}
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
@@ -429,7 +429,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                     {showBusinesses ?
                         <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowBusinesses(false) }} paddings={false} singleButton title={strings.business || "Business"}>
                             <View style={{ width: '100%' }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         setBusiness_id("");
                                         setSales_point_id("");
@@ -450,7 +450,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     }}
                                 >
                                     <YambiText text={strings.none || "None"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                                </TouchableOpacity>
+                                </Pressable>
                                 <ScrollView
                                     style={{ maxHeight: 320 }}
                                     showsVerticalScrollIndicator={true}
@@ -471,7 +471,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                     {showSalesPoints ?
                         <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowSalesPoints(false) }} paddings={false} singleButton title={strings.sales_point || "Sales Point"}>
                             <View style={{ width: '100%' }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         setSales_point_id("");
                                         dispatch(setShowModalApp(false));
@@ -491,7 +491,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     }}
                                 >
                                     <YambiText text={strings.none || "None"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                                </TouchableOpacity>
+                                </Pressable>
                                 <ScrollView
                                     style={{ maxHeight: 320 }}
                                     showsVerticalScrollIndicator={true}
@@ -538,7 +538,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
 
                     {/* Currency - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                        <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
+                        <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
                             <YambiText text={strings.currency + " *"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                             <View style={{
                                 backgroundColor: theme.border,
@@ -549,12 +549,12 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                             }}>
                                 <YambiText text={renderCurrency(currency, true)} size="normal" color="high" style={{ marginLeft: 2 }} />
                             </View>
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {/* Category - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                        <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
+                        <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
                             <YambiText text={strings.category + " *"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                             <View style={{
                                 backgroundColor: theme.border,
@@ -570,12 +570,12 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     style={{ marginLeft: 2 }}
                                 />
                             </View>
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {/* Wallet */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                        <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowWallets(true) }}>
+                        <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowWallets(true) }}>
                             <YambiText text={strings.wallet} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                             <View style={{
                                 backgroundColor: theme.border,
@@ -591,7 +591,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     style={{ marginLeft: 2 }}
                                 />
                             </View>
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {/* Business (if user owns businesses) */}
@@ -599,7 +599,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                         <>
                             {accessibleBusinesses.length > 0 && (
                                 <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowBusinesses(true) }}>
+                                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowBusinesses(true) }}>
                                         <YambiText text={strings.business} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                                         <View style={{
                                             backgroundColor: theme.border,
@@ -615,14 +615,14 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                                 style={{ marginLeft: 2 }}
                                             />
                                         </View>
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             )}
 
                             {/* Sales Point (show accessible points based on user level) */}
                             {accessibleSalesPoints.length > 0 && (
                                 <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowSalesPoints(true) }}>
+                                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowSalesPoints(true) }}>
                                         <YambiText text={strings.sales_point} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                                         <View style={{
                                             backgroundColor: theme.border,
@@ -645,7 +645,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                                 style={{ marginLeft: 2 }}
                                             />
                                         </View>
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             )}
                         </>
@@ -685,7 +685,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                     }}>
                         <YambiText text={strings.payment_type || "Payment Type"} size="small" color="gray" style={{ marginBottom: 12, fontWeight: '600' }} />
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 }}>
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => !(debt === 1) && setPayment_type(1)}
                                 disabled={debt === 1}
                                 style={{
@@ -704,8 +704,8 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     text={strings.cash || "Cash"}
                                     style={{ color: payment_type === 1 ? theme.text_design2 : theme.text, fontSize: 14 }} color="design"
                                 />
-                            </TouchableOpacity>
-                            <TouchableOpacity
+                            </Pressable>
+                            <Pressable
                                 onPress={() => !(debt === 1) && setPayment_type(2)}
                                 disabled={debt === 1}
                                 style={{
@@ -724,8 +724,8 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     text={strings.card || "Card"}
                                     style={{ color: payment_type === 2 ? theme.text_design2 : theme.text, fontSize: 14 }} color="design"
                                 />
-                            </TouchableOpacity>
-                            <TouchableOpacity
+                            </Pressable>
+                            <Pressable
                                 onPress={() => !(debt === 1) && setPayment_type(3)}
                                 disabled={debt === 1}
                                 style={{
@@ -744,7 +744,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                                     style={{ color: payment_type === 3 ? theme.text_design2 : theme.text, fontSize: 14 }} color="design"
                                     numberLines={1}
                                 />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
 
                         {/* Debt Toggle */}

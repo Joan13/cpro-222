@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Image } from "react-native";
+import { Text, Pressable, View, Image } from "react-native";
 import { TBusiness, TSellsPoint, TTheme, TUser } from "../../types/types";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { memo, useCallback } from 'react';
@@ -16,7 +16,7 @@ const SellsPointsList = ({ item,  }: { item: TSellsPoint, index: number }) => {
     const app_theme = useAppSelector(state => state.app_theme);
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={() => {
                 // dispatch(setBusiness(item));
                 // navigation.navigate("Workspace" as never);
@@ -42,7 +42,7 @@ const SellsPointsList = ({ item,  }: { item: TSellsPoint, index: number }) => {
                     <TextSmallYambi text={item.sells_point_address} numberLines={1} />
                     <TextNormalYambiGray text={renderCategoryName(item.category)} numberLines={1} />
                 </View>
-                <TouchableOpacity
+                <Pressable
                     onPress={() => RootNavigation.navigate("BusinessItems", { business_id: item.business_id, sales_point_id: item._id })}
                     style={{
                         height: 50,
@@ -55,9 +55,9 @@ const SellsPointsList = ({ item,  }: { item: TSellsPoint, index: number }) => {
                     <Text style={{
                         color: app_theme.colors.text_design2
                     }}>{strings.sell}</Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
-        </TouchableOpacity>
+        </Pressable>
     );
 }
 

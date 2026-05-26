@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, TouchableOpacity, SafeAreaView, Text, Platform, ScrollView, TextInput } from 'react-native';
+import { View, Pressable, Text, ScrollView, TextInput } from 'react-native';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import FontAwesome from 'react-native-vector-icons/FontAwesome';
 // import Feather from 'react-native-vector-icons/Feather';
@@ -32,6 +32,7 @@ import { UserChats, UsersMessages } from '../../store/database/Models';
 import { PlayActionSound, SocketApp } from '../../../GlobalVariables';
 import moment from 'moment';
 import AppActivityIndicator from '../app/AppActivityIndicator';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // import { SocketApp } from '../../../App';
 
 // const navigation = NativeStackScreenProps<RootStackParamList>();
@@ -289,7 +290,7 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                     />
 
                     <Animated.View entering={FadeIn} exiting={FadeOut}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={EditTheMessage}
                             style={{
                                 height: 35, paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center',
@@ -299,7 +300,7 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                             {!loading ?
                                 <Text style={{ color: app_theme.colors.text_design2 }}>{strings.send}</Text> :
                                 <AppActivityIndicator color={app_theme.colors.text_design2} />}
-                        </TouchableOpacity>
+                        </Pressable>
                     </Animated.View>
                 </View> : null}
         </SafeAreaView>

@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, TextInput, Animated, Pressable, ActivityIndicator, Platform, RefreshControl, BackHandler } from "react-native";
+import { View, TextInput, Animated, Pressable, ActivityIndicator, Platform, RefreshControl, BackHandler } from "react-native";
 import { useEffect, useState, useRef, useMemo, useLayoutEffect } from 'react';
 import { NavProps, TBusiness, TBusinessSubscription, TItem, TItemPrices, TSale, TSellsPoint } from "../../types/types";
 import { strings } from "../../lang/lang";
@@ -314,7 +314,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
             return;
         }
         const headerLeft = () => (
-            <TouchableOpacity
+            <Pressable
                 onPress={() => RNRestart.restart()}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 style={{ marginLeft: Platform.OS === "ios" ? 8 : 4 }}>
@@ -324,7 +324,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     size={22}
                     color={theme.text_design1}
                 />
-            </TouchableOpacity>
+            </Pressable>
         );
         if (catalogError) {
             navigation.setOptions({
@@ -923,44 +923,45 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         {/* Business Name and ID */}
                         <View style={{ flex: 1 }}>
                             <YambiText size="big" text={business.business_name} bold style={{ marginBottom: 5 }} />
-                            <TouchableOpacity onLongPress={() => copyToClipboard(business._id)}>
+                            <Pressable onLongPress={() => copyToClipboard(business._id)}>
                                 <YambiText size="small" color="gray" text={strings.id + ": " + business._id} />
-                            </TouchableOpacity>
+                            </Pressable>
                             
-                            {/* Followers + menu */}
                             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, justifyContent: "space-between" }}>
-                                <TouchableOpacity
-                                    onPress={() => navigation.navigate("BusinessSubscribers", { business_id: business_id })}
-                                    activeOpacity={0.7}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingVertical: 6,
-                                        paddingHorizontal: 10,
-                                        backgroundColor: theme.high_color + '15',
-                                        borderRadius: 12,
-                                        alignSelf: 'flex-start'
-                                    }}>
-                                    {/* <IconApp pack="FI" name="users" size={14} color={theme.high_color} styles={{ marginRight: 6 }} /> */}
-                                    {subscriberCountLoading ? (
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <View style={{ width: 18, height: 18, marginRight: 6 }}>
-                                                <AppActivityIndicator size={14} styles={{ height: 18 }} />
-                                            </View>
-                                            <YambiText size="small" color="gray" text={strings.loading} numberLines={1} style={{ fontSize: 11 }} />
+                            {/* Followers + menu */}
+                            {subscriberCount>0?
+                            
+                            <Pressable
+                                onPress={() => navigation.navigate("BusinessSubscribers", { business_id: business_id })}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingVertical: 6,
+                                    paddingHorizontal: 10,
+                                    backgroundColor: theme.high_color + '15',
+                                    borderRadius: 12,
+                                    alignSelf: 'flex-start'
+                                }}>
+                                {/* <IconApp pack="FI" name="users" size={14} color={theme.high_color} styles={{ marginRight: 6 }} /> */}
+                                {subscriberCountLoading ? (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={{ width: 18, height: 18, marginRight: 6 }}>
+                                            <AppActivityIndicator size={14} styles={{ height: 18 }} />
                                         </View>
-                                    ) : (
-                                        <>
-                                            <YambiText color="high"
-                                                text={subscriberCount.toString()}
-                                                bold size="small"
-                                                style={{ marginRight: 4 }}
-                                            />
-                                            <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} numberLines={1} />
-                                        </>
-                                    )}
-                                    <IconApp pack="FI" name="chevron-right" size={12} color={theme.gray} styles={{ marginLeft: 4 }} />
-                                </TouchableOpacity>
+                                        <YambiText size="small" color="gray" text={strings.loading} numberLines={1} style={{ fontSize: 11 }} />
+                                    </View>
+                                ) : (
+                                    <>
+                                        <YambiText color="high"
+                                            text={subscriberCount.toString()}
+                                            bold size="small"
+                                            style={{ marginRight: 4 }}
+                                        />
+                                        <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} numberLines={1} />
+                                    </>
+                                )}
+                                <IconApp pack="FI" name="chevron-right" size={12} color={theme.gray} styles={{ marginLeft: 4 }} />
+                            </Pressable>:null}
 
                                 <DropdownMenu.Root>
                                     <DropdownMenu.Trigger>
@@ -1091,7 +1092,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     {/* Buttons Row */}
                     <View style={{  flex:1 }}>
                         {/* Ghost Button for More Info */}
-                        {showBusinessInfo ? <View style={{ flex: 1, marginRight: 5 }}>
+                        {showBusinessInfo ? <View style={{ flex: 1, marginRight: 5, marginBottom:10 }}>
                             <ButtonNormal
                                 title={showBusinessInfo ? strings.hide : strings.business_info}
                                 loadEnabled={false}
@@ -1141,9 +1142,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                 borderWidth: 1,
                 borderColor: theme.error + '40',
             }}>
-                <TouchableOpacity
+                <Pressable
                     onPress={() => setShowOutOfStock(!showOutOfStock)}
-                    activeOpacity={0.8}
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -1159,7 +1159,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         size={16}
                         color={theme.gray}
                     />
-                </TouchableOpacity>
+                </Pressable>
 
                 <View style={{ marginTop: 12 }}>
                     {itemsToShow.map((i, idx) => (
@@ -1218,9 +1218,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                 marginHorizontal: 15,
                 borderColor: theme.error + '40',
             }}>
-                <TouchableOpacity
+                <Pressable
                     onPress={() => setShowLowStockAlert(!showLowStockAlert)}
-                    activeOpacity={0.8}
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -1236,7 +1235,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         size={16}
                         color={theme.gray}
                     />
-                </TouchableOpacity>
+                </Pressable>
 
                 <View style={{ marginTop: 12 }}>
                     {itemsToShow.map((i, idx) => (
@@ -1447,9 +1446,9 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
         return (
             <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24, backgroundColor: theme.background }}>
                 <YambiText color="gray" text={strings.business_not_found} style={{ textAlign: "center", marginBottom: 20 }} />
-                <TouchableOpacity onPress={() => RNRestart.restart()} style={{ alignSelf: "center", paddingVertical: 12 }}>
+                <Pressable onPress={() => RNRestart.restart()} style={{ alignSelf: "center", paddingVertical: 12 }}>
                     <YambiText color="high" text={strings.home} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         );
     }
@@ -1495,7 +1494,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     onChangeText={SearchItem}
                 />
                 {searched_text !== "" && (
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => SearchItem("")}
                         style={{
                             height: 32,
@@ -1505,11 +1504,11 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                             marginRight: 8
                         }}>
                         <IconApp pack="FI" name="x" size={18} color={theme.gray} />
-                    </TouchableOpacity>
+                    </Pressable>
                 )}
 
                 {flag !== 1 && (
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => business_items_filter === "1" || business_items_filter === "" ? dispatch(setBusinessItemsFilter("0")) : dispatch(setBusinessItemsFilter("1"))}
                         style={{
                             borderColor: theme.border,
@@ -1522,7 +1521,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         }}>
                         <IconApp pack="FI" name={business_items_filter === "0" ? "arrow-down" : "arrow-up"} size={18} color={theme.high_color} />
                         <YambiText color="high" text={strings.filter} style={{ marginLeft: 6 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 )}
             </View>
 
@@ -1610,7 +1609,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                 </View>
                             </View>
 
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={SetCash}
                                 style={{
                                     height: 36,
@@ -1621,7 +1620,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                     borderRadius: 8,
                                 }}>
                                 <IconApp color={theme.high_color} name="maximize-2" size={18} pack="FI" />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
 
                         {/* Price Section */}
@@ -1635,7 +1634,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                 <YambiText size="small" color="gray" text={strings.price} />
 
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={SetCash}
                                         style={{
                                             flexDirection: 'row',
@@ -1648,9 +1647,9 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                         }}>
                                         <SwitchApp value={!type_sale} small onPress={SetCash} />
                                         <YambiText text={strings.cash} style={{ marginLeft: 6 }} />
-                                    </TouchableOpacity>
+                                    </Pressable>
 
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={Detail}
                                         style={{
                                             flexDirection: 'row',
@@ -1662,7 +1661,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                         }}>
                                         <SwitchApp value={!wholesale} small onPress={Detail} />
                                         <YambiText text={strings.detail} style={{ marginLeft: 6 }} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             </View>
                             <TextInput

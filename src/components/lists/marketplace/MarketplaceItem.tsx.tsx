@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Pressable } from "react-native";
+import { Pressable, View } from "react-native";
 import { TCartItem } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo } from "react";
@@ -154,7 +154,7 @@ const MarketplaceItem = ({ item, index }: { item: TCartItem, index: number }) =>
             {renderSizes()}
 
             {/* Cart button */}
-            <TouchableOpacity
+            <Pressable
                 onPress={AddRemoveCartItem}
                 style={{
                     marginTop: 10,
@@ -168,7 +168,7 @@ const MarketplaceItem = ({ item, index }: { item: TCartItem, index: number }) =>
                 }}>
                 <IconApp pack="FI" name="shopping-cart" color={app_theme.colors.badge_color} size={17} />
                 <YambiText style={{ marginLeft: 8 }} color="badge" size="small" text={exists_in_cart() ? strings.remove_from_cart : strings.add_to_cart} />
-            </TouchableOpacity>
+            </Pressable>
         </Pressable>
     )
 };

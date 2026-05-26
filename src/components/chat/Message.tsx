@@ -1,22 +1,16 @@
-import { View, Text, FlatList, TouchableOpacity, SectionList, Image, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
-import React, { useCallback, useEffect, useMemo, useState, memo } from 'react';
-import { useObject, useQuery, useRealm } from '@realm/react';
-import { UserChats, UsersMessages } from '../../store/database/Models';
-import { TGrouppedMessage, TMessage } from '../../types/types';
-import Animated, { BounceIn, FadeInDown, FadeInUp, SlideInDown, SlideInUp } from 'react-native-reanimated';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Feather from 'react-native-vector-icons/Feather';
+import React, { useState, memo } from 'react';
+import { useObject, useRealm } from '@realm/react';
+import { UsersMessages } from '../../store/database/Models';
+import {  TMessage } from '../../types/types';
+import Animated, { BounceIn, FadeInUp } from 'react-native-reanimated';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 // import { SocketApp } from '../../../App';
 import _ from 'lodash';
 import moment from 'moment';
-import { setMessageSelected } from '../../store/reducers/appSlice';
-import SwipableItem from 'react-native-swipeable-item';
 import { strings } from '../../lang/lang';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { createSelector } from 'reselect';
 
 
 const Message = ({ item, index, messages, user }: { item: TMessage, index: number, messages, user:string }) => {

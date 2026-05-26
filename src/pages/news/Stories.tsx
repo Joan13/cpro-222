@@ -1,23 +1,16 @@
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Alert, Image, useWindowDimensions, TextInput, Pressable } from "react-native";
-import Feather from 'react-native-vector-icons/Feather';
-import { useNavigation } from "@react-navigation/native";
-import { useCallback, useEffect, useState } from 'react';
-import { NavProps, TBusiness, TBusinessUser, TSellsPoint } from "../../types/types";
+import { Text, Pressable, View, Image } from "react-native";
+import { useEffect, useState } from 'react';
+import { NavProps } from "../../types/types";
 import { strings } from "../../lang/lang";
-import ButtonNormal from "../../components/app/ButtonNormal";
-import { IconApp } from "../../components/app/IconApp";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import * as RootNavigation from '../../services/Navigation_ref';
 import { useQuery } from "@realm/react";
-import { BusinessUsers, Stories, UserBusinesses, UserContacts } from "../../store/database/Models";
-import { setBusinessOpened, setShowModalApp } from "../../store/reducers/appSlice";
+import { Stories, UserBusinesses, UserContacts } from "../../store/database/Models";
+import { setShowModalApp } from "../../store/reducers/appSlice";
 import { TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
 import { FlashList } from "@shopify/flash-list";
-// import { app_theme } from "../../store/app/variables";
-import Animated, { FadeIn } from "react-native-reanimated";
 import StoriesList from "../../components/lists/stories/StoriesList";
-import { remote_host_server, renderDateTime, media_url } from "../../../GlobalVariables";
+import { renderDateTime, media_url } from "../../../GlobalVariables";
 import FastImage from "react-native-fast-image";
 
 const StoriesComponent = ({ navigation, route }: NavProps) => {

@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, ScrollView, TextInput } from "react-native";
+import { Pressable, View, ScrollView, TextInput } from "react-native";
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -233,10 +233,10 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                     shadowRadius: 6,
                     elevation: 3,
                 }}>
-                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowUsers(true) }} style={{ marginBottom: 20 }}>
+                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowUsers(true) }} style={{ marginBottom: 20 }}>
                         <TextNormalYambiGray text={strings.user_details} styles={{ marginBottom: 8 }} />
                         <TextNormalYambiHighColor text={phone_number === "" ? strings.contact_select : phone_number} bold />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     <View style={{ marginBottom: 20 }}>
                         <TextNormalYambiGray text={strings.name} styles={{ marginBottom: 8 }} />
@@ -262,7 +262,7 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                         <TextNormalYambiGray text={strings.access_level} styles={{ marginBottom: 12 }} />
 
                         {conditionEditBusiness() ? (
-                            <TouchableOpacity onPress={() => setLevel(1)} style={{
+                            <Pressable onPress={() => setLevel(1)} style={{
                                 flexDirection: 'row',
                                 marginBottom: 16,
                                 paddingVertical: 8,
@@ -272,11 +272,11 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                                     <TextNormalYambiHighColor text={strings.owner} bold={level === 1} />
                                     <TextSmallYambiGray text={strings.admin_text} styles={{ marginTop: 4 }} />
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                         ) : null}
 
                         {sales_point !== null && conditionEditBusiness() ? (
-                            <TouchableOpacity onPress={() => setLevel(2)} style={{
+                            <Pressable onPress={() => setLevel(2)} style={{
                                 flexDirection: 'row',
                                 marginBottom: 16,
                                 paddingVertical: 8,
@@ -286,11 +286,11 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                                     <TextNormalYambiHighColor text={strings.salesforce_manager} bold={level === 2} />
                                     <TextSmallYambiGray text={strings.salesforce_manager_text} styles={{ marginTop: 4 }} />
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                         ) : null}
 
                         {sales_point !== null ? (
-                            <TouchableOpacity onPress={() => setLevel(3)} style={{
+                            <Pressable onPress={() => setLevel(3)} style={{
                                 flexDirection: 'row',
                                 marginBottom: 8,
                                 paddingVertical: 8,
@@ -300,7 +300,7 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                                     <TextNormalYambiHighColor text={strings.sale_operator} bold={level === 3} />
                                     <TextSmallYambiGray text={strings.sale_operator_text} styles={{ marginTop: 4 }} />
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                         ) : null}
                     </View>
                 </View>

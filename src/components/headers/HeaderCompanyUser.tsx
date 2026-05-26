@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, ActivityIndicator } from "react-native"
+import { View, Pressable, ActivityIndicator } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { setShowModalApp } from "../../store/reducers/appSlice";
 import { NavProps, TCompanyUser } from "../../types/types";
@@ -129,7 +129,7 @@ const HeaderCompanyUser = ({ navigation, route }: NavProps) => {
 
             {isDeleted ? (
                 isCurrentUserAdmin && (
-                    <TouchableOpacity
+                    <Pressable
                         onPress={RestoreCompanyUser}
                         style={{
                             backgroundColor: theme.colors.high_color + '20',
@@ -142,12 +142,12 @@ const HeaderCompanyUser = ({ navigation, route }: NavProps) => {
                         {loading ?
                             <ActivityIndicator size="small" color={theme.colors.high_color} /> :
                             <YambiText text={(strings as any).restore_member || strings.restore_user} size="small" color="high" style={{ fontSize: 14 }} />}
-                    </TouchableOpacity>
+                    </Pressable>
                 )
             ) : (
                 <>
                     {canEdit && (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => RootNavigation.navigate("EditCompanyUser", { company_user: company_user })}
                             style={{
                                 height: 30,
@@ -156,11 +156,11 @@ const HeaderCompanyUser = ({ navigation, route }: NavProps) => {
                                 justifyContent: 'center',
                             }}>
                             <IconApp pack="FI" name="edit" size={20} color={theme.colors.text_design1} />
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
 
                     {canDelete && (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 dispatch(setShowModalApp(true));
                                 setConfirm_delete(true);
@@ -174,7 +174,7 @@ const HeaderCompanyUser = ({ navigation, route }: NavProps) => {
                             {loading ?
                                 <ActivityIndicator size="small" color={theme.colors.text_design1} /> :
                                 <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />}
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
                 </>
             )}

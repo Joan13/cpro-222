@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useObject } from "@realm/react";
 import { useAppSelector } from "../../../store/app/hooks";
 import { TextNormalYambi, TextSmallYambiGray } from "../../app/Text";
@@ -46,9 +46,8 @@ const InventoryMovementHistoryItem = ({ movement, onPress }: Props) => {
     const qtyInsight = formatInventoryMovementQuantityText(movement.quantity, wholesalePerLot);
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={onPress}
-            activeOpacity={0.75}
             style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -80,7 +79,7 @@ const InventoryMovementHistoryItem = ({ movement, onPress }: Props) => {
                 {dateLine !== "" ? <TextSmallYambiGray text={dateLine} /> : null}
             </View>
             <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.gray} />
-        </TouchableOpacity>
+        </Pressable>
     );
 };
 

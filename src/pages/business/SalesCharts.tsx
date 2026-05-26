@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, Pressable, View } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-gifted-charts";
 import { TSale } from "../../types/types";
 import { useAppSelector } from "../../store/app/hooks";
@@ -194,7 +194,7 @@ const SalesCharts = ({ sales, startDate, endDate, businessId }: SalesChartsProps
                     { key: "pie", label: strings.chart_type_pie },
                     { key: "donut", label: strings.chart_type_donut },
                 ].map(type => (
-                    <TouchableOpacity
+                    <Pressable
                         key={type.key}
                         onPress={() => setChartType(type.key as ChartType)}
                         style={{
@@ -210,7 +210,7 @@ const SalesCharts = ({ sales, startDate, endDate, businessId }: SalesChartsProps
                         <Text style={{ color: chartType === type.key ? theme.high_color : theme.gray, fontSize: 12 }}>
                             {type.label}
                         </Text>
-                    </TouchableOpacity>
+                    </Pressable>
                 ))}
             </ScrollView>
 

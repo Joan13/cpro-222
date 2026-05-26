@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { View, RefreshControl, StyleSheet, Platform, useWindowDimensions, TextInput, TouchableOpacity } from "react-native";
+import { View, RefreshControl, StyleSheet, Platform, useWindowDimensions, TextInput, Pressable } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { FlashList } from "@shopify/flash-list";
 import axios from "axios";
@@ -131,7 +131,7 @@ const BusinessInventoryMovementHistory = ({ navigation, route }: ScreenProps) =>
                         clearButtonMode="never"
                     />
                     {searchQuery !== "" ? (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => setSearchQuery("")}
                             style={{
                                 height: 36,
@@ -142,7 +142,7 @@ const BusinessInventoryMovementHistory = ({ navigation, route }: ScreenProps) =>
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
                             <IconApp pack="FI" name="x" size={18} color={theme.colors.gray} />
-                        </TouchableOpacity>
+                        </Pressable>
                     ) : null}
                 </View>
             </View>

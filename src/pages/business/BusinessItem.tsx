@@ -1,4 +1,4 @@
-import { ScrollView, View, TouchableOpacity, Linking, Platform, BackHandler, Pressable } from "react-native";
+import { ScrollView, View, Linking, Platform, BackHandler, Pressable } from "react-native";
 import { NavProps, RootStackParamList, TSellsPoint, TItem, TCartItem, TBusiness } from "../../types/types";
 import { useAppSelector, useAppDispatch } from "../../store/app/hooks";
 import { useEffect, useState, useMemo, useCallback, useLayoutEffect, useRef } from "react";
@@ -17,7 +17,7 @@ async function fetchCartItemFromServerForDeepLink(itemId: string, phoneNumber: s
     try {
         const res = await axios.post(remote_host + "/yambi/API/get_item", {
             item_id: itemId,
-            phone_number: phoneNumber || "",
+            // phone_number: phoneNumber || "",
         });
         if (
             res.data?.success === "1" &&
@@ -85,6 +85,10 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
     const [phoneStatus, setPhoneStatus] = useState<Record<string, 'checking' | 'exists' | 'not_exists'>>({});
 
     useLayoutEffect(() => {
+
+        if(item.marketplace_visibility!==1)
+            return
+
         navigation.setOptions({
             title: item.item_name,
             headerRight: () => (
@@ -364,14 +368,13 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                 {/* Image Section — only when the item has at least one image */}
                 {imageView ? (
                     <View style={{ marginBottom: 20, position: 'relative' }}>
-                        <TouchableOpacity
-                            activeOpacity={0.9}
+                        <Pressable
                             onPress={openItemPhotos}
                             style={{ borderRadius: 16, overflow: 'hidden' }}
                             accessibilityRole="imagebutton"
                             accessibilityLabel="View photo">
                             {imageView}
-                        </TouchableOpacity>
+                        </Pressable>
                         {hasDiscount && (
                             <View style={{ 
                                 position: 'absolute', 
@@ -434,9 +437,8 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
 
                     {/* Add to Cart — only when Marketplace tab is enabled in Customize */}
                     {tab_visible_marketplace ? (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={handleAddToCart}
-                            activeOpacity={0.7}
                             style={{
                                 marginTop: 16,
                                 backgroundColor: isInCart ? theme.error + '20' : theme.badge_background_color,
@@ -462,7 +464,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                 bold
                                 text={isInCart ? strings.remove_from_cart : strings.add_to_cart} 
                             />
-                        </TouchableOpacity>
+                        </Pressable>
                     ) : null}
                 </SectionCard>
 
@@ -523,9 +525,8 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                         <IconApp pack="FI" name="package" size={18} color={theme.high_color} />
                         <YambiText bold text={business.business_name} style={{ marginLeft: 8 }} />
                     </View>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => navigation.navigate('BusinessItems', { business_id: business._id, flag: 3, sales_point_id: "", hide_inventory_profit_overview: true, from_business_item: true })}
-                        activeOpacity={0.7}
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -537,7 +538,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                             <YambiText size="small" text={strings.view_items} />
                         </View>
                         <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </SectionCard>
 
                 {/* Sales Points Section */}
@@ -596,7 +597,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                         
                                                         if (phoneKey && status === 'exists' && !isCurrentUser) {
                                                             return (
-                                                                <TouchableOpacity
+                                                                <Pressable
                                                                     key={`${raw}-${idx}`}
                                                                     onPress={() => navigation.navigate('Inbox', { user: phoneKey })}
                                                                     style={{
@@ -611,11 +612,10 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                                         borderColor: theme.high_color,
                                                                         marginBottom: 8,
                                                                     }}
-                                                                    activeOpacity={0.7}
                                                                 >
                                                                     <IconApp pack="FI" name="message-circle" size={16} color={theme.high_color} />
                                                                     <YambiText size="small" color="high" text={strings.chat_with_the_seller} style={{ marginLeft: 8 }} />
-                                                                </TouchableOpacity>
+                                                                </Pressable>
                                                             );
                                                         }
                                                         return (
@@ -638,7 +638,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                 </View>
                                                 <View>
                                                     {emailParts.map((em, ei) => (
-                                                        <TouchableOpacity 
+                                                        <Pressable 
                                                             key={`${em}-${ei}`} 
                                                             onPress={() => openEmail(em)}
                                                             style={{
@@ -646,11 +646,10 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                                 alignItems: 'center',
                                                                 marginBottom: 6,
                                                             }}
-                                                            activeOpacity={0.7}
                                                         >
                                                             <IconApp pack="FI" name="mail" size={14} color={theme.high_color} />
                                                             <YambiText size="small" color="high" text={em} style={{ marginLeft: 8 }} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     ))}
                                                 </View>
                                             </View>
@@ -674,7 +673,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
     const fromDeepLink = !!linkItemId?.trim() && !inline;
     const [fetchedCart, setFetchedCart] = useState<TCartItem | null>(null);
     const [loadingItem, setLoadingItem] = useState(false);
-    const [loadFailed, setLoadFailed] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);  
     /** Inline navigation: merge latest business + sales points (addresses completed server-side). */
     const [inlineDetailRefresh, setInlineDetailRefresh] = useState<TCartItem | null>(null);
     const inlineRef = useRef<TCartItem | null>(null);
@@ -699,7 +698,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
             return;
         }
         const headerLeft = () => (
-            <TouchableOpacity
+            <Pressable
                 onPress={() => RNRestart.restart()}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 style={{ marginLeft: Platform.OS === 'ios' ? 8 : 4 }}>
@@ -709,7 +708,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
                     size={22}
                     color={theme.text_design1}
                 />
-            </TouchableOpacity>
+            </Pressable>
         );
         const loadingDeepLink =
             loadingItem ||
@@ -748,17 +747,23 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
      * get_item when possible (item + prices + business + points); else get_business with sales_points.
      */
     useEffect(() => {
+        // console.log(inline)
         if (!inline?.business?._id || !inline?.item?._id) {
             return undefined;
         }
+
+        
+
         const businessId = inline.business._id;
         const itemId = inline.item._id;
         const phone = user_data?.phone_number || "";
         let cancelled = false;
 
+        // console.log(itemId)
+
         const run = async () => {
             const fromItemApi = await fetchCartItemFromServerForDeepLink(itemId, phone);
-            if (cancelled) {
+            if (cancelled) { 
                 return;
             }
             const latest = inlineRef.current;
@@ -876,12 +881,11 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
                     color="gray"
                     style={{ textAlign: "center", marginTop: 16 }}
                 />
-                <TouchableOpacity
+                <Pressable
                     onPress={() => (fromDeepLink ? RNRestart.restart() : navigation.goBack())}
-                    activeOpacity={0.7}
                     style={{ marginTop: 20, paddingVertical: 12, paddingHorizontal: 20 }}>
                     <YambiText text={strings.back} size="small" color="high" />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         );
     }

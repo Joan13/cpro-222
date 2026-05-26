@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { View, Image, SafeAreaView, Platform, ScrollView, Text, TouchableOpacity, Linking } from 'react-native';
+import { View, Image, Platform, ScrollView, Text, Pressable, Linking } from 'react-native';
 import axios from 'axios';
 import { strings } from '../../lang/lang';
 import { useAppSelector } from '../../store/app/hooks';
@@ -10,6 +10,7 @@ import { TextBigYambi, TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray 
 import { remote_host, isRemoteAppVersionNewer } from '../../../GlobalVariables';
 import { NavProps } from '../../types/types';
 import { IconApp } from '../../components/app/IconApp';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AboutYambi = ({ navigation }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
@@ -26,7 +27,7 @@ const AboutYambi = ({ navigation }: NavProps) => {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => Linking.openURL('https://yambi.net')}
                     style={{ marginRight: 14, paddingVertical: 6, paddingHorizontal: 4 }}
                     accessibilityRole="link"
@@ -39,7 +40,7 @@ const AboutYambi = ({ navigation }: NavProps) => {
                     }}>
                         {strings.site_web || 'Website'}
                     </Text>
-                </TouchableOpacity>
+                </Pressable>
             ),
         });
     }, [navigation, theme.colors.high_color]);

@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Linking, FlatList, Dimensions, Image, StyleSheet, ViewToken } from 'react-native';
+import { View, Pressable, Linking, FlatList, Dimensions, Image, StyleSheet, ViewToken } from 'react-native';
 import { strings } from '../../lang/lang';
 import Animated, { FadeInDown, FadeInUp, SlideInLeft, SlideInRight, FadeOut, useAnimatedStyle, withSpring, useSharedValue, interpolate, Extrapolate, useAnimatedScrollHandler, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -162,7 +162,7 @@ const OnboardingItemComponent = ({ item, index, scrollX, app_theme, lang, go_sig
                     style={[styles.bottomContainer, { borderTopWidth: 1, marginHorizontal: 20, borderColor: app_theme.colors.border, paddingTop: 15, marginTop: 10 }]}>
                     <View style={styles.privacyContainer}>
                         <TextSmallYambiGray text={strings.info_privacy_policy1 + " "} styles={{ textAlign: 'center' }} />
-                        <TouchableOpacity onPress={() => {
+                        <Pressable onPress={() => {
                             if (lang === "fr" || lang === "sw_drc") {
                                 Linking.openURL("https://yambi.net/legal/fr.html");
                             } else {
@@ -170,7 +170,7 @@ const OnboardingItemComponent = ({ item, index, scrollX, app_theme, lang, go_sig
                             }
                         }}>
                             <TextSmallYambiHighColor text={strings.terms_use_text} styles={{ textAlign: 'center' }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     <View style={{ marginHorizontal: 50 }}>
@@ -363,11 +363,11 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
                     <Animated.View
                         entering={SlideInLeft.delay(150).springify()}
                         exiting={FadeOut.duration(200)}>
-                    <TouchableOpacity
+                    <Pressable
                     onPress={handleSkip}
                     style={styles.skipButton}>
                     <TextNormalYambi text={strings.skip} styles={{ color: app_theme.colors.primary }} />
-                </TouchableOpacity>
+                </Pressable>
                     </Animated.View>
                 ) : (
                     <Animated.View
@@ -377,36 +377,36 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
                 )}
 
                 <View style={styles.topBarTrailing}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => navigation.navigate('Languages')}
                         style={styles.splashSecondaryIcon}
                         accessibilityRole="button"
                         accessibilityLabel="Languages">
                         <MaterialIcons name="language" size={22} color={app_theme.colors.text} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Pressable>
+                    <Pressable
                         onPress={() => navigation.navigate('Themes')}
                         style={styles.splashSecondaryIcon}
                         accessibilityRole="button"
                         accessibilityLabel="Themes">
                         <Feather name="sun" size={20} color={app_theme.colors.text} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Pressable>
+                    <Pressable
                         onPress={() => navigation.navigate('AboutYambi')}
                         style={styles.splashSecondaryIcon}
                         accessibilityRole="button"
                         accessibilityLabel="About">
                         <Feather name="info" size={20} color={app_theme.colors.text} />
-                    </TouchableOpacity>
+                    </Pressable>
                     {currentIndex < onboardingData.length - 1 ? (
                         <Animated.View
                             entering={SlideInRight.delay(150).springify()}
                             exiting={FadeOut.duration(200)}>
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={handleNext}
                                 style={[styles.navButtonTop, { backgroundColor: app_theme.colors.design_tip2 }]}>
                                 <Feather name="arrow-right" size={20} color={app_theme.colors.text_design2} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </Animated.View>
                     ) : null}
                 </View>

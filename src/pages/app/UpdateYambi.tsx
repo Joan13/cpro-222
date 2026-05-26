@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { View, Image, SafeAreaView, Linking, Platform, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { View, Image, Linking, Platform, ScrollView, Pressable, Text } from 'react-native';
 import axios from 'axios';
 import { strings } from '../../lang/lang';
 import { useAppSelector } from '../../store/app/hooks';
@@ -10,6 +10,7 @@ import { remote_host } from '../../../GlobalVariables';
 import { IconApp } from '../../components/app/IconApp';
 import AppActivityIndicator from '../../components/app/AppActivityIndicator';
 import { NavProps } from '../../types/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const UpdateYambi = ({ navigation }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
@@ -19,7 +20,7 @@ const UpdateYambi = ({ navigation }: NavProps) => {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => Linking.openURL('https://yambi.net')}
                     style={{ marginRight: 14, paddingVertical: 6, paddingHorizontal: 4 }}
                     accessibilityRole="link"
@@ -32,7 +33,7 @@ const UpdateYambi = ({ navigation }: NavProps) => {
                     }}>
                         {strings.site_web || 'Website'}
                     </Text>
-                </TouchableOpacity>
+                </Pressable>
             ),
         });
     }, [navigation, theme.colors.high_color]);
@@ -79,7 +80,7 @@ const UpdateYambi = ({ navigation }: NavProps) => {
     }
 
     return (
-        <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
             <ScrollView 
                 contentContainerStyle={{ flexGrow: 1 }}
@@ -141,12 +142,12 @@ const UpdateYambi = ({ navigation }: NavProps) => {
                                 styles={{ textAlign: 'center', marginBottom: 12, lineHeight: 20 }} 
                             />
                         )}
-                        <TouchableOpacity onPress={handleUpdate} activeOpacity={0.7}>
+                        <Pressable onPress={handleUpdate}>
                             <TextSmallYambiHighColor 
                                 text={strings.click_here_to_download_install || 'Click here to download and install the new app version'} 
                                 styles={{ textAlign: 'center', lineHeight: 20, textDecorationLine: 'underline' }} 
                             />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {/* Version Comparison Card */}
@@ -233,7 +234,7 @@ const UpdateYambi = ({ navigation }: NavProps) => {
             </ScrollView>
 
             
-        </SafeAreaView>
+        </View>
     )
 }
 

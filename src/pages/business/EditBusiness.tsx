@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, ActivityIndicator, ScrollView, TextInput, Pressable, Platform } from "react-native";
+import {  View, ActivityIndicator, ScrollView, TextInput, Pressable, Platform } from "react-native";
 import ImagePicker from 'react-native-image-crop-picker';
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
@@ -256,10 +256,10 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
+            <Pressable style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
                 <TextNormalYambi text={index + 1 + "."} styles={{ width: 35 }} />
                 <TextNormalYambi text={item.toLocaleUpperCase()} numberLines={1} styles={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         )
     }
 
@@ -426,7 +426,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                         </Pressable>
 
 
-                        <TouchableOpacity onPress={pick_profile} style={{
+                        <Pressable onPress={pick_profile} style={{
                             marginTop: -50,
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -451,7 +451,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                         <TextNormalYambiInDesign text={strings.send} />
                                         <IconApp pack='FI' name="send" size={15} color={theme.text_design2} styles={{ marginLeft: 5 }} />
                                     </View>}
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </View>
             </View>
@@ -471,10 +471,10 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                     </ModalApp> : null}
 
                 <View style={{ backgroundColor: theme.background, marginBottom: 30, marginTop: 10 }}>
-                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
+                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
                         <TextSmallYambiGray text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} styles={{  marginBottom: 5 }} />
                         <TextNormalYambiHighColor text={category === null ? strings.select_category : renderCategoryName(category)} styles={{ marginLeft: 2, marginTop: 5 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
@@ -593,7 +593,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                     styles={{ marginBottom: 8 }} 
                                 />
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => setSubscription_active(0)}
                                         style={{
                                             flexDirection: 'row',
@@ -616,9 +616,9 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                             text={(strings as any).inactive || "Inactive"} 
                                             styles={{ marginLeft: 8, color: subscription_active === 0 ? theme.high_color : theme.text }} 
                                         />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                     
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => setSubscription_active(1)}
                                         style={{
                                             flexDirection: 'row',
@@ -640,7 +640,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                             text={(strings as any).active || "Active"} 
                                             styles={{ marginLeft: 8, color: subscription_active === 1 ? theme.high_color : theme.text }} 
                                         />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             </View>
 
@@ -650,7 +650,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                     text={(strings as any).valid_until || "Valid Until"} 
                                     styles={{ marginBottom: 8 }} 
                                 />
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => setShowDatePicker(true)}
                                     style={{
                                         backgroundColor: theme.border,
@@ -665,7 +665,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                         text={moment(valid_until).format('YYYY-MM-DD HH:mm')} 
                                     />
                                     <IconApp pack="FI" name="calendar" size={18} color={theme.text} />
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
                         </View>
                     </>
@@ -691,7 +691,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                     />
                 )}
 
-                {/* <TouchableOpacity
+                {/* <Pressable
                     onPress={() => setDefine_as_main_site(!define_as_main_site)}
                     style={{
                         flexDirection: 'row',
@@ -703,7 +703,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                         <IconApp pack="FI" name="check-circle" size={15} color={theme.high_color} /> :
                         <IconApp pack="FI" name="circle" size={15} color={theme.gray} />}
                     <TextNormalYambi text={strings.define_as_main_site} styles={{ marginLeft: 8 }} />
-                </TouchableOpacity> */}
+                </Pressable> */}
 
                 <ButtonNormal title={strings.edit_business} loading={loading} onPress={EBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20 }} normal={true} />
 

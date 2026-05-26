@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from "react-native";
+import { View, Pressable } from "react-native";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { IconApp } from "../app/IconApp";
 import { NavProps } from "../../types/types";
@@ -70,7 +70,7 @@ const HeaderRightExpense = ({ navigation, route }: NavProps) => {
             justifyContent: 'center'
         }}>
             {isExpensePage && (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => {
                         navigation.navigate('EditExpense', { expense_id });
                     }}
@@ -83,9 +83,9 @@ const HeaderRightExpense = ({ navigation, route }: NavProps) => {
                     }}
                 >
                     <IconApp pack="FI" name="edit" size={20} color={theme.text_design1} />
-                </TouchableOpacity>
+                </Pressable>
             )}
-            <TouchableOpacity
+            <Pressable
                 onPress={() => {
                     dispatch(setShowModalApp(true));
                     setShowDeleteModal(true);
@@ -99,7 +99,7 @@ const HeaderRightExpense = ({ navigation, route }: NavProps) => {
                 }}
             >
                 <IconApp pack="FI" name="trash-2" size={20} color={theme.error || theme.high_color} />
-            </TouchableOpacity>
+            </Pressable>
 
             {showDeleteModal && (
                 <ModalApp

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import {
     View,
     ScrollView,
-    SafeAreaView,
-    TouchableOpacity,
+    Pressable,
     StyleSheet,
     Image,
     TextInput,
@@ -19,6 +18,7 @@ import { NavProps } from '../../types/types';
 import ModalApp from '../../components/app/ModalApp';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import { remote_host } from '../../../GlobalVariables';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Types ---
 
@@ -399,7 +399,7 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
 
                             <View style={{ gap: 12 }}>
                                 {mobileMoneyProviders.map((provider) => (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={provider.id}
                                         style={{
                                             backgroundColor: theme.colors.border,
@@ -434,7 +434,7 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                                             size={18}
                                             color={theme.colors.gray}
                                         />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 ))}
                             </View>
                         </View>
@@ -449,7 +449,7 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                                 style={{ marginBottom: 12 }}
                             />
 
-                            <TouchableOpacity
+                            <Pressable
                                 style={{
                                     backgroundColor: theme.colors.badge_background_color,
                                     borderRadius:    12,
@@ -474,7 +474,7 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                                     color="badge"
                                     bold
                                 />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View> */}
 
                         {/* ── Info box ── */}

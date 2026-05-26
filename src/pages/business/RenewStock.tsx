@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, TouchableOpacity } from "react-native";
+import { View, ScrollView, TextInput, Pressable } from "react-native";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import axios, { isAxiosError } from "axios";
@@ -298,8 +298,7 @@ const RenewStock = ({ route, navigation }: NavProps) => {
     const modeChip = (bulk: boolean, label: string) => {
         const selected = useBulk === bulk;
         return (
-            <TouchableOpacity
-                activeOpacity={0.85}
+            <Pressable
                 onPress={() => {
                     setUseBulk(bulk);
                     setError("");
@@ -315,15 +314,14 @@ const RenewStock = ({ route, navigation }: NavProps) => {
                     borderColor: selected ? theme.badge_background_color : theme.border,
                 }}>
                 <YambiText text={label} color={selected ? "default" : "default"} />
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 
     const movementOption = (type: number, label: string) => {
         const selected = movementType === type;
         return (
-            <TouchableOpacity
-                activeOpacity={0.85}
+            <Pressable
                 onPress={() => {
                     setMovementType(type);
                     setError("");
@@ -338,7 +336,7 @@ const RenewStock = ({ route, navigation }: NavProps) => {
                     borderColor: selected ? theme.badge_background_color : theme.border,
                 }}>
                 <YambiText text={label} color={selected ? "default" : "default"} />
-            </TouchableOpacity>
+            </Pressable>
         );
     };
 

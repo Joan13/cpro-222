@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 import { } from 'react';
 import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
@@ -12,7 +12,7 @@ const HeaderTitleChat = () => {
   const user_data = useAppSelector(state => state.user_data);
 
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('Themes' as never)}>
+    <Pressable onPress={() => navigation.navigate('Themes' as never)}>
       <Animated.View
         style={{
           justifyContent: 'center',
@@ -22,7 +22,7 @@ const HeaderTitleChat = () => {
         }}>
         {/* <Text numberOfLines={1}>{current_user.user_names}</Text> */}
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   )
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, TextInput } from 'react-native';
 import Animated, { BounceIn, FadeInUp } from 'react-native-reanimated';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -409,7 +409,7 @@ const CustomizeExpenses = () => {
                             />
 
                             {/* Visibility Toggle */}
-                            <TouchableOpacity onPress={() => {
+                            <Pressable onPress={() => {
                                 if (passwordVisible) {
                                     // Show password - no verification needed
                                     setPasswordVisible(false);
@@ -429,7 +429,7 @@ const CustomizeExpenses = () => {
                                 backgroundColor: theme.colors.border,
                             }}>
                                 <IconApp name={passwordVisible ? "eye-off" : "eye"} pack='FI' size={18} color={theme.colors.gray} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </View>
                 </Animated.View> : null}

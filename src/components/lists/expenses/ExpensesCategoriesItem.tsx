@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useAppSelector } from '../../../store/app/hooks';
 import { strings } from '../../../lang/lang';
 import { IconApp } from '../../app/IconApp';
@@ -87,7 +87,7 @@ const ExpensesCategoriesItem = ({ item, expenses, navigation }: ExpensesCategori
     const categoryIcon = getCategoryIcon(item.id);
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={() => {
                 if (hasExpenses) {
                     navigation.navigate('CategoryExpenses', { category_id: item.id });
@@ -139,7 +139,7 @@ const ExpensesCategoriesItem = ({ item, expenses, navigation }: ExpensesCategori
                     </View>
                 )}
             </View>
-        </TouchableOpacity>
+        </Pressable>
     );
 };
 

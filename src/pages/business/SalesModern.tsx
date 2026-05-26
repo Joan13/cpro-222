@@ -1,4 +1,4 @@
-import { TouchableOpacity, ScrollView, View, Animated } from 'react-native';
+import { Pressable, ScrollView, View, Animated } from 'react-native';
 import { useEffect, useState, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { setShowModalApp } from '../../store/reducers/appSlice';
@@ -293,7 +293,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
             {show_users_filter && !conditionShowSales() && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShow_users_filter(false); }} paddings={false} singleButton title={strings.filter_by_seller}>
                     <ScrollView style={{ maxHeight: 400 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setUser_filter("");
                                 dispatch(setShowModalApp(false));
@@ -306,9 +306,9 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                 borderColor: app_theme.colors.border,
                             }}>
                             <TextNormalYambiHighColor text={strings.all} />
-                        </TouchableOpacity>
+                        </Pressable>
                         {uniqueSellers.map((seller, index) => (
-                            <TouchableOpacity
+                            <Pressable
                                 key={index}
                                 onPress={() => {
                                     setUser_filter(seller);
@@ -322,7 +322,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                     borderColor: app_theme.colors.border,
                                 }}>
                                 <TextNormalYambi text={seller} />
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </ModalApp>
@@ -331,7 +331,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
             {show_currency_filter && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShow_currency_filter(false); }} paddings={false} singleButton title={strings.filter_by_currency}>
                     <ScrollView style={{ maxHeight: 400.  }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setCurrency_filter("");
                                 dispatch(setShowModalApp(false));
@@ -344,12 +344,12 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                 borderColor: app_theme.colors.border,
                             }}>
                             <TextNormalYambiHighColor text={strings.all} />
-                        </TouchableOpacity>
+                        </Pressable>
                         {global_currencies.map((cu: number) => {
                             const salesInCurrency = filtered_sales.filter(s => s.currency === cu);
                             if (salesInCurrency.length > 0) {
                                 return (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={cu}
                                         onPress={() => {
                                             setCurrency_filter(cu.toString());
@@ -366,7 +366,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                         }}>
                                         <TextNormalYambi text={renderCurrency(cu, true)} />
                                         <TextNormalYambiHighColor text={salesInCurrency.length.toString()} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 );
                             }
                             return null;
@@ -426,7 +426,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                             { key: "overview_sales", label: strings.print_option_overview_sales },
                             { key: "overview_only", label: strings.print_option_overview_only },
                         ].map(option => (
-                            <TouchableOpacity
+                            <Pressable
                                 key={option.key}
                                 onPress={async () => {
                                     dispatch(setShowModalApp(false));
@@ -441,7 +441,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                 }}
                             >
                                 <TextNormalYambi text={option.label} />
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </View>
                 </ModalApp>
@@ -501,7 +501,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                     />
 
                     {/* Filters Toggle */}
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => setShow_filters(!show_filters)}
                         style={{
                             flexDirection: 'row',
@@ -528,7 +528,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                             )}
                         </View>
                         <IconApp pack="FI" name={show_filters ? "chevron-up" : "chevron-down"} size={20} color={app_theme.colors.text} />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     {/* Filters */}
                     <Animated.View style={{
@@ -541,7 +541,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                     }}>
                         <View style={{ marginBottom: 15 }}>
                             {/* Date Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setDate_selection_modal(true);
@@ -564,7 +564,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                         } />
                                     </View>
                                     {date_start !== "" && date_end !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setDate_start("");
@@ -572,14 +572,14 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                             }}
                                             style={{ padding: 5 }}>
                                             <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Seller Filter - only show if not a level 3 operator */}
                             {!conditionShowSales() && (
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         dispatch(setShowModalApp(true));
                                         setShow_users_filter(true);
@@ -598,21 +598,21 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                             <TextNormalYambiHighColor text={user_filter !== "" ? user_filter : strings.all} />
                                         </View>
                                         {user_filter !== "" && (
-                                            <TouchableOpacity
+                                            <Pressable
                                                 onPress={(e) => {
                                                     e.stopPropagation();
                                                     setUser_filter("");
                                                 }}
                                                 style={{ padding: 5 }}>
                                                 <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                            </TouchableOpacity>
+                                            </Pressable>
                                         )}
                                     </View>
-                                </TouchableOpacity>
+                                </Pressable>
                             )}
 
                             {/* Currency Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setShow_currency_filter(true);
@@ -635,17 +635,17 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                         } />
                                     </View>
                                     {currency_filter !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setCurrency_filter("");
                                             }}
                                             style={{ padding: 5 }}>
                                             <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Payment Type Filter (Completed vs On Credit) */}
                             <View style={{
@@ -657,7 +657,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                             }}>
                                 <TextSmallYambiGray text={strings.filter_by_category} styles={{ marginBottom: 10 }} />
                                 <View style={{ flexDirection: 'row' }}>
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => setCategory_filter(0)}
                                         style={{
                                             flex: 1,
@@ -670,8 +670,8 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                             borderColor: category_filter === 0 ? app_theme.colors.high_color : app_theme.colors.border,
                                         }}>
                                         <TextNormalYambi text={strings.completed_sales} styles={{ color: category_filter === 0 ? app_theme.colors.high_color : app_theme.colors.text }} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
+                                    </Pressable>
+                                    <Pressable
                                         onPress={() => setCategory_filter(1)}
                                         style={{
                                             flex: 1,
@@ -684,7 +684,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                             borderColor: category_filter === 1 ? app_theme.colors.high_color : app_theme.colors.border,
                                         }}>
                                         <TextNormalYambi text={strings.on_credit} styles={{ color: category_filter === 1 ? app_theme.colors.high_color : app_theme.colors.text }} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             </View>
                         </View>
@@ -692,7 +692,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
 
                     {/* View Sales by Item Link */}
                     {business !== null && (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => navigation.navigate("BusinessItems", { business_id: business_id, flag: 1, sales_point_id: sales_point_id })}
                             style={{
                                 flexDirection: 'row',
@@ -708,13 +708,13 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                 <TextNormalYambi text={strings.view_sales_by_item} bold styles={{ marginLeft: 10 }} />
                             </View>
                             <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
 
                     {/* Currency Statistics */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 10 }}>
                         <TextNormalYambi text={`${strings.stats} (${filtered_sales.length})`} bold styles={{ fontSize: 18 }} />
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 dispatch(setShowModalApp(true));
                                 setShow_print_options(true);
@@ -732,7 +732,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                         >
                             <IconApp pack="FI" name="printer" size={16} color={app_theme.colors.high_color} />
                             <TextSmallYambi text={strings.print} styles={{ marginLeft: 6, color: app_theme.colors.high_color }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {Object.entries(stats.currency_stats).map(([currency, data]) => {

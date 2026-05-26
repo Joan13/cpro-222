@@ -1,4 +1,4 @@
-import { TouchableOpacity, Pressable, View, Image, Dimensions } from "react-native";
+import {  Pressable, View, Image, Dimensions } from "react-native";
 import { TStory } from "../../../types/types";
 // import MessageText from "./ReturnMessage";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";

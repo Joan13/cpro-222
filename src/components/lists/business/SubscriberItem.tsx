@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Pressable } from "react-native";
+import { Pressable, View } from "react-native";
 import { useAppSelector } from "../../../store/app/hooks";
 import { TextNormalYambi, TextSmallYambiGray } from "../../app/Text";
 import { IconApp } from "../../app/IconApp";
@@ -146,13 +146,13 @@ const SubscriberItem = ({ item }: SubscriberItemProps) => {
                 />
             </View>
 
-            <TouchableOpacity
+            <Pressable
                 onPress={GoToProfile}
                 style={{
                     padding: 8,
                 }}>
                 <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.gray} />
-            </TouchableOpacity>
+            </Pressable>
         </Pressable>
     );
 };

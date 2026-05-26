@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { NavProps, TBusiness } from '../../types/types';
 import { useState, useEffect } from 'react';
 import BusinessesListModern from '../../components/lists/business/BusinessesListModern';
@@ -41,7 +41,7 @@ const BusinessViewModern = ({ route }: NavProps) => {
     return (
         <View style={{ flex: 1, backgroundColor:theme.colors.background, borderTopColor: theme.colors.border, borderTopWidth:1 }}>
             {/* {subscriberCount > 0 && (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => {
                         RootNavigation.navigate("BusinessSubscribers", { business_id: business._id });
                     }}
@@ -60,7 +60,7 @@ const BusinessViewModern = ({ route }: NavProps) => {
                         <TextNormalYambiHighColor text={subscriberCount.toString()} bold styles={{ marginRight: 8 }} />
                         <TextSmallYambiGray text="→" />
                     </View>
-                </TouchableOpacity>
+                </Pressable>
             )} */}
             <BusinessesListModern
                 businesses={businesses}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal, ScrollView, Dimensions, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, Modal, ScrollView, Dimensions, Platform, Image } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -842,7 +842,7 @@ const Signup = ({ navigation, route }: NavProps) => {
     }
 
     const Item = ({ item }: { item: TCountry }) => (
-        <TouchableOpacity
+        <Pressable
             onPress={() => {
                 setCountry(item.name);
                 setcode(item.dialling_code);
@@ -875,7 +875,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                     <YambiText text={item.dialling_code} size="normal" color="default" bold />
                 </View>
             </View>
-        </TouchableOpacity>
+        </Pressable>
     );
 
     const renderItem = useCallback(({ item }: { item: TCountry }) => {
@@ -928,36 +928,36 @@ const Signup = ({ navigation, route }: NavProps) => {
             {/* Header with Back Button (theme lives under progress while steps 0–2) */}
             <View style={styles.header}>
                 {step > 0 && step < 3 ? (
-                    <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                    <Pressable onPress={handleBack} style={styles.backButton}>
                         <Feather name="arrow-left" size={24} color={app_theme.colors.text} />
-                    </TouchableOpacity>
+                    </Pressable>
                 ) : (
                     <View style={{ width: 40 }} />
                 )}
 
                 {step === 3 ? (
                     <View style={styles.headerIconGroup}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => navigation.navigate('Languages')}
                             style={styles.themeButton}
                             accessibilityRole="button"
                             accessibilityLabel="Languages">
                             <MaterialIcons name="language" size={22} color={app_theme.colors.text} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => navigation.navigate('Themes')}
                             style={styles.themeButton}
                             accessibilityRole="button"
                             accessibilityLabel="Themes">
                             <Feather name="sun" size={20} style={{ color: app_theme.colors.text }} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => navigation.navigate('AboutYambi')}
                             style={styles.themeButton}
                             accessibilityRole="button"
                             accessibilityLabel="About">
                             <Feather name="info" size={20} style={{ color: app_theme.colors.text }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 ) : (
                     <View style={{ width: 40 }} />
@@ -980,27 +980,27 @@ const Signup = ({ navigation, route }: NavProps) => {
                         </View>
                         <YambiText text={`${strings.step_of} ${step + 1} ${strings.of} 3`} size="small" color="gray" style={{ textAlign: 'center', marginTop: 10 }} />
                         <View style={styles.progressIconRow}>
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => navigation.navigate('Languages')}
                                 style={styles.iconButtonUnderProgress}
                                 accessibilityRole="button"
                                 accessibilityLabel="Languages">
                                 <MaterialIcons name="language" size={22} color={app_theme.colors.text} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
+                            </Pressable>
+                            <Pressable
                                 onPress={() => navigation.navigate('Themes')}
                                 style={styles.iconButtonUnderProgress}
                                 accessibilityRole="button"
                                 accessibilityLabel="Themes">
                                 <Feather name="sun" size={20} style={{ color: app_theme.colors.text }} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
+                            </Pressable>
+                            <Pressable
                                 onPress={() => navigation.navigate('AboutYambi')}
                                 style={styles.iconButtonUnderProgress}
                                 accessibilityRole="button"
                                 accessibilityLabel="About">
                                 <Feather name="info" size={20} style={{ color: app_theme.colors.text }} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </Animated.View>
                 )}
@@ -1032,14 +1032,14 @@ const Signup = ({ navigation, route }: NavProps) => {
                         {/* Google Sign-In Button */}
                         {can_show_google_button() && (
                             <Animated.View entering={FadeInUp.delay(550)} style={{ width: '100%', marginBottom: 20 }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={signInWithGoogle}
                                     style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                                         <Image source={require('./../../assets/google.png')} style={{ width: 25, height: 25, marginRight: 10 }} />
                                         <YambiText text={strings.sign_in_with_google || "Sign in with Google"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
                                     </View>
-                                </TouchableOpacity>
+                                </Pressable>
                             </Animated.View>
                         )}
 
@@ -1055,14 +1055,14 @@ const Signup = ({ navigation, route }: NavProps) => {
                         {/* Continue with Phone Button */}
                         {can_show_phone_button() && (
                             <Animated.View entering={FadeInUp.delay(610)} style={{ width: '100%', marginBottom: 20 }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={handleContinueWithPhone}
                                     style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                                         <MaterialIcons name="phone" size={20} color={app_theme.colors.primary} style={{ marginRight: 10 }} />
                                         <YambiText text={strings.continue_with_phone || "Continue with phone"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
                                     </View>
-                                </TouchableOpacity>
+                                </Pressable>
                             </Animated.View>
                         )}
 
@@ -1131,14 +1131,14 @@ const Signup = ({ navigation, route }: NavProps) => {
                                 <Animated.View
                                     entering={SlideInRight.delay(600).springify()}
                                     style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => setOpenModal(!openModal)}
                                         style={styles.countrySelector}>
                                         <FontAwesome name="chevron-down" size={10} style={{ marginHorizontal: 10, color: app_theme.colors.gray }} />
                                         <Text style={{ color: app_theme.colors.text }}>
                                             {code_country} <Text style={{ fontWeight: 'bold' }}>  {code}</Text>
                                         </Text>
-                                    </TouchableOpacity>
+                                    </Pressable>
                                     <View style={[styles.phoneInput, { borderColor: app_theme.colors.gray }]}>
                                         <TextInput
                                             onChangeText={(text) => setPhone_number(text)}
@@ -1176,7 +1176,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                                     style={{ flex: 1, paddingVertical: 7, borderWidth: 0, borderColor: app_theme.colors.background, color: app_theme.colors.text }}
                                 />
                                 {search !== "" ?
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => {
                                             setSearch("");
                                             SearchCountry("");
@@ -1188,7 +1188,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                                             alignItems: 'center'
                                         }}>
                                         <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
-                                    </TouchableOpacity> : null}
+                                    </Pressable> : null}
                             </View>
                             <FlashList
                                 estimatedItemSize={50}

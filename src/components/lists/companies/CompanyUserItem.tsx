@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Pressable, Image } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import { TCompanyUser, TCompany } from "../../../types/types";
 import { useAppSelector } from "../../../store/app/hooks";
 import { YambiText } from "../../app/Text";
@@ -28,7 +28,7 @@ const CompanyUserItem = ({ item, company }: { item: TCompanyUser, company?: TCom
     const roleInfo = company && company.category && item.level ? getCompanyUserRole(item.level, company.category) : null;
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={() => RootNavigation.navigate("CompanyUser", { company_user: item, company: company })}
             style={{
                 // backgroundColor: app_theme.colors.border + '30',
@@ -101,7 +101,7 @@ const CompanyUserItem = ({ item, company }: { item: TCompanyUser, company?: TCom
                     </View>
                 </View>
             )}
-        </TouchableOpacity>
+        </Pressable>
     )
 }
 

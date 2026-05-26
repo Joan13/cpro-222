@@ -1,16 +1,14 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Pressable } from 'react-native'
+import { View, Pressable } from 'react-native'
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { TMessage } from '../../../types/types';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { AVPlaybackStatus, Audio } from 'expo-av';
-import { setPlayingVoiceNote, setVoiceNoteBeingPlayed } from '../../../store/reducers/appSlice';
+import { setVoiceNoteBeingPlayed } from '../../../store/reducers/appSlice';
 // import { SocketApp } from '../../../../App';
-import RNFS from 'react-native-fs';
 import { useRealm } from '@realm/react';
-import moment from 'moment';
 import { strings } from '../../../lang/lang';
-import { remote_host, remote_host_server, SocketApp, media_url } from '../../../../GlobalVariables';
+import { remote_host, SocketApp, media_url } from '../../../../GlobalVariables';
 import { IconApp } from '../../app/IconApp';
 import axios from 'axios';
 import { Sound } from 'expo-av/build/Audio';
@@ -745,7 +743,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
         }}>
             {/* <Text>{message.main_text_message}</Text> */}
             {downloadingAudio ?
-                <TouchableOpacity
+                <Pressable
                     onPress={FirstActions}
                     style={{
                         height: 50,
@@ -758,8 +756,8 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                     {/* <ActivityIndicator color={app_theme.colors.high_color} size={20} /> */}
 
                     <TextSmallYambiHighColor2 text={downloadProgress.toFixed() + "%"} styles={{}} />
-                </TouchableOpacity> :
-                <TouchableOpacity
+                </Pressable> :
+                <Pressable
                     onPress={PlayVoice}
                     style={{
                         height: 50,
@@ -773,7 +771,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                         <IconApp pack='FA6' name="play" color={app_theme.colors.high_color} size={20} />
                         :
                         <IconApp pack='FA6' name="pause" color={app_theme.colors.high_color} size={20} />}
-                </TouchableOpacity>}
+                </Pressable>}
 
             <View style={{
                 marginLeft: 10,
@@ -836,7 +834,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                         flex: 1,
                         alignItems: 'flex-end'
                     }}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={PlaybackRate}
                         style={{
                             height: 30,
@@ -848,7 +846,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                         }}>
                         {/* <TextSmallYambi text={status?.rate === 1 ? "1.5x" : status?.rate === 1.5 ? "2x" : status?.rate === 2 ? "1x" : "1x"} /> */}
                         <TextSmallYambi text={status?.rate + "x"} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </Animated.View> : null}
         </View>
     )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, TextInput, TouchableOpacity, SafeAreaView, RefreshControl } from 'react-native';
+import { View, TextInput, Pressable, RefreshControl } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import { strings } from '../../lang/lang';
@@ -14,6 +14,7 @@ import { IconApp } from '../../components/app/IconApp';
 import { remote_host } from '../../../GlobalVariables';
 import * as RootNavigation from './../../services/Navigation_ref';
 import AppActivityIndicator from '../../components/app/AppActivityIndicator';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // const navigation = NativeStackScreenProps<RootStackParamList>();
 
@@ -157,7 +158,7 @@ const Users = () => {
                         style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: app_theme.colors.background, backgroundColor: app_theme.colors.background, color: app_theme.colors.text }}
                     />
                     {text_contact_search !== "" ?
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 dispatch(setTextContactSearch(""));
                             }}
@@ -168,7 +169,7 @@ const Users = () => {
                                 alignItems: 'center'
                             }}>
                             <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
-                        </TouchableOpacity> : null}
+                        </Pressable> : null}
                 </View>
 
                 {loading && !loadingMore ? (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { strings } from '../../lang/lang';
 import { useAppSelector, useAppDispatch } from '../../store/app/hooks';
@@ -12,6 +12,7 @@ import axios from 'axios';
 import ModalApp from '../../components/app/ModalApp';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import SwitchApp from '../../components/app/SwitchApp';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MakeDonation = ({ navigation }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
@@ -213,7 +214,7 @@ const MakeDonation = ({ navigation }: NavProps) => {
     };
 
     return (
-        <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+        <View style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }]}>
             {showSuccessModal ? (
                 <ModalApp 
                     onClose={() => { 
@@ -356,7 +357,7 @@ const MakeDonation = ({ navigation }: NavProps) => {
                             />
                             
                             <View style={{ flexDirection: 'row', gap: 12 }}>
-                                <TouchableOpacity
+                                <Pressable
                                     style={{
                                         flex: 1,
                                         backgroundColor: donationType === 1 ? theme.colors.high_color + '20' : theme.colors.border,
@@ -387,9 +388,9 @@ const MakeDonation = ({ navigation }: NavProps) => {
                                         text={strings.monthly_donation_description || "Recurring monthly donation"} 
                                         styles={{ fontSize: 11 }} 
                                     />
-                                </TouchableOpacity>
+                                </Pressable>
 
-                                <TouchableOpacity
+                                <Pressable
                                     style={{
                                         flex: 1,
                                         backgroundColor: donationType === 0 ? theme.colors.high_color + '20' : theme.colors.border,
@@ -420,7 +421,7 @@ const MakeDonation = ({ navigation }: NavProps) => {
                                         text={strings.one_time_donation_description || "Single donation"} 
                                         styles={{ fontSize: 11 }} 
                                     />
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
                         </View>
 
@@ -434,7 +435,7 @@ const MakeDonation = ({ navigation }: NavProps) => {
                             
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                                 {presetAmounts.map((presetAmount) => (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={presetAmount}
                                         disabled={useCustomAmount}
                                         style={{
@@ -456,7 +457,7 @@ const MakeDonation = ({ navigation }: NavProps) => {
                                             color={!useCustomAmount && amount === presetAmount ? "badge" : "default"}
                                             style={{ fontSize: 16 }}
                                         />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 ))}
                             </View>
 
@@ -556,7 +557,7 @@ const MakeDonation = ({ navigation }: NavProps) => {
 
                         {/* Donate Button */}
                         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-                            <TouchableOpacity
+                            <Pressable
                                 style={{
                                     backgroundColor: theme.colors.badge_background_color,
                                     borderRadius: 12,
@@ -589,12 +590,12 @@ const MakeDonation = ({ navigation }: NavProps) => {
                                         />
                                     </>
                                 )}
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </View>
                 </ScrollView>
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 

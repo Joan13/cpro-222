@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, ActivityIndicator, Text } from "react-native"
+import { View, Pressable } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -20,7 +20,7 @@ const HeaderRightInbox = () => {
                 <ActivityIndicator size={20} color={theme.colors.text_design1} />
             </View> */}
 
-            <TouchableOpacity style={{
+            <Pressable style={{
                 height: 30,
                 width: 30,
                 alignItems: 'center',
@@ -28,9 +28,9 @@ const HeaderRightInbox = () => {
                 marginHorizontal: 5
             }}>
                 <Feather name="search" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity style={{
+            <Pressable style={{
                 height: 30,
                 width: 30,
                 alignItems: 'flex-end',
@@ -38,7 +38,7 @@ const HeaderRightInbox = () => {
                 marginLeft: 5
             }}>
                 <Feather name="camera" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

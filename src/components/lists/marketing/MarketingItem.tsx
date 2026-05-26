@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Dimensions } from "react-native";
+import { View, Pressable, Dimensions } from "react-native";
 import { TMarketing } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from 'react';

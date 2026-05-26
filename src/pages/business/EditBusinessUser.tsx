@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, ScrollView, TextInput } from "react-native";
+import { Pressable, View, ScrollView, TextInput } from "react-native";
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -200,13 +200,13 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                     estimatedItemSize={50}
                     showsVerticalScrollIndicator={false}
                     renderItem={({ item, index }: { item: TSellsPoint, index: number }) => (
-                        <TouchableOpacity onPress={() => selectSalesPoint(item._id)} style={{
+                        <Pressable onPress={() => selectSalesPoint(item._id)} style={{
                             marginVertical: 7,
                             flexDirection: 'row'
                         }}>
                             <IconApp pack="FI" name={sales_point_to_enter === item._id ? "check-circle" : "circle"} color={sales_point_to_enter === item._id ? theme.high_color : theme.gray} size={15} styles={{ marginTop: 4, marginRight: 10 }} />
                             <TextNormalYambiHighColor bold={sales_point_to_enter === item._id ? true : false} text={item.sells_point_name} />
-                        </TouchableOpacity>)}
+                        </Pressable>)}
                 />
             </View>
         )
@@ -315,7 +315,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
 
                 <View style={{ marginBottom: 20 }}>
                     <TextNormalYambiGray text={strings.user_status} styles={{ marginBottom: 8 }} />
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
                                 dispatch(setShowModalApp(true));
@@ -337,7 +337,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                             }
                         }} small />
                         <TextNormalYambiHighColor text={user_active ? strings.active : strings.blocked} styles={{ marginLeft: 10 }} bold />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 20 }}>
@@ -364,7 +364,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                     <TextNormalYambiGray text={strings.access_level} styles={{ marginBottom: 12 }} />
 
                     {conditionEditBusiness() ? (
-                        <TouchableOpacity onPress={() => setLevel(1)} style={{
+                        <Pressable onPress={() => setLevel(1)} style={{
                             flexDirection: 'row',
                             marginBottom: 16,
                             paddingVertical: 8,
@@ -374,10 +374,10 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                                 <TextNormalYambiHighColor text={strings.owner} bold={level === 1} />
                                 <TextSmallYambiGray text={strings.admin_text} styles={{ marginTop: 4 }} />
                             </View>
-                        </TouchableOpacity>
+                        </Pressable>
                     ) : null}
 
-                    <TouchableOpacity onPress={() => {
+                    <Pressable onPress={() => {
                         if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
                             dispatch(setShowModalApp(true));
                             setErrorBlockSoleOwner(true);
@@ -392,9 +392,9 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                             <TextNormalYambiHighColor text={strings.salesforce_manager} bold={level === 2} />
                             <TextSmallYambiGray text={strings.salesforce_manager_text} styles={{ marginTop: 4 }} />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
-                    <TouchableOpacity onPress={() => {
+                    <Pressable onPress={() => {
                         if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
                             dispatch(setShowModalApp(true));
                             setErrorBlockSoleOwner(true);
@@ -409,11 +409,11 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                             <TextNormalYambiHighColor text={strings.sale_operator} bold={level === 3} />
                             <TextSmallYambiGray text={strings.sale_operator_text} styles={{ marginTop: 4 }} />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 {ShowChangeSalesPointButton() ? (
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => { dispatch(setShowModalApp(true)); setShowSellsPointsList(true); }}
                         style={{
                             paddingVertical: 8,
@@ -424,7 +424,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                             alignSelf: 'flex-start'
                         }}>
                         <TextNormalYambiHighColor text={strings.edit_sales_point} bold />
-                    </TouchableOpacity>
+                    </Pressable>
                 ) : null}
             </View>
 

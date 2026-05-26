@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
@@ -15,6 +15,7 @@ import {
     setTabVisibleAdmin,
     setTabVisibleNoticeboard 
 } from '../../store/reducers/persistedAppSlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Customize = ({ navigation }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
@@ -71,14 +72,14 @@ const Customize = ({ navigation }: NavProps) => {
     }
 
     return (
-        <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
 
             <ScrollView style={{ flex: 1, backgroundColor: 'transparent' }}>
                 <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
                     {/* Business Customization Card */}
                     <View style={{ paddingHorizontal: 15, marginTop: 20 }}>
-                        <TouchableOpacity
+                        <Pressable
                             style={{
                                 backgroundColor: theme.colors.background,
                                 borderRadius: 12,
@@ -106,10 +107,10 @@ const Customize = ({ navigation }: NavProps) => {
                                 </View>
                                 <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
                             </View>
-                        </TouchableOpacity>
+                        </Pressable>
 
                         {/* Expenses Customization Card */}
-                        <TouchableOpacity
+                        <Pressable
                             style={{
                                 backgroundColor: theme.colors.background,
                                 borderRadius: 12,
@@ -137,7 +138,7 @@ const Customize = ({ navigation }: NavProps) => {
                                 </View>
                                 <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
                             </View>
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {/* Border Line */}
@@ -259,7 +260,7 @@ const Customize = ({ navigation }: NavProps) => {
                     </View>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     )
 }
 

@@ -1,18 +1,8 @@
-import { View, TouchableOpacity, ActivityIndicator, Text } from "react-native"
-import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Feather from 'react-native-vector-icons/Feather';
-import { setSearchContactEnabled, setShowModalApp } from "../../store/reducers/appSlice";
+import { View, Pressable } from "react-native"
+import { useAppSelector } from "../../store/app/hooks";
 // import { SocketApp } from "../../../App";
-import { NavProps, TItem } from "../../types/types";
+import { NavProps } from "../../types/types";
 import { IconApp } from "../app/IconApp";
-import { useObject, useRealm } from "@realm/react";
-import moment from "moment";
-import { strings } from "../../lang/lang";
-import { TextNormalYambiGray } from "../app/Text";
-import ModalApp from "../app/ModalApp";
-import { useState } from "react";
-import Animated, { BounceIn } from "react-native-reanimated";
 
 const HeaderBusinessUsers = ({ navigation, route }: NavProps) => {
 
@@ -40,7 +30,7 @@ const HeaderBusinessUsers = ({ navigation, route }: NavProps) => {
             alignItems: 'center',
             justifyContent: 'center',
         }}>
-            <TouchableOpacity
+            <Pressable
                 onPress={NewUser}
                 style={{
                     height: 30,
@@ -50,7 +40,7 @@ const HeaderBusinessUsers = ({ navigation, route }: NavProps) => {
                     marginLeft: 5
                 }}>
                 <IconApp pack="FA6" name="circle-plus" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

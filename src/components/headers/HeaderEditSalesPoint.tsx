@@ -1,7 +1,5 @@
-import { View, TouchableOpacity, ActivityIndicator, Text } from "react-native"
+import { View, Pressable } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Feather from 'react-native-vector-icons/Feather';
 import { setLoadingButton, setSearchContactEnabled, setShowModalApp } from "../../store/reducers/appSlice";
 // import { SocketApp } from "../../../App";
 import { NavProps, TItem } from "../../types/types";
@@ -132,7 +130,7 @@ const HeaderEditSalesPoint = ({ navigation, route }: NavProps) => {
                     <TextNormalYambiGray text={strings.connection_failed} />
                 </ModalApp> : null}
 
-            <TouchableOpacity
+            <Pressable
                 onPress={() => { dispatch(setShowModalApp(true)); setConfirm_delete(true) }}
                 style={{
                     height: 30,
@@ -142,7 +140,7 @@ const HeaderEditSalesPoint = ({ navigation, route }: NavProps) => {
                     marginLeft: 5
                 }}>
                 <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

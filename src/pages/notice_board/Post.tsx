@@ -1,4 +1,4 @@
-import { View, ScrollView, Dimensions, Image, Pressable, TextInput, RefreshControl, TouchableOpacity, Animated, Platform } from "react-native";
+import { View, ScrollView, Dimensions, Image, Pressable, TextInput, RefreshControl, Animated, Platform } from "react-native";
 import { useEffect, useState, useRef } from 'react';
 import { useAppSelector, useAppDispatch } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -485,7 +485,7 @@ const Post = ({ navigation, route }: NavProps) => {
         const deepLink = fromDeepLinkRef.current;
         const headerLeft = deepLink
             ? () => (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => navigation.navigate('Home' as never)}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     style={{ marginLeft: Platform.OS === 'ios' ? 8 : 4 }}>
@@ -495,7 +495,7 @@ const Post = ({ navigation, route }: NavProps) => {
                         size={22}
                         color={theme.text_design1}
                     />
-                </TouchableOpacity>
+                </Pressable>
             )
             : undefined;
 
@@ -505,7 +505,7 @@ const Post = ({ navigation, route }: NavProps) => {
                 headerLeft,
                 headerRight: isAdmin ? () => (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             navigation.navigate('EditNews', { news: post });
                         }}
@@ -518,8 +518,8 @@ const Post = ({ navigation, route }: NavProps) => {
                         }}
                     >
                         <IconApp pack="FI" name="edit" size={20} color={theme.text_design1} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Pressable>
+                    <Pressable
                         onPress={() => {
                             setShowDeleteModal(true);
                             dispatch(setShowModalApp(true));
@@ -533,7 +533,7 @@ const Post = ({ navigation, route }: NavProps) => {
                         }}
                     >
                         <IconApp pack="FI" name="trash-2" size={20} color={theme.error || theme.high_color} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
             ) : undefined
             });

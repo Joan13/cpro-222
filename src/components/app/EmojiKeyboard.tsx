@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Pressable, Image, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Platform, Dimensions } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';

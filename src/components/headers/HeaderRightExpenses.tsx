@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from "react-native";
+import { View, Pressable } from "react-native";
 import { useAppSelector } from "../../store/app/hooks";
 import { IconApp } from "../app/IconApp";
 import { NavProps } from "../../types/types";
@@ -13,7 +13,7 @@ const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
             alignItems: 'center',
             justifyContent: 'center'
         }}>
-            <TouchableOpacity
+            <Pressable
                 onPress={() => {
                     navigation.navigate('Calculator');
                 }}
@@ -26,8 +26,8 @@ const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
                 }}
             >
                 <IconApp pack="MC" name="calculator" size={20} color={theme.text_design1} />
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
                 onPress={() => {
                     navigation.navigate('AddExpense', { category_id: category_id });
                 }}
@@ -40,7 +40,7 @@ const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
                 }}
             >
                 <IconApp pack="FI" name="plus" size={20} color={theme.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     );
 };

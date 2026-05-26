@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, RefreshControl, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, RefreshControl, Pressable, StyleSheet } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { strings } from '../../lang/lang';
 import { YambiText } from '../../components/app/Text';
@@ -421,7 +421,7 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
                                     color="gray"
                                     style={{ textAlign: 'center', marginBottom: 20 }}
                                 />
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         navigation.navigate('BusinessSubscriptionPlans', { business_id: business_id });
                                     }}
@@ -437,7 +437,7 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
                                         color="badge"
                                         bold
                                     />
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
                         )
                     }

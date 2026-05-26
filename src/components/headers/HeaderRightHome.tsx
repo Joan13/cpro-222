@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Text } from "react-native"
+import { View, Pressable, Text } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useDispatch } from "react-redux";
@@ -463,7 +463,7 @@ const HeaderRightHome = () => {
                     justifyContent: 'center',
                     alignItems: 'center'
                 }}>
-                    <TouchableOpacity style={{
+                    <Pressable style={{
                         height: 30,
                         width: 30,
                         alignItems: 'center',
@@ -472,7 +472,7 @@ const HeaderRightHome = () => {
                         marginRight: 0
                     }}>
                         <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View> : null} */}
 
 
@@ -484,7 +484,7 @@ const HeaderRightHome = () => {
 
 {loading_header&&(
                         <Animated.View entering={FadeIn}>
-                        <TouchableOpacity onPress={RefreshData} style={{
+                        <Pressable onPress={RefreshData} style={{
                             height: 30,
                             width: 30,
                             // backgroundColor: 'red',
@@ -494,13 +494,13 @@ const HeaderRightHome = () => {
                             marginLeft: 15,
                         }}>
                                 <AppActivityIndicator size={20} showLabel={false} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </Animated.View>
                     )}
 
                 {title === strings.business || title === strings.expenses ?
                     <Animated.View entering={FadeIn}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => { RootNavigation.navigate("Calculator") }}
                             style={{
                                 height: 30,
@@ -511,13 +511,13 @@ const HeaderRightHome = () => {
                                 marginRight: 0
                             }}>
                             <IconApp pack="IO" name="calculator" size={20} color={theme.colors.text_design1} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </Animated.View> : null}
 
                 {title === strings.business ?
                     <>
                         <Animated.View entering={FadeIn}>
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => { RootNavigation.navigate(title === strings.business ? "NewBusiness" : "AddNews") }}
                                 style={{
                                     height: 30,
@@ -528,14 +528,14 @@ const HeaderRightHome = () => {
                                     marginRight: 0
                                 }}>
                                 <IconApp pack="FI" name="plus" size={20} color={theme.colors.text_design1} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </Animated.View>
                     </> : null}
 
                 {title === strings.marketplace ?
                     <Animated.View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} entering={FadeIn}>
 
-                        <TouchableOpacity onPress={GoSearchMarketplace} style={{
+                        <Pressable onPress={GoSearchMarketplace} style={{
                             height: 30,
                             width: 30,
                             flexDirection: 'row',
@@ -546,9 +546,9 @@ const HeaderRightHome = () => {
                             marginLeft: 15,
                         }}>
                             <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
-                        </TouchableOpacity>
+                        </Pressable>
 
-                        <TouchableOpacity onPress={GoCart} style={{
+                        <Pressable onPress={GoCart} style={{
                             height: 30,
                             width: 30,
                             flexDirection: 'row',
@@ -578,14 +578,14 @@ const HeaderRightHome = () => {
                                         {cart ? cart.length : ""}
                                     </Text>
                                 </View> : null}
-                        </TouchableOpacity>
+                        </Pressable>
                     </Animated.View> : null}
 
             </View>
 
             {title === strings.chats && chats.length !== 0 ?
                 <Animated.View entering={FadeIn}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => { dispatch(setShowFavoriteChats(!show_favorite_chats)) }}
                         style={{
                             height: 30,
@@ -596,13 +596,13 @@ const HeaderRightHome = () => {
                             marginRight: 0
                         }}>
                         <IconApp pack="AD" name={show_favorite_chats ? "star" : "staro"} size={20} color={theme.colors.text_design1} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </Animated.View>
                 : null}
 
 
             {app_description.home_user_image_position === 'right' ?
-                <TouchableOpacity onPress={() => RootNavigation.navigate('SettingsYambi')}>
+                <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}>
                     {/* {user_data.user_profile !== "" ?
                         <Animated.View
                             style={{
@@ -649,7 +649,7 @@ const HeaderRightHome = () => {
                                 }}
                             />}
                     </Animated.View>
-                </TouchableOpacity>
+                </Pressable>
                 : null}
         </View>
     )

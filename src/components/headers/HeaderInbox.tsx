@@ -1,21 +1,16 @@
-import { View, Text, TouchableOpacity, Platform, ActivityIndicator, BackHandler, Image, Pressable, StatusBar } from 'react-native';
+import { View, Text, Image, Pressable } from 'react-native';
 import { memo, useEffect, useMemo, useState } from 'react';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { strings } from '../../lang/lang';
-import Feather from 'react-native-vector-icons/Feather';
 import { setCurrentUser, setMessageSelected, setPlayingRecorded, setRecordingAudio, setResponseTo } from '../../store/reducers/appSlice';
-import Entypo from 'react-native-vector-icons/Entypo';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import * as RootNavigation from './../../services/Navigation_ref';
 import { IconApp } from '../app/IconApp';
 import { NavProps, TUser } from '../../types/types';
 import { useObject } from '@realm/react';
 import { UserContacts, UsersMessages } from '../../store/database/Models';
 import FastImage from 'react-native-fast-image';
-import { remote_host_server, renderDateTime, SocketApp, media_url, formatPhoneInternational } from '../../../GlobalVariables';
+import {  renderDateTime, SocketApp, media_url, formatPhoneInternational } from '../../../GlobalVariables';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -187,7 +182,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
       // backgroundColor:'green'
     }}>
 
-      {/* <TouchableOpacity onPress={goBack} style={{
+      {/* <Pressable onPress={goBack} style={{
         height: 50,
         // width: 35,
         paddingLeft: 15,
@@ -198,7 +193,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
         // backgroundColor: 'gray'
       }}>
         <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={22} color={app_theme.colors.text_design1} />
-      </TouchableOpacity> */}
+      </Pressable> */}
 
       {message_selected === "" ?
         <Animated.View entering={FadeIn} exiting={FadeOut} style={{
@@ -270,7 +265,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
           <ActivityIndicator size={20} color={app_theme.colors.text_design1} />
         </View> */}
 
-            {/* <TouchableOpacity style={{
+            {/* <Pressable style={{
               height: 30,
               width: 30,
               alignItems: 'center',
@@ -278,9 +273,9 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
               marginHorizontal: 5
             }}>
               <Feather name="search" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity style={{
+            <Pressable style={{
               height: 30,
               width: 30,
               alignItems: 'flex-end',
@@ -288,7 +283,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
               marginLeft: 5
             }}>
               <Feather name="camera" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
           </View>
         </Animated.View>
         :
@@ -296,7 +291,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
           flexDirection: 'row',
           flex: 1
         }}>
-          {/* <TouchableOpacity onPress={() => navigation.navigate('Themes' as never)}>
+          {/* <Pressable onPress={() => navigation.navigate('Themes' as never)}>
         <Animated.View
           sharedTransitionTag='viewImageInbox'
           style={{
@@ -311,7 +306,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
             style={{ width: 40, height: 40, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
           />
         </Animated.View>
-      </TouchableOpacity> */}
+      </Pressable> */}
           {/* <View style={{
         flex: 1,
         marginRight: 2
@@ -337,7 +332,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
             justifyContent: 'center',
             // marginRight: 15
           }}>
-            {/* <TouchableOpacity
+            {/* <Pressable
               onPress={() => {
                 dispatch(setResponseTo(message_selected));
                 dispatch(setMessageSelected(""));
@@ -350,9 +345,9 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
                 marginHorizontal: 5
               }}>
               <Entypo name="reply" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
-            {/* <TouchableOpacity
+            {/* <Pressable
               onPress={() => dispatch(setResponseTo(message_selected))}
               style={{
                 height: 30,
@@ -362,9 +357,9 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
                 marginHorizontal: 5
               }}>
               <MaterialCommunityIcons name="delete-outline" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
-            {/* <TouchableOpacity style={{
+            {/* <Pressable style={{
               height: 30,
               width: 30,
               alignItems: 'center',
@@ -372,10 +367,10 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
               marginLeft: 5
             }}>
               <Entypo name="forward" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
             {/* {message !== null ?
               message.message_type === 0 ?
-                <TouchableOpacity
+                <Pressable
                   onPress={copyToClipboard}
                   style={{
                     height: 30,
@@ -385,7 +380,7 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
                     marginHorizontal: 5
                   }}>
                   <MaterialCommunityIcons name="content-copy" size={20} color={app_theme.colors.text_design1} />
-                </TouchableOpacity> : null : null} */}
+                </Pressable> : null : null} */}
           </View>
         </Animated.View>}
 

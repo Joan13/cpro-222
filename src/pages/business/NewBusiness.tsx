@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Alert, ScrollView, TextInput } from "react-native";
+import { Text, Pressable, View, Alert, ScrollView, TextInput } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
@@ -286,10 +286,10 @@ const NewBusinesses = () => {
         };
 
         return (
-            <TouchableOpacity style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
+            <Pressable style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
                 <TextNormalYambi text={index + 1 + "."} styles={{ width: 35 }} />
                 <TextNormalYambi text={item.toUpperCase()} styles={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         )
     }
 
@@ -319,14 +319,14 @@ const NewBusinesses = () => {
                 <TextBigYambi text={"Hey " + user_data.user_names + "!"} bold styles={{ marginHorizontal: 0, marginTop: 10 }} />
                 <TextNormalYambiGray text={strings.information_create_business} styles={{ marginTop: 15 }} />
 
-                {/* <TouchableOpacity style={{
+                {/* <Pressable style={{
                     marginTop: 15
                 }}>
                     <Text style={{
                         fontSize: app_description.general_font_size,
                         color: theme.high_color
                     }}>{strings.videos_create_business}</Text>
-                </TouchableOpacity> */}
+                </Pressable> */}
             </View>
 
             {/* <View style={{
@@ -360,10 +360,10 @@ const NewBusinesses = () => {
                     </ModalApp> : null}
 
                 <View style={{ backgroundColor: theme.background, marginBottom: 30, marginTop: 10 }}>
-                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
+                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
                         <TextSmallYambiGray text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} styles={{ marginLeft: 2, marginBottom: 5 }} />
                         <TextNormalYambiHighColor text={category === null ? strings.select_category : renderCategoryName(category)} styles={{ marginLeft: 2, marginTop: 5 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 15 }}>
@@ -461,7 +461,7 @@ const NewBusinesses = () => {
                         <Categories />
                     </ModalApp> : null}
 
-                <TouchableOpacity
+                <Pressable
                     onPress={() => setDefine_as_main_site(!define_as_main_site)}
                     style={{
                         flexDirection: 'row',
@@ -475,7 +475,7 @@ const NewBusinesses = () => {
 
                     <SwitchApp value={define_as_main_site} onPress={() => setDefine_as_main_site(!define_as_main_site)} small />
                     <TextNormalYambi text={strings.define_as_main_site} styles={{ marginLeft: 8 }} />
-                </TouchableOpacity>
+                </Pressable>
 
                 <ButtonNormal title={strings.new_business} loading={loading} onPress={NewBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20 }} normal={true} />
 

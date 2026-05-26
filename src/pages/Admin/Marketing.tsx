@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, TextInput, ScrollView, TouchableOpacity, Image, Text, Pressable, RefreshControl } from "react-native";
+import { View, TextInput, ScrollView, Text, Pressable, RefreshControl } from "react-native";
 import axios from "axios";
 import { remote_host, remote_host_server, media_url } from "../../../GlobalVariables";
 import ImagePicker from 'react-native-image-crop-picker';
@@ -363,7 +363,7 @@ export default function Marketing() {
                     ) : null}
 
                     <View style={{ flexDirection: 'row', alignItems:'center' }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={pickImage}
                             style={{
                                 flex: 1,
@@ -378,10 +378,10 @@ export default function Marketing() {
                         >
                             <IconApp pack="FI" name="image" color={app_theme.colors.high_color} size={20} styles={{ marginRight: 8 }} />
                             <TextNormalYambiHighColor text={selectedImage !== "" || newItem.image !== "" ? strings.change_picture : strings.add_item_picture} />
-                        </TouchableOpacity>
+                        </Pressable>
 
                         {selectedImage !== "" && (
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={uploadImage}
                                 disabled={uploadingImage}
                                 style={{
@@ -397,7 +397,7 @@ export default function Marketing() {
                             >
                                 <IconApp pack="FI" name="upload" color="#fff" size={20} styles={{ marginRight: 8 }} />
                                 <TextNormalYambi text={uploadingImage ? strings.loading : strings.save_picture} styles={{ color: '#fff' }} bold />
-                            </TouchableOpacity>
+                            </Pressable>
                         )}
                     </View>
 
@@ -527,7 +527,7 @@ export default function Marketing() {
                                 </View>
                             ) : null}
                             <View style={{ flexDirection: 'column', gap: 12 }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={pickEditImage}
                                     style={{
                                         flex: 1,
@@ -541,9 +541,9 @@ export default function Marketing() {
                                 >
                                     <IconApp pack="FI" name="image" color={app_theme.colors.high_color} size={20} styles={{ marginRight: 8 }} />
                                     <TextNormalYambiHighColor text={editImage !== "" || editItem.image !== "" ? strings.change_picture : strings.add_item_picture} />
-                                </TouchableOpacity>
+                                </Pressable>
                                 {editImage !== "" && (
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={uploadEditImage}
                                         disabled={editUploadingImage}
                                         style={{
@@ -562,7 +562,7 @@ export default function Marketing() {
                                             fontWeight: "800",
                                             color: app_theme.colors.badge_color
                                         }}>{editUploadingImage ? strings.loading : strings.save_picture}</Text>
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 )}
                             </View>
                         </View>

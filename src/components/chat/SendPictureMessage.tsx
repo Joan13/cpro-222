@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, useWindowDimensions, Platform, Vibration, TextInput } from 'react-native';
+import { View, Pressable, useWindowDimensions, Platform, Vibration, TextInput } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -178,19 +178,19 @@ const SendPictureMessage = ({ navigation, route }: NavProps) => {
                     alignItems: 'center',
                     height: 60
                 }}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={pick_picture}
                         style={{ height: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.border, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1, paddingHorizontal: 15 }}>
                         <TextNormalYambi text={profile !== "" ? strings.change_picture : strings.picture_select} styles={{ marginRight: 5 }} />
                         <FontAwesome6 name="edit" size={17} color={app_theme.colors.text} />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     {profile !== "" ?
-                        <TouchableOpacity
+                        <Pressable
                             onPress={sendMessage}
                             style={{ height: 50, width: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.design_tip2, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1, marginRight: 6 }}>
                             <Ionicons name="send" size={18} color={app_theme.colors.text_design2} />
-                        </TouchableOpacity> : null}
+                        </Pressable> : null}
                 </View>
             </View>
         </View>

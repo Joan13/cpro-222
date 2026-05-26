@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from "react-native";
+import { View, Pressable } from "react-native";
 import { TMarketing } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from 'react';
@@ -85,12 +85,12 @@ const MarketingItemAdmin = ({
                     ) : null}
                 </View>
 
-                <TouchableOpacity onPress={onEdit} style={{ marginLeft: 10, height: 35, width: 35, backgroundColor: app_theme.colors.high_color + "15", justifyContent: 'center', alignItems: 'center', borderRadius: 30 }}>
+                <Pressable onPress={onEdit} style={{ marginLeft: 10, height: 35, width: 35, backgroundColor: app_theme.colors.high_color + "15", justifyContent: 'center', alignItems: 'center', borderRadius: 30 }}>
                     <IconApp pack="FI" name="edit" size={15} color={app_theme.colors.high_color} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { setShowDeleteModal(true); dispatch(setShowModalApp(true)); }} style={{ marginLeft: 10, height: 35, width: 35, backgroundColor: app_theme.colors.error + "15", justifyContent: 'center', alignItems: 'center', borderRadius: 30 }}>
+                </Pressable>
+                <Pressable onPress={() => { setShowDeleteModal(true); dispatch(setShowModalApp(true)); }} style={{ marginLeft: 10, height: 35, width: 35, backgroundColor: app_theme.colors.error + "15", justifyContent: 'center', alignItems: 'center', borderRadius: 30 }}>
                     <IconApp pack="MC" name="delete" size={15} color={app_theme.colors.error} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         </View>
     );

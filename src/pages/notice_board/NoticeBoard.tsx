@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, RefreshControl, ScrollView } from "react-native";
+import { View, Pressable, RefreshControl, ScrollView } from "react-native";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppSelector, useAppDispatch } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -266,7 +266,7 @@ const NoticeBoard = ({ navigation }: NavProps) => {
                 gap: 8
             }}
         >
-            <TouchableOpacity
+            <Pressable
                 onPress={openTimetables}
                 style={{
                     flexDirection: 'row',
@@ -278,10 +278,10 @@ const NoticeBoard = ({ navigation }: NavProps) => {
                 }}>
                 <IconApp pack="FI" name="calendar" size={16} color={theme.high_color} styles={{ marginRight: 6 }} />
                 <YambiText text={strings.timetable} size="small" color="high" />
-            </TouchableOpacity>
+            </Pressable>
 
             {hasSubscribed === true && (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => RootNavigation.navigate("Companies", { fromNoticeBoard: true })}
                     style={{
                         flexDirection: 'row',
@@ -297,11 +297,11 @@ const NoticeBoard = ({ navigation }: NavProps) => {
                         size="small"
                         color="high"
                     />
-                </TouchableOpacity>
+                </Pressable>
             )}
 
             {hasUserPosts && (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => RootNavigation.navigate("News", { flag: 1 })}
                     style={{
                         flexDirection: 'row',
@@ -313,7 +313,7 @@ const NoticeBoard = ({ navigation }: NavProps) => {
                     }}>
                     <IconApp pack="FI" name="file-text" size={16} color={theme.high_color} styles={{ marginRight: 6 }} />
                     <YambiText text={strings.my_posts} size="small" color="high" />
-                </TouchableOpacity>
+                </Pressable>
             )}
         </ScrollView>
     );
@@ -416,7 +416,7 @@ const NoticeBoard = ({ navigation }: NavProps) => {
                             color="gray" 
                             style={{ marginBottom: 20, textAlign: 'center' }} 
                         />
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setSubscriptionError(false);
                                 checkSubscription();
@@ -433,7 +433,7 @@ const NoticeBoard = ({ navigation }: NavProps) => {
                                 size="normal" 
                                 color="white" 
                             />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </ScrollView>
             </View>

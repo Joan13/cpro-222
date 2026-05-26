@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from "react-native"
+import { View, Pressable } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import {  setShowModalApp } from "../../store/reducers/appSlice";
 import { NavProps } from "../../types/types";
@@ -35,7 +35,7 @@ const HeaderAddBusinessUser = ({ navigation, route }: NavProps) => {
                     </View>
                 </ModalApp> : null} */}
 
-            <TouchableOpacity
+            <Pressable
                 onPress={AddUser}
                 style={{
                     height: 30,
@@ -45,7 +45,7 @@ const HeaderAddBusinessUser = ({ navigation, route }: NavProps) => {
                     marginLeft: 5
                 }}>
                 <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

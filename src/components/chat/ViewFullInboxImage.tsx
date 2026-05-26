@@ -1,6 +1,6 @@
-import { View, Text, useWindowDimensions, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, useWindowDimensions, Pressable, Alert, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import {  useNavigation } from '@react-navigation/native';
 import FastImage from 'react-native-fast-image';
 import Animated, { 
     useSharedValue, 
@@ -136,7 +136,7 @@ const ViewFullInboxImage = ({ route }: ViewImage) => {
                     </Animated.View>
                 </GestureDetector>
 
-                <TouchableOpacity
+                <Pressable
                     onPress={() => Download(media_url + "/picture_messages/" + mm.main_text_message, mm.main_text_message)}
                     style={{
                         height: 45,
@@ -153,7 +153,7 @@ const ViewFullInboxImage = ({ route }: ViewImage) => {
                     }}>
                     {downloading ? <AppActivityIndicator /> :
                         <MaterialCommunityIcons name="download-box" size={20} color={app_theme.colors.high_color} />}
-                </TouchableOpacity>
+                </Pressable>
 
             </View>
         </GestureHandlerRootView>

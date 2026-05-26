@@ -1,12 +1,9 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useEffect } from 'react';
+import { View, Pressable } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector } from '../../store/app/hooks';
 import FastImage from 'react-native-fast-image';
-import HeaderRightHome from './HeaderRightHome';
-import { remote_host, remote_host_server, media_url } from '../../../GlobalVariables';
-import axios from 'axios';
+import {  media_url } from '../../../GlobalVariables';
 const packagee = './.././../../package.json';
 
 const HeaderHome = () => {
@@ -45,7 +42,7 @@ const HeaderHome = () => {
       borderColor: theme.colors.border
     }}>
       {app_description.home_user_image_position === 'left' ?
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsYambi' as never)}>
+        <Pressable onPress={() => navigation.navigate('SettingsYambi' as never)}>
           <Animated.View
             // sharedTransitionTag='homeImageViewAnimated'
             style={{
@@ -81,7 +78,7 @@ const HeaderHome = () => {
                 }}
               />}
           </Animated.View>
-        </TouchableOpacity>
+        </Pressable>
         : null}
 
       {/* <Text style={{

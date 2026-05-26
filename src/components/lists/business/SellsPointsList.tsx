@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Pressable } from "react-native";
+import { Text, Pressable, View } from "react-native";
 import { TBusiness, TBusinessUser, TSellsPoint } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from 'react';
@@ -124,7 +124,7 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                         <TextNormalYambiGray text={strings.business_level_error} />
                     </ModalApp> : null}
 
-                <TouchableOpacity onPress={GoSalesPoint} style={{
+                <Pressable onPress={GoSalesPoint} style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     marginBottom: 12,
@@ -150,7 +150,7 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                             <TextNormalYambi bold text={item.sells_point_name} styles={{ marginBottom: 4, fontSize: 16 }} />
 
                     {show_edit && (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => RootNavigation.navigate("EditSalesPoint", { sales_point: item })}
                             style={{
                                 height: 35,
@@ -163,7 +163,7 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                             }}>
                             <IconApp pack="FI" name="edit" size={16} color={app_theme.colors.high_color} />
                             {/* <TextNormalYambiHighColor text={strings.edit} styles={{ marginLeft: 6, fontWeight: '600' }} /> */}
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
                         </View>
 
@@ -205,12 +205,12 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                             )}
                         </View>
                     </View>
-                </TouchableOpacity>
+                </Pressable>
 
                 {/* Action Buttons */}
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                     {show_sell && (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => RootNavigation.navigate("BusinessItems", { business_id: item.business_id, sales_point_id: item._id, flag: 0 })}
                             style={{
                                 flex: 1,
@@ -232,7 +232,7 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                                 marginLeft: 6,
                                 fontWeight: '600',
                             }}>{strings.sell}</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
 
                 </View>
@@ -253,7 +253,7 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                             <TextNormalYambi text={strings.all_users} styles={{ fontSize: 14, fontWeight: '600' }} />
                         )}
 
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 if (conditionGoUsers()) {
                                     RootNavigation.navigate("NewBusinessUser", { sales_point_id: item._id, business_id: item.business_id });
@@ -269,7 +269,7 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                             }}>
                             <IconApp pack='FI' name='plus' size={16} color={app_theme.colors.high_color} />
                             <TextNormalYambiHighColor text={spu.length>0?strings.add:strings.add_user} styles={{ marginLeft: 4, fontSize: 13, fontWeight: '600' }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </View>
 

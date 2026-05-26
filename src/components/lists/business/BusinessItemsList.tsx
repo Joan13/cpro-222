@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Image } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import { TItem } from "../../../types/types";
 import { useAppSelector } from "../../../store/app/hooks";
 import { memo } from 'react';
@@ -111,7 +111,7 @@ const BusinessItemsList = ({ item, index, business_id, onSelectItem, flag, can_u
         }
     }
     return (
-        <TouchableOpacity
+        <Pressable
             disabled={locked}
             onPress={() => {
                 if (!locked) onSelectItem(item, prices, flag);
@@ -215,7 +215,7 @@ const BusinessItemsList = ({ item, index, business_id, onSelectItem, flag, can_u
                         </View>
                     ) : flag !== 3 && !locked ? (
                         // Hide Edit button when flag === 3 (viewing from BusinessItem)
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => RootNavigation.navigate("EditBusinessItem", { item_id: item._id, business_id: business_id, can_upload_images })}
                             style={{
                                 flexDirection: 'row',
@@ -227,7 +227,7 @@ const BusinessItemsList = ({ item, index, business_id, onSelectItem, flag, can_u
                             }}>
                             <IconApp pack="FI" name="edit" size={14} color={app_theme.colors.high_color} />
                             <TextSmallYambiHighColor styles={{ marginLeft: 5 }} text={strings.edit} />
-                        </TouchableOpacity>
+                        </Pressable>
                     ) : null}
                 </View>
 
@@ -368,7 +368,7 @@ const BusinessItemsList = ({ item, index, business_id, onSelectItem, flag, can_u
                     </View>
                 )}
             </View>
-        </TouchableOpacity>
+        </Pressable>
     );
 }
 

@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, TouchableOpacity } from "react-native";
+import { View, ScrollView, TextInput, Pressable } from "react-native";
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -289,7 +289,7 @@ const NoticeBoardRegistration = ({ onRegistrationSuccess }: NoticeBoardRegistrat
                 {companies.map((item, index) => {
                     const isLastItem = index === companies.length - 1;
                     return (
-                        <TouchableOpacity
+                        <Pressable
                             key={item._id}
                             onPress={() => selectCompany(item)}
                             style={{
@@ -308,7 +308,7 @@ const NoticeBoardRegistration = ({ onRegistrationSuccess }: NoticeBoardRegistrat
                                 )}
                             </View>
                             <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} />
-                        </TouchableOpacity>
+                        </Pressable>
                     );
                 })}
             </View>
@@ -525,7 +525,7 @@ const NoticeBoardRegistration = ({ onRegistrationSuccess }: NoticeBoardRegistrat
                                         const isSelected = isTagSelected(tag);
                                         
                                         return (
-                                            <TouchableOpacity
+                                            <Pressable
                                                 key={index}
                                                 onPress={() => {
                                                     if (isMainTag) {
@@ -550,7 +550,7 @@ const NoticeBoardRegistration = ({ onRegistrationSuccess }: NoticeBoardRegistrat
                                                     size="small" 
                                                     color={isSelected ? "high" : "default"} 
                                                 />
-                                            </TouchableOpacity>
+                                            </Pressable>
                                         );
                                     })}
                                 </View>

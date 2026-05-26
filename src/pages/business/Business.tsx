@@ -1,4 +1,4 @@
-import { TouchableOpacity, ScrollView, View, useWindowDimensions, Pressable } from 'react-native';
+import { ScrollView, View, useWindowDimensions, Pressable } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { setShowModalApp } from '../../store/reducers/appSlice';
@@ -152,7 +152,7 @@ const Business = ({ navigation, route }: NavProps) => {
                     flexDirection: 'row',
                     justifyContent: 'space-between'
                 }}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             setDate_selection_modal(true);
                             dispatch(setShowModalApp(true));
@@ -192,9 +192,9 @@ const Business = ({ navigation, route }: NavProps) => {
                                 {date_start !== "" && date_end !== "" ? <IconApp pack="FI" name="x" size={15} color={app_theme.colors.gray} /> : null}
                             </Pressable>
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             setShow_users_filter(true);
                             dispatch(setShowModalApp(true));
@@ -233,7 +233,7 @@ const Business = ({ navigation, route }: NavProps) => {
                                 {user_filter !== "" ? <IconApp pack="FI" name="x" size={15} color={app_theme.colors.gray} /> : null}
                             </Pressable>
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{
@@ -241,7 +241,7 @@ const Business = ({ navigation, route }: NavProps) => {
                     justifyContent: 'space-between',
                     marginBottom: 5
                 }}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             setShow_category_filter(true);
                             dispatch(setShowModalApp(true));
@@ -268,9 +268,9 @@ const Business = ({ navigation, route }: NavProps) => {
                         }}>
                             <TextSmallYambiHighColor styles={{ flex: 1 }} numberLines={1} text={show_category_filters()} />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             setShow_currency_filter(true);
                             dispatch(setShowModalApp(true));
@@ -309,7 +309,7 @@ const Business = ({ navigation, route }: NavProps) => {
                                 {currency_filter !== "" ? <IconApp pack="FI" name="x" size={15} color={app_theme.colors.gray} /> : null}
                             </Pressable>
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
                 {global_currencies.map((currency: number, index: number) => {
 
@@ -506,7 +506,7 @@ const Business = ({ navigation, route }: NavProps) => {
                             estimatedItemSize={50}
                             showsVerticalScrollIndicator={false}
                             renderItem={({ item, index }: { item: TBusinessUser, index: number }) => (
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         setUser_filter(item.phone_number);
                                         dispatch(setShowModalApp(false));
@@ -521,7 +521,7 @@ const Business = ({ navigation, route }: NavProps) => {
                                     <TextNormalYambi text={renderBusinessUserLevel(item.level)} />
                                     <TextNormalYambi text={item.phone_number} />
                                     {/* <TextNormalYambi text={item.phone_number} /> */}
-                                </TouchableOpacity>
+                                </Pressable>
                             )}
                         />
                     </View>

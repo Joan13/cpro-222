@@ -1,10 +1,8 @@
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import {  Text } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
-import { useCallback, useEffect, memo } from 'react';
-import { useObject, useQuery, useRealm } from '@realm/react';
-import { UserChats, UsersMessages } from '../../store/database/Models';
-import { TMessage } from '../../types/types';
-import Animated from 'react-native-reanimated';
+import {  memo } from 'react';
+import { useObject, useRealm } from '@realm/react';
+import {  UsersMessages } from '../../store/database/Models';
 
 const MessageText = (token: string) => {
     const app_theme = useAppSelector(state => state.app_theme);

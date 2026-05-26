@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Platform, TextInput, Keyboard, useWindowDimensions, BackHandler } from 'react-native';
+import { View, Text, Pressable, Platform, TextInput, Keyboard, useWindowDimensions, BackHandler } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import Animated, { BounceIn, BounceOut, FadeIn, FadeInDown, FadeInUp, FadeOut, useAnimatedStyle } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -937,10 +937,10 @@ const FooterChat = ({ user }: { user: string }) => {
                     fontSize: app_description.small_general_font_size,
                     fontWeight: app_description.small_general_font_weight as any
                   }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
-                <TouchableOpacity onPress={() => dispatch(setResponseTo(""))}
+                <Pressable onPress={() => dispatch(setResponseTo(""))}
                   style={{ padding: 0 }}>
                   <Feather name='x' color={app_theme.colors.gray} size={13} />
-                </TouchableOpacity>
+                </Pressable>
               </View>
               {renderResponseTo()}
             </View>
@@ -1002,36 +1002,36 @@ const FooterChat = ({ user }: { user: string }) => {
 
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingRight: 10 }}>
               <View style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center', flexDirection: 'row' }}>
-                {/* <TouchableOpacity
+                {/* <Pressable
                   // onPress={() => RootNavigation.navigate('contacts')}
                   style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
                   <IconApp pack='FI' name="camera" size={20} color={app_theme.colors.gray} />
-                </TouchableOpacity> */}
-                {/* <TouchableOpacity
+                </Pressable> */}
+                {/* <Pressable
                   // onPress={() => RootNavigation.navigate('contacts')}
                   style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
                   <MaterialCommunityIcons name="cookie" size={22} color={app_theme.colors.gray} />
-                </TouchableOpacity> */}
+                </Pressable> */}
                 {!playingAudio || !voice_surface() ?
                   <>
-                    <TouchableOpacity
+                    <Pressable
                       onPress={() => RootNavigation.navigate("PictureMessage", { user: user })}
                       style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
                       <IconApp pack='FI' name="image" size={20} color={app_theme.colors.gray} />
-                    </TouchableOpacity>
+                    </Pressable>
 
 
                     {message_inbox !== "" ?
-                      <TouchableOpacity
+                      <Pressable
                         onPress={() => setEnterCaption(!enterCaption)}
                         style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
                         {enterCaption ?
                           <IconApp pack='MC' name="closed-caption" size={24} color={app_theme.colors.gray} />
                           :
                           <IconApp pack='MC' name="closed-caption-outline" size={24} color={app_theme.colors.gray} />}
-                      </TouchableOpacity> : null}
+                      </Pressable> : null}
                   </> : null}
-                {/* <TouchableOpacity
+                {/* <Pressable
                   onPress={openEmojis}
                   // onPress={() => {
                   //   if (this.props.message_input_tab === 4) {
@@ -1048,13 +1048,13 @@ const FooterChat = ({ user }: { user: string }) => {
                   ) : (
                     <IconApp pack='MC' name="emoticon" size={20} color={app_theme.colors.gray} />
                   )}
-                </TouchableOpacity> */}
-                {/* <TouchableOpacity
+                </Pressable> */}
+                {/* <Pressable
                   // onPress={() => RootNavigation.navigate('contacts')}
                   style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
                   <MaterialCommunityIcons name="sticker-emoji" size={20} color={app_theme.colors.gray} />
-                </TouchableOpacity> */}
-                {/* <TouchableOpacity
+                </Pressable> */}
+                {/* <Pressable
                   // onPress={() => {
                   //   if (this.props.message_input_tab === 6) {
                   //     this.props.dispatch({ type: 'SET_MESSAGE_INPUT_TAB', payload: 0 });
@@ -1065,7 +1065,7 @@ const FooterChat = ({ user }: { user: string }) => {
                   // }}
                   style={{ paddingRight: 5, paddingLeft: 5, height: 30, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5 }}>
                   <MaterialCommunityIcons name="alpha-a-box" size={20} color={app_theme.colors.gray} />
-                </TouchableOpacity> */}
+                </Pressable> */}
               </View>
             </View>
           </View>
@@ -1092,7 +1092,7 @@ const FooterChat = ({ user }: { user: string }) => {
                   alignItems: 'center',
                   // flex: 1
                 }}>
-                  <TouchableOpacity
+                  <Pressable
                     onPress={stopBeforeQuit}
                     style={{
                       height: 44,
@@ -1105,14 +1105,14 @@ const FooterChat = ({ user }: { user: string }) => {
                       borderColor: app_theme.colors.error + '40',
                     }}>
                     <MaterialIcons name="delete-outline" color={app_theme.colors.error} size={22} />
-                  </TouchableOpacity>
+                  </Pressable>
 
                   <View style={{
                     flex: 1,
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}>
-                    {/* <TouchableOpacity
+                    {/* <Pressable
                       style={{
                         height: 40,
                         width: 40,
@@ -1123,7 +1123,7 @@ const FooterChat = ({ user }: { user: string }) => {
                       }}
                       onPress={onStopRecord}>
                       <FontAwesome6 name="stop" color={app_theme.colors.text} size={20} />
-                    </TouchableOpacity> */}
+                    </Pressable> */}
                   </View>
                 </View>
               </View> : null}
@@ -1172,7 +1172,7 @@ const FooterChat = ({ user }: { user: string }) => {
                     alignItems: 'center',
                   }}>
                     {playingRecorded ?
-                      <TouchableOpacity
+                      <Pressable
                         style={{
                           height: 44,
                           width: 44,
@@ -1185,8 +1185,8 @@ const FooterChat = ({ user }: { user: string }) => {
                         }}
                         onPress={() => onVoice(2)}>
                         <FontAwesome6 name="stop" color={app_theme.colors.error} size={20} />
-                      </TouchableOpacity> :
-                      <TouchableOpacity
+                      </Pressable> :
+                      <Pressable
                         onPress={stopBeforeQuit}
                         style={{
                           height: 44,
@@ -1199,7 +1199,7 @@ const FooterChat = ({ user }: { user: string }) => {
                           borderColor: app_theme.colors.error + '40',
                         }}>
                         <MaterialIcons name="delete-outline" color={app_theme.colors.error} size={22} />
-                      </TouchableOpacity>}
+                      </Pressable>}
                   </View>
 
                   <View style={{
@@ -1207,7 +1207,7 @@ const FooterChat = ({ user }: { user: string }) => {
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}>
-                    <TouchableOpacity
+                    <Pressable
                       style={{
                         height: 48,
                         width: 48,
@@ -1222,7 +1222,7 @@ const FooterChat = ({ user }: { user: string }) => {
                       {!isPlaying ?
                         <FontAwesome6 name="play" color={app_theme.colors.high_color} size={18} /> :
                         <FontAwesome6 name="pause" color={app_theme.colors.high_color} size={18} />}
-                    </TouchableOpacity>
+                    </Pressable>
                   </View>
                 </View>
               </View> : null}
@@ -1234,17 +1234,17 @@ const FooterChat = ({ user }: { user: string }) => {
 
           <View style={{ height: 30, flex: 1 }}>
             {message_inbox !== "" ?
-              <TouchableOpacity
+              <Pressable
                 // onPress={() => RootNavigation.navigate('contacts')}
                 style={{ height: 30, width: 20, justifyContent: 'center', alignItems: 'center' }}>
                 <IconApp pack='FI' name="maximize-2" size={15} color={app_theme.colors.background} />
-              </TouchableOpacity> : null}
+              </Pressable> : null}
           </View>
 
 
           {message_inbox !== "" ?
             <Animated.View entering={FadeIn} exiting={FadeOut}>
-              <TouchableOpacity
+              <Pressable
                 onPress={() => sendMessage(message_inbox, 0, "")}
                 style={{
                   height: 48,
@@ -1260,12 +1260,12 @@ const FooterChat = ({ user }: { user: string }) => {
                   // elevation: 4,
                 }}>
                 <Ionicons name="send" size={20} color={app_theme.colors.text_design2} />
-              </TouchableOpacity>
+              </Pressable>
             </Animated.View> : null}
 
           {readyToSendVoiceNote ?
             <Animated.View entering={FadeIn} exiting={FadeOut}>
-              <TouchableOpacity
+              <Pressable
                 onPress={sendVoiceNote}
                 style={{
                   height: 48,
@@ -1281,11 +1281,11 @@ const FooterChat = ({ user }: { user: string }) => {
                   // elevation: 4,
                 }}>
                 <Ionicons name="send" size={20} color={app_theme.colors.text_design2} />
-              </TouchableOpacity></Animated.View> : null}
+              </Pressable></Animated.View> : null}
 
           {recordingAudio ?
             <Animated.View entering={FadeIn} exiting={FadeOut}>
-              <TouchableOpacity
+              <Pressable
                 onPress={onStopRecord}
                 style={{
                   height: 48,
@@ -1301,19 +1301,19 @@ const FooterChat = ({ user }: { user: string }) => {
                   // elevation: 4,
                 }}>
                 <Ionicons name="stop" size={20} color={app_theme.colors.text_design2} />
-              </TouchableOpacity></Animated.View> : null}
+              </Pressable></Animated.View> : null}
 
           {/* {RecordingOrPlaying() ?
-            <TouchableOpacity
+            <Pressable
               onPress={sendVoiceNote}
               style={{ height: 50, width: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.design_tip2, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1 }}>
               <Ionicons name="stop" size={18} color={app_theme.colors.text_design2} />
-            </TouchableOpacity> : null} */}
+            </Pressable> : null} */}
 
 
           {NotRecordingOrPlayingAandNoMessage() ?
             <Animated.View entering={FadeIn} exiting={FadeOut}>
-              <TouchableOpacity
+              <Pressable
                 onPress={recordVoiceNote}
                 style={{
                   height: 48,
@@ -1329,7 +1329,7 @@ const FooterChat = ({ user }: { user: string }) => {
                   // elevation: 4,
                 }}>
                 <IconApp pack='FA6' name="microphone" size={20} color={app_theme.colors.text_design2} />
-              </TouchableOpacity></Animated.View> : null}
+              </Pressable></Animated.View> : null}
         </View>
       </View>
 

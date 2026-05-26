@@ -1,7 +1,5 @@
-import { View, TouchableOpacity } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { NavProps } from "../../types/types";
-import { IconApp } from "../app/IconApp";
 import { useEffect } from "react";
 import { strings } from "../../lang/lang";
 

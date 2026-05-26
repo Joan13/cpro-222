@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView, StyleSheet, Pressable, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Pressable, RefreshControl } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -15,6 +15,7 @@ import packagee from "./../../../package.json";
 import { useRealm } from '@realm/react';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import ModalApp from '../../components/app/ModalApp';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SettingsYambi = ({ navigation, route }: NavProps) => {
 
@@ -225,479 +226,481 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
      });
 
      return (
-          <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+          <View style={{flex: 1,backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderTopWidth: 1}}>
+               {/* <SafeAreaView style={[{  }, StyleSheet.absoluteFill]}> */}
 
-               {showInternetError ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
-                         <YambiText text={strings.connection_failed} size="normal" color="gray" />
-                    </ModalApp> : null}
+{showInternetError ?
+     <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
+          <YambiText text={strings.connection_failed} size="normal" color="gray" />
+     </ModalApp> : null}
 
-               <View style={{ flex: 1 }}>
+<View style={{ flex: 1 }}>
 
-                    <StatusBarYambi />
+     <StatusBarYambi />
 
-                    <ScrollView 
-                         style={{ flex: 1, backgroundColor: 'transparent' }}
-                         refreshControl={
-                              <RefreshControl
-                                   refreshing={refreshing}
-                                   onRefresh={onRefresh}
-                                   tintColor={theme.colors.high_color}
-                                   colors={[theme.colors.high_color]}
-                              />
-                         }
-                    >
-                         <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-                              {/* Profile Header Card */}
-                              <View style={{
-                                   backgroundColor: theme.colors.border,
-                                   marginHorizontal: 20,
-                                   marginTop: 20,
-                                   marginBottom: 15,
-                                   borderRadius: 16,
-                                   padding: 20,
-                                   paddingBottom: 0,
-                              }}>
-                                   {/* Main Profile Info - Image alongside details */}
-                                   <View style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                   }}>
-                                        {/* Profile Image with Upload Button */}
-                                        <View style={{
-                                             position: 'relative',
-                                             marginRight: 15,
+     <ScrollView 
+          style={{ flex: 1, backgroundColor: 'transparent' }}
+          refreshControl={
+               <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor={theme.colors.high_color}
+                    colors={[theme.colors.high_color]}
+               />
+          }
+     >
+          <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+               {/* Profile Header Card */}
+               <View style={{
+                    backgroundColor: theme.colors.border,
+                    marginHorizontal: 20,
+                    marginTop: 20,
+                    marginBottom: 15,
+                    borderRadius: 16,
+                    padding: 20,
+                    paddingBottom: 0,
+               }}>
+                    {/* Main Profile Info - Image alongside details */}
+                    <View style={{
+                         flexDirection: 'row',
+                         alignItems: 'flex-start',
+                    }}>
+                         {/* Profile Image with Upload Button */}
+                         <View style={{
+                              position: 'relative',
+                              marginRight: 15,
+                         }}>
+                              <Pressable onPress={ViewPhoto}>
+                                   <Animated.View
+                                        sharedTransitionTag='homeViewAnimated'
+                                        style={{
+                                             width: 80,
+                                             height: 80,
+                                             borderWidth: 2,
+                                             borderColor: theme.colors.high_color,
+                                             borderRadius: 40,
+                                             overflow: 'hidden',
                                         }}>
-                                             <Pressable onPress={ViewPhoto}>
-                                                  <Animated.View
-                                                       sharedTransitionTag='homeViewAnimated'
-                                                       style={{
-                                                            width: 80,
-                                                            height: 80,
-                                                            borderWidth: 2,
-                                                            borderColor: theme.colors.high_color,
-                                                            borderRadius: 40,
-                                                            overflow: 'hidden',
-                                                       }}>
-                                                       {user_data.user_profile === "" ?
-                                                            <Animated.Image
-                                                                 sharedTransitionTag='homeImageAnimated'
-                                                                 source={require("./../../assets/profile_black.jpg")}
-                                                                 style={{ width: 80, height: 80, flex: 1 }}
-                                                            />
-                                                            :
-                                                            <Animated.Image
-                                                                 sharedTransitionTag='homeImageAnimated'
-                                                                 src={media_url + "/profile_pictures/" + user_data.user_profile}
-                                                                 style={{ width: 80, height: 80 }}
-                                                            />
-                                                       }
-                                                  </Animated.View>
-                                             </Pressable>
+                                        {user_data.user_profile === "" ?
+                                             <Animated.Image
+                                                  sharedTransitionTag='homeImageAnimated'
+                                                  source={require("./../../assets/profile_black.jpg")}
+                                                  style={{ width: 80, height: 80, flex: 1 }}
+                                             />
+                                             :
+                                             <Animated.Image
+                                                  sharedTransitionTag='homeImageAnimated'
+                                                  src={media_url + "/profile_pictures/" + user_data.user_profile}
+                                                  style={{ width: 80, height: 80 }}
+                                             />
+                                        }
+                                   </Animated.View>
+                              </Pressable>
 
-                                             <TouchableOpacity onPress={pick_profile} style={{
-                                                  position: 'absolute',
-                                                  bottom: -4,
-                                                  right: -4,
-                                                  height: 32,
-                                                  width: 32,
-                                                  borderRadius: 16,
-                                                  backgroundColor: theme.colors.high_color,
-                                                  borderWidth: 2,
-                                                  borderColor: theme.colors.border,
-                                                  alignItems: 'center',
-                                                  justifyContent: 'center',
-                                             }}>
-                                                  {loading_profile ?
-                                                       <ActivityIndicator color={theme.colors.background} size={14} /> :
-                                                       profile === "" ?
-                                                            <IconApp pack='FI' name="camera" size={14} color={theme.colors.background} />
-                                                            :
-                                                            <IconApp pack='FI' name="check" size={14} color={theme.colors.background} />
-                                                  }
-                                             </TouchableOpacity>
-                                        </View>
+                              <Pressable onPress={pick_profile} style={{
+                                   position: 'absolute',
+                                   bottom: -4,
+                                   right: -4,
+                                   height: 32,
+                                   width: 32,
+                                   borderRadius: 16,
+                                   backgroundColor: theme.colors.high_color,
+                                   borderWidth: 2,
+                                   borderColor: theme.colors.border,
+                                   alignItems: 'center',
+                                   justifyContent: 'center',
+                              }}>
+                                   {loading_profile ?
+                                        <ActivityIndicator color={theme.colors.background} size={14} /> :
+                                        profile === "" ?
+                                             <IconApp pack='FI' name="camera" size={14} color={theme.colors.background} />
+                                             :
+                                             <IconApp pack='FI' name="check" size={14} color={theme.colors.background} />
+                                   }
+                              </Pressable>
+                         </View>
 
-                                        {/* User Basic Info */}
-                                        <View style={{ flex: 1, justifyContent: 'flex-start' }}>
-                                             <View style={{
-                                                  flexDirection: 'row',
-                                                  alignItems: 'center',
-                                                  marginBottom: 6,
-                                                  flexWrap: 'wrap'
-                                             }}>
-                                                  <IconApp pack='FI' name="user" size={14} color={theme.colors.gray} styles={{ marginRight: 6 }} />
-                                                  <Text style={{
-                                                       color: theme.colors.text,
-                                                       fontSize: 18,
-                                                       fontWeight: 'bold',
-                                                       // flex: 1,
-                                                  }} numberOfLines={2}>{user_data.user_names}</Text>
+                         {/* User Basic Info */}
+                         <View style={{ flex: 1, justifyContent: 'flex-start' }}>
+                              <View style={{
+                                   flexDirection: 'row',
+                                   alignItems: 'center',
+                                   marginBottom: 6,
+                                   flexWrap: 'wrap'
+                              }}>
+                                   <IconApp pack='FI' name="user" size={14} color={theme.colors.gray} styles={{ marginRight: 6 }} />
+                                   <Text style={{
+                                        color: theme.colors.text,
+                                        fontSize: 18,
+                                        fontWeight: 'bold',
+                                        // flex: 1,
+                                   }} numberOfLines={2}>{user_data.user_names}</Text>
 
-                                                  {user_data.user_verified === 1 && (
-                                                       <IconApp pack='MT' name="verified" size={16} color={theme.colors.high_color} styles={{ marginLeft: 6 }} />
-                                                  )}
-                                             </View>
-
-                                             {/* Email if available */}
-                                             {user_data.user_email && user_data.user_email !== "" && (
-                                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                                       <IconApp pack='FI' name="mail" size={12} color={theme.colors.gray} />
-                                                       <YambiText text={user_data.user_email} size="small" color="default" numberLines={1} style={{ marginLeft: 5, fontSize: 12 }} />
-                                                  </View>
-                                             )}
-
-                                             {/* Phone Number */}
-                                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                                  <IconApp pack='FI' name="phone" size={12} color={theme.colors.gray} />
-                                                  <YambiText text={formatPhoneInternational(user_data)} size="small" color="default" style={{ marginLeft: 5, fontSize: 12 }} />
-                                             </View>
-
-                                             {/* Account Privacy Badge with Chevron */}
-                                             <View style={{
-                                                  flexDirection: 'row',
-                                                  alignItems: 'center',
-                                                  alignSelf: 'flex-start',
-                                             }}>
-                                                  <View style={{
-                                                       backgroundColor: user_data.account_privacy === 1 ? theme.colors.error + '20' : theme.colors.success + '20',
-                                                       paddingHorizontal: 10,
-                                                       paddingVertical: 3,
-                                                       borderRadius: 10,
-                                                  }}>
-                                                       <YambiText
-                                                            text={user_data.account_privacy === 1 ? strings.private_account : strings.public_account}
-                                                            size="small"
-                                                            color={user_data.account_privacy === 1 ? "error" : "success"}
-                                                            bold
-                                                            style={{
-                                                                 fontSize: 10
-                                                            }}
-                                                       />
-                                                  </View>
-                                                  {hasAdditionalInfo && (
-                                                       <TouchableOpacity
-                                                            onPress={() => setShowAdditionalInfo(!showAdditionalInfo)}
-                                                            style={{
-                                                                 marginLeft: 8,
-                                                                 padding: 4,
-                                                            }}
-                                                       >
-                                                            <Animated.View style={chevronAnimatedStyle}>
-                                                                 <IconApp pack='FI' name="chevron-down" size={16} color={theme.colors.gray} />
-                                                            </Animated.View>
-                                                       </TouchableOpacity>
-                                                  )}
-                                             </View>
-                                        </View>
-                                   </View>
-
-                                   {/* Additional Information Section */}
-                                   {hasAdditionalInfo && (
-                                        <Animated.View style={[{
-                                             marginTop: 15,
-                                             paddingTop: 15,
-                                             borderTopWidth: 1,
-                                             borderColor: theme.colors.background,
-                                        }, additionalInfoAnimatedStyle]}>
-                                             {/* Profession */}
-                                             {user_data.profession && user_data.profession !== "" && (
-                                                  <View style={{ marginBottom: 8 }}>
-                                                       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
-                                                            <IconApp pack='FI' name="briefcase" size={12} color={theme.colors.high_color} />
-                                                            <YambiText text={strings.profession || "Profession"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
-                                                       </View>
-                                                       <YambiText text={user_data.profession} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
-                                                  </View>
-                                             )}
-
-                                             {/* Address */}
-                                             {user_data.user_address && user_data.user_address !== "" && (
-                                                  <View style={{ marginBottom: 8 }}>
-                                                       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
-                                                            <IconApp pack='FI' name="map-pin" size={12} color={theme.colors.high_color} />
-                                                            <YambiText text={strings.address || "Address"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
-                                                       </View>
-                                                       <YambiText text={user_data.user_address} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
-                                                  </View>
-                                             )}
-
-                                             {/* Status/Bio */}
-                                             {user_data.status_information && user_data.status_information !== "" && (
-                                                  <View style={{ marginBottom: 8 }}>
-                                                       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
-                                                            <IconApp pack='FI' name="info" size={14} color={theme.colors.high_color} />
-                                                            <YambiText text={strings.status || "Status"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
-                                                       </View>
-                                                       <YambiText text={user_data.status_information} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
-                                                  </View>
-                                             )}
-
-                                             {/* Bio */}
-                                             {user_data.bio && user_data.bio !== "" && (
-                                                  <View style={{ marginBottom: 20 }}>
-                                                       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
-                                                            <IconApp pack='FI' name="edit-3" size={12} color={theme.colors.high_color} />
-                                                            <YambiText text={strings.bio || "Bio"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
-                                                       </View>
-                                                       <YambiText text={user_data.bio} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
-                                                  </View>
-                                             )}
-                                        </Animated.View>
+                                   {user_data.user_verified === 1 && (
+                                        <IconApp pack='MT' name="verified" size={16} color={theme.colors.high_color} styles={{ marginLeft: 6 }} />
                                    )}
                               </View>
 
-                              {/* Settings Cards */}
-                              <View style={{ paddingHorizontal: 20 }}>
-                                   {/* <TextNormalYambi text={strings.settings} bold styles={{ marginBottom: 15, fontSize: 18 }} /> */}
+                              {/* Email if available */}
+                              {user_data.user_email && user_data.user_email !== "" && (
+                                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                        <IconApp pack='FI' name="mail" size={12} color={theme.colors.gray} />
+                                        <YambiText text={user_data.user_email} size="small" color="default" numberLines={1} style={{ marginLeft: 5, fontSize: 12 }} />
+                                   </View>
+                              )}
 
-                                   {/* Languages Card */}
-                                   <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 12,
-                                        }}
-                                        onPress={() => navigation.navigate("Languages" as never)}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp name="language-outline" pack='IO' size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <YambiText text={strings.language_change} size="normal" color="default" style={{ marginBottom: 2 }} />
-                                                  <YambiText text={strings.change_language_settings_text} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
-                                        </View>
-                                   </TouchableOpacity>
+                              {/* Phone Number */}
+                              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                   <IconApp pack='FI' name="phone" size={12} color={theme.colors.gray} />
+                                   <YambiText text={formatPhoneInternational(user_data)} size="small" color="default" style={{ marginLeft: 5, fontSize: 12 }} />
+                              </View>
 
-                                   {/* Themes Card */}
-                                   <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 12,
-                                        }}
-                                        onPress={() => navigation.navigate('Themes' as never)}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp pack='FI' name="sun" size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                                                       <YambiText text={strings.themes} size="normal" color="default" style={{ flex: 1 }} />
-                                                       <View style={{
-                                                            backgroundColor: theme.colors.high_color + '20',
-                                                            paddingHorizontal: 8,
-                                                            paddingVertical: 2,
-                                                            borderRadius: 8,
-                                                       }}>
-                                                            <YambiText text={theme.name} size="small" color="high" style={{ fontSize: 11 }} />
-                                                       </View>
-                                                  </View>
-                                                  <YambiText text={strings.themes_settings_text} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} styles={{ marginLeft: 10 }} />
-                                        </View>
-                                   </TouchableOpacity>
-
-                                   {/* Customize Card */}
-                                   <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 12,
-                                        }}
-                                        onPress={() => navigation.navigate('Customize')}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp pack='FI' name="edit" size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <YambiText text={strings.customize || "Customize"} size="normal" color="default" style={{ marginBottom: 2 }} />
-                                                  <YambiText text={strings.customize_settings_text} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
-                                        </View>
-                                   </TouchableOpacity>
-
-                                   {/* Message Us Card */}
-                                   <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 12,
-                                        }}
-                                        onPress={() => navigation.navigate("MessageUs")}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp pack="FI" name="message-square" size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <YambiText text={strings.message_us} size="normal" color="default" style={{ marginBottom: 2 }} />
-                                                  <YambiText text={strings.message_us_settings_text} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
-                                        </View>
-                                   </TouchableOpacity>
-
-                                   {/* My Account Card */}
-                                   <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 12,
-                                        }}
-                                        onPress={() => navigation.navigate("MyAccount")}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp pack="FI" name="user" size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <YambiText text={strings.my_account} size="normal" color="default" style={{ marginBottom: 2 }} />
-                                                  <YambiText text={strings.my_account_text} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
-                                        </View>
-                                   </TouchableOpacity>
-
-                                   {/* Support the Project Card */}
-                                   {/* <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 12,
-                                        }}
-                                        onPress={() => navigation.navigate("MakeDonation")}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp pack='FI' name="heart" size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <YambiText text={strings.support_the_project || strings.make_donation} size="normal" color="default" style={{ marginBottom: 2 }} />
-                                                  <YambiText text={strings.support_project_settings_text || strings.make_donation_subtext} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
-                                        </View>
-                                   </TouchableOpacity> */}
-
-                                   {/* About Card */}
-                                   <TouchableOpacity
-                                        style={{
-                                             backgroundColor: theme.colors.background,
-                                             borderRadius: 12,
-                                             borderWidth: 1,
-                                             borderColor: theme.colors.border,
-                                             marginBottom: 20,
-                                        }}
-                                        onPress={() => navigation.navigate("AboutYambi")}
-                                   >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-                                             <View style={{
-                                                  width: 40,
-                                                  height: 40,
-                                                  borderRadius: 20,
-                                                  backgroundColor: theme.colors.border,
-                                                  justifyContent: 'center',
-                                                  alignItems: 'center',
-                                                  marginRight: 15,
-                                             }}>
-                                                  <IconApp pack='FI' name="info" size={20} color={theme.colors.high_color} />
-                                             </View>
-                                             <View style={{ flex: 1 }}>
-                                                  <YambiText text={strings.about_yambi} size="normal" color="default" style={{ marginBottom: 2 }} />
-                                                  <YambiText text={strings.version + " " + packagee.version} size="small" color="gray" />
-                                             </View>
-                                             <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
-                                        </View>
-                                   </TouchableOpacity>
+                              {/* Account Privacy Badge with Chevron */}
+                              <View style={{
+                                   flexDirection: 'row',
+                                   alignItems: 'center',
+                                   alignSelf: 'flex-start',
+                              }}>
+                                   <View style={{
+                                        backgroundColor: user_data.account_privacy === 1 ? theme.colors.error + '20' : theme.colors.success + '20',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 3,
+                                        borderRadius: 10,
+                                   }}>
+                                        <YambiText
+                                             text={user_data.account_privacy === 1 ? strings.private_account : strings.public_account}
+                                             size="small"
+                                             color={user_data.account_privacy === 1 ? "error" : "success"}
+                                             bold
+                                             style={{
+                                                  fontSize: 10
+                                             }}
+                                        />
+                                   </View>
+                                   {hasAdditionalInfo && (
+                                        <Pressable
+                                             onPress={() => setShowAdditionalInfo(!showAdditionalInfo)}
+                                             style={{
+                                                  marginLeft: 8,
+                                                  padding: 4,
+                                             }}
+                                        >
+                                             <Animated.View style={chevronAnimatedStyle}>
+                                                  <IconApp pack='FI' name="chevron-down" size={16} color={theme.colors.gray} />
+                                             </Animated.View>
+                                        </Pressable>
+                                   )}
                               </View>
                          </View>
+                    </View>
 
-                         <View style={{
-                              alignItems: 'center',
-                              paddingVertical: 30,
-                              paddingHorizontal: 20,
-                         }}>
-                              <YambiText
-                                   text={strings.footer}
-                                   size="small"
-                                   color="gray"
-                                   style={{
-                                        textAlign: 'center',
-                                        fontSize: 12,
-                                   }}
-                              />
-                         </View>
-                    </ScrollView>
+                    {/* Additional Information Section */}
+                    {hasAdditionalInfo && (
+                         <Animated.View style={[{
+                              marginTop: 15,
+                              paddingTop: 15,
+                              borderTopWidth: 1,
+                              borderColor: theme.colors.background,
+                         }, additionalInfoAnimatedStyle]}>
+                              {/* Profession */}
+                              {user_data.profession && user_data.profession !== "" && (
+                                   <View style={{ marginBottom: 8 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                                             <IconApp pack='FI' name="briefcase" size={12} color={theme.colors.high_color} />
+                                             <YambiText text={strings.profession || "Profession"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
+                                        </View>
+                                        <YambiText text={user_data.profession} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
+                                   </View>
+                              )}
+
+                              {/* Address */}
+                              {user_data.user_address && user_data.user_address !== "" && (
+                                   <View style={{ marginBottom: 8 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                                             <IconApp pack='FI' name="map-pin" size={12} color={theme.colors.high_color} />
+                                             <YambiText text={strings.address || "Address"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
+                                        </View>
+                                        <YambiText text={user_data.user_address} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
+                                   </View>
+                              )}
+
+                              {/* Status/Bio */}
+                              {user_data.status_information && user_data.status_information !== "" && (
+                                   <View style={{ marginBottom: 8 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                                             <IconApp pack='FI' name="info" size={14} color={theme.colors.high_color} />
+                                             <YambiText text={strings.status || "Status"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
+                                        </View>
+                                        <YambiText text={user_data.status_information} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
+                                   </View>
+                              )}
+
+                              {/* Bio */}
+                              {user_data.bio && user_data.bio !== "" && (
+                                   <View style={{ marginBottom: 20 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                                             <IconApp pack='FI' name="edit-3" size={12} color={theme.colors.high_color} />
+                                             <YambiText text={strings.bio || "Bio"} size="small" color="gray" style={{ marginLeft: 5, fontSize: 11 }} />
+                                        </View>
+                                        <YambiText text={user_data.bio} size="small" color="default" style={{ marginLeft: 17, fontSize: 13 }} />
+                                   </View>
+                              )}
+                         </Animated.View>
+                    )}
                </View>
-          </SafeAreaView>
+
+               {/* Settings Cards */}
+               <View style={{ paddingHorizontal: 20 }}>
+                    {/* <TextNormalYambi text={strings.settings} bold styles={{ marginBottom: 15, fontSize: 18 }} /> */}
+
+                    {/* Languages Card */}
+                    <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 12,
+                         }}
+                         onPress={() => navigation.navigate("Languages" as never)}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp name="language-outline" pack='IO' size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <YambiText text={strings.language_change} size="normal" color="default" style={{ marginBottom: 2 }} />
+                                   <YambiText text={strings.change_language_settings_text} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
+                         </View>
+                    </Pressable>
+
+                    {/* Themes Card */}
+                    <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 12,
+                         }}
+                         onPress={() => navigation.navigate('Themes' as never)}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp pack='FI' name="sun" size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                                        <YambiText text={strings.themes} size="normal" color="default" style={{ flex: 1 }} />
+                                        <View style={{
+                                             backgroundColor: theme.colors.high_color + '20',
+                                             paddingHorizontal: 8,
+                                             paddingVertical: 2,
+                                             borderRadius: 8,
+                                        }}>
+                                             <YambiText text={theme.name} size="small" color="high" style={{ fontSize: 11 }} />
+                                        </View>
+                                   </View>
+                                   <YambiText text={strings.themes_settings_text} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} styles={{ marginLeft: 10 }} />
+                         </View>
+                    </Pressable>
+
+                    {/* Customize Card */}
+                    <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 12,
+                         }}
+                         onPress={() => navigation.navigate('Customize')}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp pack='FI' name="edit" size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <YambiText text={strings.customize || "Customize"} size="normal" color="default" style={{ marginBottom: 2 }} />
+                                   <YambiText text={strings.customize_settings_text} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
+                         </View>
+                    </Pressable>
+
+                    {/* Message Us Card */}
+                    <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 12,
+                         }}
+                         onPress={() => navigation.navigate("MessageUs")}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp pack="FI" name="message-square" size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <YambiText text={strings.message_us} size="normal" color="default" style={{ marginBottom: 2 }} />
+                                   <YambiText text={strings.message_us_settings_text} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
+                         </View>
+                    </Pressable>
+
+                    {/* My Account Card */}
+                    <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 12,
+                         }}
+                         onPress={() => navigation.navigate("MyAccount")}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp pack="FI" name="user" size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <YambiText text={strings.my_account} size="normal" color="default" style={{ marginBottom: 2 }} />
+                                   <YambiText text={strings.my_account_text} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
+                         </View>
+                    </Pressable>
+
+                    {/* Support the Project Card */}
+                    {/* <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 12,
+                         }}
+                         onPress={() => navigation.navigate("MakeDonation")}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp pack='FI' name="heart" size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <YambiText text={strings.support_the_project || strings.make_donation} size="normal" color="default" style={{ marginBottom: 2 }} />
+                                   <YambiText text={strings.support_project_settings_text || strings.make_donation_subtext} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
+                         </View>
+                    </Pressable> */}
+
+                    {/* About Card */}
+                    <Pressable
+                         style={{
+                              backgroundColor: theme.colors.background,
+                              borderRadius: 12,
+                              borderWidth: 1,
+                              borderColor: theme.colors.border,
+                              marginBottom: 20,
+                         }}
+                         onPress={() => navigation.navigate("AboutYambi")}
+                    >
+                         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                              <View style={{
+                                   width: 40,
+                                   height: 40,
+                                   borderRadius: 20,
+                                   backgroundColor: theme.colors.border,
+                                   justifyContent: 'center',
+                                   alignItems: 'center',
+                                   marginRight: 15,
+                              }}>
+                                   <IconApp pack='FI' name="info" size={20} color={theme.colors.high_color} />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                   <YambiText text={strings.about_yambi} size="normal" color="default" style={{ marginBottom: 2 }} />
+                                   <YambiText text={strings.version + " " + packagee.version} size="small" color="gray" />
+                              </View>
+                              <IconApp pack='FI' name="chevron-right" size={20} color={theme.colors.gray} />
+                         </View>
+                    </Pressable>
+               </View>
+          </View>
+
+          <View style={{
+               alignItems: 'center',
+               paddingVertical: 30,
+               paddingHorizontal: 20,
+          }}>
+               <YambiText
+                    text={strings.footer}
+                    size="small"
+                    color="gray"
+                    style={{
+                         textAlign: 'center',
+                         fontSize: 12,
+                    }}
+               />
+          </View>
+     </ScrollView>
+</View>
+{/* </SafeAreaView> */}
+          </View>
      )
 }
 // }

@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Image } from "react-native";
+import { Text, Pressable, View, Image } from "react-native";
 import { TBusiness, TSale, TSellsPoint, TTheme, TUser } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useCallback } from 'react';
@@ -38,7 +38,7 @@ const SalesList = ({ item, index, onLongPress }: { item: TSale, onLongPress, ind
     }
 
     return (
-        <TouchableOpacity onPress={() => onLongPress(item, article, prices)}
+        <Pressable onPress={() => onLongPress(item, article, prices)}
             style={{
                 // borderBottomWidth: 1,
                 // borderTopWidth: 0,
@@ -131,7 +131,7 @@ const SalesList = ({ item, index, onLongPress }: { item: TSale, onLongPress, ind
 
             {item.sale_active === 0 ?
                 <TextNormalYambiError text={strings.sale_cancelled_by_user} numberLines={1} /> : null}
-        </TouchableOpacity>
+        </Pressable>
     );
 }
 

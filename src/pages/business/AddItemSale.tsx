@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, ScrollView, View, Alert, Image, TextInput } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, Text, Pressable, ScrollView, View, Alert, Image, TextInput } from "react-native";
 import Feather from 'react-native-vector-icons/Feather';
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from 'react';
@@ -356,7 +356,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                         marginBottom: 16,
                         flexWrap: 'wrap',
                     }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => setType_sale(type_sale === 0 ? 1 : 0)}
                             style={{
                                 flex: 1,
@@ -383,9 +383,9 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 {type_sale === 0 && <IconApp pack="FI" name="check" size={12} color={theme.background} />}
                             </View>
                             <YambiText text={strings.cash} size="normal" color="default" bold={type_sale === 0} />
-                        </TouchableOpacity>
+                        </Pressable>
 
-                        <TouchableOpacity
+                        <Pressable
                             onPress={Detail}
                             style={{
                                 flex: 1,
@@ -412,7 +412,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 {!wholesale && <IconApp pack="FI" name="check" size={12} color={theme.background} />}
                             </View>
                             <YambiText text={strings.detail} size="normal" color="default" bold={!wholesale} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                     {/* Price Input */}
@@ -537,7 +537,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
 
                 {/* Submit Button */}
                 <View style={{ paddingHorizontal: 16, paddingBottom: 20, paddingTop: 8 }}>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={ConfirmSale}
                         disabled={!numberItemToSell || !error_number()}
                         style={{
@@ -560,7 +560,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 fontWeight: '600' 
                             }} 
                         />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
             </ScrollView>
         </View>

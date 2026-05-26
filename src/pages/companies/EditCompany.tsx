@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Alert, ScrollView, TextInput, ActivityIndicator, Pressable } from "react-native";
+import { View, ScrollView, TextInput, ActivityIndicator, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
@@ -268,10 +268,10 @@ const EditCompany = ({ navigation, route }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
+            <Pressable style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
                 <YambiText text={index + 1 + "."} size="normal" color="default" style={{ width: 35 }} />
                 <YambiText text={item.toUpperCase()} size="normal" color="default" style={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         )
     }
 
@@ -380,7 +380,7 @@ const EditCompany = ({ navigation, route }: NavProps) => {
                             </View>
                         </Pressable>
 
-                        <TouchableOpacity onPress={pick_profile} style={{
+                        <Pressable onPress={pick_profile} style={{
                             marginTop: -50,
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -405,15 +405,15 @@ const EditCompany = ({ navigation, route }: NavProps) => {
                                         <YambiText text={strings.send} size="small" color="white" />
                                         <IconApp pack='FI' name="send" size={15} color="#FFFFFF" styles={{ marginLeft: 5 }} />
                                     </View>}
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </View>
 
                 <View style={{ marginBottom: 30, marginTop: 10 }}>
-                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
+                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
                         <YambiText text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                         <YambiText text={category === null ? strings.select_category : renderCategoryName(category)} size="normal" color="high" style={{ marginLeft: 2, marginTop: 5 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 15 }}>
@@ -542,7 +542,7 @@ const EditCompany = ({ navigation, route }: NavProps) => {
                                     }}
                                 >
                                     <YambiText text={tag} size="small" color="high" style={{ marginRight: 8 }} />
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => removeTag(tag)}
                                         style={{
                                             width: 20,
@@ -554,7 +554,7 @@ const EditCompany = ({ navigation, route }: NavProps) => {
                                         }}
                                     >
                                         <IconApp pack="FI" name="x" size={12} color="white" />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             ))}
                         </View>

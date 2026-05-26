@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { useAppSelector } from '../../store/app/hooks';
 import { TextBigYambi, TextNormalYambiHighColor, TextSmallYambiGray, YambiText } from '../../components/app/Text';
@@ -6,6 +6,7 @@ import { IconApp } from '../../components/app/IconApp';
 import { NavProps } from '../../types/types';
 import StatusBarYambi from '../../components/app/StatusBar';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Calculator = ({}: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
@@ -130,9 +131,8 @@ const Calculator = ({}: NavProps) => {
         iconSize?: number;
         useBadgeColor?: boolean;
     }) => (
-        <TouchableOpacity
+        <Pressable
             onPress={onPress}
-            activeOpacity={0.7}
             style={[
                 {
                     flex: 1,
@@ -170,7 +170,7 @@ const Calculator = ({}: NavProps) => {
                     }} 
                 />
             )}
-        </TouchableOpacity>
+        </Pressable>
     );
 
     return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, SafeAreaView, Pressable, StyleSheet } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
@@ -114,7 +114,7 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                         {/* Plans List */}
                         <View style={{ paddingHorizontal: 20 }}>
                             {PLANS.map((plan) => (
-                                <TouchableOpacity
+                                <Pressable
                                     key={plan.id}
                                     style={{
                                         backgroundColor: theme.colors.border + '40',
@@ -217,7 +217,7 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                                             />
                                         </View>
                                     </View>
-                                </TouchableOpacity>
+                                </Pressable>
                             ))}
                         </View>
 

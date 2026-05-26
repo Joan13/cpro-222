@@ -1,7 +1,6 @@
 import {
     View,
     Text,
-    TouchableOpacity,
     Pressable,
     Vibration,
 } from 'react-native';
@@ -470,8 +469,7 @@ const Messages = ({ user }: { user: string }) => {
                             }}
                         >
 
-                            <TouchableOpacity
-                                activeOpacity={0.8}
+                            <Pressable
                                 onPress={
                                     jumpToBottom
                                 }
@@ -505,7 +503,7 @@ const Messages = ({ user }: { user: string }) => {
                                     }
                                 />
 
-                            </TouchableOpacity>
+                            </Pressable>
 
                         </Animated.View>
 

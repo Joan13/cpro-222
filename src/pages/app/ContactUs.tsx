@@ -1,4 +1,4 @@
-import { View, Image, SafeAreaView, TouchableOpacity, Linking, ScrollView } from 'react-native';
+import { View, Image, Pressable, Linking, ScrollView } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
@@ -6,6 +6,7 @@ import { TextNormalYambi, TextNormalYambiHighColor, TextSmallYambiGray } from '.
 import { NavProps } from '../../types/types';
 import { useEffect } from 'react';
 import ButtonNormal from '../../components/app/ButtonNormal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ContactUs = ({ navigation, route }: NavProps) => {
 
@@ -27,7 +28,7 @@ const ContactUs = ({ navigation, route }: NavProps) => {
      }, []);
 
      return (
-          <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+          <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
 
                <StatusBarYambi />
 
@@ -46,7 +47,7 @@ const ContactUs = ({ navigation, route }: NavProps) => {
                          Linking.canOpenURL("tel:+243837122188")} normal={true} styles={{ marginVertical: 10 }} />
                </ScrollView>
 
-          </SafeAreaView>
+          </View>
      )
 }
 // }

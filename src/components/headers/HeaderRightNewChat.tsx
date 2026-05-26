@@ -1,7 +1,5 @@
-import { View, TouchableOpacity, ActivityIndicator, Text } from "react-native"
+import { View, Pressable } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Feather from 'react-native-vector-icons/Feather';
 import { setRawContacts, setSearchContactEnabled } from "../../store/reducers/appSlice";
 // import { SocketApp } from "../../../App";
 import { IconApp } from "../app/IconApp";
@@ -96,7 +94,7 @@ const HeaderRightNewChat = () => {
                 <ActivityIndicator size={20} color={theme.colors.text_design1} />
             </View> */}
 
-            <TouchableOpacity
+            <Pressable
                 onPress={openSearchContact}
                 style={{
                     height: 30,
@@ -106,9 +104,9 @@ const HeaderRightNewChat = () => {
                     marginHorizontal: 5
                 }}>
                 <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
                 onPress={loadContacts}
                 style={{
                     height: 30,
@@ -120,7 +118,7 @@ const HeaderRightNewChat = () => {
                 {refreshing_contacts ?
                     <AppActivityIndicator color={theme.colors.text_design1} /> :
                     <IconApp pack="FI" name="refresh-ccw" size={20} color={theme.colors.text_design1} />}
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

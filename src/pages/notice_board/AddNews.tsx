@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, TouchableOpacity } from "react-native";
+import { View, ScrollView, TextInput, Pressable } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -109,7 +109,7 @@ const AddNews = ({ navigation, route }: NavProps) => {
                     estimatedItemSize={60}
                     showsVerticalScrollIndicator={true}
                     renderItem={({ item }: { item: { company: TCompany, companyUser: TCompanyUser } }) => (
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => selectCompany(item)}
                             style={{
                                 padding: 15,
@@ -127,7 +127,7 @@ const AddNews = ({ navigation, route }: NavProps) => {
                                 )}
                             </View>
                             <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} />
-                        </TouchableOpacity>
+                        </Pressable>
                     )}
                 />
             </View>
@@ -214,7 +214,7 @@ const AddNews = ({ navigation, route }: NavProps) => {
 
                 <View style={{ marginBottom: 15, marginTop: 10 }}>
                     <YambiText text={(strings as any).company || "Company"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => { dispatch(setShowModalApp(true)); setShowCompanies(true) }}
                         style={{
                             backgroundColor: theme.border,
@@ -233,7 +233,7 @@ const AddNews = ({ navigation, route }: NavProps) => {
                             style={{ flex: 1 }}
                         />
                         <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} styles={{ marginRight: 10 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 15 }}>
@@ -339,12 +339,12 @@ const AddNews = ({ navigation, route }: NavProps) => {
                                     }}
                                 >
                                     <YambiText text={tag} size="small" color="high" />
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => removeTag(tag)}
                                         style={{ marginLeft: 8 }}
                                     >
                                         <IconApp pack="FI" name="x" size={14} color={theme.high_color} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             ))}
                         </View>

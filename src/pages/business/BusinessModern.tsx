@@ -1,4 +1,4 @@
-import { TouchableOpacity, ScrollView, View, Animated, Platform } from 'react-native';
+import { Pressable, ScrollView, View, Animated, Platform } from 'react-native';
 import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { setShowModalApp } from '../../store/reducers/appSlice';
@@ -131,7 +131,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
     useLayoutEffect(() => {
         const headerLeft = needsDeepLinkHeader
             ? () => (
-                <TouchableOpacity
+                <Pressable
                     onPress={() => navigation.navigate("Home" as never)}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     style={{ marginLeft: Platform.OS === "ios" ? 8 : 4 }}>
@@ -141,7 +141,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                         size={22}
                         color={app_theme.colors.text_design1}
                     />
-                </TouchableOpacity>
+                </Pressable>
             )
             : undefined;
 
@@ -287,13 +287,12 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
             }}>
                 <IconApp pack="FI" name="briefcase" size={56} color={app_theme.colors.gray} />
                 <TextNormalYambiGray text={strings.business_not_found} styles={{ textAlign: "center", marginTop: 16 }} />
-                <TouchableOpacity
+                <Pressable
                     onPress={() =>
                         needsDeepLinkHeader ? navigation.navigate("Home" as never) : navigation.goBack()}
-                    activeOpacity={0.7}
                     style={{ marginTop: 20, paddingVertical: 12, paddingHorizontal: 20 }}>
                     <TextNormalYambiHighColor text={strings.back} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         );
     }
@@ -304,7 +303,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
             {show_users_filter && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShow_users_filter(false); }} singleButton title={strings.filter_by_seller}>
                     <ScrollView style={{ maxHeight: 400 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setUser_filter("");
                                 dispatch(setShowModalApp(false));
@@ -316,9 +315,9 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                 borderColor: app_theme.colors.border,
                             }}>
                             <TextNormalYambiHighColor text={strings.all} />
-                        </TouchableOpacity>
+                        </Pressable>
                         {bus.map((user, index) => (
-                            <TouchableOpacity
+                            <Pressable
                                 key={index}
                                 onPress={() => {
                                     setUser_filter(user.phone_number);
@@ -331,7 +330,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                     borderColor: app_theme.colors.border,
                                 }}>
                                 <TextNormalYambi text={user.phone_number} />
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </ModalApp>
@@ -340,7 +339,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
             {show_currency_filter && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShow_currency_filter(false); }} singleButton title={strings.filter_by_currency}>
                     <ScrollView style={{ maxHeight: 400 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setCurrency_filter("");
                                 dispatch(setShowModalApp(false));
@@ -352,12 +351,12 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                 borderColor: app_theme.colors.border,
                             }}>
                             <TextNormalYambiHighColor text={strings.all} />
-                        </TouchableOpacity>
+                        </Pressable>
                         {global_currencies.map((cu: number) => {
                             const salesInCurrency = filtered_sales.filter(s => s.currency === cu);
                             if (salesInCurrency.length > 0) {
                                 return (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={cu}
                                         onPress={() => {
                                             setCurrency_filter(cu.toString());
@@ -373,7 +372,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                         }}>
                                         <TextNormalYambi text={renderCurrency(cu, true)} />
                                         <TextNormalYambiHighColor text={salesInCurrency.length.toString()} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 );
                             }
                             return null;
@@ -445,7 +444,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                 text={(strings as any).subscription_expired_message || "Your business subscription has expired. Please renew to continue adding new sales."} 
                                 styles={{ textAlign: 'center', marginBottom: 15, lineHeight: 20 }} 
                             />
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => navigation.navigate("AddBusinessSubscription", { business_id: business_id })}
                                 style={{
                                     backgroundColor: app_theme.colors.error,
@@ -462,7 +461,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                     bold 
                                     styles={{ marginLeft: 8, color: app_theme.colors.background }} 
                                 />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     )}
 
@@ -540,7 +539,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                     </View>
 
                     {/* Filters Toggle */}
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => setShow_filters(!show_filters)}
                         style={{
                             flexDirection: 'row',
@@ -567,7 +566,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                             )}
                         </View>
                         <IconApp pack="FI" name={show_filters ? "chevron-up" : "chevron-down"} size={20} color={app_theme.colors.text} />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     {/* Filters */}
                     <Animated.View style={{
@@ -580,7 +579,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                     }}>
                         <View style={{ marginBottom: 15 }}>
                             {/* Date Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setDate_selection_modal(true);
@@ -603,7 +602,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                         } />
                                     </View>
                                     {date_start !== "" && date_end !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setDate_start("");
@@ -611,13 +610,13 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                             }}
                                             style={{ padding: 5 }}>
                                             <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Seller Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setShow_users_filter(true);
@@ -636,20 +635,20 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                         <TextNormalYambiHighColor text={user_filter !== "" ? user_filter : strings.all} />
                                     </View>
                                     {user_filter !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setUser_filter("");
                                             }}
                                             style={{ padding: 5 }}>
                                             <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
 
                             {/* Currency Filter */}
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setShowModalApp(true));
                                     setShow_currency_filter(true);
@@ -671,17 +670,17 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                                         } />
                                     </View>
                                     {currency_filter !== "" && (
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={(e) => {
                                                 e.stopPropagation();
                                                 setCurrency_filter("");
                                             }}
                                             style={{ padding: 5 }}>
                                             <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </Animated.View>
 

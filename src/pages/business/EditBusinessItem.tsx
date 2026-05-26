@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Alert, ScrollView, TextInput, Pressable, ActivityIndicator, Platform } from "react-native";
+import { View, Alert, ScrollView, TextInput, Pressable, ActivityIndicator, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
@@ -11,9 +11,8 @@ import { FlashList } from "@shopify/flash-list";
 import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice";
 import { randomString, remote_host, remote_host_server, renderCategoryName, renderCurrency, renderDateUpToMilliseconds, SocketApp, global_currencies, media_url } from "../../../GlobalVariables";
 import axios from "axios";
-import { NavProps, TBusiness, TBusinessSubscription, TItem, TItemPrices, TSellsPoint } from "../../types/types";
+import { NavProps, TBusiness, TBusinessSubscription, TItem, TItemPrices } from "../../types/types";
 import { useObject, useQuery, useRealm } from "@realm/react";
-import * as RootNavigation from '../../services/Navigation_ref';
 import moment from "moment";
 import { UserBusinessArticles, ItemPrices, BusinessItemsSale } from "../../store/database/Models";
 // import { SocketApp } from "../../../App";
@@ -172,14 +171,14 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             <ScrollView>
                 {Object.values(items_categories).map((cat: any) => (
                     <View key={cat.id}>
-                        <TouchableOpacity
+                        <Pressable
                             style={{ paddingVertical: 10, backgroundColor: selectedCategory === cat.id ? theme.high_color + "50" : theme.background, borderRadius: 7, paddingLeft: 10 }}>
                             <YambiText text={cat.name.toUpperCase()} bold />
-                        </TouchableOpacity>
+                        </Pressable>
                         {cat.subcategories && (
                             <View style={{ marginLeft: 15 }}>
                                 {Object.entries(cat.subcategories).map(([subKey, subValue], index) => (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={subKey}
                                         onPress={() => {
                                             setSelectedCategory(cat.id);
@@ -199,7 +198,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                         }}
                                     >
                                         <YambiText text={subValue + ""} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 ))}
                             </View>
                         )}
@@ -256,14 +255,14 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                 title={strings.choose_colors}>
                 <ScrollView style={{ width: "100%" }}>
                     {COLORS_LIST.map((color) => (
-                        <TouchableOpacity key={color} onPress={() => {
+                        <Pressable key={color} onPress={() => {
                             setColor(color);
                         }} style={{ flexDirection: 'row', alignItems: 'center', padding: 5, paddingHorizontal: 20 }}>
 
                             <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: find_color_inList(color) ? theme.high_color + "70" : theme.background, marginRight: 10, borderWidth: 1, borderColor: 'gray' }} />
                             <View style={{ marginHorizontal: 6, borderRadius: 5, backgroundColor: color, height: 15, width: 25 }}></View>
                             <YambiText text={strings[color]} />
-                        </TouchableOpacity>
+                        </Pressable>
                     ))}
                 </ScrollView>
             </ModalApp>
@@ -331,7 +330,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
                             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                                 {sizes.map((size: string) => (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={size}
                                         onPress={() => setSizes(size)}
                                         style={{
@@ -351,7 +350,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                         }}
                                     >
                                         <YambiText text={size} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 ))}
                             </View>
                         </Pressable>
@@ -446,16 +445,16 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             {/* Discount Start Date and Time */}
                             <YambiText size="small" color="gray" text={strings.start_date_time || strings.discount_start_date || "Start Date & Time"} style={{ marginBottom: 5 }} />
                             <View style={{ flexDirection: 'row', marginBottom: 15 }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => setShowStartDatePicker(true)}
                                     style={{ flex: 1, backgroundColor: theme.border, borderRadius: 5, height: 45, justifyContent: 'center', paddingLeft: 15, marginRight: 5 }}>
                                     <YambiText text={moment(date_start).format('YYYY-MM-DD')} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
+                                </Pressable>
+                                <Pressable
                                     onPress={() => setShowStartTimePicker(true)}
                                     style={{ flex: 1, backgroundColor: theme.border, borderRadius: 5, height: 45, justifyContent: 'center', paddingLeft: 15, marginLeft: 5 }}>
                                     <YambiText text={moment(time_start).format('HH:mm')} />
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
 
                             {showStartDatePicker && (
@@ -489,16 +488,16 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             {/* Discount End Date and Time */}
                             <YambiText size="small" color="gray" text={strings.end_date_time || strings.discount_end_date || "End Date & Time"} style={{ marginBottom: 5 }} />
                             <View style={{ flexDirection: 'row', marginBottom: 15 }}>
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => setShowEndDatePicker(true)}
                                     style={{ flex: 1, backgroundColor: theme.border, borderRadius: 5, height: 45, justifyContent: 'center', paddingLeft: 15, marginRight: 5 }}>
                                     <YambiText text={moment(date_end).format('YYYY-MM-DD')} />
-                                </TouchableOpacity>
-                                <TouchableOpacity
+                                </Pressable>
+                                <Pressable
                                     onPress={() => setShowEndTimePicker(true)}
                                     style={{ flex: 1, backgroundColor: theme.border, borderRadius: 5, height: 45, justifyContent: 'center', paddingLeft: 15, marginLeft: 5 }}>
                                     <YambiText text={moment(time_end).format('HH:mm')} />
-                                </TouchableOpacity>
+                                </Pressable>
                             </View>
 
                             {showEndDatePicker && (
@@ -839,10 +838,10 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
         };
 
         return (
-            <TouchableOpacity style={{ backgroundColor: theme.background, flex: 1, flexDirection: 'row', borderRadius: 8, paddingHorizontal: 15, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCurrency}>
+            <Pressable style={{ backgroundColor: theme.background, flex: 1, flexDirection: 'row', borderRadius: 8, paddingHorizontal: 15, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCurrency}>
                 <YambiText text={index + 1 + "."} style={{ width: 35 }} />
                 <YambiText text={renderCurrency(item, true)} style={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         )
     }
 
@@ -1049,7 +1048,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                 </View>
                             </View>
 
-                            <TouchableOpacity onPress={pick_item_image} style={{
+                            <Pressable onPress={pick_item_image} style={{
                                 marginTop: 15,
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -1082,7 +1081,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                             <IconApp pack='FI' name="upload-cloud" size={18} color={theme.text_design2} />
                                             <YambiText text={strings.send} color="design" bold style={{ marginLeft: 8 }} />
                                         </>}
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </View>
                     )}
@@ -1093,7 +1092,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
                         <View style={{ flex: 1 }}>
                             <YambiText size="small" color="gray" text={strings.include} style={{ marginLeft: 2, marginBottom: 5 }} />
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={GrosDetail}
                                 style={{
                                     flexDirection: 'row',
@@ -1103,16 +1102,16 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                 }}>
                                 <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} />
                                 <YambiText text={strings.gros + " " + strings.and + " " + strings.detail} numberLines={1} style={{ marginLeft: 8 }} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
 
                         <View style={{ width: 20 }}></View>
 
                         <View style={{ marginBottom: 5, flex: 1 }}>
-                            <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
+                            <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
                                 <YambiText size="small" color="gray" text={strings.currency} style={{ marginLeft: 2, marginBottom: 5 }} />
                                 <YambiText color="high" text={renderCurrency(currency, true)} style={{ marginLeft: 2, marginTop: 0 }} numberLines={1} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </View>
 
@@ -1167,9 +1166,8 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                     <View style={{ flexDirection: 'row', marginBottom: 15 }}>
                         <View style={{ flex: 1, marginRight: 10 }}>
                             <YambiText size="small" color="gray" text={strings.manufacture_date} style={{ marginLeft: 2, marginBottom: 5 }} />
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => setShowManufactureDatePicker(true)}
-                                activeOpacity={0.7}
                                 style={{ 
                                     backgroundColor: theme.border, 
                                     borderRadius: 8, 
@@ -1183,7 +1181,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                     <YambiText text={manufactureDate ? formatMonthYear(manufactureDateObj) : strings.select} />
                                     <IconApp pack="FI" name="calendar" size={18} color={manufactureDate ? theme.high_color : theme.gray} />
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                             {showManufactureDatePicker && (
                                 <DateTimePicker
                                     value={manufactureDateObj}
@@ -1203,9 +1201,8 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
                         <View style={{ flex: 1, marginLeft: 10 }}>
                             <YambiText size="small" color="gray" text={strings.expiry_date} style={{ marginLeft: 2, marginBottom: 5 }} />
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => setShowExpiryDatePicker(true)}
-                                activeOpacity={0.7}
                                 style={{ 
                                     backgroundColor: theme.border, 
                                     borderRadius: 8, 
@@ -1219,7 +1216,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                     <YambiText text={expiryDate ? formatMonthYear(expiryDateObj) : strings.select} />
                                     <IconApp pack="FI" name="calendar" size={18} color={expiryDate ? theme.high_color : theme.gray} />
                                 </View>
-                            </TouchableOpacity>
+                            </Pressable>
                             {showExpiryDatePicker && (
                                 <DateTimePicker
                                     value={expiryDateObj}
@@ -1352,7 +1349,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             <YambiText bold text={strings.quantity} />
 
                             {wholesale_and_retail ?
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => setWholesale_quantity(!wholesale_quantity)}
                                     style={{
                                         flexDirection: 'row',
@@ -1361,7 +1358,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                     }}>
                                     <IconApp pack="FA" name="check-circle" size={15} color={theme.high_color} />
                                     <YambiText color="high" text={wholesale_quantity ? strings.wholesale_quantity : strings.retail_quantity} style={{ marginLeft: 8 }} />
-                                </TouchableOpacity> : null}
+                                </Pressable> : null}
                         </View>
 
                         <View style={{ flexDirection: 'row', marginTop: 5 }}>
@@ -1528,7 +1525,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
                             return (
                                 <View>
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => {
                                             if (canPublish) {
                                                 const newVisibility = marketplace_visibility === 0 ? 1 : 0;
@@ -1546,7 +1543,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                     >
                                         <SwitchApp
                                             value={marketplace_visibility === 0 ? false : true}
-                                            small
+                                            // small
                                             onPress={() => {
                                                 if (canPublish) {
                                                     const newVisibility = marketplace_visibility === 0 ? 1 : 0;
@@ -1561,17 +1558,17 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                             numberLines={1}
                                             style={{ marginLeft: 8 }}
                                         />
-                                    </TouchableOpacity>
+                                    </Pressable>
 
                                     {!canPublish && (
-                                        <YambiText color="gray" style={{ marginTop: 10 }} text={strings.publish_to_marketplace_description} />
+                                        <YambiText color="gray" size="small" style={{ marginTop: 10 }} text={strings.publish_to_marketplace_description} />
                                     )}
                                 </View>
                             );
                         })()}
                     </View>
 
-                    <ButtonNormal title={strings.save} loadEnabled={true} onPress={EditBusinessItem} styles={{ paddingHorizontal: 20, marginVertical: 20 }} normal={true} />
+                    <ButtonNormal title={strings.save} loadEnabled={true} onPress={EditBusinessItem} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 30 }} normal={true} />
 
                     {showCategoryModal && <CategoryModal />}
                     {showColorsModal && <ColorsModal />}

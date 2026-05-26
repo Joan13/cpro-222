@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Image, Pressable, Text } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import { TUser } from "../../../types/types";
 import { useAppSelector } from "../../../store/app/hooks";
 import { memo, useEffect } from 'react';
@@ -131,7 +131,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                     // text={ShowUserName(item.user_names, item.phone_number)} 
                     />
                 </View>
-                <TouchableOpacity
+                <Pressable
                     onPress={() => selectContact(item)}
                     style={{
                         width: 20,
@@ -148,7 +148,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         color={app_theme.colors.text}
                         name="x"
                         size={13} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         )
     }
@@ -257,7 +257,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
 
     if (show_type() === 0) {
         return (
-            <TouchableOpacity
+            <Pressable
                 onPress={() => {
                     selectContact(item);
                 }}
@@ -325,7 +325,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                             </Pressable>
                         </View> : null}
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         )
     }
 };

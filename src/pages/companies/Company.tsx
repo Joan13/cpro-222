@@ -1,4 +1,4 @@
-import { View, RefreshControl, TouchableOpacity, ScrollView } from "react-native";
+import { View, RefreshControl, Pressable, ScrollView } from "react-native";
 import { useEffect, useState, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -212,7 +212,7 @@ const Company = ({ navigation, route }: NavProps) => {
                     <IconApp pack="FI" name="calendar" size={12} color={theme.gray} styles={{ marginRight: 4 }} />
                     <YambiText text={new Date(company.createdAt).toLocaleDateString()} size="small" color="gray" />
                 </View>
-                <TouchableOpacity
+                <Pressable
                     onPress={() => RootNavigation.navigate("EditCompany", { company: company })}
                     style={{
                         flexDirection: 'row',
@@ -225,7 +225,7 @@ const Company = ({ navigation, route }: NavProps) => {
                 >
                     <IconApp pack="FI" name="edit" size={14} color={theme.high_color} styles={{ marginRight: 5 }} />
                     <YambiText text={strings.edit} size="small" color="high" style={{ fontSize: 12 }} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
         </View>
     );
@@ -241,7 +241,7 @@ const Company = ({ navigation, route }: NavProps) => {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
                 <YambiText text={`${strings.company_users} (${activeUsers.length})`} bold size="normal" color="default" />
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {/* <TouchableOpacity
+                    {/* <Pressable
                         onPress={() => RootNavigation.navigate("News", { flag: 2, company_id: company_id })}
                         style={{
                             flexDirection: 'row',
@@ -254,8 +254,8 @@ const Company = ({ navigation, route }: NavProps) => {
                     >
                         <IconApp pack="FI" name="file-text" size={14} color={theme.high_color} styles={{ marginRight: 5 }} />
                         <YambiText text={strings.news || "News"} size="small" color="high" style={{ fontSize: 12 }} />
-                    </TouchableOpacity> */}
-                <TouchableOpacity
+                    </Pressable> */}
+                <Pressable
                     onPress={() => RootNavigation.navigate("NewCompanyUser", { company_id: company_id })}
                     style={{
                         flexDirection: 'row',
@@ -268,7 +268,7 @@ const Company = ({ navigation, route }: NavProps) => {
                 >
                     <IconApp pack="FI" name="plus" size={14} color="#FFFFFF" styles={{ marginRight: 5 }} />
                     <YambiText text={(strings as any).add} size="small" color="white" style={{ fontSize: 12 }} />
-                </TouchableOpacity>
+                </Pressable>
                 </View>
             </View>
         </View>

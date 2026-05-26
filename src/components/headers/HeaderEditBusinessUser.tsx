@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, ActivityIndicator, Text } from "react-native"
+import { View, Pressable, ActivityIndicator, Text } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -95,7 +95,7 @@ const HeaderEditBusinessUser = ({ navigation, route }: NavProps) => {
                     <TextNormalYambiGray text={strings.unable_delete_sole_owner} />
                 </ModalApp> : null}
 
-            <TouchableOpacity
+            <Pressable
                 onPress={() => {
                     if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
                         dispatch(setShowModalApp(true));
@@ -115,7 +115,7 @@ const HeaderEditBusinessUser = ({ navigation, route }: NavProps) => {
                 {loading ?
                     <ActivityIndicator size="small" color={theme.colors.text_design1} /> :
                     <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />}
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

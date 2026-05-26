@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Image, Pressable, Dimensions, Platform, KeyboardAvoidingView, StatusBar as sb, TextInput } from "react-native";
+import { Text, View, Image, Pressable, Dimensions, Platform, KeyboardAvoidingView, StatusBar as sb, TextInput } from "react-native";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useEffect, useState } from 'react';
 import Animated from "react-native-reanimated";
@@ -228,7 +228,7 @@ const NewStoryImagesList = ({ item, index, onReadyStatus, onGoBack, onDeleteStat
                     }}
                 />
 
-                <TouchableOpacity style={{
+                <Pressable style={{
                     justifyContent: 'center',
                     height: 40,
                     paddingHorizontal: 10,
@@ -249,7 +249,7 @@ const NewStoryImagesList = ({ item, index, onReadyStatus, onGoBack, onDeleteStat
                             }}>{strings.send_photo}</Text>
                             <IconApp name="chevron-right" pack="FI" size={15} color={app_theme.colors.text_design2} />
                         </View>}
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
             <View style={{

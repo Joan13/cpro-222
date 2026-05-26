@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Image, Pressable } from "react-native";
+import { Pressable, View } from "react-native";
 import { TBusiness, TBusinessUser, TSellsPoint } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useCallback, useEffect, useState } from 'react';
@@ -248,7 +248,7 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                             </View>
 
                             {item.business_active === 0 ?
-                                <TouchableOpacity
+                                <Pressable
                                     onPress={() => {
                                         if (conditionEditBusiness()) {
                                             RootNavigation.navigate("ContactUs", { flag: 1 })
@@ -261,9 +261,9 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                                         marginTop: -5
                                     }}>
                                     <TextSmallYambiHighColor text={strings.renew_my_subscription} styles={{ marginLeft: 7 }} />
-                                </TouchableOpacity> : null}
+                                </Pressable> : null}
 
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     if (conditionEditBusiness()) {
                                         RootNavigation.navigate("EditBusiness", { business: item })
@@ -282,9 +282,9 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                                 <IconApp pack="FI" name="edit" size={13} color={app_theme.colors.high_color} />
                                 {/* <Text numberOfLines={1} style={{ marginLeft: 7, color: app_theme.colors.high_color }}>{strings.edit_business}</Text> */}
                                 <TextSmallYambiHighColor text={strings.edit_business} styles={{ marginLeft: 7 }} />
-                            </TouchableOpacity>
+                            </Pressable>
 
-                            {/* <TouchableOpacity
+                            {/* <Pressable
                             onPress={() => RootNavigation.navigate("NewSalesPoint", { business_id: item._id })}
                             style={{
                                 justifyContent: 'center',
@@ -298,9 +298,9 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                             }}>
                             <IconApp pack="FI" name="plus" size={15} color={app_theme.colors.high_color} />
                             <Text numberOfLines={1} style={{ marginLeft: 7, color: app_theme.colors.high_color }}>{strings.new_sales_point}</Text>
-                        </TouchableOpacity> */}
+                        </Pressable> */}
 
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     if (conditionGoUsers()) {
                                         RootNavigation.navigate("NewBusinessItem", { business_id: item._id });
@@ -319,9 +319,9 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                                 <IconApp pack="FI" name="plus" size={15} color={app_theme.colors.high_color} />
                                 {/* <Text numberOfLines={1} style={{ marginLeft: 7, color: app_theme.colors.high_color }}>{strings.add_item}</Text> */}
                                 <TextSmallYambiHighColor text={strings.add_item} styles={{ marginLeft: 7 }} />
-                            </TouchableOpacity>
+                            </Pressable>
 
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     if (conditionEditBusiness()) {
                                         RootNavigation.navigate("NewSalesPoint", { business_id: item._id })
@@ -340,11 +340,11 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                                 <IconApp pack="FI" name="plus" size={15} color={app_theme.colors.high_color} />
                                 {/* <Text numberOfLines={1} style={{ marginLeft: 7, color: app_theme.colors.high_color }}>{strings.new_sales_point}</Text> */}
                                 <TextSmallYambiHighColor text={strings.add_new_sales_point} styles={{ marginLeft: 7 }} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </View>
 
-                    <TouchableOpacity
+                    <Pressable
                         onPress={GoBusiness}
                         style={{
                             flexDirection: 'row',
@@ -358,11 +358,11 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                             <TextBigYambi bold text={item.business_name} />
                             <TextNormalYambiGray styles={{ marginTop: 8 }} text={item.description_service} />
 
-                            <TouchableOpacity onPress={GoBusiness} onLongPress={() => copyToClipboard(item._id)}>
+                            <Pressable onPress={GoBusiness} onLongPress={() => copyToClipboard(item._id)}>
                                 <TextNormalYambiGray styles={{ marginTop: 8 }} text={strings.business_id + " : " + item._id} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
-                        {/* <TouchableOpacity
+                        {/* <Pressable
                         onPress={() => RootNavigation.navigate("NewSalesPoint", { business_id: item._id })}
                         style={{
                             width: 30,
@@ -371,8 +371,8 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                             alignItems: 'flex-end'
                         }}>
                         <IconApp pack="FI" name="edit" size={15} color={app_theme.colors.text} />
-                    </TouchableOpacity> */}
-                    </TouchableOpacity>
+                    </Pressable> */}
+                    </Pressable>
 
 
 

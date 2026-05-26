@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
+import { View, ScrollView, TextInput, Pressable, Image } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -298,7 +298,7 @@ const EditNews = ({ navigation, route }: NavProps) => {
                             {availableTags.map((tag, index) => {
                                 const isSelected = selectedTags.includes(tag);
                                 return (
-                                    <TouchableOpacity
+                                    <Pressable
                                     key={index}
                                         onPress={() => toggleTag(tag)}
                                     style={{
@@ -316,7 +316,7 @@ const EditNews = ({ navigation, route }: NavProps) => {
                                             <IconApp pack="FI" name="check" size={12} color={theme.high_color} styles={{ marginRight: 4 }} />
                                         )}
                                     <YambiText text={tag} size="small" color="high" />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 );
                             })}
                         </View>
@@ -325,7 +325,7 @@ const EditNews = ({ navigation, route }: NavProps) => {
 
                 <View style={{ marginBottom: 15 }}>
                     <YambiText text={(strings as any).images || "Images"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TouchableOpacity
+                    <Pressable
                         onPress={pickImages}
                         style={{
                             backgroundColor: theme.border,
@@ -339,7 +339,7 @@ const EditNews = ({ navigation, route }: NavProps) => {
                     >
                         <IconApp pack="FI" name="image" size={20} color={theme.high_color} styles={{ marginRight: 8 }} />
                         <YambiText text={(strings as any).select_images || "Select Images"} size="normal" color="high" />
-                    </TouchableOpacity>
+                    </Pressable>
                     {imageUris.length > 0 && (
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                             {imageUris.map((uri, index) => (
@@ -349,7 +349,7 @@ const EditNews = ({ navigation, route }: NavProps) => {
                                         style={{ width: 100, height: 100, borderRadius: 8 }}
                                         resizeMode={FastImage.resizeMode.cover}
                                     />
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => removeImage(index)}
                                         style={{
                                             position: 'absolute',
@@ -364,7 +364,7 @@ const EditNews = ({ navigation, route }: NavProps) => {
                                         }}
                                     >
                                         <IconApp pack="FI" name="x" size={12} color="#FFFFFF" />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             ))}
                         </View>

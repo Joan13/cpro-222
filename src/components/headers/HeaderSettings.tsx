@@ -1,9 +1,6 @@
-import { View, TouchableOpacity, ActivityIndicator, Text, Platform, SafeAreaView } from "react-native"
+import { View, Pressable, } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
-import { useNavigation } from "@react-navigation/native";
 import { IconApp } from "../app/IconApp";
-import { YambiText } from "../app/Text";
-import { strings } from "../../lang/lang";
 import { NavProps } from "../../types/types";
 
 const HeaderSettings = ({ navigation, route }: NavProps) => {
@@ -19,7 +16,7 @@ const HeaderSettings = ({ navigation, route }: NavProps) => {
             // marginHorizontal: 15,
             // backgroundColor: 'green'
         }}>
-            {/* <TouchableOpacity onPress={() => navigation.goBack()} style={{
+            {/* <Pressable onPress={() => navigation.goBack()} style={{
                 width: 50,
                 height: 50,
                 alignItems: 'center',
@@ -29,11 +26,11 @@ const HeaderSettings = ({ navigation, route }: NavProps) => {
                 borderRadius: 50
             }}>
                 <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={20} color={theme.colors.text} />
-            </TouchableOpacity>
+            </Pressable>
 
             <TextBigYambi text={strings.account_settings} /> */}
 
-            <TouchableOpacity onPress={() => navigation.navigate('EditProfile', { user: user_data })} style={{
+            <Pressable onPress={() => navigation.navigate('EditProfile', { user: user_data })} style={{
                 width: 30,
                 height: 30,
                 alignItems: 'flex-end',
@@ -42,9 +39,9 @@ const HeaderSettings = ({ navigation, route }: NavProps) => {
                 borderRadius: 50
             }}>
                 <IconApp pack='FI' name="edit" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            {/* <TouchableOpacity style={{
+            {/* <Pressable style={{
                 height: 30,
                 width: 30,
                 alignItems: 'center',
@@ -52,9 +49,9 @@ const HeaderSettings = ({ navigation, route }: NavProps) => {
                 marginHorizontal: 5
             }}>
                 <Feather name="search" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
-            {/* <TouchableOpacity style={{
+            {/* <Pressable style={{
                 height: 30,
                 width: 30,
                 // backgroundColor:'red',
@@ -63,10 +60,10 @@ const HeaderSettings = ({ navigation, route }: NavProps) => {
                 marginLeft: 5
             }}>
                 <Feather name="camera" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
             {/* {app_description.home_user_image_position === 'right' ?
-                <TouchableOpacity onPress={() => navigation.navigate('Themes' as never)}>
+                <Pressable onPress={() => navigation.navigate('Themes' as never)}>
                     <Animated.View
                         style={{
                             justifyContent: 'center',
@@ -79,7 +76,7 @@ const HeaderSettings = ({ navigation, route }: NavProps) => {
                             style={{ width: app_description.home_user_image_size, height: app_description.home_user_image_size, borderRadius: 50, borderWidth: 1, borderColor: theme.colors.border }}
                         />
                     </Animated.View>
-                </TouchableOpacity> : null} */}
+                </Pressable> : null} */}
         </View>
     )
 }

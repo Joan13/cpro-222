@@ -1,12 +1,13 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, Pressable, Image } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { changeLanguage, strings } from '../../lang/lang';
 import { setLanguageApp } from '../../store/reducers/persistedAppSlice';
 import StatusBarYambi from '../../components/app/StatusBar';
 import RNRestart from 'react-native-restart';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface LanguageOption {
     code: string;
@@ -35,7 +36,7 @@ const Languages = () => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background, borderColor: theme.border, borderTopWidth: 1 }}>
+        <View style={{ flex: 1, backgroundColor: theme.background, borderColor: theme.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
             
             <View style={{ flex: 1 }}>
@@ -67,7 +68,7 @@ const Languages = () => {
                         const isSelected = currentLanguage === lang.code;
                         
                         return (
-                            <TouchableOpacity
+                            <Pressable
                                 key={lang.code}
                                 style={{
                                     flexDirection: 'row',
@@ -79,7 +80,6 @@ const Languages = () => {
                                     borderBottomColor: theme.border,
                                 }}
                                 onPress={() => changeLanguageApp(lang.code)}
-                                activeOpacity={0.7}
                             >
                                 {/* Flag */}
                                 <View style={{ marginRight: 16 }}>
@@ -128,12 +128,12 @@ const Languages = () => {
                                         style={{ marginLeft: 12 }}
                                     />
                                 )}
-                            </TouchableOpacity>
+                            </Pressable>
                         );
                     })}
                 </View>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 

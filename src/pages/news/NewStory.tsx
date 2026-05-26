@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, ScrollView, TextInput, Image, Text, SafeAreaView, Pressable, KeyboardAvoidingView, PermissionsAndroid, Platform, Dimensions } from "react-native";
+import { View, ScrollView, TextInput, Image, Text, SafeAreaView, Pressable, KeyboardAvoidingView, PermissionsAndroid, Platform, Dimensions } from "react-native";
 import { useRef, useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";

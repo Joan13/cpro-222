@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, TextInput, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
+import { View, TextInput, ScrollView, Pressable, RefreshControl } from "react-native";
 import axios from "axios";
 import { remote_host, renderDateTime } from "../../../GlobalVariables";
 import { useAppSelector, useAppDispatch } from "../../store/app/hooks";
@@ -258,7 +258,7 @@ export default function AppData() {
                         marginBottom: 16 
                     }}>
                         <TextBigYambi text={strings.version_history} bold />
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => setShowAllVersions(!showAllVersions)}
                             style={{
                                 flexDirection: 'row',
@@ -268,7 +268,6 @@ export default function AppData() {
                                 backgroundColor: app_theme.colors.border,
                                 borderRadius: 8,
                             }}
-                            activeOpacity={0.7}
                         >
                             <TextNormalYambi 
                                 text={showAllVersions ? strings.hide : strings.show} 
@@ -281,7 +280,7 @@ export default function AppData() {
                                 color={app_theme.colors.text} 
                                 size={16} 
                             />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                     
                     {loadingVersions ? (
@@ -353,7 +352,7 @@ export default function AppData() {
             {showAdsModal && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowAdsModal(false); }} singleButton title={strings.can_show_ads}>
                     <View style={{ paddingVertical: 10 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setAppData({ ...appData, can_show_ads: 1 });
                                 dispatch(setShowModalApp(false));
@@ -376,8 +375,8 @@ export default function AppData() {
                                 styles={{ marginRight: 12 }} 
                             />
                             <TextNormalYambi text={strings.yes} bold={appData.can_show_ads === 1} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setAppData({ ...appData, can_show_ads: 0 });
                                 dispatch(setShowModalApp(false));
@@ -398,7 +397,7 @@ export default function AppData() {
                                 styles={{ marginRight: 12 }} 
                             />
                             <TextNormalYambi text={strings.no} bold={appData.can_show_ads === 0} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </ModalApp>
             )}
@@ -406,7 +405,7 @@ export default function AppData() {
             {showPersonalizedAdsModal && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowPersonalizedAdsModal(false); }} singleButton title={strings.can_show_personalized_ads}>
                     <View style={{ paddingVertical: 10 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setAppData({ ...appData, can_show_personalized_ads: 1 });
                                 dispatch(setShowModalApp(false));
@@ -429,8 +428,8 @@ export default function AppData() {
                                 styles={{ marginRight: 12 }} 
                             />
                             <TextNormalYambi text={strings.yes} bold={appData.can_show_personalized_ads === 1} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setAppData({ ...appData, can_show_personalized_ads: 0 });
                                 dispatch(setShowModalApp(false));
@@ -451,7 +450,7 @@ export default function AppData() {
                                 styles={{ marginRight: 12 }} 
                             />
                             <TextNormalYambi text={strings.no} bold={appData.can_show_personalized_ads === 0} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </ModalApp>
             )}
@@ -460,7 +459,7 @@ export default function AppData() {
                 <ModalApp paddings={false} onClose={() => { dispatch(setShowModalApp(false)); setShowAdTypeModal(false); }} singleButton title={strings.select_ad_type}>
                     <ScrollView style={{ maxHeight: 400, paddingVertical: 0, paddingHorizontal:0 }}>
                         {adTypes.map((adType, index) => (
-                            <TouchableOpacity 
+                            <Pressable 
                                 key={adType.id}
                                 onPress={() => {
                                     setAppData({ ...appData, type_main_ads: adType.id });
@@ -483,7 +482,7 @@ export default function AppData() {
                                     styles={{ marginRight: 12 }} 
                                 />
                                 <TextNormalYambi text={adType.name} bold={appData.type_main_ads === adType.id} />
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </ModalApp>
@@ -492,7 +491,7 @@ export default function AppData() {
             {showUpdateRequiredModal && (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowUpdateRequiredModal(false); }} singleButton title={strings.update_required}>
                     <View style={{ paddingVertical: 10 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setAppData({ ...appData, update_required: 1 });
                                 dispatch(setShowModalApp(false));
@@ -515,8 +514,8 @@ export default function AppData() {
                                 styles={{ marginRight: 12 }} 
                             />
                             <TextNormalYambi text={strings.yes} bold={appData.update_required === 1} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Pressable>
+                        <Pressable
                             onPress={() => {
                                 setAppData({ ...appData, update_required: 0 });
                                 dispatch(setShowModalApp(false));
@@ -537,7 +536,7 @@ export default function AppData() {
                                 styles={{ marginRight: 12 }} 
                             />
                             <TextNormalYambi text={strings.no} bold={appData.update_required === 0} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </ModalApp>
             )}
@@ -590,7 +589,7 @@ export default function AppData() {
                     />
                 </View>
 
-                <TouchableOpacity 
+                <Pressable 
                     onPress={() => { setShowAdsModal(true); dispatch(setShowModalApp(true)); }}
                     style={{ marginBottom: 20 }}
                 >
@@ -607,9 +606,9 @@ export default function AppData() {
                         <TextNormalYambi text={appData.can_show_ads === 1 ? strings.yes : strings.no} bold />
                         <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
                     </View>
-                </TouchableOpacity>
+                </Pressable>
 
-                <TouchableOpacity 
+                <Pressable 
                     onPress={() => { setShowPersonalizedAdsModal(true); dispatch(setShowModalApp(true)); }}
                     style={{ marginBottom: 20 }}
                 >
@@ -626,9 +625,9 @@ export default function AppData() {
                         <TextNormalYambi text={appData.can_show_personalized_ads === 1 ? strings.yes : strings.no} bold />
                         <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
                     </View>
-                </TouchableOpacity>
+                </Pressable>
 
-                <TouchableOpacity 
+                <Pressable 
                     onPress={() => { setShowAdTypeModal(true); dispatch(setShowModalApp(true)); }}
                     style={{ marginBottom: 20 }}
                 >
@@ -648,13 +647,13 @@ export default function AppData() {
                         />
                         <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
                     </View>
-                </TouchableOpacity>
+                </Pressable>
 
                 {/* Update Required Section */}
                 <View style={{ marginBottom: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: app_theme.colors.border }}>
                     <TextBigYambi text={strings.update_settings} bold styles={{ marginBottom: 16 }} />
                     
-                    <TouchableOpacity 
+                    <Pressable 
                         onPress={() => { setShowUpdateRequiredModal(true); dispatch(setShowModalApp(true)); }}
                         style={{ marginBottom: 20 }}
                     >
@@ -671,7 +670,7 @@ export default function AppData() {
                             <TextNormalYambi text={appData.update_required === 1 ? strings.yes : strings.no} bold />
                             <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
                     <View style={{ marginBottom: 20 }}>
                         <TextNormalYambiGray text={`${strings.update_device} (1 = Mobile)`} styles={{ marginBottom: 8 }} />

@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, TouchableOpacity } from "react-native";
+import { View, ScrollView, TextInput, Pressable } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -179,7 +179,7 @@ const NewCompanyUser = ({ navigation, route }: NavProps) => {
                     renderItem={({ item, index }: { item: any, index: number }) => {
                         const isLastItem = index === availableRoles.length - 1;
                         return (
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => selectRole(item)}
                                 style={{
                                     padding: 15,
@@ -197,7 +197,7 @@ const NewCompanyUser = ({ navigation, route }: NavProps) => {
                                     )}
                                 </View>
                                 <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} />
-                            </TouchableOpacity>
+                            </Pressable>
                         );
                     }}
                 />
@@ -292,7 +292,7 @@ const NewCompanyUser = ({ navigation, route }: NavProps) => {
 
                 <View style={{ marginBottom: 15, marginTop: 10 }}>
                     <YambiText text={strings.user_details || strings.phone_number} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TouchableOpacity 
+                    <Pressable 
                         onPress={() => { dispatch(setShowModalApp(true)); setShowUsers(true) }}
                         style={{
                             backgroundColor: theme.border,
@@ -311,7 +311,7 @@ const NewCompanyUser = ({ navigation, route }: NavProps) => {
                             style={{ flex: 1 }}
                         />
                         <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} styles={{ marginRight: 10 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 15 }}>
@@ -327,7 +327,7 @@ const NewCompanyUser = ({ navigation, route }: NavProps) => {
 
                 <View style={{ marginBottom: 15 }}>
                     <YambiText text={strings.role || "Role"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TouchableOpacity 
+                    <Pressable 
                         onPress={() => { if (phone_number !== "") { dispatch(setShowModalApp(true)); setShowRoles(true) } }}
                         style={{
                             backgroundColor: theme.border,
@@ -347,7 +347,7 @@ const NewCompanyUser = ({ navigation, route }: NavProps) => {
                             style={{ flex: 1 }}
                         />
                         <IconApp pack="FI" name="chevron-right" size={18} color={theme.gray} styles={{ marginRight: 10 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 15 }}>

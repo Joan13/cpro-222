@@ -1,25 +1,19 @@
-import { View, Text, TouchableOpacity, Platform, ActivityIndicator, BackHandler, Image, Pressable, StatusBar, Linking } from 'react-native';
-import { memo, useEffect, useState } from 'react';
+import { View, Pressable, Linking } from 'react-native';
+import { memo, useState } from 'react';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { strings } from '../../lang/lang';
-import Feather from 'react-native-vector-icons/Feather';
 import { setCurrentUser, setMessageSelected, setPlayingRecorded, setRecordingAudio, setResponseTo, setShowModalApp } from '../../store/reducers/appSlice';
 import Entypo from 'react-native-vector-icons/Entypo';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-import * as RootNavigation from './../../services/Navigation_ref';
 import { IconApp } from '../app/IconApp';
 import { NavProps, TMessage, TUser } from '../../types/types';
 import { useObject, useQuery, useRealm } from '@realm/react';
 import { UserChats, UserContacts, UsersMessages } from '../../store/database/Models';
-import FastImage from 'react-native-fast-image';
-import { remote_host_server, SocketApp } from '../../../GlobalVariables';
+import { SocketApp } from '../../../GlobalVariables';
 import Clipboard from '@react-native-clipboard/clipboard';
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import ModalApp from '../app/ModalApp';
-import { TextNormalYambi, TextNormalYambiGray, TextNormalYambiHighColor } from '../app/Text';
+import { TextNormalYambiGray, TextNormalYambiHighColor } from '../app/Text';
 import moment from 'moment';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -164,7 +158,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
       // backgroundColor:'green'
     }}>
 
-      {/* <TouchableOpacity
+      {/* <Pressable
               onPress={forwardMessage}
               style={{
                 height: 30,
@@ -174,7 +168,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                 // marginLeft: 15
               }}>
               <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
       {showDeleteMessage && message ?
         <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowDeleteMessage(false) }} singleButton title={strings.delete_message} textCancel={strings.cancel}>
@@ -225,7 +219,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
           <ActivityIndicator size={20} color={app_theme.colors.text_design1} />
         </View> */}
 
-            {/* <TouchableOpacity style={{
+            {/* <Pressable style={{
               height: 30,
               width: 30,
               alignItems: 'center',
@@ -233,9 +227,9 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
               marginHorizontal: 5
             }}>
               <Feather name="search" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity style={{
+            <Pressable style={{
               height: 30,
               width: 30,
               alignItems: 'flex-end',
@@ -243,7 +237,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
               marginLeft: 5
             }}>
               <Feather name="camera" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
             {!userrr ?
               <DropdownMenu.Root>
@@ -266,7 +260,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
           flexDirection: 'row',
           flex: 1
         }}>
-          {/* <TouchableOpacity onPress={() => navigation.navigate('Themes' as never)}>
+          {/* <Pressable onPress={() => navigation.navigate('Themes' as never)}>
         <Animated.View
           sharedTransitionTag='viewImageInbox'
           style={{
@@ -281,7 +275,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
             style={{ width: 40, height: 40, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
           />
         </Animated.View>
-      </TouchableOpacity> */}
+      </Pressable> */}
           {/* <View style={{
         flex: 1,
         marginRight: 2
@@ -307,7 +301,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
             justifyContent: 'center',
             gap: 8,
           }}>
-            <TouchableOpacity
+            <Pressable
               onPress={() => {
                 dispatch(setResponseTo(message_selected));
                 dispatch(setMessageSelected(""));
@@ -321,9 +315,9 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                 backgroundColor: app_theme.colors.border+"50",
               }}>
               <Entypo name="reply" size={18} color={app_theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            {/* <TouchableOpacity
+            {/* <Pressable
               onPress={() => dispatch(setResponseTo(message_selected))}
               style={{
                 height: 30,
@@ -333,9 +327,9 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                 marginHorizontal: 5
               }}>
               <MaterialCommunityIcons name="delete-outline" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
-            {/* <TouchableOpacity style={{
+            {/* <Pressable style={{
               height: 30,
               width: 30,
               alignItems: 'center',
@@ -343,10 +337,10 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
               marginLeft: 5
             }}>
               <Entypo name="forward" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
             {message !== null ?
               message.message_type === 0 ?
-                <TouchableOpacity
+                <Pressable
                   onPress={copyToClipboard}
                   style={{
                     height: 36,
@@ -357,9 +351,9 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                     backgroundColor: app_theme.colors.border+"50",
                   }}>
                   <IconApp pack='MC' name="content-copy" size={18} color={app_theme.colors.text_design1} />
-                </TouchableOpacity> : null : null}
+                </Pressable> : null : null}
 
-            <TouchableOpacity
+            <Pressable
               onPress={seeMessageInfo}
               style={{
                 height: 36,
@@ -370,9 +364,9 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                 backgroundColor: app_theme.colors.border+"50",
               }}>
               <IconApp pack='FI' name="info" size={18} color={app_theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               onPress={forwardMessage}
               style={{
                 height: 36,
@@ -384,9 +378,9 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                 marginRight: 8,
               }}>
               <IconApp pack='ET' name="forward" size={18} color={app_theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
 
-            {/* <TouchableOpacity
+            {/* <Pressable
               onPress={forwardMessage}
               style={{
                 height: 30,
@@ -396,7 +390,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
                 // marginLeft: 15
               }}>
               <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
-            </TouchableOpacity> */}
+            </Pressable> */}
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger>

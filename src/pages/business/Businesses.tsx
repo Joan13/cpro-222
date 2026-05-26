@@ -489,7 +489,7 @@ const Businesses = ({}: NavProps) => {
     // }
 
     // const renderItemSellsPoints = ({ item }: { item: TSellsPoint }) => (
-    //     <TouchableOpacity
+    //     <Pressable
     //         onPress={() => {
     //             // dispatch(setBusiness(item));
     //             navigation.navigate("Workspace" as never);
@@ -517,7 +517,7 @@ const Businesses = ({}: NavProps) => {
     //                 fontSize: 12
     //             }}>{item.description_service}</Text>
     //         </View>
-    //         <TouchableOpacity
+    //         <Pressable
     //             onPress={EditWorkspace}
     //             style={{
     //                 width: 50,
@@ -526,8 +526,8 @@ const Businesses = ({}: NavProps) => {
     //                 alignItems: 'flex-end',
     //             }}>
     //             <Feather name="edit" size={15} color={theme.text} />
-    //         </TouchableOpacity>
-    //     </TouchableOpacity>
+    //         </Pressable>
+    //     </Pressable>
     // );
 
     // const renderItem = useCallback(({ item }: { item: IBusiness }) => {

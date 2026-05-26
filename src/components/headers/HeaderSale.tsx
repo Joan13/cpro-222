@@ -1,8 +1,6 @@
-import { View, TouchableOpacity, ActivityIndicator, Text } from "react-native"
+import { View, Pressable, Text } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Feather from 'react-native-vector-icons/Feather';
-import { setSearchContactEnabled, setShowModalApp } from "../../store/reducers/appSlice";
+import {  setShowModalApp } from "../../store/reducers/appSlice";
 // import { SocketApp } from "../../../App";
 import { NavProps, TItem, TSale } from "../../types/types";
 import { IconApp } from "../app/IconApp";
@@ -13,8 +11,7 @@ import { TextNormalYambiGray, TextSmallYambiError } from "../app/Text";
 import ModalApp from "../app/ModalApp";
 import { useState } from "react";
 import Animated, { BounceIn } from "react-native-reanimated";
-import { BusinessUsers, UserBusinessArticles } from "../../store/database/Models";
-import * as ContextMenu from 'zeego/context-menu';
+import { BusinessUsers } from "../../store/database/Models";
 import { SocketApp } from "../../../GlobalVariables";
 const HeaderSale = ({ navigation, route }: NavProps) => {
 
@@ -139,7 +136,7 @@ const HeaderSale = ({ navigation, route }: NavProps) => {
                 </ModalApp> : null}
 
             {sale.sale_operator === user_data.phone_number ?
-                <TouchableOpacity
+                <Pressable
                     onPress={() => { dispatch(setShowModalApp(true)); setConfirm_delete(true) }}
                     style={{
                         height: 30,
@@ -149,7 +146,7 @@ const HeaderSale = ({ navigation, route }: NavProps) => {
                         marginLeft: 5
                     }}>
                     <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />
-                </TouchableOpacity> : null}
+                </Pressable> : null}
         </View>
     )
 }

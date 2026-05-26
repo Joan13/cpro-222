@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Alert, ScrollView, TextInput } from "react-native";
+import { Text, Pressable, View, Alert, ScrollView, TextInput } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
@@ -297,10 +297,10 @@ const NewCompany = () => {
         };
 
         return (
-            <TouchableOpacity style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
+            <Pressable style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
                 <YambiText text={index + 1 + "."} size="normal" color="default" style={{ width: 35 }} />
                 <YambiText text={item.toUpperCase()} size="normal" color="default" style={{ flex: 1 }} />
-            </TouchableOpacity>
+            </Pressable>
         )
     }
 
@@ -358,10 +358,10 @@ const NewCompany = () => {
                     </ModalApp> : null}
 
                 <View style={{ marginBottom: 30, marginTop: 10 }}>
-                    <TouchableOpacity onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
+                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
                         <YambiText text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                         <YambiText text={category === null ? strings.select_category : renderCategoryName(category)} size="normal" color="high" style={{ marginLeft: 2, marginTop: 5 }} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 <View style={{ marginBottom: 15 }}>
@@ -490,7 +490,7 @@ const NewCompany = () => {
                                     }}
                                 >
                                     <YambiText text={tag} size="small" color="high" style={{ marginRight: 8 }} />
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => removeTag(tag)}
                                         style={{
                                             width: 20,
@@ -502,7 +502,7 @@ const NewCompany = () => {
                                         }}
                                     >
                                         <IconApp pack="FI" name="x" size={12} color="white" />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             ))}
                         </View>

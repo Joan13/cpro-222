@@ -1,22 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, Text, StatusBar, ScrollView, TouchableOpacity, ActivityIndicator, Alert, FlatList, Image, Dimensions, TextInput, Platform, DevSettings, SafeAreaView } from 'react-native';
-import Feather from 'react-native-vector-icons/Feather';
-import FontsAwesome from 'react-native-vector-icons/FontAwesome';
+import { View, ScrollView, Pressable, TextInput } from 'react-native';
 import Animated, { BounceIn, FadeInDown, FadeInUp, SlideInDown, SlideInUp } from 'react-native-reanimated';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
-import { useNavigation } from '@react-navigation/native';
 import StatusBarYambi from '../../components/app/StatusBar';
-import DocumentPicker from 'react-native-document-picker';
-import ImagePicker from 'react-native-image-crop-picker';
-import FastImage from 'react-native-fast-image';
-import { updateUser, updateUserProfile } from '../../store/reducers/userSlice';
-import { remote_host, remote_host_server } from '../../../GlobalVariables';
 import { TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray } from '../../components/app/Text';
 import { IconApp } from '../../components/app/IconApp';
-import { app_theme } from '../../store/app/variables';
 import SwitchApp from '../../components/app/SwitchApp';
-import { Switch } from 'react-native-ui-lib'
 import { setAfterSale, setCloseSaleBoardAfterOperation, setPasswordBusiness, setRequirePasswordBusiness, setTypeSaleBoard } from '../../store/reducers/persistedAppSlice';
 import ModalApp from '../../components/app/ModalApp';
 import { setShowModalApp, setBusinessOpened } from '../../store/reducers/appSlice';
@@ -487,7 +477,7 @@ const CustomizeBusiness = () => {
                                    />
 
                                    {/* Visibility Toggle */}
-                                   <TouchableOpacity onPress={() => {
+                                   <Pressable onPress={() => {
                                         if (passwordVisible) {
                                              // Show password - no verification needed
                                              setPasswordVisible(false);
@@ -507,7 +497,7 @@ const CustomizeBusiness = () => {
                                         backgroundColor: theme.colors.border,
                                    }}>
                                         <IconApp name={passwordVisible ? "eye-off" : "eye"} pack='FI' size={18} color={theme.colors.gray} />
-                                   </TouchableOpacity>
+                                   </Pressable>
                               </View>
                          </View>
                     </Animated.View> : null}

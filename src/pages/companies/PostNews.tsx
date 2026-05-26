@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, TouchableOpacity, Image, Dimensions, Platform } from "react-native";
+import { View, ScrollView, TextInput, Pressable, Image, Dimensions, Platform } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -564,7 +564,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                 <View style={{ flexDirection: 'row', gap: 10 }}>
                                     <View style={{ flex: 1 }}>
                                         <YambiText text={strings.start_date} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={() => setShowDatePicker({ field: 'start_date' })}
                                             style={{
                                                 backgroundColor: theme.border,
@@ -577,11 +577,11 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                         >
                                             <YambiText text={moment(timetableStartDate).format('YYYY-MM-DD')} size="normal" color="default" />
                                             <IconApp pack="FI" name="calendar" size={18} color={theme.text} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <YambiText text={strings.end_date} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={() => setShowDatePicker({ field: 'end_date' })}
                                             style={{
                                                 backgroundColor: theme.border,
@@ -594,7 +594,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                         >
                                             <YambiText text={moment(timetableEndDate).format('YYYY-MM-DD')} size="normal" color="default" />
                                             <IconApp pack="FI" name="calendar" size={18} color={theme.text} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     </View>
                                 </View>
                             </View>
@@ -613,7 +613,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                         <YambiText text={strings.entry + " " + (index + 1)} size="small" color="gray" style={{ fontWeight: 'bold' }} />
                                         {timetableEntries.length > 1 && (
-                                            <TouchableOpacity
+                                            <Pressable
                                                 onPress={() => removeTimetableEntry(index)}
                                                 style={{
                                                     backgroundColor: theme.error + '20',
@@ -623,14 +623,14 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                 }}
                                             >
                                                 <IconApp pack="FI" name="trash-2" size={14} color={theme.error} />
-                                            </TouchableOpacity>
+                                            </Pressable>
                                         )}
                                     </View>
 
                                     {/* Date News */}
                                     <View style={{ marginBottom: 10 }}>
                                         <YambiText text={strings.date} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={() => setShowDatePicker({ entryIndex: index, field: 'date_news' })}
                                             style={{
                                                 backgroundColor: theme.border,
@@ -643,7 +643,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                         >
                                             <YambiText text={moment(entry.date_news).format('YYYY-MM-DD')} size="normal" color="default" />
                                             <IconApp pack="FI" name="calendar" size={18} color={theme.text} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     </View>
 
                                     {/* Morning */}
@@ -663,7 +663,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                             {entry.morning.trim() !== "" && (
                                                 <>
                                                     <View style={{ width: 100 }}>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             onPress={() => setShowTimePicker({ entryIndex: index, field: 'morning_time' })}
                                                             style={{
                                                                 backgroundColor: theme.border,
@@ -677,10 +677,10 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                         >
                                                             <YambiText text={entry.morning_time || (strings as any).start || "Start"} size="small" color={entry.morning_time ? "default" : "gray"} />
                                                             <IconApp pack="FI" name="clock" size={14} color={theme.text} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     </View>
                                                     <View style={{ width: 100 }}>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             onPress={() => setShowTimePicker({ entryIndex: index, field: 'morning_time_end' })}
                                                             style={{
                                                                 backgroundColor: theme.border,
@@ -694,7 +694,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                         >
                                                             <YambiText text={entry.morning_time_end || (strings as any).end || "End"} size="small" color={entry.morning_time_end ? "default" : "gray"} />
                                                             <IconApp pack="FI" name="clock" size={14} color={theme.text} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     </View>
                                                 </>
                                             )}
@@ -718,7 +718,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                             {entry.afternoon.trim() !== "" && (
                                                 <>
                                                     <View style={{ width: 100 }}>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             onPress={() => setShowTimePicker({ entryIndex: index, field: 'afternoon_time' })}
                                                             style={{
                                                                 backgroundColor: theme.border,
@@ -732,10 +732,10 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                         >
                                                             <YambiText text={entry.afternoon_time || (strings as any).start || "Start"} size="small" color={entry.afternoon_time ? "default" : "gray"} />
                                                             <IconApp pack="FI" name="clock" size={14} color={theme.text} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     </View>
                                                     <View style={{ width: 100 }}>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             onPress={() => setShowTimePicker({ entryIndex: index, field: 'afternoon_time_end' })}
                                                             style={{
                                                                 backgroundColor: theme.border,
@@ -749,7 +749,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                         >
                                                             <YambiText text={entry.afternoon_time_end || (strings as any).end || "End"} size="small" color={entry.afternoon_time_end ? "default" : "gray"} />
                                                             <IconApp pack="FI" name="clock" size={14} color={theme.text} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     </View>
                                                 </>
                                             )}
@@ -773,7 +773,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                             {entry.evening.trim() !== "" && (
                                                 <>
                                                     <View style={{ width: 100 }}>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             onPress={() => setShowTimePicker({ entryIndex: index, field: 'evening_time' })}
                                                             style={{
                                                                 backgroundColor: theme.border,
@@ -787,10 +787,10 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                         >
                                                             <YambiText text={entry.evening_time || (strings as any).start || "Start"} size="small" color={entry.evening_time ? "default" : "gray"} />
                                                             <IconApp pack="FI" name="clock" size={14} color={theme.text} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     </View>
                                                     <View style={{ width: 100 }}>
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             onPress={() => setShowTimePicker({ entryIndex: index, field: 'evening_time_end' })}
                                                             style={{
                                                                 backgroundColor: theme.border,
@@ -804,7 +804,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                         >
                                                             <YambiText text={entry.evening_time_end || (strings as any).end || "End"} size="small" color={entry.evening_time_end ? "default" : "gray"} />
                                                             <IconApp pack="FI" name="clock" size={14} color={theme.text} />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     </View>
                                                 </>
                                             )}
@@ -819,7 +819,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                 {availableTags.map((tag, tagIndex) => {
                                                     const isSelected = entry.tags.includes(tag);
                                                     return (
-                                                        <TouchableOpacity
+                                                        <Pressable
                                                             key={tagIndex}
                                                             onPress={() => toggleTimetableTag(index, tag)}
                                                             style={{
@@ -837,7 +837,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                                                 <IconApp pack="FI" name="check" size={12} color={theme.high_color} styles={{ marginRight: 4 }} />
                                                             )}
                                                             <YambiText text={tag} size="small" color="high" />
-                                                        </TouchableOpacity>
+                                                        </Pressable>
                                                     );
                                                 })}
                                             </View>
@@ -868,7 +868,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                             {availableTags.map((tag, index) => {
                                 const isSelected = selectedTags.includes(tag);
                                 return (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={index}
                                         onPress={() => toggleTag(tag)}
                                         style={{
@@ -886,7 +886,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                             <IconApp pack="FI" name="check" size={12} color={theme.high_color} styles={{ marginRight: 4 }} />
                                         )}
                                         <YambiText text={tag} size="small" color="high" />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 );
                             })}
                         </View>
@@ -895,7 +895,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
 
                 <View style={{ marginBottom: 15 }}>
                             <YambiText text={(strings as any).images} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TouchableOpacity
+                    <Pressable
                         onPress={pickImages}
                         style={{
                             backgroundColor: theme.border,
@@ -909,7 +909,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                     >
                         <IconApp pack="FI" name="image" size={20} color={theme.high_color} styles={{ marginRight: 8 }} />
                                 <YambiText text={(strings as any).select_images} size="normal" color="high" />
-                    </TouchableOpacity>
+                    </Pressable>
                     {imageUris.length > 0 && (
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                             {imageUris.map((uri, index) => (
@@ -919,7 +919,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                         style={{ width: 100, height: 100, borderRadius: 8 }}
                                         resizeMode={FastImage.resizeMode.cover}
                                     />
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => removeImage(index)}
                                         style={{
                                             position: 'absolute',
@@ -934,7 +934,7 @@ const PostNews = ({ navigation, route }: NavProps) => {
                                         }}
                                     >
                                         <IconApp pack="FI" name="x" size={12} color="#FFFFFF" />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View>
                             ))}
                         </View>

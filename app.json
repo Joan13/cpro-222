@@ -5,7 +5,7 @@
     "version": "2.46.28",
     "scheme": "yambi",
     "orientation": "portrait",
-    "icon": "./assets/generated/app-icon.png",
+    "icon": "./src/assets/logo_icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "assetBundlePatterns": [
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/ic_launcher_round.png",
+        "foregroundImage": "./src/assets/logo_icon.png",
         "backgroundColor": "#ffffff"
       },
       "softwareKeyboardLayoutMode": "resize",
@@ -77,20 +77,26 @@
       ]
     },
     "web": {
-      "favicon": "./src/assets/logo1.png"
+      "favicon": "./src/assets/logo_icon.png"
     },
     "plugins": [
-      "./plugins/withYambiNative.js",
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/assets/notification_icon.png",
+          "color": "#780006",
+          "defaultChannel": "default"
+        }
+      ],
       [
         "react-native-bootsplash",
         {
-          "assetsDir": "assets/bootsplash",
+          "assetsDir": "./src/assets/bootsplash",
           "android": {
             "parentTheme": "EdgeToEdge"
           }
         }
       ],
-      "./plugins/withReactNativeVectorIcons.js",
       [
         "expo-av",
         {
@@ -98,8 +104,8 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-community/datetimepicker",
       "@react-native-firebase/messaging",
+      "@react-native-community/datetimepicker",
       "@react-native-google-signin/google-signin",
       [
         "@stripe/stripe-react-native",

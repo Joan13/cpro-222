@@ -1,4 +1,4 @@
-import { TouchableOpacity } from "react-native"
+import { Pressable } from "react-native"
 import { useAppSelector } from "../../../store/app/hooks";
 import { TextNormalYambi } from "../../app/Text";
 import { useObject, useQuery } from "@realm/react";
@@ -37,7 +37,7 @@ export const BusinessUserFilterView = ({ phone_number, onAction }: { phone_numbe
     // console.log(uuser.find(user=>user.))
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={() => onAction(phone_number)}
             style={{
                 marginVertical: 5,
@@ -48,7 +48,7 @@ export const BusinessUserFilterView = ({ phone_number, onAction }: { phone_numbe
             {/* {oo !== undefined ? <TextNormalYambi text={renderBusinessUserLevel(oo.level)} /> : null} */}
             {oo !== undefined ? <TextNormalYambi text={oo.user_name} /> : null}
             <TextNormalYambi text={phone_number} />
-        </TouchableOpacity>
+        </Pressable>
     )
 }
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ScrollView, SafeAreaView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { strings } from '../../lang/lang';
 import { useAppSelector, useAppDispatch } from '../../store/app/hooks';
@@ -461,7 +461,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                                 (() => {
                                     const disabled = isDurationDisabled(d);
                                     return (
-                                <TouchableOpacity
+                                <Pressable
                                         key={d}
                                     style={{
                                             backgroundColor: durationMonths === d ? theme.colors.high_color + '20' : theme.colors.border,
@@ -549,7 +549,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                                             bold
                                             style={{ marginLeft: 26, marginTop: 6 }}
                                     />
-                                </TouchableOpacity>
+                                </Pressable>
                                     );
                                 })()
                                 ))}
@@ -615,7 +615,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
 
                         {/* Subscribe Button */}
                         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-                            <TouchableOpacity
+                            <Pressable
                                 style={{
                                     backgroundColor: theme.colors.badge_background_color,
                                     borderRadius: 12,
@@ -648,7 +648,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                                         />
                                     </>
                                 )}
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </View>
                 </ScrollView>

@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useAppSelector } from "../../../store/app/hooks";
 import { strings } from "../../../lang/lang";
 import { IconApp } from "../../app/IconApp";
@@ -67,7 +67,7 @@ const ExpenseItem = ({ item, index, onPress }: { item: Expenses, index: number, 
     const tertiaryColorText = colorScheme === 0 ? "high3" : colorScheme === 1 ? "high" : "high2";
 
     return (
-        <TouchableOpacity
+        <Pressable
             onPress={onPress}
             style={{
                 backgroundColor: theme.background,
@@ -327,7 +327,7 @@ const ExpenseItem = ({ item, index, onPress }: { item: Expenses, index: number, 
                     </View>
                 </View>
             </View>
-        </TouchableOpacity>
+        </Pressable>
     );
 };
 

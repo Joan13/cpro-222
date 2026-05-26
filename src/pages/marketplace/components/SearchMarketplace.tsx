@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, TextInput, TouchableOpacity, SafeAreaView } from "react-native";
+import { View, TextInput, Pressable } from "react-native";
 import { useAppSelector, useAppDispatch } from "../../../store/app/hooks";
 import MarketplaceItem from "../../../components/lists/marketplace/MarketplaceItem.tsx";
 import { YambiText } from "../../../components/app/Text";
@@ -11,6 +11,7 @@ import axios from "axios";
 import { remote_host } from "../../../../GlobalVariables";
 import { setShowModalApp } from "../../../store/reducers/appSlice";
 import AppActivityIndicator from "../../../components/app/AppActivityIndicator";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SearchMarketplace = ({ navigation, route }: NavProps) => {
     const app_theme = useAppSelector(state => state.app_theme);
@@ -70,7 +71,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background, marginTop: 30 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background }}>
             {/* Search Bar */}
             <View style={{
                 flexDirection: 'row',
@@ -84,7 +85,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
                 // paddingVertical: 8,
             }}>
                 {/* Back Button */}
-                <TouchableOpacity
+                <Pressable
                     onPress={handleGoBack}
                     style={{
                         height: 32,
@@ -94,7 +95,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
                         marginRight: 8
                     }}>
                     <IconApp pack="FI" name="arrow-left" color={app_theme.colors.text} size={18} />
-                </TouchableOpacity>
+                </Pressable>
 
                 <View style={{ height: 32, width: 20, justifyContent: 'center', alignItems: 'center' }}>
                 {loading ? <AppActivityIndicator /> : null}
@@ -119,7 +120,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
 
                 {/* X Button */}
                 {searchQuery !== "" && (
-                    <TouchableOpacity
+                    <Pressable
                         onPress={handleClearSearch}
                         style={{
                             height: 32,
@@ -129,7 +130,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
                             marginLeft: 8
                         }}>
                         <IconApp pack="FI" name="x" color={app_theme.colors.gray} size={18} />
-                    </TouchableOpacity>
+                    </Pressable>
                 )}
             </View>
 

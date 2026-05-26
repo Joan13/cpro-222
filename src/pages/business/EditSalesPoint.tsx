@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, ScrollView, TextInput } from "react-native";
+import { View, ScrollView, TextInput } from "react-native";
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";

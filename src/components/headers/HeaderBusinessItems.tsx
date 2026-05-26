@@ -1,4 +1,4 @@
-import { View, TouchableOpacity } from "react-native"
+import { View, Pressable } from "react-native"
 import { useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { NavProps } from "../../types/types";
@@ -102,7 +102,7 @@ const HeaderBusinessItems = ({ navigation, route }: NavProps) => {
                     />
                 </ModalApp>
             ) : null}
-            <TouchableOpacity
+            <Pressable
                 onPress={NewArticle}
                 style={{
                     height: 30,
@@ -112,7 +112,7 @@ const HeaderBusinessItems = ({ navigation, route }: NavProps) => {
                     marginLeft: 5
                 }}>
                 <IconApp pack="FA6" name="circle-plus" size={20} color={theme.colors.text_design1} />
-            </TouchableOpacity>
+            </Pressable>
         </View>
     )
 }

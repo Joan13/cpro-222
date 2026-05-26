@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, View, Image, Pressable } from "react-native";
+import {  Text, View, Image, Pressable } from "react-native";
 import { TChat, TStory, TUser } from "../../../types/types";
 import Animated from "react-native-reanimated";
 // import MessageText from "./ReturnMessage";

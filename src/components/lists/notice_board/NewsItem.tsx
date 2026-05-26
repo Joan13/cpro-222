@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Dimensions, Image, Pressable, TextInput, Animated, ScrollView } from "react-native";
+import { View, Dimensions, Image, Pressable, TextInput, Animated, ScrollView } from "react-native";
 import { useState, useEffect, useRef, memo } from "react";
 import { useAppSelector } from "../../../store/app/hooks";
 import { SocketApp, media_url } from "../../../../GlobalVariables";
@@ -431,7 +431,7 @@ const NewsItem = ({ item, onPress }: NewsItemProps) => {
             {companyUser && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                     {/* Profile Picture */}
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             if (userProfile) {
                                 RootNavigation.navigate("ViewPhoto", { 
@@ -469,7 +469,7 @@ const NewsItem = ({ item, onPress }: NewsItemProps) => {
                                 <IconApp pack="FI" name="user" size={20} color={theme.gray} />
                             </View>
                         )}
-                    </TouchableOpacity>
+                    </Pressable>
                     
                     {/* Publisher Details */}
                     <View style={{ flex: 1 }}>

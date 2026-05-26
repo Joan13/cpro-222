@@ -1,4 +1,4 @@
-import { View, Text, Image, Pressable, Vibration, TouchableOpacity } from 'react-native';
+import { View, Text, Image, Vibration, Pressable } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import React, { memo, useEffect, useState } from 'react';
 import { useObject } from '@realm/react';
@@ -382,8 +382,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                             {item.response_to !== "" ?
                                 message !== null ?
                                     <View>
-                                        <TouchableOpacity
-                                            activeOpacity={0.7}
+                                        <Pressable
                                             onPress={() => {
                                                 if (scrollToMessage && item.response_to) {
                                                     scrollToMessage(item.response_to);
@@ -411,7 +410,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                 fontSize: app_description.small_general_font_size,
                                                 fontWeight: app_description.small_general_font_weight as any
                                             }}>{message.message_type === 2 ? strings.picture : message.message_type === 1 ? strings.voice_note : message.main_text_message}</Text>
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     </View>
                                     : null : null}
                             <View style={{

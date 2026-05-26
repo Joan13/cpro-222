@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Image, Pressable } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import { TBusinessUser } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from 'react';
@@ -131,7 +131,7 @@ const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: T
     //                     }}
     //                     text={item.user_names} />
     //             </View>
-    //             <TouchableOpacity
+    //             <Pressable
     //                 onPress={() => selectContact(item)}
     //                 style={{
     //                     width: 20,
@@ -148,7 +148,7 @@ const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: T
     //                     color={app_theme.colors.text}
     //                     name="x"
     //                     size={13} />
-    //             </TouchableOpacity>
+    //             </Pressable>
     //         </View>
     //     )
     // }
@@ -173,7 +173,7 @@ const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: T
                     <TextNormalYambiGray text={strings.business_level_error} />
                 </ModalApp> : null}
 
-            <TouchableOpacity
+            <Pressable
                 onPress={() => {
                     selectContact(item);
                 }}
@@ -287,7 +287,7 @@ const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: T
                     )}
                 </View>
 
-                <TouchableOpacity
+                <Pressable
                     onPress={() => {
                         if (conditionEditUser(item.level)) {
                             RootNavigation.navigate("EditBusinessUser", { business_id: item.business_id, sales_point_id: item.sales_point_id, user: item })
@@ -302,8 +302,8 @@ const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: T
                         borderRadius: 18,
                     }}>
                     <IconApp color={app_theme.colors.high_color} name="edit" pack="FI" size={16} />
-                </TouchableOpacity>
-            </TouchableOpacity>
+                </Pressable>
+            </Pressable>
 
             {/* <View style={{ borderColor: app_theme.colors.border, borderTopWidth: 1 }}>
                 <FlashList

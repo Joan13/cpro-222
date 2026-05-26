@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, TextInput, Pressable, SafeAreaView } from 'react-native';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -140,7 +140,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
     const AddComponent = () => {
         return (
             <View style={{ marginHorizontal: 0, borderColor: app_theme.colors.border, borderTopWidth: 0 }}>
-                {/* <TouchableOpacity onPress={() => navigation.navigate("NewGroup")} style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center' }}>
+                {/* <Pressable onPress={() => navigation.navigate("NewGroup")} style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center' }}>
                     <View style={{
                         width: 35,
                         height: 35,
@@ -162,12 +162,12 @@ const NewChat = ({ route, navigation }: NavProps) => {
                     }}>
                         <YambiText text={strings.new_group} size="normal" color="default" />
                     </View>
-                </TouchableOpacity> */}
+                </Pressable> */}
 
                 {/* <View style={{
                     flexDirection: 'row', justifyContent: 'center', alignItems: 'center'
                 }}>
-                    <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
+                    <Pressable style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
                         <View style={{
                             width: 35,
                             height: 35,
@@ -189,9 +189,9 @@ const NewChat = ({ route, navigation }: NavProps) => {
                         }}>
                             <YambiText text={strings.new_blog} size="normal" color="default" />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
 
-                    <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
+                    <Pressable style={{ flexDirection: 'row', justifyContent: 'flex-start', height: 60, alignItems: 'center', flex: 1 }}>
                         <View style={{
                             width: 35,
                             height: 35,
@@ -213,7 +213,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
                         }}>
                             <YambiText text={strings.new_article} size="normal" color="default" />
                         </View>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View> */}
 
                 {contacts.length > 0 ?
@@ -249,7 +249,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
                             style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: app_theme.colors.background, backgroundColor: app_theme.colors.background, color: app_theme.colors.text }}
                         />
                         {text_contact_search !== "" ?
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     dispatch(setTextContactSearch(""));
                                     setIIItems(contacts as never);
@@ -261,7 +261,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
                                     alignItems: 'center'
                                 }}>
                                 <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
-                            </TouchableOpacity> : null}
+                            </Pressable> : null}
                     </Animated.View> : null}
                 {/* renderItem={({ item, index }: { item: TMessage, index: number }) => ( */}
                 <FlashList

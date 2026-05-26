@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, TextInput, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable } from 'react-native';
 import axios from 'axios';
 import { strings } from '../../lang/lang';
 import { remote_host } from '../../../GlobalVariables';
@@ -10,6 +10,7 @@ import ModalApp from '../../components/app/ModalApp';
 import { IconApp } from '../../components/app/IconApp';
 import { TextNormalYambi, TextSmallYambiGray, YambiText } from '../../components/app/Text';
 import { setLoadingButton, setShowModalApp } from '../../store/reducers/appSlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MessageUs = () => {
     const theme = useAppSelector(state => state.app_theme);
@@ -102,7 +103,7 @@ const MessageUs = () => {
     };
 
     return (
-        <SafeAreaView
+        <View
             style={{
                 backgroundColor: theme.colors.background,
                 flex: 1,
@@ -122,7 +123,7 @@ const MessageUs = () => {
                             text={strings.select_message_type}
                             styles={{ marginLeft: 2, marginBottom: 8 }}
                         />
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 setShowTypeModal(true);
                                 dispatch(setShowModalApp(true));
@@ -140,7 +141,7 @@ const MessageUs = () => {
                             <Text style={{ color: theme.colors.text }}>
                                 {selectedLabel || strings.select_message_type}
                             </Text>
-                        </TouchableOpacity>
+                        </Pressable>
 
                         <TextInput
                             placeholderTextColor="gray"
@@ -219,7 +220,7 @@ const MessageUs = () => {
                 >
                     <ScrollView style={{ maxHeight: 400, paddingVertical: 0, paddingHorizontal: 0 }}>
                         {reportTypes.map((t, index) => (
-                            <TouchableOpacity
+                            <Pressable
                                 key={t.id}
                                 onPress={() => {
                                     setReportType(t.id);
@@ -245,7 +246,7 @@ const MessageUs = () => {
                                     styles={{ marginRight: 12 }}
                                 />
                                 <TextNormalYambi text={t.label} bold={reportType === t.id} />
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </ModalApp>
@@ -276,7 +277,7 @@ const MessageUs = () => {
                     <TextNormalYambi text={errorDetail} />
                 </ModalApp>
             )}
-        </SafeAreaView>
+        </View>
     );
 };
 

@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Pressable, Platform, ScrollView, Animated, RefreshControl, Alert } from "react-native";
+import { Pressable, View, Platform, ScrollView, Animated, RefreshControl, Alert } from "react-native";
 import { TBusiness, TBusinessSubscription, TSellsPoint } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -374,11 +374,12 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     }
 
     const MenuCard = ({ icon, title, onPress, iconPack = "FI", prominent = false, color }: { icon: string, title: string, onPress: () => void, iconPack?: string, prominent?: boolean, color?: string }) => (
-        <TouchableOpacity
+        <Pressable
             onPress={onPress}
             style={{
                 flex: 1,
                 backgroundColor: prominent ? app_theme.colors.badge_background_color : app_theme.colors.border,
+                // backgroundColor: prominent ? app_theme.colors.badge_background_color : color+"30",
                 borderRadius: 16,
                 padding: 20,
                 alignItems: 'center',
@@ -395,7 +396,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                 color={prominent ? "badge" : "default"}
                 style={{ marginTop: 10, textAlign: 'center' }}
             />
-        </TouchableOpacity>
+        </Pressable>
     );
 
     // Skip user relationship check for admin users
@@ -427,7 +428,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     title={strings.switch_business}>
                     <ScrollView style={{ maxHeight: 400 }}>
                         {businesses.map((business, index) => (
-                            <TouchableOpacity
+                            <Pressable
                                 key={business._id}
                                 onPress={() => {
                                     onBusinessSwitch(index);
@@ -471,7 +472,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 </View>
                                 {index === currentBusinessIndex ?
                                     <IconApp pack="FA" name="check-circle" size={20} color={app_theme.colors.high_color} /> : null}
-                            </TouchableOpacity>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </ModalApp> : null}
@@ -490,7 +491,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             sells_points.map((pos) => {
                                 const isLocked = !accessibleSalesPointIds.includes(pos._id);
                                 return (
-                                <TouchableOpacity
+                                <Pressable
                                     key={pos._id}
                                     disabled={isLocked}
                                     onPress={() => {
@@ -520,7 +521,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                     {isLocked
                                         ? <IconApp pack="FI" name="lock" size={18} color={app_theme.colors.error} />
                                         : <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />}
-                                </TouchableOpacity>
+                                </Pressable>
                                 );
                             })}
                     </ScrollView>
@@ -547,7 +548,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 if (!canAccessPOS) return null;
                                 const isLocked = !accessibleSalesPointIds.includes(pos._id);
                                 return (
-                                    <TouchableOpacity
+                                    <Pressable
                                         key={pos._id}
                                         disabled={isLocked}
                                         onPress={() => {
@@ -577,7 +578,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                         {isLocked
                                             ? <IconApp pack="FI" name="lock" size={18} color={app_theme.colors.error} />
                                             : <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />}
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 );
                             })}
                     </ScrollView>
@@ -587,7 +588,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                 {/* Header Section */}
                 {businesses.length > 1 ?
                     <View style={{ marginBottom: 20 }}>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 dispatch(setShowModalApp(true));
                                 setShowSwitchBusiness(true);
@@ -603,7 +604,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             }}>
                             <IconApp pack="FI" name="grid" size={16} color={app_theme.colors.high_color} />
                             <YambiText size="small" color="high" text={strings.switch_business} style={{ marginLeft: 8 }} />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View> : null}
 
                 {/* Business Card */}
@@ -666,7 +667,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                                 )}
                                             </View>
                                         </View>
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={() => {
                                                 if (conditionEditBusiness()) {
                                                     RootNavigation.navigate("AddBusinessSubscription", { business_id: item._id });
@@ -688,17 +689,16 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                                 text={strings.renew_my_subscription}
                                                 style={{ fontSize: 12 }}
                                             />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     </View>
                                 )}
                                 
                                 {/* Subscriber Count */}
                                 {subscriberCount > 0 && (
-                                    <TouchableOpacity
+                                    <Pressable
                                         onPress={() => {
                                             RootNavigation.navigate("BusinessSubscribers", { business_id: item._id });
                                         }}
-                                        activeOpacity={0.7}
                                         style={{
                                             flexDirection: 'row',
                                             alignItems: 'center',
@@ -718,7 +718,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                         />
                                         <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
                                         <IconApp pack="FI" name="chevron-right" size={12} color={app_theme.colors.gray} styles={{ marginLeft: 4 }} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 )}
                                 
                                 {!businessExpired ?
@@ -732,7 +732,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             <IconApp pack="FA" name="warning" size={14} color={app_theme.colors.error} />
                                             <YambiText size="small" color="error" text={strings.expired_subscription} style={{ marginLeft: 5 }} />
                                         </View>
-                                        <TouchableOpacity
+                                        <Pressable
                                             onPress={() => {
                                                 if (conditionEditBusiness()) {
                                                     RootNavigation.navigate("AddBusinessSubscription", { business_id: item._id });
@@ -752,7 +752,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             }}>
                                             <IconApp pack="FI" name="refresh-cw" size={14} color={app_theme.colors.high_color} />
                                             <YambiText size="small" color="high" text={strings.renew_my_subscription} style={{ marginLeft: 6 }} />
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     </View>}
                             </View>
                         </View>
@@ -880,17 +880,17 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 <YambiText size="small" color="gray" text={strings.users} />
                             </View> : null}
                         {/* {subscriberCount > 0 ?
-                            <TouchableOpacity 
+                            <Pressable 
                                 style={{ alignItems: 'center' }}
                                 onPress={() => {
                                     RootNavigation.navigate("BusinessSubscribers", { business_id: item._id });
                                 }}>
                                 <YambiText color="high" text={subscriberCount.toString()} bold />
                                 <YambiText size="small" color="gray" text={strings.followers} />
-                            </TouchableOpacity> : null} */}
+                            </Pressable> : null} */}
                     </View>
 
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => setShowBusinessInfo(!showBusinessInfo)}
                         style={{
                             flexDirection: 'row',
@@ -904,7 +904,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                         }}>
                         <IconApp pack="FI" name={showBusinessInfo ? "chevron-up" : "info"} size={16} color={app_theme.colors.high_color} />
                         <YambiText size="small" color="high" text={showBusinessInfo ? strings.hide : strings.business_info} style={{ marginLeft: 8 }} />
-                    </TouchableOpacity>
+                    </Pressable>
 
                     <Animated.View style={{
                         maxHeight: businessInfoHeight.interpolate({
@@ -927,23 +927,23 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             {item.phone_number && item.phone_number.trim() !== '' ?
                                 <View style={{ marginBottom: 12 }}>
                                     <YambiText size="small" color="gray" text={strings.phone} style={{ marginBottom: 5 }} />
-                                    <TouchableOpacity onPress={() => copyToClipboard(item.phone_number)}>
+                                    <Pressable onPress={() => copyToClipboard(item.phone_number)}>
                                         <YambiText text={item.phone_number} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View> : null}
                             {item.emails && item.emails.trim() !== '' ?
                                 <View style={{ marginBottom: 12 }}>
                                     <YambiText size="small" color="gray" text={strings.emails} style={{ marginBottom: 5 }} />
-                                    <TouchableOpacity onPress={() => copyToClipboard(item.emails)}>
+                                    <Pressable onPress={() => copyToClipboard(item.emails)}>
                                         <YambiText text={item.emails} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View> : null}
                             {item.tax_number && item.tax_number.trim() !== '' ?
                                 <View style={{ marginBottom: 12 }}>
                                     <YambiText size="small" color="gray" text={strings.tax_number} style={{ marginBottom: 5 }} />
-                                    <TouchableOpacity onPress={() => copyToClipboard(item.tax_number)}>
+                                    <Pressable onPress={() => copyToClipboard(item.tax_number)}>
                                         <YambiText text={item.tax_number} />
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 </View> : null}
                             {item.business_address && item.business_address.trim() !== '' ?
                                 <View style={{ marginBottom: 12 }}>
@@ -951,7 +951,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                     <YambiText text={item.business_address} />
                                 </View> : null}
 
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={() => {
                                     if (conditionEditBusiness()) {
                                         RootNavigation.navigate("EditBusiness", { business: item });
@@ -970,7 +970,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 }}>
                                 <IconApp pack="FI" name="edit" size={16} color={app_theme.colors.high_color} />
                                 <YambiText size="small" color="high" text={strings.add_business_information} style={{ marginLeft: 8 }} />
-                            </TouchableOpacity>
+                            </Pressable>
                         </View>
                     </Animated.View>
                 </View>
@@ -987,11 +987,10 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             borderColor: app_theme.colors.error + '40',
                         }}
                     >
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 if (lowStockItems.length > 3) setShowLowStock(!showLowStock);
                             }}
-                            activeOpacity={0.8}
                             style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
@@ -1015,7 +1014,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                     color={app_theme.colors.gray}
                                 />
                             ) : null}
-                        </TouchableOpacity>
+                        </Pressable>
 
                         <View style={{ marginTop: 12 }}>
                             {(showLowStock ? lowStockItems : lowStockItems.slice(0, 3)).map((i: any, idx: number) => (
@@ -1074,7 +1073,8 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                         icon="store"
                         title={strings.sells_points}
                         iconPack="MT"
-                        color="#EC4899"
+                        // color="#EC4899"
+                        color={app_theme.colors.high_color2}
                         onPress={() => {
                             dispatch(setShowModalApp(true));
                             setShowPOSList(true);
@@ -1083,7 +1083,8 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     <MenuCard
                         icon="users"
                         title={strings.users}
-                        color="#3B82F6"
+                        // color="#3B82F6"
+                        color={app_theme.colors.high_color3}
                         onPress={() => {
                             if (conditionGoUsers()) {
                                 RootNavigation.navigate("UserBusinessUsers", { business_id: item._id });
@@ -1097,7 +1098,8 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     <MenuCard
                         icon="package"
                         title={strings.inventory}
-                        color="#F59E0B"
+                        // color="#F59E0B"
+                        color={app_theme.colors.high_color}
                         onPress={() => {
                             if (conditionGoUsers()) {
                                 const maxArticles = maxArticlesAllowed;
@@ -1115,7 +1117,8 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     <MenuCard
                         icon="trending-up"
                         title={strings.sales}
-                        color="#10B981"
+                        // color="#10B981"
+                        color={app_theme.colors.success}
                         onPress={() => RootNavigation.navigate("BusinessSales", { business_id: item._id, sales_point_id: "", item_id: "" })}
                     />
                     <MenuCard
@@ -1183,13 +1186,12 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     </View>
                 </View>
 
-                <TouchableOpacity
+                <Pressable
                     onPress={() => {
                         if (conditionGoUsers()) {
                             RootNavigation.navigate("BusinessInventoryMovementHistory", { business_id: item._id });
                         }
                     }}
-                    activeOpacity={0.8}
                     style={{
                         backgroundColor: app_theme.colors.border,
                         borderRadius: 12,
@@ -1212,7 +1214,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                         />
                     </View>
                     <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />
-                </TouchableOpacity>
+                </Pressable>
 
                 <SalesCharts
                     sales={Array.from(bs as any)}
@@ -1260,7 +1262,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
 
                 {/* Team Card */}
                 {bu.length > 0 ?
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             if (conditionGoUsers()) {
                                 RootNavigation.navigate("UserBusinessUsers", { business_id: item._id });
@@ -1285,7 +1287,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             </View>
                         </View>
                         <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />
-                    </TouchableOpacity> : null}
+                    </Pressable> : null}
             </View>
         </ScrollView>
     );
