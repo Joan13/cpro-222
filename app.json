@@ -91,7 +91,7 @@
       [
         "react-native-bootsplash",
         {
-          "assetsDir": "./src/assets/bootsplash",
+          "assetsDir": "./assets/bootsplash",
           "android": {
             "parentTheme": "EdgeToEdge"
           }
