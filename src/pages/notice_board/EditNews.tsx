@@ -12,7 +12,7 @@ import { NavProps, TNews, TCompany } from "../../types/types";
 import { IconApp } from "../../components/app/IconApp";
 import moment from "moment";
 import ImagePicker from 'react-native-image-crop-picker';
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 
 const EditNews = ({ navigation, route }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme.colors);
@@ -344,10 +344,10 @@ const EditNews = ({ navigation, route }: NavProps) => {
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                             {imageUris.map((uri, index) => (
                                 <View key={index} style={{ position: 'relative', width: 100, height: 100 }}>
-                                    <FastImage
-                                        source={{ uri: uri }}
+                                    <ExpoImage
+                                        source={uri}
                                         style={{ width: 100, height: 100, borderRadius: 8 }}
-                                        resizeMode={FastImage.resizeMode.cover}
+                                        contentFit="cover"
                                     />
                                     <Pressable
                                         onPress={() => removeImage(index)}

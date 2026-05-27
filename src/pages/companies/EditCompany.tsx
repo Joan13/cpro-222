@@ -14,7 +14,7 @@ import axios from "axios";
 import { NavProps, TCompany } from "../../types/types";
 import moment from "moment";
 import ImagePicker from 'react-native-image-crop-picker';
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 
 const EditCompany = ({ navigation, route }: NavProps) => {
 
@@ -343,40 +343,32 @@ const EditCompany = ({ navigation, route }: NavProps) => {
                                 borderColor: theme.high_color + '30'
                             }}>
                                 {company.logo === "" ?
-                                    <FastImage
+                                    <ExpoImage
                                         style={{
                                             width: 100,
                                             height: 100
                                         }}
-                                        resizeMode={FastImage.resizeMode.contain}
+                                        contentFit="contain"
                                         source={require("./../../assets/budget.png")} />
                                     :
                                     profile !== "" ?
-                                        <FastImage
+                                        <ExpoImage
                                             style={{
                                                 width: 150,
                                                 height: 150,
                                                 borderRadius: 150
                                             }}
-                                            resizeMode={FastImage.resizeMode.cover}
-                                            source={{
-                                                priority: FastImage.priority.high,
-                                                cache: 'immutable',
-                                                uri: profile
-                                            }} />
+                                            contentFit="cover"
+                                            source={profile} />
                                         :
-                                        <FastImage
+                                        <ExpoImage
                                             style={{
                                                 width: 150,
                                                 height: 150,
                                                 borderRadius: 150
                                             }}
-                                            resizeMode={FastImage.resizeMode.cover}
-                                            source={{
-                                                priority: FastImage.priority.high,
-                                                cache: 'immutable',
-                                                uri: media_url + "/company_logos/" + company.logo
-                                            }} />}
+                                            contentFit="cover"
+                                            source={media_url + "/company_logos/" + company.logo} />}
                             </View>
                         </Pressable>
 

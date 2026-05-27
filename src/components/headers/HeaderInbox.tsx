@@ -9,9 +9,9 @@ import { IconApp } from '../app/IconApp';
 import { NavProps, TUser } from '../../types/types';
 import { useObject } from '@realm/react';
 import { UserContacts, UsersMessages } from '../../store/database/Models';
-import FastImage from 'react-native-fast-image';
 import {  renderDateTime, SocketApp, media_url, formatPhoneInternational } from '../../../GlobalVariables';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { Image as ExpoImage } from 'expo-image';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -206,19 +206,15 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
               style={{ width: 40, height: 40, marginRight: 10, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
             />
               :
-              <FastImage
+              <ExpoImage
                 style={{
                   height: 40,
                   width: 40,
                   borderRadius: 50,
                   marginRight: 10
                 }}
-                resizeMode={FastImage.resizeMode.cover}
-                source={{
-                  priority: FastImage.priority.high,
-                  cache: 'immutable',
-                  uri: media_url + "/profile_pictures/" + userr.user_profile
-                }} />}
+                contentFit="cover"
+                source={media_url + "/profile_pictures/" + userr.user_profile} />}
           </Pressable>
 
           <Pressable onPress={GoUserProfileInfo}

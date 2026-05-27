@@ -12,7 +12,7 @@ import { IconApp } from "../../app/IconApp";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { remote_host_server, renderDateTime, media_url, formatPhoneInternational } from "../../../../GlobalVariables";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import * as RootNavigation from '../../../services/Navigation_ref';
 import * as DropdownMenu from 'zeego/dropdown-menu';
 import * as ContextMenu from 'zeego/context-menu';
@@ -340,18 +340,14 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
                 />
                     :
-                    <FastImage
+                    <ExpoImage
                         style={{
                             height: 45,
                             width: 45,
                             borderRadius: 50
                         }}
-                        resizeMode={FastImage.resizeMode.cover}
-                        source={{
-                            priority: FastImage.priority.high,
-                            cache: 'immutable',
-                            uri: media_url + "/profile_pictures/" + userr.user_profile
-                        }} />}
+                        contentFit="cover"
+                        source={media_url + "/profile_pictures/" + userr.user_profile} />}
             </Pressable>
             <View style={{
                 flex: 1,

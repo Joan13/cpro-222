@@ -1,6 +1,6 @@
 import { View, Pressable, Image } from "react-native";
 import { YambiText } from "../../app/Text";
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, media_url } from "../../../../GlobalVariables";
 import * as RootNavigation from '../../../services/Navigation_ref';
 import moment from "moment";
@@ -35,14 +35,10 @@ const CommentItem = ({ comment, size = 'normal', showFullText = true }: CommentI
                 style={{ marginRight: isSmall ? 8 : 10 }}
             >
                 {comment.user_profile ? (
-                    <FastImage
+                    <ExpoImage
                         style={{ width: profileSize, height: profileSize, borderRadius: borderRadius }}
-                        resizeMode={FastImage.resizeMode.cover}
-                        source={{
-                            priority: FastImage.priority.normal,
-                            cache: 'immutable',
-                            uri: media_url + "/profile_pictures/" + comment.user_profile
-                        }}
+                        contentFit="cover"
+                        source={media_url + "/profile_pictures/" + comment.user_profile}
                     />
                 ) : (
                     <Image

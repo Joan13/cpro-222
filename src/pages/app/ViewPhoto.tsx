@@ -1,6 +1,6 @@
 import { Pressable, View, Dimensions, Image } from "react-native";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { useAppSelector } from "../../store/app/hooks";
 import { NavProps } from "../../types/types";
 import { TextNormalYambiGray } from "../../components/app/Text";
@@ -260,18 +260,16 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
             <GestureDetector gesture={zoomGestures}>
                 <Animated.View style={[{ width: '100%', height: '100%' }, panStyle]}>
                     <Animated.View style={scaledImageFrameStyle}>
-                        <FastImage
+                        <ExpoImage
                             style={{ width: '100%', height: '100%' }}
-                            resizeMode={FastImage.resizeMode.contain}
+                            contentFit="contain"
                             source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
                                 uri,
                             }}
                             onLoadStart={() => setLoading(true)}
-                            onLoad={(e: { nativeEvent?: { width?: number; height?: number } }) => {
-                                const w = e.nativeEvent?.width;
-                                const h = e.nativeEvent?.height;
+                            onLoad={(e) => {
+                                const w = e.source?.width;
+                                const h = e.source?.height;
                                 if (w && h && w > 0 && h > 0) {
                                     natW.value = w;
                                     natH.value = h;

@@ -1,7 +1,7 @@
 import { View, Text, useWindowDimensions, Pressable, Alert, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import {  useNavigation } from '@react-navigation/native';
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import Animated, { 
     useSharedValue, 
     useAnimatedStyle, 
@@ -120,18 +120,14 @@ const ViewFullInboxImage = ({ route }: ViewImage) => {
                 <GestureDetector gesture={panGesture}>
                     <Animated.View style={[{ flex: 1 }, animatedStyle]}>
                         <Pinchable style={{ flex: 1 }}>
-                            <FastImage
+                            <ExpoImage
                                 style={{
                                     flex: 1,
                                     borderRadius: 5,
                                     width: width
                                 }}
-                                resizeMode={FastImage.resizeMode.contain}
-                                source={{
-                                    priority: FastImage.priority.high,
-                                    cache: 'immutable',
-                                    uri: mm.message_read === 5 ? mm.main_text_message : media_url + "/picture_messages/" + mm.main_text_message
-                                }} />
+                                contentFit="contain"
+                                source={mm.message_read === 5 ? mm.main_text_message : media_url + "/picture_messages/" + mm.main_text_message} />
                         </Pinchable>
                     </Animated.View>
                 </GestureDetector>

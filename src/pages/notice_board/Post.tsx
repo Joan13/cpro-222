@@ -7,7 +7,7 @@ import { YambiText } from "../../components/app/Text";
 import { remote_host, SocketApp, media_url } from "../../../GlobalVariables";
 import axios from "axios";
 import { NavProps, TCompany, TCompanyUser } from "../../types/types";
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import * as RootNavigation from '../../services/Navigation_ref';
 import { getCompanyUserRole } from "../../util/getCompanyUserRole";
 import moment from "moment";
@@ -64,13 +64,13 @@ const AutoHeightImage = ({
                 backgroundColor: theme.border + '20',
             }}
         >
-            <FastImage
+            <ExpoImage
                 source={{ uri: imageUri }}
                 style={{
                     width: '100%',
                     height: '100%',
                 }}
-                resizeMode={FastImage.resizeMode.cover}
+                contentFit="cover"
             />
             {showOverlay && (
                 <View style={{
@@ -126,13 +126,13 @@ const FixedHeightImage = ({
                 backgroundColor: theme.border + '20',
             }}
         >
-            <FastImage
+            <ExpoImage
                 source={{ uri: imageUri }}
                 style={{
                     width: '100%',
                     height: '100%',
                 }}
-                resizeMode={FastImage.resizeMode.cover}
+                contentFit="cover"
             />
             {showOverlay && (
                 <View style={{
@@ -643,14 +643,10 @@ const Post = ({ navigation, route }: NavProps) => {
                             style={{ marginRight: 12 }}
                         >
                             {userProfile ? (
-                                <FastImage
+                                <ExpoImage
                                     style={{ width: 40, height: 40, borderRadius: 20 }}
-                                    resizeMode={FastImage.resizeMode.cover}
-                                    source={{
-                                        priority: FastImage.priority.normal,
-                                        cache: 'immutable',
-                                        uri: media_url + "/profile_pictures/" + userProfile
-                                    }}
+                                    contentFit="cover"
+                                    source={media_url + "/profile_pictures/" + userProfile}
                                 />
                             ) : (
                                 <View style={{

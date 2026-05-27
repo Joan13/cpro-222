@@ -16,7 +16,7 @@ import { randomString, renderDateUpToMilliseconds, SocketApp, copyToClipboard, r
 import moment from "moment";
 import SwitchApp from "../../components/app/SwitchApp";
 import ButtonNormal from "../../components/app/ButtonNormal";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import axios from "axios";
 import Realm from "realm";
 import AppActivityIndicator from "../../components/app/AppActivityIndicator";
@@ -906,14 +906,10 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                             })}
                         >
                             {business.logo && business.logo !== "" ? (
-                                <FastImage
+                                <ExpoImage
                                     style={{ width: 76, height: 76, borderRadius: 38 }}
-                                    resizeMode={FastImage.resizeMode.cover}
-                                    source={{
-                                        priority: FastImage.priority.high,
-                                        cache: 'immutable',
-                                        uri: media_url + "/business_logos/" + business.logo
-                                    }}
+                                    contentFit="cover"
+                                    source={media_url + "/business_logos/" + business.logo}
                                 />
                             ) : (
                                 <IconApp pack="MT" name="business-center" size={35} color={theme.high_color} />

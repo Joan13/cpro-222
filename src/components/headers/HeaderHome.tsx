@@ -1,8 +1,8 @@
-import { View, Pressable } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector } from '../../store/app/hooks';
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import {  media_url } from '../../../GlobalVariables';
 const packagee = './.././../../package.json';
 
@@ -38,8 +38,11 @@ const HeaderHome = () => {
       // paddingHorizontal: 15,
       // height: 60,
       backgroundColor: theme.colors.design_tip1,
-      borderBottomWidth: 1,
-      borderColor: theme.colors.border
+      // backgroundColor: 'green',
+      marginRight: 150
+      // flex:1
+      // borderBottomWidth: 1,
+      // borderColor: theme.colors.border
     }}>
       {app_description.home_user_image_position === 'left' ?
         <Pressable onPress={() => navigation.navigate('SettingsYambi' as never)}>
@@ -53,7 +56,7 @@ const HeaderHome = () => {
               // alignItems: app_description.home_user_image_position === 'left' ? 'center' :'flex-end',
             }}>
             {user_data.user_profile !== "" ?
-              <FastImage
+              <ExpoImage
                 style={{
                   width: app_description.home_user_image_size,
                   height: app_description.home_user_image_size,
@@ -61,10 +64,8 @@ const HeaderHome = () => {
                   borderColor: theme.colors.border,
                   borderWidth: 1
                 }}
-                resizeMode={FastImage.resizeMode.contain}
+                contentFit="contain"
                 source={{
-                  priority: FastImage.priority.high,
-                  cache: 'immutable',
                   uri: media_url + "/profile_pictures/" + user_data.user_profile
                 }} />
               :
@@ -81,19 +82,19 @@ const HeaderHome = () => {
         </Pressable>
         : null}
 
-      {/* <Text style={{
+      <Text style={{
         color: theme.colors.text_design1,
         fontSize: app_description.home_title_font_size,
         fontWeight: app_description.home_title_font_weight as any,
         flex: 1
-      }}>{title}</Text> */}
+      }} numberOfLines={1}>{title}</Text>
 
       {/* <HeaderRightHome /> */}
     </View>
   )
 }
 
-{/* <FastImage
+{/* <ExpoImage
               style={{
                 width: app_description.home_user_image_size, 
                 height: app_description.home_user_image_size,
@@ -101,10 +102,8 @@ const HeaderHome = () => {
                    borderColor: theme.colors.border,
                    borderWidth: 1
               }}
-              resizeMode={FastImage.resizeMode.contain}
+              contentFit="contain"
               source={{
-                   priority: FastImage.priority.high,
-                   cache: 'immutable',
                    uri: media_url + "/profile_pictures/" + user_data.user_profile
               }} /> */}
 

@@ -6,7 +6,7 @@ import { remote_host_server, formatPhoneInternational, media_url } from "../../.
 import * as RootNavigation from './../../../services/Navigation_ref';
 import { useObject } from "@realm/react";
 import { UserContacts, UserData } from "../../../store/database/Models";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { TUser } from "../../../types/types";
 
 interface SubscriberItemProps {
@@ -107,14 +107,10 @@ const SubscriberItem = ({ item }: SubscriberItemProps) => {
             }}>
             <Pressable onPress={ViewPhoto}>
                 {user?.user_profile && user.user_profile !== "" ? (
-                    <FastImage
+                    <ExpoImage
                         style={{ width: 50, height: 50, borderRadius: 25 }}
-                        resizeMode={FastImage.resizeMode.cover}
-                        source={{
-                            priority: FastImage.priority.high,
-                            cache: 'immutable',
-                            uri: media_url + "/profile_pictures/" + user.user_profile
-                        }}
+                        contentFit="cover"
+                        source={media_url + "/profile_pictures/" + user.user_profile}
                     />
                 ) : (
                     <View style={{

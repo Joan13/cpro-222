@@ -11,7 +11,7 @@ import { strings } from "../../../lang/lang";
 import * as RootNavigation from './../../../services/Navigation_ref';
 import ModalApp from "../../app/ModalApp";
 import { setShowModalApp } from "../../../store/reducers/appSlice";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import * as DropdownMenu from 'zeego/dropdown-menu';
 import axios from "axios";
 import SalesCharts from "../../../pages/business/SalesCharts";
@@ -457,14 +457,10 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                     {business.logo === "" ?
                                         <IconApp pack="MT" name="business-center" size={20} color={app_theme.colors.text} />
                                         :
-                                        <FastImage
+                                        <ExpoImage
                                             style={{ width: 40, height: 40, borderRadius: 20 }}
-                                            resizeMode={FastImage.resizeMode.cover}
-                                            source={{
-                                                priority: FastImage.priority.high,
-                                                cache: 'immutable',
-                                                uri: media_url + "/business_logos/" + business.logo
-                                            }} />}
+                                            contentFit="cover"
+                                            source={media_url + "/business_logos/" + business.logo} />}
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <YambiText text={business.business_name} bold />
@@ -629,14 +625,10 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 {item.logo === "" ?
                                     <IconApp pack="MT" name="business-center" size={35} color={app_theme.colors.high_color} />
                                     :
-                                    <FastImage
+                                    <ExpoImage
                                         style={{ width: 76, height: 76, borderRadius: 38 }}
-                                        resizeMode={FastImage.resizeMode.cover}
-                                        source={{
-                                            priority: FastImage.priority.high,
-                                            cache: 'immutable',
-                                            uri: media_url + "/business_logos/" + item.logo
-                                        }} />}
+                                        contentFit="cover"
+                                        source={media_url + "/business_logos/" + item.logo} />}
                             </Pressable>
 
                             <View style={{ flex: 1 }}>

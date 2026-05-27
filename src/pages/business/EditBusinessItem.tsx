@@ -20,7 +20,7 @@ import SwitchApp from "../../components/app/SwitchApp";
 import DateRangePicker from "rn-select-date-range";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePicker from 'react-native-image-crop-picker';
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 
 const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
@@ -997,10 +997,10 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                         // Show local image if being uploaded
                                         if (itemImage !== "") {
                                             return (
-                                                <FastImage
+                                                <ExpoImage
                                                     style={{ width: 160, height: 160 }}
-                                                    resizeMode={FastImage.resizeMode.cover}
-                                                    source={{ uri: itemImage }} />
+                                                    contentFit="cover"
+                                                    source={itemImage} />
                                             );
                                         }
 
@@ -1023,14 +1023,10 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                             // Array.isArray(imagesArray) && 
                                             if (imagesArray.length > 0) {
                                                 return (
-                                                    <FastImage
+                                                    <ExpoImage
                                                         style={{ width: 160, height: 160 }}
-                                                        resizeMode={FastImage.resizeMode.cover}
-                                                        source={{
-                                                            priority: FastImage.priority.high,
-                                                            cache: 'immutable',
-                                                            uri: media_url + "/items_images/" + imagesArray[0]
-                                                        }} />
+                                                        contentFit="cover"
+                                                        source={media_url + "/items_images/" + imagesArray[0]} />
                                                 );
                                             }
                                         } catch (e) {

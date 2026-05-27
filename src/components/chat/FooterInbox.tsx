@@ -15,14 +15,22 @@ import { UserChats, UsersMessages } from '../../store/database/Models';
 import AudioRecorderPlayer, { AVEncoderAudioQualityIOSType, AVEncodingOption, AVModeIOSOption, AudioEncoderAndroidType, AudioSet, AudioSourceAndroidType } from 'react-native-audio-recorder-player';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import RNFS, { stat } from 'react-native-fs';
-import { AVPlaybackStatus, Audio } from 'expo-av';
+import {
+  AudioModule,
+  AudioStatus,
+  createAudioPlayer,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioPlayerStatus,
+  useAudioRecorder,
+  useAudioRecorderState
+} from 'expo-audio';
 import { YambiText } from '../app/Text';
 import * as RootNavigation from './../../services/Navigation_ref';
 import YambiEmojiKeyboard from '../app/YambiEmojiKeyboard';
 import TextInputComponent from '../app/TextInputMessage';
 import { PlayActionSound, randomString, renderDateUpToMilliseconds, SocketApp } from '../../../GlobalVariables';
 import { IconApp } from '../app/IconApp';
-import { Sound } from 'expo-av/build/Audio';
 // const KeyboardRegistry = Keyboard.KeyboardRegistry;
 
 const audioRecorderPlayer = AudioRecorderPlayer;
@@ -67,9 +75,7 @@ const FooterChat = ({ user }: { user: string }) => {
   // const [pause, setPause] = useState<boolean>(false);
   const [uri, setUri] = useState("");
   const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [recording, setRecording] = useState<Audio.Recording | undefined>(undefined);
-  const [status, setStatus] = useState<AVPlaybackStatus>();
+  const [status, setStatus] = useState<AudioStatus>();
   const [fileSize, setFileSize] = useState<number>();
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
@@ -81,7 +87,14 @@ const FooterChat = ({ user }: { user: string }) => {
 
   const chats = useQuery(UserChats);
 
-  const [sound, setSound] = useState<Sound>();
+  const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder, 500);
+  const playerStatus = useAudioPlayerStatus(sound);
+
+  useEffect(() => {
+    setStatus(playerStatus);
+  }, [playerStatus]);
 
   const renderResponseTo = () => {
     if(message===null) return;
@@ -146,13 +159,7 @@ const FooterChat = ({ user }: { user: string }) => {
       const exists = await RNFS.exists(uri);
 
       if (exists) {
-        // console.log('Loading Sound');
-        const { sound } = await Audio.Sound.createAsync({ uri: uri }, { progressUpdateIntervalMillis: 1000 / 60 }, onPlaybackStatusUpdate);
-
-        // if (sound) {
-        //     console.log("Sound loaded");
-        // }
-        setSound(sound);
+        sound.replace({ uri });
       }
     } catch (error) {
 
@@ -171,23 +178,24 @@ const FooterChat = ({ user }: { user: string }) => {
     }
 
 
-    if (status?.isLoaded && status?.isPlaying === false && status?.didJustFinish === true) {
+    if (status?.isLoaded && status?.playing === false && status?.didJustFinish === true) {
       setIsPaused(false);
 
-      // dispatch(setPlayingVoiceNote(true));
-      await sound.replayAsync();
+      await sound.seekTo(0);
+      sound.play();
     }
-    else if (status?.isLoaded && status?.isPlaying && isPaused === false) {
+    else if (status?.isLoaded && status?.playing && isPaused === false) {
       setIsPaused(true);
-      await sound.pauseAsync();
-    } else if (status?.isLoaded && (status?.isPlaying === false && status?.didJustFinish === false && isPaused === false)) {
+      sound.pause();
+    } else if (status?.isLoaded && (status?.playing === false && status?.didJustFinish === false && isPaused === false)) {
 
       setIsPaused(false);
-      await sound.replayAsync();
+      await sound.seekTo(0);
+      sound.play();
     }
     else {
       setIsPaused(false);
-      await sound.playAsync();
+      sound.play();
     }
   }
 
@@ -196,13 +204,14 @@ const FooterChat = ({ user }: { user: string }) => {
       return;
     }
 
-    await sound.stopAsync();
+    sound.pause();
+    await sound.seekTo(0);
     setIsPaused(false);
   }
 
   const pauseBecauseAnotherVoiceStartedPlaying = async () => {
     if (voice_note_being_played !== uri) {
-      await sound?.pauseAsync();
+      sound.pause();
       setIsPaused(true);
     }
   }
@@ -211,18 +220,9 @@ const FooterChat = ({ user }: { user: string }) => {
     pauseBecauseAnotherVoiceStartedPlaying();
   }, [voice_note_being_played]);
 
-  const onPlaybackStatusUpdate = async (status: AVPlaybackStatus) => {
-
-    setStatus(status);
-
-    if (!status?.isLoaded) {
-      return;
-    }
-  };
-
-  const isPlaying = status?.isLoaded ? status.isPlaying : false;
-  const position = status?.isLoaded ? status.positionMillis : 0;
-  const duration = status?.isLoaded && typeof status.durationMillis === 'number' ? status.durationMillis : 1;
+  const isPlaying = status?.isLoaded ? status.playing : false;
+  const position = status?.isLoaded ? status.currentTime * 1000 : 0;
+  const duration = status?.isLoaded ? status.duration * 1000 : 1;
   const progress = position / duration;
 
   const formatMilliseconds = (milliseconds: number) => {
@@ -302,13 +302,14 @@ const FooterChat = ({ user }: { user: string }) => {
     // }, 50);
 
     try {
-      if (permissionResponse && permissionResponse.status !== 'granted') {
-        // console.log('Requesting permission..');
-        await requestPermission();
+      const permissionResponse = await AudioModule.getRecordingPermissionsAsync();
+      if (!permissionResponse.granted) {
+        await AudioModule.requestRecordingPermissionsAsync();
       }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true
+
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true
       });
 
       // console.log('Starting recording..');
@@ -327,30 +328,18 @@ const FooterChat = ({ user }: { user: string }) => {
         setPlayingRecorded(false);
       }
 
-      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(recording);
-      // console.log(recording._uri);
-      // console.log('Recording started');
+      await recorder.prepareToRecordAsync();
+      recorder.record();
     } catch (err) {
       // console.error('Failed to start recording', err);
     }
   };
-
+  
   useEffect(() => {
-    let interval;
-    if (recording) {
-      interval = setInterval(async () => {
-        const status = await recording.getStatusAsync();
-        if (status.isRecording) {
-          setRecordTime(formatMilliseconds(status.durationMillis)); // Convertir en secondes
-        }
-      }, 1000);
-    } else {
-      clearInterval(interval);
+    if (recorderState?.isRecording) {
+      setRecordTime(formatMilliseconds(recorderState.durationMillis));
     }
-    return () => clearInterval(interval);
-  }, [recording]);
+  }, [recorderState?.durationMillis, recorderState?.isRecording]);
 
   const onStopRecord = async () => {
     // // console.log("Starts stopping...")
@@ -369,19 +358,13 @@ const FooterChat = ({ user }: { user: string }) => {
     // audioRecorderPlayer.removeRecordBackListener();
     // setUri(result);
 
-    if (!recording) {
+    if (!recorderState?.isRecording) {
       return;
     }
 
-    // console.log('Stopping recording..');
-    setRecording(undefined);
-    await recording.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync(
-      {
-        allowsRecordingIOS: false,
-      }
-    );
-    const urii = recording.getURI();
+    await recorder.stop();
+    await setAudioModeAsync({ allowsRecording: false });
+    const urii = recorder.uri;
 
     if (urii)
       setUri(urii);
@@ -397,96 +380,43 @@ const FooterChat = ({ user }: { user: string }) => {
     return sound
       ? () => {
         // console.log('Unloading Sound');
-        sound.unloadAsync();
+        sound.remove();
       }
       : undefined;
   }, [uri]);
 
   const onVoice = async (index: number) => {
-
-    if (!sound) {
-      return;
-    }
-
     PlayActionSound(5);
 
-    // console.log(uri);
-
     if (index === 0) {
-
-      // sound.setOnPlaybackStatusUpdate((status) => updatePlayTime(status));
-
-      try {
-        const result = await sound.getStatusAsync();
-
-        if (result.isLoaded) {
-          if (!result.isPlaying) {
-            await sound.playAsync()
-              .then((s) => {
-                dispatch(setPlayingRecorded(true));
-                // startCounter(result.durationMillis);
-
-                setIsPaused(true);
-
-                setTimeout(async () => {
-                  dispatch(setPlayingRecorded(false));
-                  setIsPaused(false);
-
-                  await sound.unloadAsync();
-                }, result.durationMillis);
-              });
-          }
-        } else {
-          try {
-
-            const result = await sound.loadAsync({ uri: uri });
-
-            if (result.isLoaded) {
-              if (!result.isPlaying) {
-                await sound.playAsync()
-                  .then((s) => {
-                    dispatch(setPlayingRecorded(true));
-                    // startCounter(result.durationMillis);
-
-                    setIsPaused(true);
-
-                    setTimeout(async () => {
-                      dispatch(setPlayingRecorded(false));
-                      setIsPaused(false);
-
-                      await sound.unloadAsync();
-                    }, result.durationMillis);
-                  });
-              }
-            }
-          } catch (error) {
-            console.log(error)
-          }
-        }
-      } catch (error) {
-        console.log("error");
+      if (!status?.isLoaded) {
+        return;
       }
 
-
+      if (!status.playing) {
+        sound.play();
+        dispatch(setPlayingRecorded(true));
+        setIsPaused(true);
+      }
     }
 
     if (index === 1) {
-      await sound.pauseAsync();
+      sound.pause();
       setIsPaused(false);
     }
 
     if (index === 2) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
+      sound.pause();
+      await sound.seekTo(0);
       dispatch(setPlayingRecorded(false))
       setIsPaused(false);
       setPlayTime(0);
     }
   };
 
-  const updatePlayTime = async (status: AVPlaybackStatus) => {
+  const updatePlayTime = async (status: AudioStatus) => {
     if (status.isLoaded) {
-      setPlayTime(status.positionMillis);
+      setPlayTime(status.currentTime * 1000);
     }
   }
 
@@ -556,7 +486,8 @@ const FooterChat = ({ user }: { user: string }) => {
 
     // sendMessage(tk, 1, tk);
     // console.log(uri);
-    await sound?.unloadAsync();
+    sound.pause();
+    await sound.seekTo(0);
     // }, 100);
 
     // setUri("");
@@ -722,15 +653,9 @@ const FooterChat = ({ user }: { user: string }) => {
     // audioRecorderPlayer.removeRecordBackListener();
 
     // console.log('Stopping recording..');
-    if (recording) {
-      setRecording(undefined);
-      await recording.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync(
-        {
-          allowsRecordingIOS: false,
-        }
-      );
-      // const urii = recording.getURI();
+    if (recorderState?.isRecording) {
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
     }
 
     setReadyToSendVoiceNote(false);
@@ -742,7 +667,8 @@ const FooterChat = ({ user }: { user: string }) => {
     setTimeout(async () => {
       // sendMessage(tk, 1, tk);
       // console.log(uri);
-      await sound?.unloadAsync();
+      sound.pause();
+      await sound.seekTo(0);
     }, 100);
   }
 
@@ -1153,7 +1079,7 @@ const FooterChat = ({ user }: { user: string }) => {
                   }}>
                     <Animated.View style={[{
                       height: 6,
-                      backgroundColor: status?.isLoaded && status?.isPlaying ? app_theme.colors.high_color : app_theme.colors.gray,
+                      backgroundColor: status?.isLoaded && status?.playing ? app_theme.colors.high_color : app_theme.colors.gray,
                       borderRadius: 15
                     }, progressStyle]}></Animated.View>
                   </View>

@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, Pressable, Image, Dimensions, Platform } from "react-native";
+import { View, ScrollView, TextInput, Pressable, Dimensions, Platform } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -10,7 +10,7 @@ import { remote_host, randomString } from "../../../GlobalVariables";
 import axios from "axios";
 import { NavProps, TCompany } from "../../types/types";
 import ImagePicker from 'react-native-image-crop-picker';
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import { IconApp } from "../../components/app/IconApp";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from "moment";
@@ -914,10 +914,10 @@ const PostNews = ({ navigation, route }: NavProps) => {
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                             {imageUris.map((uri, index) => (
                                 <View key={index} style={{ position: 'relative', width: 100, height: 100 }}>
-                                    <FastImage
-                                        source={{ uri: uri }}
+                                    <ExpoImage
+                                        source={uri}
                                         style={{ width: 100, height: 100, borderRadius: 8 }}
-                                        resizeMode={FastImage.resizeMode.cover}
+                                        contentFit="cover"
                                     />
                                     <Pressable
                                         onPress={() => removeImage(index)}

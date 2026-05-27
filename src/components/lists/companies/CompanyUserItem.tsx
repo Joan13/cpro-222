@@ -4,7 +4,7 @@ import { useAppSelector } from "../../../store/app/hooks";
 import { YambiText } from "../../app/Text";
 import * as RootNavigation from './../../../services/Navigation_ref';
 import { getCompanyUserRole } from "../../../util/getCompanyUserRole";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, media_url } from "../../../../GlobalVariables";
 
 const CompanyUserItem = ({ item, company }: { item: TCompanyUser, company?: TCompany | null }) => {
@@ -51,14 +51,10 @@ const CompanyUserItem = ({ item, company }: { item: TCompanyUser, company?: TCom
                         borderColor: app_theme.colors.high_color + '30',
                         overflow: 'hidden',
                     }}>
-                        <FastImage
+                        <ExpoImage
                             style={{ width: '100%', height: '100%' }}
-                            resizeMode={FastImage.resizeMode.cover}
-                            source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
-                                uri: media_url + "/profile_pictures/" + userProfile
-                            }}
+                            contentFit="cover"
+                            source={media_url + "/profile_pictures/" + userProfile}
                         />
                     </View>
                 ) : (

@@ -1,4 +1,4 @@
-import { View, Pressable, Linking, FlatList, Dimensions, Image, StyleSheet, ViewToken } from 'react-native';
+import { View, Pressable, Linking, FlatList, Dimensions, Image, StyleSheet, ViewToken, Platform } from 'react-native';
 import { strings } from '../../lang/lang';
 import Animated, { FadeInDown, FadeInUp, SlideInLeft, SlideInRight, FadeOut, useAnimatedStyle, withSpring, useSharedValue, interpolate, Extrapolate, useAnimatedScrollHandler, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -12,6 +12,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import ModalApp from '../../components/app/ModalApp';
 import LottieView from 'lottie-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // GoogleSignin.configure({
 //     // webClientId: GOOGLE_WEB_CLIENT_ID,
@@ -254,6 +255,9 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
 
     useEffect(() => {
 
+        if (Platform.OS === 'ios')
+            return;
+
         const timeout = setTimeout(() => {
             dispatch(setShowModalApp(true));
             setShowNeedAccessWelcomeMessage(true);
@@ -338,7 +342,7 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: app_theme.colors.background, paddingVertical: 20 }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background }}>
             <StatusBarYambi />
 
             {showNeedAccessWelcomeMessage && (
@@ -456,7 +460,7 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
             </Animated.View>
 
 
-        </View>
+        </SafeAreaView>
     );
 }
 

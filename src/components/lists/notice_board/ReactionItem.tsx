@@ -1,7 +1,7 @@
 import { View, Pressable } from "react-native";
 import { YambiText } from "../../app/Text";
 import { IconApp } from "../../app/IconApp";
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, media_url } from "../../../../GlobalVariables";
 import * as RootNavigation from '../../../services/Navigation_ref';
 import moment from "moment";
@@ -32,14 +32,10 @@ const ReactionItem = ({ reaction, theme }: ReactionItemProps) => {
                 style={{ marginRight: 12 }}
             >
                 {reaction.user_profile ? (
-                    <FastImage
+                    <ExpoImage
                         style={{ width: 40, height: 40, borderRadius: 20 }}
-                        resizeMode={FastImage.resizeMode.cover}
-                        source={{
-                            priority: FastImage.priority.normal,
-                            cache: 'immutable',
-                            uri: media_url + "/profile_pictures/" + reaction.user_profile
-                        }}
+                        contentFit="cover"
+                        source={media_url + "/profile_pictures/" + reaction.user_profile}
                     />
                 ) : (
                     <View style={{

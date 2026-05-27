@@ -2,7 +2,7 @@ import { Text, View, Image, Pressable, Dimensions, Platform, KeyboardAvoidingVie
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useEffect, useState } from 'react';
 import Animated from "react-native-reanimated";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { IconApp } from "../../app/IconApp";
 import Pinchable from 'react-native-pinchable';
@@ -181,17 +181,14 @@ const NewStoryImagesList = ({ item, index, onReadyStatus, onGoBack, onDeleteStat
                 </ModalApp> : null}
 
             <Pinchable>
-                <FastImage
+                <ExpoImage
                     style={{
                         width: screenWidth,
                         // height: height,
                         flex: 1
                     }}
-                    resizeMode={FastImage.resizeMode.contain}
-                    source={{
-                        cache: 'immutable',
-                        uri: item.path
-                    }} />
+                    contentFit="contain"
+                    source={item.path} />
             </Pinchable>
 
             {/* <View style={{

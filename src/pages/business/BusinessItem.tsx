@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from "../../store/app/hooks";
 import { useEffect, useState, useMemo, useCallback, useLayoutEffect, useRef } from "react";
 import { YambiText } from "../../components/app/Text";
 import { IconApp } from "../../components/app/IconApp";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host, renderCurrency, media_url } from "../../../GlobalVariables";
 import { strings } from "../../lang/lang";
 import axios from "axios";
@@ -222,13 +222,10 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                 const imgs = JSON.parse(item.images);
                 if (Array.isArray(imgs) && imgs.length > 0) {
                     return (
-                        <FastImage
+                        <ExpoImage
                             style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }}
-                            source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
-                                uri: media_url + "/items_images/" + imgs[0]
-                            }}
+                            source={media_url + "/items_images/" + imgs[0]}
+                            contentFit="cover"
                         />
                     );
                 }

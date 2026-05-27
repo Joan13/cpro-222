@@ -24,6 +24,7 @@ import { setShowModalApp } from '../../store/reducers/appSlice';
 import ModalApp from '../../components/app/ModalApp';
 import RNRestart from 'react-native-restart';
 import AppActivityIndicator from '../../components/app/AppActivityIndicator';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Signup = ({ navigation, route }: NavProps) => {
 
@@ -913,7 +914,7 @@ const Signup = ({ navigation, route }: NavProps) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: app_theme.colors.background }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: app_theme.colors.background }]}>
             <StatusBarYambi />
             {showError ?
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false); setSignupErrorBody(null); }} singleButton title={strings.error}>
@@ -1030,7 +1031,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                         entering={FadeInUp.delay(500)}
                         style={styles.stepContainer}>
                         {/* Google Sign-In Button */}
-                        {can_show_google_button() && (
+                        {/* {can_show_google_button() && (
                             <Animated.View entering={FadeInUp.delay(550)} style={{ width: '100%', marginBottom: 20 }}>
                                 <Pressable
                                     onPress={signInWithGoogle}
@@ -1041,16 +1042,16 @@ const Signup = ({ navigation, route }: NavProps) => {
                                     </View>
                                 </Pressable>
                             </Animated.View>
-                        )}
+                        )} */}
 
                         {/* Divider */}
-                        {can_show_google_button() && (
+                        {/* {can_show_google_button() && (
                             <Animated.View entering={FadeInUp.delay(580)} style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 20 }}>
                                 <View style={{ flex: 1, height: 1, backgroundColor: app_theme.colors.border }} />
                                 <YambiText text={strings.or || "OR"} size="small" color="gray" style={{ marginHorizontal: 15 }} />
                                 <View style={{ flex: 1, height: 1, backgroundColor: app_theme.colors.border }} />
                             </Animated.View>
-                        )}
+                        )} */}
 
                         {/* Continue with Phone Button */}
                         {can_show_phone_button() && (
@@ -1161,7 +1162,8 @@ const Signup = ({ navigation, route }: NavProps) => {
                         <View style={{
                             backgroundColor: app_theme.colors.background,
                             flex: 1,
-                            paddingVertical: 20
+                            paddingVertical: 20,
+                            marginTop: 50
                         }}>
                             <View style={{ marginBottom: 0, marginHorizontal: 15, paddingLeft: 10, paddingVertical: 0, borderColor: app_theme.colors.border, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1 }}>
                                 <FontAwesome name="search" size={16} style={{ marginRight: 10, color: app_theme.colors.gray }} />
@@ -1288,7 +1290,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                     </Animated.View>
                 )}
             </ScrollView>
-        </View>
+        </SafeAreaView>
 
     );
 

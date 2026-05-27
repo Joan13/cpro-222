@@ -587,66 +587,125 @@ const Yambi = ({ navigation }: NavProps) => {
 
     // }, []);
 
+    // const loadContacts = () => {
+    //     Contacts.getAll()
+    //         .then(contacts => {
+    //             const contacts_list: Array<TContact> = [];
+    //             const namesByPhone: Record<string, string> = {};
+
+    //             for (const contact of contacts) {
+    //                 const phoneNumbers = contact?.phoneNumbers;
+    //                 if (!Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
+    //                     continue;
+    //                 }
+
+    //                 const displayName = (contact?.displayName ?? '').trim();
+    //                 for (const phone of phoneNumbers) {
+    //                     const rawNumber = phone?.number;
+    //                     if (typeof rawNumber !== 'string' || !rawNumber.trim()) {
+    //                         continue;
+    //                     }
+
+    //                     const normalizedNumber = removeWhiteSpaces(rawNumber);
+    //                     if (!normalizedNumber) {
+    //                         continue;
+    //                     }
+
+    //                     const contact_found: TContact = { displayName, phoneNumber: normalizedNumber };
+    //                     contacts_list.push(contact_found);
+
+    //                     if (displayName) {
+    //                         namesByPhone[normalizedNumber] = displayName;
+    //                     }
+    //                 }
+    //             }
+
+    //             const all_contacts = removeDuplicateNumbers(contacts_list);
+    //             contactNameByPhoneRef.current = namesByPhone;
+    //             dispatch(setRawContacts(all_contacts));
+    //             dispatch(setRawContactsPersisted(all_contacts));
+
+    //             setTimeout(() => {
+    //                 SocketApp.emit('update_contacts', all_contacts);
+    //             }, 1000);
+    //         })
+    //         .catch(e => { });
+    // }
+
+    const normalizePhoneNumber = (phone: string) => {
+        return phone.replace(/[^\d+]/g, '');
+    };
+    
+    const buildDisplayName = (contact: any) => {
+        return (
+            contact?.displayName?.trim() ||
+            [
+                contact?.givenName,
+                contact?.middleName,
+                contact?.familyName,
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .trim()
+        );
+    };
+    
     const loadContacts = () => {
         Contacts.getAll()
             .then(contacts => {
                 const contacts_list: Array<TContact> = [];
                 const namesByPhone: Record<string, string> = {};
-
+    
                 for (const contact of contacts) {
                     const phoneNumbers = contact?.phoneNumbers;
+    
                     if (!Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
                         continue;
                     }
-
-                    const displayName = (contact?.displayName ?? '').trim();
+    
+                    const displayName = buildDisplayName(contact);
+    
                     for (const phone of phoneNumbers) {
                         const rawNumber = phone?.number;
+    
                         if (typeof rawNumber !== 'string' || !rawNumber.trim()) {
                             continue;
                         }
-
-                        const normalizedNumber = removeWhiteSpaces(rawNumber);
+    
+                        const normalizedNumber = normalizePhoneNumber(rawNumber);
+    
                         if (!normalizedNumber) {
                             continue;
                         }
-
-                        const contact_found: TContact = { displayName, phoneNumber: normalizedNumber };
+    
+                        const contact_found: TContact = {
+                            displayName,
+                            phoneNumber: normalizedNumber,
+                        };
+    
                         contacts_list.push(contact_found);
-
+    
                         if (displayName) {
                             namesByPhone[normalizedNumber] = displayName;
                         }
                     }
                 }
-
+    
                 const all_contacts = removeDuplicateNumbers(contacts_list);
+    
                 contactNameByPhoneRef.current = namesByPhone;
+    
                 dispatch(setRawContacts(all_contacts));
                 dispatch(setRawContactsPersisted(all_contacts));
-
+    
                 setTimeout(() => {
                     SocketApp.emit('update_contacts', all_contacts);
                 }, 1000);
             })
-            .catch(e => { });
-
-        // (async () => {
-        //     const { status } = await Contacts.requestPermissionsAsync();
-        //     if (status === 'granted') {
-        //       const { data } = await Contacts.getContactsAsync({
-        //         // fields: [Contacts.Fields.Emails],
-        //       });
-
-        //     //   if (data.length > 0) {
-        //         const contact = data[0];
-        //         console.log(contact);
-        //     //   }
-        //     } else {
-        //         console.log("nooooo")
-        //     }
-        //   })();
-    }
+            .catch(e => {
+                console.log('LOAD CONTACTS ERROR', e);
+            });
+    };
 
     const Permissions_yambi = () => {
         // loadContacts();
@@ -2498,7 +2557,7 @@ const Yambi = ({ navigation }: NavProps) => {
                         headerLeft: () => (
                             <HeaderHome />
                         ),
-                        title: title
+                        title: ""
                     }} component={HomeRootStack} />
 
                     <Stack.Screen name="Inbox"

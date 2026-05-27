@@ -15,7 +15,7 @@ import * as RootNavigation from './../../../services/Navigation_ref';
 import SwitchApp from "../../app/SwitchApp";
 import ModalApp from "../../app/ModalApp";
 import { setShowModalApp } from "../../../store/reducers/appSlice";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 
 const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusiness, business_users?: TBusinessUser, index: number, isAdmin?: boolean }) => {
     const app_theme = useAppSelector(state => state.app_theme);
@@ -197,27 +197,23 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                             alignSelf: 'center'
                         }}>
                             {item.logo === "" ?
-                                <FastImage
+                                <ExpoImage
                                     style={{
                                         width: 85,
                                         height: 85
                                     }}
-                                    resizeMode={FastImage.resizeMode.contain}
+                                    contentFit="contain"
                                     source={require("./../../../assets/budget.png")} />
                                 :
-                                <FastImage
+                                <ExpoImage
                                     style={{
                                         width: 140,
                                         height: 140,
                                         borderRadius: 100
                                         // flex:1
                                     }}
-                                    resizeMode={FastImage.resizeMode.contain}
-                                    source={{
-                                        priority: FastImage.priority.high,
-                                        cache: 'immutable',
-                                        uri: media_url + "/business_logos/" + item.logo
-                                    }} />}
+                                    contentFit="contain"
+                                    source={media_url + "/business_logos/" + item.logo} />}
                         </Pressable>
                         <View style={{
                             justifyContent: 'flex-end',
@@ -498,26 +494,22 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
                         marginTop: 7
                     }}>
                         {item.logo === "" ?
-                            <FastImage
+                            <ExpoImage
                                 style={{
                                     width: 30,
                                     height: 30
                                 }}
-                                resizeMode={FastImage.resizeMode.contain}
+                                contentFit="contain"
                                 source={require("./../../../assets/budget.png")} />
                             :
-                            <FastImage
+                            <ExpoImage
                                 style={{
                                     width: 45,
                                     height: 45,
                                     borderRadius: 45
                                 }}
-                                resizeMode={FastImage.resizeMode.contain}
-                                source={{
-                                    priority: FastImage.priority.high,
-                                    cache: 'immutable',
-                                    uri: media_url + "/business_logos/" + item.logo
-                                }} />}
+                                contentFit="contain"
+                                source={media_url + "/business_logos/" + item.logo} />}
                     </Pressable>
                     <View style={{ flex: 1 }}>
                         <TextNormalYambi text={item.business_name} bold />

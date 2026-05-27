@@ -2,7 +2,7 @@ import moment from "moment";
 import { strings } from "./src/lang/lang";
 import { TContact, TUser } from "./src/types/types";
 import { io } from "socket.io-client";
-import { Audio } from "expo-av";
+import { createAudioPlayer } from "expo-audio";
 import Clipboard from '@react-native-clipboard/clipboard';
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { DateTime } from "luxon";
@@ -455,35 +455,39 @@ export const renderCurrency = (currencyID: number, full: boolean) => {
 }
 
 export const PlayActionSound = async (index: number) => {
+    const playShortActionSound = (source: number) => {
+        const player = createAudioPlayer(source, { updateInterval: 250 });
+        player.play();
+        setTimeout(() => {
+            try {
+                player.remove();
+            } catch (error) { }
+        }, 2500);
+    };
 
     if (index === 1) {
         // Vibration.vibrate(25);
-        // const { sound } = await Audio.Sound.createAsync(require('./../../assets/sounds/Double_Pop.mp3'));
-        // await sound.playAsync();
+        // playShortActionSound(require('./src/assets/sounds/Double_Pop.mp3'));
     }
 
     if (index === 2) {
         // Vibration.vibrate(10);
-        const { sound } = await Audio.Sound.createAsync(require('./src/assets/sounds/Single_Pop.mp3'));
-        await sound.playAsync();
+        playShortActionSound(require('./src/assets/sounds/Single_Pop.mp3'));
     }
 
     if (index === 3) {
         // Vibration.vibrate(25);
-        const { sound } = await Audio.Sound.createAsync(require('./src/assets/sounds/Triple_Pop.mp3'));
-        await sound.playAsync();
+        playShortActionSound(require('./src/assets/sounds/Triple_Pop.mp3'));
     }
 
     if (index === 4) {
         // Vibration.vibrate(10);
-        const { sound } = await Audio.Sound.createAsync(require('./src/assets/sounds/Double_Pop.mp3'));
-        await sound.playAsync();
+        playShortActionSound(require('./src/assets/sounds/Double_Pop.mp3'));
     }
 
     if (index === 5) {
         // Vibration.vibrate(25);
-        // const { sound } = await Audio.Sound.createAsync(require('./../../assets/sounds/Double_Pop.mp3'));
-        // await sound.playAsync();
+        // playShortActionSound(require('./src/assets/sounds/Double_Pop.mp3'));
     }
 };
 

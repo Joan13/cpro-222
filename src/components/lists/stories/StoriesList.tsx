@@ -12,7 +12,7 @@ import { IconApp } from "../../app/IconApp";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { remote_host_server, renderDateTime, media_url } from "../../../../GlobalVariables";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import * as RootNavigation from '../../../services/Navigation_ref';
 import { FlashList } from "@shopify/flash-list";
 import StoryMainItem from "./StoryMainItem";
@@ -60,18 +60,14 @@ const StoriesList = ({ item, index, GoStory }: { item: any, index: number, GoSto
                         style={{ width: 40, height: 40, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
                     />
                         :
-                        <FastImage
+                        <ExpoImage
                             style={{
                                 height: 40,
                                 width: 40,
                                 borderRadius: 50
                             }}
-                            resizeMode={FastImage.resizeMode.cover}
-                            source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
-                                uri: media_url + "/profile_pictures/" + item.user.user_profile
-                            }} />}
+                            contentFit="cover"
+                            source={media_url + "/profile_pictures/" + item.user.user_profile} />}
                     <View style={{
                         backgroundColor: app_theme.colors.badge_background_color,
                         height: 20,

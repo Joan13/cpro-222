@@ -12,7 +12,7 @@ import { setShowModalApp } from "../../../store/reducers/appSlice";
 import { strings } from "../../../lang/lang";
 import { useObject, useQuery } from "@realm/react";
 import { BusinessUsers, UserContacts, UserData } from "../../../store/database/Models";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 
 const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: TBusinessUser, index: number, show_level: boolean, selectContact }) => {
     const app_theme = useAppSelector(state => state.app_theme);
@@ -218,17 +218,13 @@ const BusinessUsersList = ({ item, index, show_level, selectContact }: { item: T
                                 borderColor: app_theme.colors.high_color + '30',
                                 overflow: 'hidden',
                             }}>
-                                <FastImage
+                                <ExpoImage
                                     style={{
                                         height: '100%',
                                         width: '100%',
                                     }}
-                                    resizeMode={FastImage.resizeMode.cover}
-                                    source={{
-                                        priority: FastImage.priority.high,
-                                        cache: 'immutable',
-                                        uri: media_url + "/profile_pictures/" + mmm.user_profile
-                                    }} />
+                                    contentFit="cover"
+                                    source={media_url + "/profile_pictures/" + mmm.user_profile} />
                             </View>
                         : 
                             <View style={{

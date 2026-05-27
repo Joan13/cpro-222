@@ -3,7 +3,7 @@ import { TMarketing } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from 'react';
 import { IconApp } from "../../app/IconApp";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, media_url } from "../../../../GlobalVariables";
 import { TextNormalYambi, TextSmallYambi, TextSmallYambiGray } from "../../app/Text";
 import ModalApp from "../../app/ModalApp";
@@ -37,17 +37,13 @@ const MarketingItem = ({
                 height: MARKETING_IMAGE_HEIGHT,
                 borderColor: app_theme.colors.border,
             }}>
-            <FastImage
+            <ExpoImage
                 style={{
                     width: SCREEN_WIDTH,
                     height: MARKETING_IMAGE_HEIGHT
                 }}
-                // resizeMode={FastImage.resizeMode.contain}
-                source={{
-                    priority: FastImage.priority.high,
-                    cache: 'immutable',
-                    uri: media_url + "/marketing_images/" + item.image
-                }} />
+                contentFit="contain"
+                source={media_url + "/marketing_images/" + item.image} />
         </View>
     );
 }

@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { strings } from '../../lang/lang';
-import FastImage from 'react-native-fast-image';
+import { Image as ExpoImage } from 'expo-image';
 import { NavProps, TChat, TMessage } from '../../types/types';
 import moment from 'moment';
 import { useRealm } from '@realm/react';
@@ -132,17 +132,13 @@ const SendPictureMessage = ({ navigation, route }: NavProps) => {
                 flex: 1
             }}>
                 {profile !== "" ?
-                    <FastImage
+                    <ExpoImage
                         style={{
                             flex: 1,
                             width: width,
                         }}
-                        resizeMode={FastImage.resizeMode.contain}
-                        source={{
-                            priority: FastImage.priority.high,
-                            //  cache: 'immutable',
-                            uri: profile
-                        }} /> : null}
+                        contentFit="contain"
+                        source={profile} /> : null}
             </View>
 
             {profile !== "" ?

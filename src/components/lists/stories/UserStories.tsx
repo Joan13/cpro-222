@@ -12,7 +12,7 @@ import { IconApp } from "../../app/IconApp";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { remote_host_server, renderDateTime, media_url } from "../../../../GlobalVariables";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import * as RootNavigation from '../../../services/Navigation_ref';
 
 const UserStories = ({ item, index, GoStory }: { item: TStory, index: number, GoStory }) => {

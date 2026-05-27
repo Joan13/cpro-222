@@ -12,7 +12,7 @@ import AppActivityIndicator from "../../components/app/AppActivityIndicator";
 import ButtonNormal from "../../components/app/ButtonNormal";
 import ModalApp from "../../components/app/ModalApp";
 import { setShowModalApp } from "../../store/reducers/appSlice";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 
 export default function Marketing() {
     const app_theme = useAppSelector(state => state.app_theme);
@@ -515,14 +515,10 @@ export default function Marketing() {
                                         resizeMode="cover"
                                     /> */}
 
-                                    <FastImage
+                                    <ExpoImage
                         style={{ height: 60, width: 60, marginRight: 12, borderRadius: 8 }}
-                        resizeMode={FastImage.resizeMode.cover}
-                        source={{
-                            priority: FastImage.priority.high,
-                            cache: 'immutable',
-                            uri: editImage !== "" ? editImage : media_url + "/marketing_images/" + newItem.image
-                        }}
+                        contentFit="cover"
+                        source={editImage !== "" ? editImage : media_url + "/marketing_images/" + newItem.image}
                     />
                                 </View>
                             ) : null}

@@ -13,7 +13,7 @@ import { remote_host, remote_host_server, renderCategoryName, media_url } from "
 import axios from "axios";
 import { NavProps, TBusiness } from "../../types/types";
 import { useRealm } from "@realm/react";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from "moment";
 
@@ -402,26 +402,22 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                             <View
                                 style={{ width: 150, height: 150, borderWidth: 1, borderColor: theme.border, borderRadius: 100, justifyContent: 'center', alignItems: 'center' }}>
                                 {business.logo === "" ?
-                                    <FastImage
+                                    <ExpoImage
                                         style={{
                                             width: 100,
                                             height: 100
                                         }}
-                                        resizeMode={FastImage.resizeMode.contain}
+                                        contentFit="contain"
                                         source={require("./../../assets/budget.png")} />
                                     :
-                                    <FastImage
+                                    <ExpoImage
                                         style={{
                                             width: 150,
                                             height: 150,
                                             borderRadius: 150
                                         }}
-                                        resizeMode={FastImage.resizeMode.contain}
-                                        source={{
-                                            priority: FastImage.priority.high,
-                                            cache: 'immutable',
-                                            uri: media_url + "/business_logos/" + business.logo
-                                        }} />}
+                                        contentFit="contain"
+                                        source={media_url + "/business_logos/" + business.logo} />}
                             </View>
                         </Pressable>
 

@@ -1,8 +1,18 @@
 import { Platform } from 'react-native';
-import { Audio } from 'expo-av';
+import { AudioModule, setAudioModeAsync } from 'expo-audio';
+import { useEffect, useState } from 'react';
 
 export default function useAudioPermission() {
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
+  const [permissionResponse, setPermissionResponse] = useState<Awaited<ReturnType<typeof AudioModule.getRecordingPermissionsAsync>> | null>(null);
+
+  useEffect(() => {
+    const loadPermission = async () => {
+      const response = await AudioModule.getRecordingPermissionsAsync();
+      setPermissionResponse(response);
+    };
+
+    loadPermission();
+  }, []);
 
   const ensureAudioPermission = async () => {
     try {
@@ -10,9 +20,10 @@ export default function useAudioPermission() {
       if (!permissionResponse) return;
 
       // 🔸 Si la permission n'est pas encore accordée, on la demande
-      if (permissionResponse.status !== 'granted') {
-        const newPermission = await requestPermission();
-        if (newPermission.status !== 'granted') {
+      if (!permissionResponse.granted) {
+        const newPermission = await AudioModule.requestRecordingPermissionsAsync();
+        setPermissionResponse(newPermission);
+        if (!newPermission.granted) {
           if (__DEV__) {
             console.warn(
               'Microphone permission not granted.',
@@ -28,9 +39,9 @@ export default function useAudioPermission() {
 
       // 🔸 Config iOS (uniquement si permission accordée)
       if (Platform.OS === 'ios') {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
+        await setAudioModeAsync({
+          allowsRecording: true,
+          playsInSilentMode: true,
         });
       }
 

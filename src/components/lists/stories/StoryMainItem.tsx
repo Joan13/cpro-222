@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useEffect, useState } from "react";
 import { TextNormalYambi, TextNormalYambiHighColor, TextSmallYambi, TextSmallYambiGray } from "../../app/Text";
 import * as RootNavigation from '../../../services/Navigation_ref';
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, renderDateTime, media_url } from "../../../../GlobalVariables";
 import { IconApp } from "../../app/IconApp";
 import { useObject } from "@realm/react";
@@ -87,18 +87,14 @@ const StoryMainItem = ({ item, index }: { item: TStory, index: number }) => {
                             style={{ width: 25, height: 25, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
                         />
                             :
-                            <FastImage
+                            <ExpoImage
                                 style={{
                                     height: 25,
                                     width: 25,
                                     borderRadius: 50
                                 }}
-                                resizeMode={FastImage.resizeMode.cover}
-                                source={{
-                                    priority: FastImage.priority.high,
-                                    cache: 'immutable',
-                                    uri: media_url + "/profile_pictures/" + user.user_profile
-                                }} />}
+                                contentFit="cover"
+                                source={media_url + "/profile_pictures/" + user.user_profile} />}
                     </Pressable> : null}
 
                 <View style={{
@@ -132,17 +128,13 @@ const StoryMainItem = ({ item, index }: { item: TStory, index: number }) => {
 
                 <Pressable onPress={ViewPhoto}>
                     <Pinchable>
-                        <FastImage
+                        <ExpoImage
                             style={{
                                 height: imageHeight,
                                 borderRadius: 5
                             }}
-                            resizeMode={FastImage.resizeMode.cover}
-                            source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
-                                uri: media_url + "/photo_status/" + item.main_text
-                            }} />
+                            contentFit="cover"
+                            source={media_url + "/photo_status/" + item.main_text} />
                     </Pinchable>
                 </Pressable>
 

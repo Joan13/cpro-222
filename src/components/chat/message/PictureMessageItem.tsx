@@ -3,8 +3,7 @@ import { NavProps, RootStackParamList, TMessage } from "../../../types/types";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { useRealm } from "@realm/react";
-import FastImage from "react-native-fast-image";
-// import { SocketApp } from "../../../../App";
+import { Image as ExpoImage } from 'expo-image';
 import axios from "axios";
 import moment from "moment";
 import * as RootNavigation from './../../../services/Navigation_ref';
@@ -129,17 +128,13 @@ const PictureMessageItem = ({ message }: { message: TMessage }) => {
         <Pressable
             onPress={() => RootNavigation.navigate("ViewFullInboxImage", { message: message.token })}
             style={{ marginBottom: 5, marginTop: 3 }}>
-            <FastImage
+            <ExpoImage
                 style={{
                     height: 150,
                     borderRadius: 5
                 }}
-                resizeMode={FastImage.resizeMode.cover}
-                source={{
-                    priority: FastImage.priority.high,
-                    cache: 'immutable',
-                    uri: message.message_read === 5 ? message.main_text_message : media_url + "/picture_messages/" + message.main_text_message
-                }} />
+                contentFit="cover"
+                source={message.message_read === 5 ? message.main_text_message : media_url + "/picture_messages/" + message.main_text_message} />
 
             {uploading ?
                 <View style={{

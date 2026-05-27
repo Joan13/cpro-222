@@ -3,7 +3,7 @@ import { TCartItem } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo } from "react";
 import { IconApp } from "../../app/IconApp";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, renderCurrency, media_url } from "../../../../GlobalVariables";
 import { strings } from "../../../lang/lang";
 import { YambiText } from "../../app/Text";
@@ -99,13 +99,9 @@ const MarketplaceItem = ({ item, index }: { item: TCartItem, index: number }) =>
                             const imgs = JSON.parse(item.item.images);
                             if (Array.isArray(imgs) && imgs.length > 0) {
                                 return (
-                                    <FastImage
+                                    <ExpoImage
                                         style={{ width: '100%', aspectRatio: 1, borderRadius: 5 }}
-                                        source={{
-                                            priority: FastImage.priority.high,
-                                            cache: 'immutable',
-                                            uri: media_url + "/items_images/" + imgs[0]
-                                        }}
+                                        source={media_url + "/items_images/" + imgs[0]}
                                     />
                                 );
                             }

@@ -442,7 +442,8 @@ const HeaderRightHome = () => {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 60
+            // position: "absolute"
+            // height: 60
         }}>
             {/* <View style={{
                 width: 30,

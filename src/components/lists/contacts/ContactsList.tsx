@@ -4,7 +4,7 @@ import { useAppSelector } from "../../../store/app/hooks";
 import { memo, useEffect } from 'react';
 import { YambiText } from "../../app/Text";
 import Feather from 'react-native-vector-icons/Feather';
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { formatPhoneInternational, remote_host_server, media_url } from "../../../../GlobalVariables";
 import * as RootNavigation from '../../../services/Navigation_ref';
 import { strings } from "../../../lang/lang";
@@ -173,18 +173,14 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
                     />
                         :
-                        <FastImage
+                        <ExpoImage
                             style={{
                                 height: 45,
                                 width: 45,
                                 borderRadius: 50
                             }}
-                            resizeMode={FastImage.resizeMode.cover}
-                            source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
-                                uri: media_url + "/profile_pictures/" + item.user_profile
-                            }} />}
+                            contentFit="cover"
+                            source={media_url + "/profile_pictures/" + item.user_profile} />}
 
 {/* <Text style={{ color: 'red' }}>{media_url + "/profile_pictures/" + item.user_profile}</Text> */}
 
@@ -272,18 +268,14 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
                     />
                         :
-                        <FastImage
+                        <ExpoImage
                             style={{
                                 height: 45,
                                 width: 45,
                                 borderRadius: 50
                             }}
-                            resizeMode={FastImage.resizeMode.cover}
-                            source={{
-                                priority: FastImage.priority.high,
-                                cache: 'immutable',
-                                uri: media_url + "/profile_pictures/" + item.user_profile
-                            }} />}
+                            contentFit="cover"
+                            source={media_url + "/profile_pictures/" + item.user_profile} />}
                 </Pressable>
                 <View style={{
                     flex: 1,

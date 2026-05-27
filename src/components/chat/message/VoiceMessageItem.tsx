@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { TMessage } from '../../../types/types';
 import { useState, useEffect } from 'react';
-import { AVPlaybackStatus, Audio } from 'expo-av';
+import { AudioStatus, createAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { setVoiceNoteBeingPlayed } from '../../../store/reducers/appSlice';
 // import { SocketApp } from '../../../../App';
 import { useRealm } from '@realm/react';
@@ -11,7 +11,6 @@ import { strings } from '../../../lang/lang';
 import { remote_host, SocketApp, media_url } from '../../../../GlobalVariables';
 import { IconApp } from '../../app/IconApp';
 import axios from 'axios';
-import { Sound } from 'expo-av/build/Audio';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system/legacy';
 import { TextSmallYambi, TextSmallYambiGray, TextSmallYambiHighColor2 } from '../../app/Text';
@@ -33,9 +32,8 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
     const dispatch = useAppDispatch();
     const realm = useRealm();
-    // const sound = useRef(new Audio.Sound());
-    const [sound, setSound] = useState<Sound>();
-    const [status, setStatus] = useState<AVPlaybackStatus>();
+    const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
+    const status = useAudioPlayerStatus(sound);
     const [fileSize, setFileSize] = useState<string>();
     const [isPaused, setIsPaused] = useState<boolean>(false);
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
@@ -325,13 +323,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
     const loadSound = async () => {
         // console.log(audioPath);
         try {
-            const { sound } = await Audio.Sound.createAsync({ uri: audioPath }, { progressUpdateIntervalMillis: 1000 / 60 }, onPlaybackStatusUpdate);
-
-            // if (message.receiver === user_data.phone_number) {
-            //     console.log(sound);
-            // }
-
-            setSound(sound);
+            sound.replace({ uri: audioPath });
         } catch (error) {
             // console.log(error)
         }
@@ -442,26 +434,21 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
         // console.log(voice_note_being_played);
 
-        if (status?.isLoaded && status?.isPlaying === false && status?.didJustFinish === true) {
+        if (status?.isLoaded && status?.playing === false && status?.didJustFinish === true) {
             setIsPaused(false);
-            // setPlayingVoiceNote(true);
-            // if (voice_note_being_played != message.main_text_message) {
-            // dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
-            // }
-
-            // dispatch(setPlayingVoiceNote(true));
-            await sound.replayAsync();
+            await sound.seekTo(0);
+            sound.play();
         }
-        else if (status?.isLoaded && status?.isPlaying && isPaused === false) {
+        else if (status?.isLoaded && status?.playing && isPaused === false) {
             // console.log("Pause sound");
             // console.log("Is paused")
             setIsPaused(true);
-            await sound.pauseAsync();
+            sound.pause();
             // if (voice_note_being_played == message.main_text_message) {
             // dispatch(setVoiceNoteBeingPlayed(""));
             // }
             // setPlayingVoiceNote(false);
-        } else if (status?.isLoaded && (status?.isPlaying === false && status?.didJustFinish === false && isPaused === false)) {
+        } else if (status?.isLoaded && (status?.playing === false && status?.didJustFinish === false && isPaused === false)) {
 
             setIsPaused(false);
             // setPlayingVoiceNote(true);
@@ -470,7 +457,8 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             // dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
             // console.log(voice_note_being_played);
             // }
-            await sound.replayAsync();
+            await sound.seekTo(0);
+            sound.play();
         }
         // else if (status?.isLoaded && !status?.isPlaying && !status?.didJustFinish) {
         //     console.log(!status.isPlaying)
@@ -484,7 +472,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             // dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
             // console.log("ok")
             // }
-            await sound.playAsync();
+            sound.play();
         }
 
         // console.log(voice_note_being_played);
@@ -495,7 +483,8 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             return;
         }
 
-        await sound.stopAsync();
+        sound.pause();
+        await sound.seekTo(0);
         setIsPaused(false);
         // setPlayingVoiceNote(false);
         // if (voice_note_being_played == message.main_text_message) {
@@ -627,7 +616,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
     const pauseBecauseAnotherVoiceStartedPlaying = async () => {
         if (voice_note_being_played !== message.main_text_message) {
-            await sound?.pauseAsync();
+            sound.pause();
             setIsPaused(true);
         }
     }
@@ -657,68 +646,29 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
         //         sound.current.unloadAsync();
         //     }
         //     : undefined;
-        return sound
-            ? () => {
-                // console.log('Unloading Sound');
-                sound.unloadAsync();
-                clearTimeout(timeout);
-            }
-            : undefined;
+        return () => {
+            sound.remove();
+            clearTimeout(timeout);
+        };
     }, [message.main_text_message]);
 
-    const onPlaybackStatusUpdate = async (status: AVPlaybackStatus) => {
-
-        // if (voice_note_being_played !== message.main_text_message) {
-        //     // return;
-        //     // console.log("Njo ayo")
-
-        //     await sound?.pauseAsync();
-        // }
-
-        setStatus(status);
-
-        if (!status?.isLoaded) {
-            return;
-        }
-
-        // console.log(status)
-
-        // console.log(voice_note_being_played);
-
-        // if (status?.didJustFinish===true) {
-        // //     console.log("Did just finished");
-        // //     // setStatus(status);
-        // //     // console.log(sound)
-        // //     // status?.isLoaded?status.positionMillis=0:status.positionMillis=;
-        //     await sound?.setPositionAsync(0);
-        //     // await sound?.stopAsync();
-        //     // setSound(null);
-        // //     // console.log(status)
-        // //     // await sound?.setStatusAsync(isPlaying)
-        // }
-    };
-
     const PlaybackRate = async () => {
-        if (!sound) {
-            return;
-        }
-
         let rate = 1;
 
         if (status?.isLoaded) {
-            if (status?.rate === 2) {
+            if (status?.playbackRate === 2) {
                 rate = 1;
             } else {
-                rate = status?.rate + 0.5;
+                rate = status?.playbackRate + 0.5;
             }
         }
 
-        await sound.setRateAsync(rate, true);
+        sound.setPlaybackRate(rate);
     }
 
-    const isPlaying = status?.isLoaded ? status.isPlaying : false;
-    const position = status?.isLoaded ? status.positionMillis : 0;
-    const duration = status?.isLoaded ? status.durationMillis : 1;
+    const isPlaying = status?.isLoaded ? status.playing : false;
+    const position = status?.isLoaded ? status.currentTime * 1000 : 0;
+    const duration = status?.isLoaded ? status.duration * 1000 : 1;
     const progress = position / duration;
 
     const formatMilliseconds = (milliseconds: number) => {
@@ -788,7 +738,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                 }}>
                     <Animated.View style={[{
                         height: 6,
-                        backgroundColor: status?.isLoaded && status?.isPlaying ? app_theme.colors.high_color : app_theme.colors.gray,
+                        backgroundColor: status?.isLoaded && status?.playing ? app_theme.colors.high_color : app_theme.colors.gray,
                         borderRadius: 15
                     }, progressStyle]}></Animated.View>
                 </View>
@@ -825,7 +775,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             </View>
 
             {/* {status?.isLoaded && isPlaying ? */}
-            {sound && status?.isLoaded ?
+            {status?.isLoaded ?
                 <Animated.View
                     entering={FadeIn}
                     exiting={FadeOut}
@@ -844,8 +794,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                             alignItems: 'center',
                             backgroundColor: app_theme.colors.border
                         }}>
-                        {/* <TextSmallYambi text={status?.rate === 1 ? "1.5x" : status?.rate === 1.5 ? "2x" : status?.rate === 2 ? "1x" : "1x"} /> */}
-                        <TextSmallYambi text={status?.rate + "x"} />
+                        <TextSmallYambi text={status?.playbackRate + "x"} />
                     </Pressable>
                 </Animated.View> : null}
         </View>

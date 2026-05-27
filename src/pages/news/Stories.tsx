@@ -11,7 +11,7 @@ import ModalApp from "../../components/app/ModalApp";
 import { FlashList } from "@shopify/flash-list";
 import StoriesList from "../../components/lists/stories/StoriesList";
 import { renderDateTime, media_url } from "../../../GlobalVariables";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 
 const StoriesComponent = ({ navigation, route }: NavProps) => {
 
@@ -117,18 +117,16 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                             style={{ width: 40, height: 40, borderRadius: 50, borderWidth: 1, borderColor: theme.border }}
                         />
                             :
-                            <FastImage
+                            <ExpoImage
                                 style={{
                                     height: 40,
                                     width: 40,
                                     borderRadius: 50
                                 }}
-                                resizeMode={FastImage.resizeMode.cover}
-                                source={{
-                                    priority: FastImage.priority.high,
-                                    cache: 'immutable',
-                                    uri: media_url + "/profile_pictures/" + user_data.user_profile
-                                }} />}
+                                contentFit="cover"
+                                source={
+                                    media_url + "/profile_pictures/" + user_data.user_profile
+                                } />}
                         <View style={{
                             backgroundColor: theme.badge_background_color,
                             height: 20,

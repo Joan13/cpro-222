@@ -3,7 +3,7 @@ import { TMarketing } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from 'react';
 import { IconApp } from "../../app/IconApp";
-import FastImage from "react-native-fast-image";
+import { Image as ExpoImage } from 'expo-image';
 import { remote_host_server, media_url } from "../../../../GlobalVariables";
 import { TextNormalYambi, TextSmallYambi, TextSmallYambiGray } from "../../app/Text";
 import ModalApp from "../../app/ModalApp";
@@ -58,14 +58,10 @@ const MarketingItemAdmin = ({
 
             <View style={{ flexDirection: "row", alignItems: "center" }}>
                 {item.image ? (
-                    <FastImage
+                    <ExpoImage
                         style={{ height: 60, width: 60, marginRight: 12, borderRadius: 8 }}
-                        resizeMode={FastImage.resizeMode.cover}
-                        source={{
-                            priority: FastImage.priority.high,
-                            cache: 'immutable',
-                            uri: media_url + "/marketing_images/" + item.image
-                        }}
+                        contentFit="cover"
+                        source={media_url + "/marketing_images/" + item.image}
                     />
                 ) : (
                     <View style={{
