@@ -5,7 +5,6 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/es/integration/react';
 import store, { persistor } from './src/store/app/store';
 import { TouchableOpacity } from 'react-native';
-TouchableOpacity.defaultProps = { activeOpacity: 0.8 };
 import {
   BusinessItemsSale,
   BusinessUsers,

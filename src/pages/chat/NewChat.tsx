@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import { View, TextInput, Pressable, SafeAreaView } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, TextInput, Pressable } from 'react-native';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -30,6 +30,7 @@ import { useQuery } from '@realm/react';
 import { UserContacts } from '../../store/database/Models';
 // import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SocketApp } from '../../../GlobalVariables';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // import { SocketApp } from '../../../App';
 
 // const navigation = NativeStackScreenProps<RootStackParamList>();
@@ -225,7 +226,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 1 }}>
 
             <StatusBarYambi />
 
@@ -282,7 +283,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
                     }}
                 />
             </View>
-        </SafeAreaView>
+        </View>
     );
 
 }

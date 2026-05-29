@@ -444,6 +444,7 @@ const HeaderRightHome = () => {
             justifyContent: 'center',
             // position: "absolute"
             // height: 60
+            // backgroundColor: 'yellow'
         }}>
             {/* <View style={{
                 width: 30,

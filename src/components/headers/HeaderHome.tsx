@@ -37,9 +37,9 @@ const HeaderHome = () => {
       alignItems: 'center',
       // paddingHorizontal: 15,
       // height: 60,
-      backgroundColor: theme.colors.design_tip1,
+      // backgroundColor: theme.colors.design_tip1,
       // backgroundColor: 'green',
-      marginRight: 150
+      // marginRight: 150
       // flex:1
       // borderBottomWidth: 1,
       // borderColor: theme.colors.border
@@ -82,12 +82,12 @@ const HeaderHome = () => {
         </Pressable>
         : null}
 
-      <Text style={{
+      {/* <Text style={{
         color: theme.colors.text_design1,
         fontSize: app_description.home_title_font_size,
         fontWeight: app_description.home_title_font_weight as any,
-        flex: 1
-      }} numberOfLines={1}>{title}</Text>
+        // flex: 1
+      }} numberOfLines={1}>{title}</Text> */}
 
       {/* <HeaderRightHome /> */}
     </View>
