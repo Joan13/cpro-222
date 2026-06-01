@@ -18,12 +18,12 @@ import moment from 'moment';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
 
-const HeaderRightInbox = ({ navigation, route }: NavProps) => {
+const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string }) => {
   // const navigation = useNavigation();
   const dispatch = useAppDispatch();
   const border_color = useAppSelector(state => state.app_theme.colors.border);
   const user_data = useAppSelector(state => state.user_data);
-  const { user } = route.params;
+  // const { user } = route.params;
   const contacts = useAppSelector(state => state.app.raw_contacts);
   const app_theme = useAppSelector(state => state.app_theme);
   const app_description = useAppSelector(state => state.persisted_app.app_description);
@@ -32,7 +32,7 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
   const playingRecorded = useAppSelector(state => state.app.playingRecorded);
   const [showDeleteMessage, setShowDeleteMessage] = useState<boolean>(false);
   const message = useObject(UsersMessages, message_selected);
-  const userrr = useObject(UserContacts, user);
+  const userrr = useObject(UserContacts, "");
   const chats = useQuery(UserChats);
   const realm = useRealm();
 
@@ -147,15 +147,11 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
 
   return (
     <View style={{
-      // flexDirection: 'row',
-      // borderBottomWidth: 1,
-      // borderColor: app_theme.colors.border,
-      // alignItems: 'center',
-      // flex:1,
-      // width: 10,
-      // paddingTop: 50,
-      // backgroundColor: app_theme.colors.design_tip1,
-      // backgroundColor:'green'
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      // minHeight: 44,
+      paddingRight: 8,
     }}>
 
       {/* <Pressable
@@ -200,15 +196,17 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
         : null}
 
       {message_selected === "" ?
-        <Animated.View entering={FadeIn} exiting={FadeOut} style={{
-          flexDirection: 'row',
-          flex: 1
-        }}>
+        <Animated.View
+          entering={FadeIn}
+          exiting={FadeOut}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            // marginRight: 15
           }}>
             {/* <View style={{
           width: 30,
@@ -242,7 +240,17 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
             {!userrr ?
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
-                  <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
+                  <Pressable
+                    style={{
+                      height: 36,
+                      width: 36,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 18,
+                      backgroundColor: app_theme.colors.border + '50',
+                    }}>
+                    <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
+                  </Pressable>
                 </DropdownMenu.Trigger>
 
                 <DropdownMenu.Content>
@@ -256,10 +264,13 @@ const HeaderRightInbox = ({ navigation, route }: NavProps) => {
           </View>
         </Animated.View>
         :
-        <Animated.View entering={FadeIn} exiting={FadeOut} style={{
-          flexDirection: 'row',
-          flex: 1
-        }}>
+        <Animated.View
+          entering={FadeIn}
+          exiting={FadeOut}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
           {/* <Pressable onPress={() => navigation.navigate('Themes' as never)}>
         <Animated.View
           sharedTransitionTag='viewImageInbox'

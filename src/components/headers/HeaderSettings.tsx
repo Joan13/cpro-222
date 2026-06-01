@@ -1,39 +1,56 @@
-import { View, Pressable, } from "react-native"
+import { View, Pressable, Platform } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
 import { IconApp } from "../app/IconApp";
 import { NavProps } from "../../types/types";
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { YambiText } from "../app/Text";
+import { strings } from "../../lang/lang";
+import { Text } from "react-native";
 
-const HeaderSettings = ({ navigation, route }: NavProps) => {
+const HeaderSettings = ({ navigation }: {navigation:any}) => {
     const theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
+    const insets = useSafeAreaInsets();
 
     return (
         <View style={{
-            // flexDirection: 'row',
+            flexDirection: 'row',
             alignItems: 'center',
             justifyContent: "center",
+            paddingTop: insets.top,
+    height: insets.top + 40,
+    paddingRight: 12,
             // height: 60,
             // marginHorizontal: 15,
-            // backgroundColor: 'green'
+            backgroundColor: theme.colors.design_tip1
         }}>
-            {/* <Pressable onPress={() => navigation.goBack()} style={{
-                width: 50,
-                height: 50,
+            <Pressable onPress={() => navigation.goBack()} style={{
+                width: 44,
+                height: 44,
+                flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginHorizontal: 5,
-                backgroundColor: theme.colors.border,
-                borderRadius: 50
+                // marginHorizontal: 5,
+                // backgroundColor: theme.colors.border,
             }}>
-                <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={20} color={theme.colors.text} />
+                <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={25} color={theme.colors.text_design1} />
             </Pressable>
 
-            <TextBigYambi text={strings.account_settings} /> */}
+            {/* <YambiText text={strings.account_settings} style={{flex:1, textAlign:'center'}}  /> */}
+            <Text style={{
+                color:theme.colors.text_design1,
+                fontSize: 20,
+                flex:1,
+                textAlign:'center',
+                // fontWeight: 'bold'
+            }}>
+{strings.account_settings}
+            </Text>
 
             <Pressable onPress={() => navigation.navigate('EditProfile', { user: user_data })} style={{
                 width: 30,
                 height: 30,
-                alignItems: 'flex-end',
+                alignItems: 'center',
                 justifyContent: 'center',
                 // marginHorizontal: 5,
                 borderRadius: 50

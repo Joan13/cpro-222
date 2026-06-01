@@ -108,7 +108,7 @@ const HeaderEditBusinessUser = ({ navigation, route }: NavProps) => {
                 style={{
                     height: 30,
                     width: 30,
-                    alignItems: 'flex-end',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     marginLeft: 5
                 }}>

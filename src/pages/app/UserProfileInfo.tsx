@@ -452,7 +452,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                              alignItems: 'center',
                                              marginBottom: 6,
                                         }}>
-                                             <IconApp pack='MC' name="android-messages" size={20} color={theme.colors.high_color} />
+                                             <IconApp pack="MC" name="message-text" size={20} color={theme.colors.high_color} />
                                         </View>
                                         <YambiText text={strings.message} size="small" color="high" />
                                    </Pressable>
@@ -470,7 +470,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                              alignItems: 'center',
                                              marginBottom: 6,
                                         }}>
-                                             <IconApp pack='AD' name="copy1" size={20} color={theme.colors.high_color} />
+                                             <IconApp pack="MC" name="content-copy" size={20} color={theme.colors.high_color} />
                                         </View>
                                         <YambiText text={strings.copy_number} size="small" color="high" />
                                    </Pressable>
@@ -551,7 +551,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                                   borderBottomColor: theme.colors.border,
                                              }}
                                         >
-                                             <IconApp styles={{}} name="android-messages" pack='MC' size={20} color={theme.colors.gray} />
+                                             <IconApp styles={{}} name="message-text" pack="MC" size={20} color={theme.colors.gray} />
                                              <View style={{ marginLeft: 16, flex: 1 }}>
                                                   <YambiText text={strings.message_counter} size="normal" color="default" />
                                              </View>

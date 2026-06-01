@@ -79,6 +79,7 @@
       "favicon": "./src/assets/logo_icon.png"
     },
     "plugins": [
+      "./plugins/withReactNativeVectorIcons.js",
       [
         "expo-notifications",
         {

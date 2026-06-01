@@ -31,6 +31,8 @@ import YambiEmojiKeyboard from '../app/YambiEmojiKeyboard';
 import TextInputComponent from '../app/TextInputMessage';
 import { PlayActionSound, randomString, renderDateUpToMilliseconds, SocketApp } from '../../../GlobalVariables';
 import { IconApp } from '../app/IconApp';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '../layout/KeyboardRootView';
 // const KeyboardRegistry = Keyboard.KeyboardRegistry;
 
 const audioRecorderPlayer = AudioRecorderPlayer;
@@ -56,6 +58,8 @@ const FooterChat = ({ user }: { user: string }) => {
   const current_user = useAppSelector(state => state.app.current_user);
   const realm = useRealm();
   const width = useWindowDimensions().width;
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const message = useObject(UsersMessages, response_to);
   const [enterCaption, setEnterCaption] = useState(false);
 
@@ -74,7 +78,7 @@ const FooterChat = ({ user }: { user: string }) => {
   const [caption, setCaption] = useState<string>("");
   // const [pause, setPause] = useState<boolean>(false);
   const [uri, setUri] = useState("");
-  const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
+  const [keyboardVisible, setKeyboardVisible] = useState<boolean>(keyboardHeight > 0);
   const [status, setStatus] = useState<AudioStatus>();
   const [fileSize, setFileSize] = useState<number>();
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -706,23 +710,8 @@ const FooterChat = ({ user }: { user: string }) => {
       backAction,
     );
 
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setKeyboardVisible(true); // or some other action
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardVisible(false); // or some other action
-      }
-    );
-
     return () => {
       backHandler.remove();
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
       // sound.current.unloadAsync();
       // sound
       //   ? () => {
@@ -732,6 +721,13 @@ const FooterChat = ({ user }: { user: string }) => {
       //   : undefined;
     };
   }, [recordingAudio, playingRecorded, sound]);
+
+  useEffect(() => {
+    setKeyboardVisible(keyboardHeight > 0);
+  }, [keyboardHeight]);
+
+  const footerBottomPadding =
+    keyboardHeight > 0 ? 8 : Math.max(insets.bottom, 15);
 
   const openEmojis = () => {
     if (show_custom_keyboard) {
@@ -830,9 +826,11 @@ const FooterChat = ({ user }: { user: string }) => {
     <View style={{
       width: width,
       backgroundColor: app_theme.colors.background,
-      minHeight: 80, maxHeight: 350,
-      borderColor: app_theme.colors.border, borderTopWidth: 1,
-      paddingBottom:  15
+      minHeight: 80,
+      maxHeight: 350,
+      borderColor: app_theme.colors.border,
+      borderTopWidth: 1,
+      paddingBottom: footerBottomPadding,
     }}>
 
       {/* <View style={{ paddingBottom: 0, minHeight: 80, maxHeight: 350, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 1 }}> */}

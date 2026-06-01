@@ -1,4 +1,4 @@
-import { View, Text, Image, Pressable } from 'react-native';
+import { View, Text, Image, Pressable, Platform } from 'react-native';
 import { memo, useEffect, useMemo, useState } from 'react';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -15,11 +15,11 @@ import { Image as ExpoImage } from 'expo-image';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
 
-const HeaderInbox = ({ navigation, route }: NavProps) => {
+const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) => {
   // const navigation = useNavigation();
   const dispatch = useAppDispatch();
   const border_color = useAppSelector(state => state.app_theme.colors.border);
-  const { user } = route.params;
+  // const { user } = route.params;
   const contacts = useAppSelector(state => state.app.raw_contacts);
   const app_theme = useAppSelector(state => state.app_theme);
   const app_description = useAppSelector(state => state.persisted_app.app_description);
@@ -28,10 +28,10 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
   const playingRecorded = useAppSelector(state => state.app.playingRecorded);
   const user_data = useAppSelector(state => state.user_data);
   const message = useObject(UsersMessages, message_selected);
-  const userrr = useObject(UserContacts, user);
+  const userrr = useObject(UserContacts, "");
   const [last_activity_status, setLast_activity_status] = useState<string>("");
 
-  // console.log(contacts)
+  // console.log(user, 'user')
 
   let userr: TUser = {
     user_id: user,
@@ -95,7 +95,8 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
       dispatch(setMessageSelected(""));
     } else {
       // RootNavigation.goBack();
-      RootNavigation.navigate("Home");
+      // RootNavigation.navigate("Home");
+      navigation.goBack();
       dispatch(setMessageSelected(""));
       dispatch(setResponseTo(""));
     }
@@ -175,25 +176,27 @@ const HeaderInbox = ({ navigation, route }: NavProps) => {
       // borderBottomWidth: 1,
       // borderColor: app_theme.colors.border,
       alignItems: 'center',
-      // flex:1,
+      flex:1,
+      // marginRight: 50,
+      // width: 250,
       // height: 60,
       // paddingTop: 50,
       // backgroundColor: app_theme.colors.design_tip1,
       // backgroundColor:'green'
     }}>
 
-      {/* <Pressable onPress={goBack} style={{
-        height: 50,
-        // width: 35,
-        paddingLeft: 15,
-        paddingRight: 10,
+      <Pressable onPress={goBack} style={{
+        height: 44,
+        width: 44,
+        // paddingLeft: 15,
+        // paddingRight: 10,
         // alignItems: 'center',
         justifyContent: 'center',
         // marginHorizontal: 5,
         // backgroundColor: 'gray'
       }}>
-        <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={22} color={app_theme.colors.text_design1} />
-      </Pressable> */}
+        <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={25} color={app_theme.colors.text_design1} />
+      </Pressable>
 
       {message_selected === "" ?
         <Animated.View entering={FadeIn} exiting={FadeOut} style={{

@@ -15,6 +15,10 @@ import AdminDashboard from '../Admin/AdminDashboard';
 import Marketplace from '../marketplace/Marketplace';
 import ExpensesPage from '../expenses/Expenses';
 import NoticeBoard from '../notice_board/NoticeBoard';
+import HeaderHome from '../../components/headers/HeaderHome';
+import HeaderRightHome from '../../components/headers/HeaderRightHome';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated from 'react-native-reanimated';
 
 
 const Tab = createBottomTabNavigator();
@@ -27,6 +31,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
     const expenses_opened = useAppSelector(state => state.app.expenses_opened);
     const title = useAppSelector(state => state.app.title);
     const dispatch = useAppDispatch();
+    const insets = useSafeAreaInsets();
     const chatss = useQuery(
         UserChats, chts => {
             return chts.filtered('chat_read == $0', 0);
@@ -114,7 +119,23 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
     // }, [Tab.Navigator.displayName]);
 
     return (
-        <View style={[{ backgroundColor: app_theme.colors.border, flex: 1 }, StyleSheet.absoluteFill]}>
+        <Animated.View style={[{ backgroundColor: app_theme.colors.border, flex: 1 }, StyleSheet.absoluteFill]}>
+
+<View
+      style={{
+        paddingTop: insets.top,
+        height: insets.top + 56,
+        flexDirection: "row",
+        alignItems: "center",
+        width: "100%",
+        paddingHorizontal: 12,
+        justifyContent: "space-between",
+        backgroundColor: app_theme.colors.design_tip1
+      }}
+    >
+      <HeaderHome />
+      <HeaderRightHome />
+    </View>
 
             <StatusBarYambi />
 
@@ -331,7 +352,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                             <IconApp name="camera-plus" pack="MC" size={18} color={app_theme.colors.text_design2} /> : null}
                     </Pressable>
                 </View> : null}
-        </View>
+        </Animated.View>
     )
 }
 

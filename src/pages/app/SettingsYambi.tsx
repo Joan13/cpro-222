@@ -16,6 +16,7 @@ import { useRealm } from '@realm/react';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import ModalApp from '../../components/app/ModalApp';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import HeaderSettings from '../../components/headers/HeaderSettings';
 
 const SettingsYambi = ({ navigation, route }: NavProps) => {
 
@@ -226,15 +227,18 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
      });
 
      return (
-          <View style={{flex: 1,backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderTopWidth: 1}}>
+          <View style={{flex: 1,backgroundColor: theme.colors.background}}>
                {/* <SafeAreaView style={[{  }, StyleSheet.absoluteFill]}> */}
+               <HeaderSettings navigation={navigation} />
 
 {showInternetError ?
      <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
           <YambiText text={strings.connection_failed} size="normal" color="gray" />
      </ModalApp> : null}
 
-<View style={{ flex: 1 }}>
+<View style={{ flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+
+     
 
      <StatusBarYambi />
 
@@ -276,8 +280,8 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
                                         style={{
                                              width: 80,
                                              height: 80,
-                                             borderWidth: 2,
-                                             borderColor: theme.colors.high_color,
+                                             // borderWidth: 2,
+                                             // borderColor: theme.colors.high_color,
                                              borderRadius: 40,
                                              overflow: 'hidden',
                                         }}>

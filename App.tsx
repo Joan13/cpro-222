@@ -2539,12 +2539,15 @@ const Yambi = ({ navigation }: NavProps) => {
 
                         <Stack.Screen name="Home" options={{
                             headerShadowVisible: false,
-                            headerBackVisible: true,
+                            headerBackVisible: false,
                             // navigationBarColor: app_theme.colors.background,
                             // statusBarHidden:false,
                             headerTitleAlign: 'left',
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                            // headerBackTitle: '',
+                            headerBackButtonDisplayMode: 'minimal',
+                            headerBackButtonMenuEnabled: false,
+                            headerShown: false, headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1,
                             },
                             headerTitleStyle: {
                                 fontSize: app_description.home_title_font_size,
@@ -2552,43 +2555,46 @@ const Yambi = ({ navigation }: NavProps) => {
                             },
                             headerTintColor: app_theme.colors.text_design1,
                             // animation: 'fade',
-                            headerRight: () => (
-                                <HeaderRightHome />
-                            ),
-                            headerLeft: () => (
-                                <HeaderHome />
-                            ),
-                            title
+                            // headerRight: () => (
+                            //     <HeaderRightHome />
+                            // ),
+                            // headerLeft: () => (
+                            //     <HeaderHome />
+                            // ),
+                            // title: ""
                         }} component={HomeRootStack} />
 
                         <Stack.Screen name="Inbox"
                             options={({ navigation, route }) => ({
-                                // headerShadowVisible: false,
+                                headerShadowVisible: false,
                                 headerBackVisible: true,
-                                headerShown: true,
-                                headerTitle: "",
+                                headerShown: false,
+                                headerTransparent: false,
+                                headerTitle: '',
                                 headerStyle: {
                                     backgroundColor: app_theme.colors.design_tip1,
                                 },
                                 headerTintColor: app_theme.colors.text_design1,
-                                // navigationBarColor: 'aqua',
                                 headerTitleStyle: {
-                                    // display:'none'
-                                    // flex: 0
+                                    fontSize: app_description.inbox_title_size,
+                                    fontWeight: app_description.inbox_title_font_weight as any,
                                 },
-                                //                     headerTitle:()=>(
-                                // <HeaderChat />
-                                //                     ),
-                                // headerTintColor: app_theme.colors.text_design1,
+                                headerLeftContainerStyle: {
+                                    flex: 1,
+                                    // maxWidth: '82%',
+                                },
+                                headerRightContainerStyle: {
+                                    flexShrink: 0,
+                                    alignItems: 'flex-end',
+                                },
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                                // title: "",
-                                headerRight: (props) => (
-                                    <HeaderRightInbox {...props} navigation={navigation} route={route} />
-                                ),
-                                headerLeft: (props) => (
-                                    <HeaderInbox {...props} navigation={navigation} route={route} />
-                                ),
-                                gestureEnabled: true
+                                // headerRight: (props) => (
+                                //     <HeaderRightInbox {...props} navigation={navigation} route={route} />
+                                // ),
+                                // headerLeft: (props) => (
+                                //     <HeaderInbox {...props} navigation={navigation} route={route} />
+                                // ),
+                                gestureEnabled: true,
                             })} component={Inbox} />
 
                         {/* <Stack.Screen name="profile" options={{ headerShown: false }} component={ProfileYambi} /> */}
@@ -2788,7 +2794,7 @@ const Yambi = ({ navigation }: NavProps) => {
 
                         <Stack.Screen name="SettingsYambi" component={SettingsYambi} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
+                            headerShown: false, headerStyle: {
                                 backgroundColor: app_theme.colors.design_tip1
                             },
                             headerTintColor: app_theme.colors.text_design1,
@@ -2800,9 +2806,9 @@ const Yambi = ({ navigation }: NavProps) => {
                                 fontSize: app_description.title_font_size,
                                 fontWeight: app_description.title_font_weight as any,
                             },
-                            headerRight: (props) => (
-                                <HeaderSettings  {...props} navigation={navigation} route={route} />
-                            ),
+                            // headerRight: (props) => (
+                            //     <HeaderSettings  {...props} navigation={navigation} route={route} />
+                            // ),
                         })} />
                         <Stack.Screen name="Languages" component={Languages} options={{
                             headerShadowVisible: false,

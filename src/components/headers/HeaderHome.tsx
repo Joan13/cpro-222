@@ -38,11 +38,13 @@ const HeaderHome = () => {
       // paddingHorizontal: 15,
       // height: 60,
       // backgroundColor: theme.colors.design_tip1,
+      // elevation: 0,
       // backgroundColor: 'green',
       // marginRight: 150
       // flex:1
       // borderBottomWidth: 1,
-      // borderColor: theme.colors.border
+      // borderColor: theme.colors.border,
+      // backgroundColor: 'red',
     }}>
       {app_description.home_user_image_position === 'left' ?
         <Pressable onPress={() => navigation.navigate('SettingsYambi' as never)}>
@@ -82,12 +84,13 @@ const HeaderHome = () => {
         </Pressable>
         : null}
 
-      {/* <Text style={{
+      <Text style={{
         color: theme.colors.text_design1,
         fontSize: app_description.home_title_font_size,
         fontWeight: app_description.home_title_font_weight as any,
+        elevation: 0,
         // flex: 1
-      }} numberOfLines={1}>{title}</Text> */}
+      }} numberOfLines={1}>{title}</Text>
 
       {/* <HeaderRightHome /> */}
     </View>

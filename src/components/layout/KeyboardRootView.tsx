@@ -2,14 +2,11 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import {
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   StyleSheet,
   View,
   type KeyboardEvent,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 type Props = {
   children: ReactNode;
 };
@@ -18,7 +15,7 @@ type Props = {
  * Tracks software keyboard height. On hide, height is reset to 0 so no gap
  * persists (unlike KeyboardAvoidingView with behavior="height" on Android).
  */
-function useKeyboardHeight() {
+export function useKeyboardHeight() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
@@ -48,33 +45,21 @@ function useKeyboardHeight() {
 
 /**
  * Keeps focused TextInputs above the software keyboard.
- * Android edge-to-edge: adjustResize often does not shrink the React tree;
- * we reserve bottom space while the keyboard is open and clear it on hide.
- * iOS: KeyboardAvoidingView with padding.
+ * Uses bottom padding from keyboard events on all platforms.
+ *
+ * Chat screens (Inbox) should use SafeAreaView edges without "bottom" and let
+ * FooterInbox manage home-indicator padding when the keyboard is closed.
  */
 export default function KeyboardRootView({ children }: Props) {
-  const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
 
-  if (Platform.OS === 'android') {
-    return (
-      <View
-        style={[
-          styles.flex,
-          keyboardHeight > 0 && { paddingBottom: keyboardHeight },
-        ]}>
-        {children}
-      </View>
-    );
-  }
+  // Full keyboard height: chat screens opt out of bottom SafeArea (see Inbox).
+  const bottomPadding = keyboardHeight > 0 ? keyboardHeight : 0;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior="padding"
-      keyboardVerticalOffset={insets.top}>
+    <View style={[styles.flex, bottomPadding > 0 && { paddingBottom: bottomPadding }]}>
       {children}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

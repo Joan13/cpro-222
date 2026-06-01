@@ -438,13 +438,13 @@ const HeaderRightHome = () => {
     }
 
     return (
-        <View style={{
+        <Animated.View style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
             // position: "absolute"
             // height: 60
-            // backgroundColor: 'yellow'
+            // backgroundColor: theme.colors.design_tip1
         }}>
             {/* <View style={{
                 width: 30,
@@ -510,7 +510,7 @@ const HeaderRightHome = () => {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginHorizontal: 15,
-                                marginRight: 0
+                                marginRight: title === strings.expenses ?20:0
                             }}>
                             <IconApp pack="IO" name="calculator" size={20} color={theme.colors.text_design1} />
                         </Pressable>
@@ -527,7 +527,7 @@ const HeaderRightHome = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     marginHorizontal: 15,
-                                    marginRight: 0
+                                    marginRight: 20
                                 }}>
                                 <IconApp pack="FI" name="plus" size={20} color={theme.colors.text_design1} />
                             </Pressable>
@@ -535,7 +535,7 @@ const HeaderRightHome = () => {
                     </> : null}
 
                 {title === strings.marketplace ?
-                    <Animated.View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} entering={FadeIn}>
+                    <Animated.View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginRight: 20 }} entering={FadeIn}>
 
                         <Pressable onPress={GoSearchMarketplace} style={{
                             height: 30,
@@ -595,7 +595,7 @@ const HeaderRightHome = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             marginHorizontal: 15,
-                            marginRight: 0
+                            marginRight: 20
                         }}>
                         <IconApp pack="AD" name={show_favorite_chats ? "star" : "staro"} size={20} color={theme.colors.text_design1} />
                     </Pressable>
@@ -604,7 +604,11 @@ const HeaderRightHome = () => {
 
 
             {app_description.home_user_image_position === 'right' ?
-                <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}>
+                <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}
+                style={{
+                    // backgroundColor: theme.colors.design_tip1
+                }}
+                >
                     {/* {user_data.user_profile !== "" ?
                         <Animated.View
                             style={{
@@ -629,7 +633,12 @@ const HeaderRightHome = () => {
                         </Animated.View>
                         : */}
 
-                    <Animated.View style={{ marginLeft: 20, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 50 }} sharedTransitionTag="homeViewAnimated">
+                    <Animated.View style={{  
+                        // borderWidth: 1, 
+                        // borderColor: theme.colors.border, 
+                        overflow: 'hidden',
+                        borderRadius: 50 
+                        }} sharedTransitionTag="homeViewAnimated">
                         {user_data.user_profile === "" ?
                             <Animated.Image
                                 sharedTransitionTag='homeImageAnimated'
@@ -637,7 +646,8 @@ const HeaderRightHome = () => {
                                 style={{
                                     width: app_description.home_user_image_size,
                                     height: app_description.home_user_image_size,
-                                    borderRadius: 50
+                                    borderRadius: 50,
+                                    backgroundColor: theme.colors.design_tip1
                                 }}
                             />
                             :
@@ -647,13 +657,14 @@ const HeaderRightHome = () => {
                                 style={{
                                     width: app_description.home_user_image_size,
                                     height: app_description.home_user_image_size,
-                                    borderRadius: 50
+                                    borderRadius: 50,
+                                    backgroundColor: theme.colors.design_tip1
                                 }}
                             />}
                     </Animated.View>
                 </Pressable>
                 : null}
-        </View>
+        </Animated.View>
     )
 }
 
