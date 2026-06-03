@@ -2,12 +2,12 @@ import { View, Pressable, Platform } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
 import { IconApp } from "../app/IconApp";
 import { NavProps } from "../../types/types";
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YambiText } from "../app/Text";
 import { strings } from "../../lang/lang";
 import { Text } from "react-native";
 
-const HeaderSettings = ({ navigation }: {navigation:any}) => {
+const HeaderSettings = ({ navigation }: { navigation: any }) => {
     const theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
     const insets = useSafeAreaInsets();
@@ -18,8 +18,9 @@ const HeaderSettings = ({ navigation }: {navigation:any}) => {
             alignItems: 'center',
             justifyContent: "center",
             paddingTop: insets.top,
-    height: insets.top + 40,
-    paddingRight: 12,
+            height: insets.top + 56,
+            paddingRight: 12,
+            paddingLeft: 5,
             // height: 60,
             // marginHorizontal: 15,
             backgroundColor: theme.colors.design_tip1
@@ -38,13 +39,13 @@ const HeaderSettings = ({ navigation }: {navigation:any}) => {
 
             {/* <YambiText text={strings.account_settings} style={{flex:1, textAlign:'center'}}  /> */}
             <Text style={{
-                color:theme.colors.text_design1,
+                color: theme.colors.text_design1,
                 fontSize: 20,
-                flex:1,
-                textAlign:'center',
+                flex: 1,
+                textAlign: 'center',
                 // fontWeight: 'bold'
             }}>
-{strings.account_settings}
+                {strings.account_settings}
             </Text>
 
             <Pressable onPress={() => navigation.navigate('EditProfile', { user: user_data })} style={{

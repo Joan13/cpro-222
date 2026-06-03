@@ -45,8 +45,8 @@ const Sale = ({ navigation, route }: NavProps) => {
 
     const tva_rate = (parseInt(sales_point?.tva) || 16) / 100;
     const totalPrice = parseFloat(sale.selling_price) * sale.number;
-    const tva = totalPrice * tva_rate;
-    const tht = totalPrice - tva;
+    const tht = totalPrice / (1 + (tva_rate)); // HT = TTC / (1 + (TVA / 100))
+    const tva = totalPrice - tht;
 
     const PrintInvoice = async () => {
         await RNPrint.print({
@@ -534,7 +534,7 @@ const Sale = ({ navigation, route }: NavProps) => {
                 {sala.type_sale === 1 ?
                     <ButtonNormal title={strings.mark_invoice_as_paid} loadEnabled={true} onPress={MakeInvoiceAsPaid} styles={{}} normal={true} />
                     :
-                    <ButtonNormal title={strings.print} loadEnabled={true} onPress={PrintInvoice} styles={{}} normal={true} />
+                    <ButtonNormal title={strings.print} loadEnabled={true} onPress={PrintInvoice} styles={{ marginBottom: 15 }} normal={true} />
                 }
             </View>
         </View>

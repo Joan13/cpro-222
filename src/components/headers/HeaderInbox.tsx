@@ -190,12 +190,12 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
         width: 44,
         // paddingLeft: 15,
         // paddingRight: 10,
-        // alignItems: 'center',
+        alignItems: 'center',
         justifyContent: 'center',
         // marginHorizontal: 5,
         // backgroundColor: 'gray'
       }}>
-        <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={25} color={app_theme.colors.text_design1} />
+        <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={24} color={app_theme.colors.text_design1} />
       </Pressable>
 
       {message_selected === "" ?
