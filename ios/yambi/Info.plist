@@ -39,7 +39,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.0</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -51,21 +51,19 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<!-- PRIVACY PERMISSIONS -->  
+	<!-- PRIVACY PERMISSIONS -->    
 
-	<key>NSMicrophoneUsageDescription</key>  
-	<string>Yambi needs access to the microphone for voice messages and audio chat.</string>    
-
-	<key>NSCameraUsageDescription</key>  
-	<string>Yambi uses the camera to send photos and videos.</string> 
+	<key>NSCameraUsageDescription</key>
+	<string>Yambi needs access to your camera so you can take photos and videos to share with other users and upload to your profile.</string> 
 
 	<key>NSContactsUsageDescription</key>
 	<string>To help you easily connect with people from your phonebook on Yambi, we need access to your contacts. By uploading your contacts to our servers, we can show you which people from your contacts are already on Yambi, making it easier for you to find them.</string>
+
 	<key>NSMicrophoneUsageDescription</key>
-	<string>We need access to your microphone to record audio for voice messages.</string>
+	<string>Yambi needs access to your microphone so you can record voice messages and participate in audio conversations.</string>
 
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photo library to allow you to upload pictures to your profile.</string>
+	<string>Yambi needs access to your photo library so you can upload a profile picture, share photos with other users, and send images in conversations.</string>
 	
 	<key>NSPrivacyUsageDescription</key>
 	<string>We need access to your contacts in order to help you easily connect with people from your phonebook available on Yambi. Also, we need access to your microphone and your camera to help you upload files on our platform. Your personal information data (name, phone number, etc.) will be stored on our servers during your entire use of Yambi.</string>

@@ -597,7 +597,7 @@ const HeaderRightHome = () => {
                             marginHorizontal: 15,
                             marginRight: 20
                         }}>
-                        <IconApp pack="AD" name={show_favorite_chats ? "star" : "staro"} size={20} color={theme.colors.text_design1} />
+                        <IconApp pack="OC" name={show_favorite_chats ? "star-fill" : "star"} size={20} color={theme.colors.text_design1} />
                     </Pressable>
                 </Animated.View>
                 : null}
