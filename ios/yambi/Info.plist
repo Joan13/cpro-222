@@ -68,13 +68,12 @@
 	<key>NSPrivacyUsageDescription</key>
 	<string>We need access to your contacts in order to help you easily connect with people from your phonebook available on Yambi. Also, we need access to your microphone and your camera to help you upload files on our platform. Your personal information data (name, phone number, etc.) will be stored on our servers during your entire use of Yambi.</string>
 
-
 	<key>RCTNewArchEnabled</key>
 	<true/>
-	<key>UIBackgroundModes</key>
+	<!-- <key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
-	</array>
+	</array> -->
 	<key>UILaunchStoryboardName</key>
 	<string>BootSplash</string>
 	<key>UIRequiredDeviceCapabilities</key>

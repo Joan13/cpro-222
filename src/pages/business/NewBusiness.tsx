@@ -477,7 +477,7 @@ const NewBusinesses = () => {
                     <TextNormalYambi text={strings.define_as_main_site} styles={{ marginLeft: 8 }} />
                 </Pressable>
 
-                <ButtonNormal title={strings.new_business} loading={loading} onPress={NewBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20 }} normal={true} />
+                <ButtonNormal title={strings.new_business} loading={loading} onPress={NewBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom:50 }} normal={true} />
 
             </View>
         </ScrollView>

@@ -14,7 +14,6 @@ import { FlashList } from "@shopify/flash-list";
 import BusinessItemsList from "../../components/lists/business/BusinessItemsList";
 import { randomString, renderDateUpToMilliseconds, SocketApp, copyToClipboard, remote_host, media_url, renderCurrency } from "../../../GlobalVariables";
 import moment from "moment";
-import SwitchApp from "../../components/app/SwitchApp";
 import ButtonNormal from "../../components/app/ButtonNormal";
 import { Image as ExpoImage } from 'expo-image';
 import axios from "axios";
@@ -22,6 +21,7 @@ import Realm from "realm";
 import AppActivityIndicator from "../../components/app/AppActivityIndicator";
 import * as DropdownMenu from "zeego/dropdown-menu";
 import RNRestart from "react-native-restart";
+import SwitchApp from "../../components/app/SwitchApp";
 
 const pi = (v: unknown, d = 0) => parseInt(String(v ?? d), 10);
 
@@ -487,11 +487,11 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     typeof res.data.count === "number"
                         ? res.data.count
                         : Array.isArray(res.data.subscriptions)
-                          ? res.data.subscriptions.length
-                          : 0;
+                            ? res.data.subscriptions.length
+                            : 0;
                 setSubscriberCount(count);
             }
-        } catch { 
+        } catch {
             // keep previous value
         } finally {
             setSubscriberCountLoading(false);
@@ -922,42 +922,42 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                             <Pressable onLongPress={() => copyToClipboard(business._id)}>
                                 <YambiText size="small" color="gray" text={strings.id + ": " + business._id} />
                             </Pressable>
-                            
+
                             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, justifyContent: "space-between" }}>
-                            {/* Followers + menu */}
-                            {subscriberCount>0?
-                            
-                            <Pressable
-                                onPress={() => navigation.navigate("BusinessSubscribers", { business_id: business_id })}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    paddingVertical: 6,
-                                    paddingHorizontal: 10,
-                                    backgroundColor: theme.high_color + '15',
-                                    borderRadius: 12,
-                                    alignSelf: 'flex-start'
-                                }}>
-                                {/* <IconApp pack="FI" name="users" size={14} color={theme.high_color} styles={{ marginRight: 6 }} /> */}
-                                {subscriberCountLoading ? (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <View style={{ width: 18, height: 18, marginRight: 6 }}>
-                                            <AppActivityIndicator size={14} styles={{ height: 18 }} />
-                                        </View>
-                                        <YambiText size="small" color="gray" text={strings.loading} numberLines={1} style={{ fontSize: 11 }} />
-                                    </View>
-                                ) : (
-                                    <>
-                                        <YambiText color="high"
-                                            text={subscriberCount.toString()}
-                                            bold size="small"
-                                            style={{ marginRight: 4 }}
-                                        />
-                                        <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} numberLines={1} />
-                                    </>
-                                )}
-                                <IconApp pack="FI" name="chevron-right" size={12} color={theme.gray} styles={{ marginLeft: 4 }} />
-                            </Pressable>:null}
+                                {/* Followers + menu */}
+                                {subscriberCount > 0 ?
+
+                                    <Pressable
+                                        onPress={() => navigation.navigate("BusinessSubscribers", { business_id: business_id })}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingVertical: 6,
+                                            paddingHorizontal: 10,
+                                            backgroundColor: theme.high_color + '15',
+                                            borderRadius: 12,
+                                            alignSelf: 'flex-start'
+                                        }}>
+                                        {/* <IconApp pack="FI" name="users" size={14} color={theme.high_color} styles={{ marginRight: 6 }} /> */}
+                                        {subscriberCountLoading ? (
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <View style={{ width: 18, height: 18, marginRight: 6 }}>
+                                                    <AppActivityIndicator size={14} styles={{ height: 18 }} />
+                                                </View>
+                                                <YambiText size="small" color="gray" text={strings.loading} numberLines={1} style={{ fontSize: 11 }} />
+                                            </View>
+                                        ) : (
+                                            <>
+                                                <YambiText color="high"
+                                                    text={subscriberCount.toString()}
+                                                    bold size="small"
+                                                    style={{ marginRight: 4 }}
+                                                />
+                                                <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} numberLines={1} />
+                                            </>
+                                        )}
+                                        <IconApp pack="FI" name="chevron-right" size={12} color={theme.gray} styles={{ marginLeft: 4 }} />
+                                    </Pressable> : null}
 
                                 <DropdownMenu.Root>
                                     <DropdownMenu.Trigger>
@@ -1031,9 +1031,9 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                     <YambiText size="small" color="gray" text={strings.address} style={{ marginBottom: 5 }} />
                                     <YambiText color="gray" text={business.business_address} style={{ lineHeight: 20 }} />
                                     {(business.city || business.state || business.country) && (
-                                        <YambiText color="gray" 
-                                            text={[business.city, business.state, business.country].filter(Boolean).join(', ')} 
-                                            style={{ marginTop: 4, lineHeight: 20 }} 
+                                        <YambiText color="gray"
+                                            text={[business.city, business.state, business.country].filter(Boolean).join(', ')}
+                                            style={{ marginTop: 4, lineHeight: 20 }}
                                         />
                                     )}
                                 </View>
@@ -1086,30 +1086,30 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     </Animated.View>
 
                     {/* Buttons Row */}
-                    <View style={{  flex:1 }}>
+                    <View style={{ flex: 1 }}>
                         {/* Ghost Button for More Info */}
-                        {showBusinessInfo ? <View style={{ flex: 1, marginRight: 5, marginBottom:10 }}>
+                        {showBusinessInfo ? <View style={{ flex: 1, marginRight: 5, marginBottom: 10 }}>
                             <ButtonNormal
                                 title={showBusinessInfo ? strings.hide : strings.business_info}
                                 loadEnabled={false}
                                 outline={true}
                                 onPress={() => setShowBusinessInfo(!showBusinessInfo)}
-                                styles={{ height: 40, flex:1 }}
+                                styles={{ height: 40, flex: 1 }}
                             />
-                        </View>:null}
+                        </View> : null}
 
                         {/* Follow Button (unfollow lives in menu once followed) */}
-                        
-                            {!followStatusLoading && followStatusAvailable && !isFollowing ? (<View style={{ flex: 1, marginBottom: 15 }}>
-                                <ButtonNormal
-                                    title={strings.follow_business}
-                                    loadEnabled={false}
-                                    normal={true}
-                                    onPress={handleFollow}
-                                    styles={{ height: 40 }}
-                                /></View>
-                            ) : null}
-                        
+
+                        {!followStatusLoading && followStatusAvailable && !isFollowing ? (<View style={{ flex: 1, marginBottom: 15 }}>
+                            <ButtonNormal
+                                title={strings.follow_business}
+                                loadEnabled={false}
+                                normal={true}
+                                onPress={handleFollow}
+                                styles={{ height: 40 }}
+                            /></View>
+                        ) : null}
+
                     </View>
                 </View>
             </View>
@@ -1137,6 +1137,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                 marginBottom: 15,
                 borderWidth: 1,
                 borderColor: theme.error + '40',
+                marginHorizontal: 15
             }}>
                 <Pressable
                     onPress={() => setShowOutOfStock(!showOutOfStock)}
@@ -1316,17 +1317,17 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         const showDonut = totalRevenue > 0 && grossProfit >= 0;
                         const pieData = showDonut
                             ? [
-                                  {
-                                      value: Math.max(0, totalCost),
-                                      color: theme.high_color2,
-                                      text: strings.inventory_stock_at_cost,
-                                  },
-                                  {
-                                      value: Math.max(0, grossProfit),
-                                      color: theme.high_color,
-                                      text: strings.inventory_gross_profit,
-                                  },
-                              ]
+                                {
+                                    value: Math.max(0, totalCost),
+                                    color: theme.high_color2,
+                                    text: strings.inventory_stock_at_cost,
+                                },
+                                {
+                                    value: Math.max(0, grossProfit),
+                                    color: theme.high_color,
+                                    text: strings.inventory_gross_profit,
+                                },
+                            ]
                             : [];
 
                         return (
@@ -1393,7 +1394,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                                         />
                                                         <YambiText size="small" color="gray"
                                                             text={strings.inventory_overall_margin}
-                                                            style={{ marginTop: 2 }}
+                                                            style={{ marginTop: 2, textAlign:'center' }}
                                                         />
                                                     </View>
                                                 )}
@@ -1641,7 +1642,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                             paddingVertical: 6,
                                             borderRadius: 8,
                                         }}>
-                                        <SwitchApp value={!type_sale} small onPress={SetCash} />
+                                        {/* <SwitchApp value={!type_sale} small onPress={SetCash} /> */}
+                                        <IconApp color={theme.high_color} name="circle" size={18} pack="FI" />
                                         <YambiText text={strings.cash} style={{ marginLeft: 6 }} />
                                     </Pressable>
 
@@ -1655,7 +1657,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                             paddingVertical: 6,
                                             borderRadius: 8,
                                         }}>
-                                        <SwitchApp value={!wholesale} small onPress={Detail} />
+                                        {/* <SwitchApp value={!wholesale} small onPress={Detail} /> */}
+                                        <IconApp color={theme.high_color} name="circle" size={18} pack={wholesale ? "FI" : "FA"} />
                                         <YambiText text={strings.detail} style={{ marginLeft: 6 }} />
                                     </Pressable>
                                 </View>

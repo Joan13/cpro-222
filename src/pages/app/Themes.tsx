@@ -33,7 +33,7 @@ const defaultTheme: TTheme = {
         like_border: 'rgba(0, 0, 0, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#780006',
-        gray: 'rgb(120, 120, 120)',
+        gray: '#808080',
         high_color: '#0050b4',
         high_color2: '#e67300',
         high_color3: '#ac3973',
@@ -50,7 +50,7 @@ const defaultTheme: TTheme = {
         bottom_navigation_background: '#FFFFFF',
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#000000',
-        bottom_navigation_inactive: 'rgb(150, 150, 150)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#FFFFFF'
     },
 };
@@ -73,7 +73,7 @@ const whiteTheme: TTheme = {
         like_border: 'rgba(0, 0, 0, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#780006',
-        gray: 'rgb(150, 150, 150)',
+        gray: '#808080',
         high_color: '#0050b4',
         high_color2: '#e67300',
         high_color3: '#ac3973',
@@ -90,7 +90,7 @@ const whiteTheme: TTheme = {
         bottom_navigation_background: '#FFFFFF',
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#000000',
-        bottom_navigation_inactive: 'rgb(150, 150, 150)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#FFFFFF'
     },
 };
@@ -113,7 +113,7 @@ const darkTheme: TTheme = {
         like_border: 'rgba(255, 255, 255, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#FFFFFF',
-        gray: 'rgb(120, 120, 120)',
+        gray: '#808080',
         high_color: '#08a0cf',
         high_color2: '#ffa31a',
         high_color3: '#ac3973',
@@ -130,7 +130,7 @@ const darkTheme: TTheme = {
         bottom_navigation_background: '#272525',
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#FFFFFF',
-        bottom_navigation_inactive: 'rgb(120, 120, 120)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
     },
 };
@@ -153,7 +153,7 @@ const blackTheme: TTheme = {
         like_border: 'rgba(255, 255, 255, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#FFFFFF',
-        gray: 'rgb(120, 120, 120)',
+        gray: '#808080',
         high_color: '#08a0cf',
         high_color2: '#ffa31a',
         high_color3: '#ac3973',
@@ -170,7 +170,7 @@ const blackTheme: TTheme = {
         bottom_navigation_background: '#000000',
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#FFFFFF',
-        bottom_navigation_inactive: 'rgb(120, 120, 120)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
     },
 };
@@ -605,7 +605,7 @@ const whiteTheme2: TTheme = {
         like_border: 'rgba(0, 0, 0, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#2E7D32',
-        gray: 'rgb(150, 150, 150)',
+        gray: '#808080',
         high_color: '#2E7D32',
         high_color2: '#e67300',
         high_color3: '#ac3973',
@@ -622,7 +622,7 @@ const whiteTheme2: TTheme = {
         bottom_navigation_background: '#FFFFFF',
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#2E7D32',
-        bottom_navigation_inactive: 'rgb(150, 150, 150)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#FFFFFF'
     },
 };
@@ -645,7 +645,7 @@ const whiteTheme3: TTheme = {
         like_border: 'rgba(0, 0, 0, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#7B1FA2',
-        gray: 'rgb(150, 150, 150)',
+        gray: '#808080',
         high_color: '#7B1FA2',
         high_color2: '#e67300',
         high_color3: '#0050b4',
@@ -662,7 +662,7 @@ const whiteTheme3: TTheme = {
         bottom_navigation_background: '#FFFFFF',
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#7B1FA2',
-        bottom_navigation_inactive: 'rgb(150, 150, 150)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#FFFFFF'
     },
 };
@@ -689,7 +689,7 @@ const blackTheme2: TTheme = {
         like_border: 'rgba(255, 255, 255, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#4CAF50',
-        gray: 'rgb(120, 120, 120)',
+        gray: '#808080',
         high_color: '#4CAF50',
         high_color2: '#ffa31a',
         high_color3: '#ac3973',
@@ -706,7 +706,7 @@ const blackTheme2: TTheme = {
         bottom_navigation_background: '#000000',
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#4CAF50',
-        bottom_navigation_inactive: 'rgb(120, 120, 120)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
     },
 };
@@ -729,7 +729,7 @@ const blackTheme3: TTheme = {
         like_border: 'rgba(255, 255, 255, 0.05)',
         other: 'rgb(255, 255, 255)',
         notification: '#BA68C8',
-        gray: 'rgb(120, 120, 120)',
+        gray: '#808080',
         high_color: '#BA68C8',
         high_color2: '#ffa31a',
         high_color3: '#08a0cf',
@@ -746,7 +746,7 @@ const blackTheme3: TTheme = {
         bottom_navigation_background: '#000000',
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#BA68C8',
-        bottom_navigation_inactive: 'rgb(120, 120, 120)',
+        bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
     },
 };
@@ -785,7 +785,7 @@ export const themes: Array<TTheme> = [...lightThemes, ...darkThemes];
 // Theme Preview Component
 const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem: TTheme, isSelected: boolean, onPress: () => void, cardWidth: number }) => {
     const currentTheme = useAppSelector(state => state.app_theme);
-    
+
     return (
         <Pressable
             onPress={onPress}
@@ -816,7 +816,7 @@ const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem
                         borderBottomColor: themeItem.colors.primary === '#FFFFFF' ? '#e6e6e6' : themeItem.colors.primary === '#000000' ? '#323232' : 'transparent',
                     }}
                 />
-                
+
                 {/* Large middle part (background) */}
                 <View
                     style={{
@@ -845,19 +845,19 @@ const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem
                             elevation: 4,
                         }}
                     >
-                        <IconApp 
-                            pack="FI" 
-                            name="star" 
-                            size={20} 
-                            color="#FFFFFF" 
+                        <IconApp
+                            pack="FI"
+                            name="star"
+                            size={20}
+                            color="#FFFFFF"
                         />
                     </View>
                 </View>
             </View>
-            
+
             {/* Theme Name Footer (fixed check row height so selected/unselected cards match) */}
-            <View style={{ 
-                padding: 12, 
+            <View style={{
+                padding: 12,
                 backgroundColor: themeItem.colors.background,
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -865,17 +865,17 @@ const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem
             }}>
                 <View style={{ height: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
                     {isSelected ? (
-                        <IconApp 
-                            pack="FA" 
-                            name="check-circle" 
-                            size={16} 
+                        <IconApp
+                            pack="FA"
+                            name="check-circle"
+                            size={16}
                             color={themeItem.colors.success}
                         />
                     ) : null}
                 </View>
-                <Text 
-                    style={{ 
-                        textAlign: 'center', 
+                <Text
+                    style={{
+                        textAlign: 'center',
                         fontSize: 12,
                         color: themeItem.colors.text,
                     }}
@@ -890,13 +890,13 @@ const ThemePreview = ({ themeItem, isSelected, onPress, cardWidth }: { themeItem
 const Themes = () => {
     const dispatch = useAppDispatch();
     const theme = useAppSelector(state => state.app_theme);
-    
+
     // Calculate responsive columns and card width
     const screenWidth = Dimensions.get('window').width;
     const padding = 20; // Horizontal padding
     const gap = 12; // Gap between cards
     const availableWidth = screenWidth - (padding * 2);
-    
+
     // Determine number of columns based on screen width
     let numColumns = 3;
     if (screenWidth >= 768) {
@@ -906,7 +906,7 @@ const Themes = () => {
     } else {
         numColumns = 3; // Small screen
     }
-    
+
     const cardWidth = (availableWidth - (gap * (numColumns - 1))) / numColumns;
 
     const set_app_theme = (theme_set: TTheme) => {
@@ -914,7 +914,7 @@ const Themes = () => {
         dispatch(setThemeSet(true));
 
         // setRootViewBackgroundColor(theme_set.colors.background);
-        
+
         // if(Platform.OS === 'android') {
         //     NavigationBar.setBackgroundColorAsync(theme_set.colors.background);
         //     NavigationBar.setButtonStyleAsync(theme_set.dark ? "light" : "dark");
@@ -935,10 +935,10 @@ const Themes = () => {
         for (let i = 0; i < themes.length; i += numColumns) {
             const rowThemes = themes.slice(i, i + numColumns);
             rows.push(
-                <View 
+                <View
                     key={`row-${i}`}
-                    style={{ 
-                        flexDirection: 'row', 
+                    style={{
+                        flexDirection: 'row',
                         justifyContent: 'space-between',
                         marginBottom: gap,
                     }}
@@ -966,7 +966,7 @@ const Themes = () => {
         <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
 
-            <ScrollView 
+            <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingHorizontal: padding, paddingVertical: 20 }}
                 showsVerticalScrollIndicator={false}
@@ -976,7 +976,7 @@ const Themes = () => {
                     <View style={{ marginBottom: 16 }}>
                         <TextBigYambi text={strings.white_themes} />
                     </View>
-                    
+
                     {renderThemeGrid(lightThemes)}
                 </View>
 
@@ -985,7 +985,7 @@ const Themes = () => {
                     <View style={{ marginBottom: 16 }}>
                         <TextBigYambi text={strings.black_themes} />
                     </View>
-                    
+
                     {renderThemeGrid(darkThemes)}
                 </View>
             </ScrollView>

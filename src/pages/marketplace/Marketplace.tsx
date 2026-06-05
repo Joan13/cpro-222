@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, SafeAreaView, Dimensions, Text, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { View, Dimensions, Text, ScrollView, RefreshControl, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -200,7 +200,7 @@ const Marketplace = () => {
   }, [fetchMarketing]);
 
   return (
-    <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+    <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
       <ScrollView style={{ flex: 1 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* Marketing carousel */}
         <View style={{ height: MARKETING_CAROUSEL_HEIGHT }}>
@@ -266,7 +266,7 @@ const Marketplace = () => {
         
         <MarketplaceItems ref={itemsRef} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

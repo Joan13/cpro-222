@@ -886,7 +886,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
         setMarketplace_visibility(itemm.marketplace_visibility);
         setSelectedSizes(itemm.sizes);
         setItemDescription(itemm.description_item || "");
-        
+
         // Set manufacture and expiry dates (normalize to first of month)
         if (itemm.manufacture_date) {
             const normalizedDate = normalizeToFirstOfMonth(new Date(itemm.manufacture_date));
@@ -898,7 +898,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             setExpiryDate(formatMonthYear(normalizedDate));
             setExpiryDateObj(normalizedDate);
         }
-        
+
         // Set suppliers
         setSuppliers(itemm.supplier || "");
 
@@ -969,117 +969,117 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
                     {/* Item Image Section */}
                     {effectiveCanUploadImages && (
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: "center", marginTop: 20, marginBottom: 20 }}>
-                        <View style={{ alignItems: 'center' }}>
-                            {/* <YambiText size="small" color="gray" text={strings.item_picture} style={{ marginBottom: 10 }} /> */}
-                            <View>
-                                <View style={{
-                                    width: 160,
-                                    height: 160,
-                                    borderRadius: 20,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    overflow: 'hidden',
-                                    backgroundColor: theme.border,
-                                    ...Platform.select({
-                                        ios: {
-                                            shadowColor: theme.high_color,
-                                            shadowOffset: { width: 0, height: 4 },
-                                            shadowOpacity: 0.3,
-                                            shadowRadius: 8,
-                                        },
-                                        android: {
-                                            elevation: 6,
-                                        },
-                                    }),
-                                }}>
-                                    {(() => {
-                                        // Show local image if being uploaded
-                                        if (itemImage !== "") {
-                                            return (
-                                                <ExpoImage
-                                                    style={{ width: 160, height: 160 }}
-                                                    contentFit="cover"
-                                                    source={itemImage} />
-                                            );
-                                        }
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: "center", marginTop: 20, marginBottom: 20 }}>
+                            <View style={{ alignItems: 'center' }}>
+                                {/* <YambiText size="small" color="gray" text={strings.item_picture} style={{ marginBottom: 10 }} /> */}
+                                <View>
+                                    <View style={{
+                                        width: 160,
+                                        height: 160,
+                                        borderRadius: 20,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        overflow: 'hidden',
+                                        backgroundColor: theme.border,
+                                        ...Platform.select({
+                                            ios: {
+                                                shadowColor: theme.high_color,
+                                                shadowOffset: { width: 0, height: 4 },
+                                                shadowOpacity: 0.3,
+                                                shadowRadius: 8,
+                                            },
+                                            android: {
+                                                elevation: 6,
+                                            },
+                                        }),
+                                    }}>
+                                        {(() => {
+                                            // Show local image if being uploaded
+                                            if (itemImage !== "") {
+                                                return (
+                                                    <ExpoImage
+                                                        style={{ width: 160, height: 160 }}
+                                                        contentFit="cover"
+                                                        source={itemImage} />
+                                                );
+                                            }
 
-                                        // Use currentImages state (updated immediately) or fallback to itemm.images
-                                        const imagesToUse = currentImages || itemm.images || "";
+                                            // Use currentImages state (updated immediately) or fallback to itemm.images
+                                            const imagesToUse = currentImages || itemm.images || "";
 
-                                        // Check if images exist
-                                        if (imagesToUse === "" || imagesToUse === "[]") {
+                                            // Check if images exist
+                                            if (imagesToUse === "" || imagesToUse === "[]") {
+                                                return (
+                                                    <View style={{ alignItems: 'center' }}>
+                                                        <IconApp pack="FI" name="image" size={50} color={theme.border + "80"} />
+                                                        <YambiText size="small" color="gray" text={strings.add_item_picture} style={{ marginTop: 10, opacity: 0.6 }} />
+                                                    </View>
+                                                );
+                                            }
+
+                                            // Parse and display the first image
+                                            try {
+                                                const imagesArray = JSON.parse(itemm.images);
+                                                // Array.isArray(imagesArray) && 
+                                                if (imagesArray.length > 0) {
+                                                    return (
+                                                        <ExpoImage
+                                                            style={{ width: 160, height: 160 }}
+                                                            contentFit="cover"
+                                                            source={media_url + "/items_images/" + imagesArray[0]} />
+                                                    );
+                                                }
+                                            } catch (e) {
+                                                // If parsing fails, show placeholder
+                                            }
+
+                                            // Fallback to placeholder
                                             return (
                                                 <View style={{ alignItems: 'center' }}>
                                                     <IconApp pack="FI" name="image" size={50} color={theme.border + "80"} />
                                                     <YambiText size="small" color="gray" text={strings.add_item_picture} style={{ marginTop: 10, opacity: 0.6 }} />
                                                 </View>
                                             );
-                                        }
-
-                                        // Parse and display the first image
-                                        try {
-                                            const imagesArray = JSON.parse(itemm.images);
-                                            // Array.isArray(imagesArray) && 
-                                            if (imagesArray.length > 0) {
-                                                return (
-                                                    <ExpoImage
-                                                        style={{ width: 160, height: 160 }}
-                                                        contentFit="cover"
-                                                        source={media_url + "/items_images/" + imagesArray[0]} />
-                                                );
-                                            }
-                                        } catch (e) {
-                                            // If parsing fails, show placeholder
-                                        }
-
-                                        // Fallback to placeholder
-                                        return (
-                                            <View style={{ alignItems: 'center' }}>
-                                                <IconApp pack="FI" name="image" size={50} color={theme.border + "80"} />
-                                                <YambiText size="small" color="gray" text={strings.add_item_picture} style={{ marginTop: 10, opacity: 0.6 }} />
-                                            </View>
-                                        );
-                                    })()}
+                                        })()}
+                                    </View>
                                 </View>
-                            </View>
 
-                            <Pressable onPress={pick_item_image} style={{
-                                marginTop: 15,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                height: 44,
-                                paddingHorizontal: 20,
-                                borderRadius: 22,
-                                backgroundColor: theme.design_tip2,
-                                flexDirection: 'row',
-                                ...Platform.select({
-                                    ios: {
-                                        shadowColor: theme.high_color,
-                                        shadowOffset: { width: 0, height: 2 },
-                                        shadowOpacity: 0.4,
-                                        shadowRadius: 4,
-                                    },
-                                    android: {
-                                        elevation: 4,
-                                    },
-                                }),
-                            }}>
-                                {loading_image ?
-                                    <ActivityIndicator color={theme.text_design2} size={18} /> :
-                                    itemImage === "" ?
-                                        <>
-                                            <IconApp pack='FI' name="camera" size={18} color={theme.text_design2} />
-                                            <YambiText text={strings.change_item_picture} color="design" bold style={{ marginLeft: 8 }} />
-                                        </>
-                                        :
-                                        <>
-                                            <IconApp pack='FI' name="upload-cloud" size={18} color={theme.text_design2} />
-                                            <YambiText text={strings.send} color="design" bold style={{ marginLeft: 8 }} />
-                                        </>}
-                            </Pressable>
+                                <Pressable onPress={pick_item_image} style={{
+                                    marginTop: 15,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: 44,
+                                    paddingHorizontal: 20,
+                                    borderRadius: 22,
+                                    backgroundColor: theme.design_tip2,
+                                    flexDirection: 'row',
+                                    ...Platform.select({
+                                        ios: {
+                                            shadowColor: theme.high_color,
+                                            shadowOffset: { width: 0, height: 2 },
+                                            shadowOpacity: 0.4,
+                                            shadowRadius: 4,
+                                        },
+                                        android: {
+                                            elevation: 4,
+                                        },
+                                    }),
+                                }}>
+                                    {loading_image ?
+                                        <ActivityIndicator color={theme.text_design2} size={18} /> :
+                                        itemImage === "" ?
+                                            <>
+                                                <IconApp pack='FI' name="camera" size={18} color={theme.text_design2} />
+                                                <YambiText text={strings.change_item_picture} color="design" bold style={{ marginLeft: 8 }} />
+                                            </>
+                                            :
+                                            <>
+                                                <IconApp pack='FI' name="upload-cloud" size={18} color={theme.text_design2} />
+                                                <YambiText text={strings.send} color="design" bold style={{ marginLeft: 8 }} />
+                                            </>}
+                                </Pressable>
+                            </View>
                         </View>
-                    </View>
                     )}
                     <View style={{
                         flexDirection: 'row',
@@ -1096,8 +1096,9 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                     // marginTop: 10,
                                     marginLeft: 2
                                 }}>
-                                <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} />
-                                <YambiText text={strings.gros + " " + strings.and + " " + strings.detail} numberLines={1} style={{ marginLeft: 8 }} />
+                                {/* <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} /> */}
+                                <IconApp color={theme.high_color} name="circle" size={18} pack={!wholesale_and_retail ? "FI" : "FA"} />
+                                <YambiText color="high" text={strings.gros + " " + strings.and + " " + strings.detail} numberLines={1} style={{ marginLeft: 8 }} />
                             </Pressable>
                         </View>
 
@@ -1116,12 +1117,12 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                         <TextInput
                             placeholderTextColor="gray"
                             maxLength={30}
-                            style={{ 
-                                color: theme.text, 
-                                backgroundColor: theme.border, 
-                                paddingLeft: 15, 
+                            style={{
+                                color: theme.text,
+                                backgroundColor: theme.border,
+                                paddingLeft: 15,
                                 paddingRight: 15,
-                                height: 45, 
+                                height: 45,
                                 borderRadius: 8,
                                 borderWidth: 1,
                                 borderColor: 'transparent',
@@ -1140,14 +1141,14 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             multiline={true}
                             numberOfLines={4}
                             textAlignVertical="top"
-                            style={{ 
-                                color: theme.text, 
-                                backgroundColor: theme.border, 
-                                paddingLeft: 15, 
+                            style={{
+                                color: theme.text,
+                                backgroundColor: theme.border,
+                                paddingLeft: 15,
                                 paddingRight: 15,
-                                paddingTop: 12, 
+                                paddingTop: 12,
                                 paddingBottom: 12,
-                                minHeight: 100, 
+                                minHeight: 100,
                                 borderRadius: 8,
                                 borderWidth: 1,
                                 borderColor: 'transparent',
@@ -1164,11 +1165,11 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             <YambiText size="small" color="gray" text={strings.manufacture_date} style={{ marginLeft: 2, marginBottom: 5 }} />
                             <Pressable
                                 onPress={() => setShowManufactureDatePicker(true)}
-                                style={{ 
-                                    backgroundColor: theme.border, 
-                                    borderRadius: 8, 
-                                    height: 45, 
-                                    justifyContent: 'center', 
+                                style={{
+                                    backgroundColor: theme.border,
+                                    borderRadius: 8,
+                                    height: 45,
+                                    justifyContent: 'center',
                                     paddingLeft: 15,
                                     borderWidth: 1,
                                     borderColor: showManufactureDatePicker ? theme.high_color : 'transparent',
@@ -1199,11 +1200,11 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             <YambiText size="small" color="gray" text={strings.expiry_date} style={{ marginLeft: 2, marginBottom: 5 }} />
                             <Pressable
                                 onPress={() => setShowExpiryDatePicker(true)}
-                                style={{ 
-                                    backgroundColor: theme.border, 
-                                    borderRadius: 8, 
-                                    height: 45, 
-                                    justifyContent: 'center', 
+                                style={{
+                                    backgroundColor: theme.border,
+                                    borderRadius: 8,
+                                    height: 45,
+                                    justifyContent: 'center',
                                     paddingLeft: 15,
                                     borderWidth: 1,
                                     borderColor: showExpiryDatePicker ? theme.high_color : 'transparent',
@@ -1241,12 +1242,12 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             placeholderTextColor="gray"
                             placeholder={strings.suppliers_placeholder}
                             maxLength={200}
-                            style={{ 
-                                color: theme.text, 
-                                backgroundColor: theme.border, 
+                            style={{
+                                color: theme.text,
+                                backgroundColor: theme.border,
                                 paddingLeft: 15,
                                 paddingRight: 15,
-                                height: 45, 
+                                height: 45,
                                 borderRadius: 8,
                                 borderWidth: 1,
                                 borderColor: 'transparent',
@@ -1564,7 +1565,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                         })()}
                     </View>
 
-                    <ButtonNormal title={strings.save} loadEnabled={true} onPress={EditBusinessItem} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 30 }} normal={true} />
+                    <ButtonNormal title={strings.save} loadEnabled={true} onPress={EditBusinessItem} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }} normal={true} />
 
                     {showCategoryModal && <CategoryModal />}
                     {showColorsModal && <ColorsModal />}

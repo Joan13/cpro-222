@@ -12,6 +12,7 @@
     "ts:check": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/ui": "~55.0.17",
     "@invertase/react-native-apple-authentication": "^2.5.1",
     "@legendapp/list": "^2.0.19",
     "@pnthach95/react-native-root-view-background": "^2.0.0",

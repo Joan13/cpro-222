@@ -228,6 +228,8 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
             backgroundColor: theme.background,
             paddingHorizontal: 16,
             paddingTop: 16,
+            borderTopColor: theme.border,
+            borderTopWidth: 1
         }}>
 
             {showUserError ?
@@ -429,7 +431,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
             </View>
 
             {/* Action Button */}
-            <View style={{ marginBottom: 24 }}>
+            <View style={{ marginBottom: 50 }}>
                 {button_to_show() === 0 ? (
                     <ButtonNormal 
                         title={strings.select_sales_point} 

@@ -1,4 +1,4 @@
-import {  View, ActivityIndicator, ScrollView, TextInput, Pressable, Platform } from "react-native";
+import { View, ActivityIndicator, ScrollView, TextInput, Pressable, Platform } from "react-native";
 import ImagePicker from 'react-native-image-crop-picker';
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
@@ -39,7 +39,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
     const [emails, setEmails] = useState<string>("");
     const [profile, setProfile] = useState<string>("");
     const [loading_profile, setLoading_profile] = useState<boolean>(false);
-    
+
     // Admin controls
     const isAdmin = user_data?.user_level === 2;
     const [subscription_active, setSubscription_active] = useState<number>(0);
@@ -85,7 +85,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
         setNational_id(business.national_number);
         setPhones(business.phones);
         setEmails(business.emails);
-        
+
         // Admin controls initialization
         if (isAdmin) {
             setSubscription_active(business.subscription_active !== undefined ? business.subscription_active : 0);
@@ -468,7 +468,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
 
                 <View style={{ backgroundColor: theme.background, marginBottom: 30, marginTop: 10 }}>
                     <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
-                        <TextSmallYambiGray text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} styles={{  marginBottom: 5 }} />
+                        <TextSmallYambiGray text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} styles={{ marginBottom: 5 }} />
                         <TextNormalYambiHighColor text={category === null ? strings.select_category : renderCategoryName(category)} styles={{ marginLeft: 2, marginTop: 5 }} />
                     </Pressable>
                 </View>
@@ -567,26 +567,26 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                 {/* Admin Controls */}
                 {isAdmin && (
                     <>
-                        <View style={{ 
-                            backgroundColor: theme.background, 
-                            marginBottom: 15, 
+                        <View style={{
+                            backgroundColor: theme.background,
+                            marginBottom: 15,
                             marginTop: 20,
                             padding: 15,
                             borderRadius: 12,
                             borderWidth: 2,
                             borderColor: theme.high_color + '40'
                         }}>
-                            <TextNormalYambi 
-                                text={(strings as any).admin_subscription_settings || "Admin: Subscription Settings"} 
-                                bold 
-                                styles={{ marginBottom: 15, color: theme.high_color }} 
+                            <TextNormalYambi
+                                text={(strings as any).admin_subscription_settings || "Admin: Subscription Settings"}
+                                bold
+                                styles={{ marginBottom: 15, color: theme.high_color }}
                             />
-                            
+
                             {/* Subscription Active Toggle */}
                             <View style={{ marginBottom: 20 }}>
-                                <TextSmallYambiGray 
-                                    text={(strings as any).subscription_status || "Subscription Status"} 
-                                    styles={{ marginBottom: 8 }} 
+                                <TextSmallYambiGray
+                                    text={(strings as any).subscription_status || "Subscription Status"}
+                                    styles={{ marginBottom: 8 }}
                                 />
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Pressable
@@ -602,18 +602,18 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                             borderColor: subscription_active === 0 ? theme.high_color : theme.border,
                                         }}
                                     >
-                                        <IconApp 
-                                            pack="FI" 
-                                            name={subscription_active === 0 ? "check-circle" : "circle"} 
-                                            size={18} 
-                                            color={subscription_active === 0 ? theme.high_color : theme.gray} 
+                                        <IconApp
+                                            pack="FI"
+                                            name={subscription_active === 0 ? "check-circle" : "circle"}
+                                            size={18}
+                                            color={subscription_active === 0 ? theme.high_color : theme.gray}
                                         />
-                                        <TextNormalYambi 
-                                            text={(strings as any).inactive || "Inactive"} 
-                                            styles={{ marginLeft: 8, color: subscription_active === 0 ? theme.high_color : theme.text }} 
+                                        <TextNormalYambi
+                                            text={(strings as any).inactive || "Inactive"}
+                                            styles={{ marginLeft: 8, color: subscription_active === 0 ? theme.high_color : theme.text }}
                                         />
                                     </Pressable>
-                                    
+
                                     <Pressable
                                         onPress={() => setSubscription_active(1)}
                                         style={{
@@ -626,15 +626,15 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                             borderColor: subscription_active === 1 ? theme.high_color : theme.border,
                                         }}
                                     >
-                                        <IconApp 
-                                            pack="FI" 
-                                            name={subscription_active === 1 ? "check-circle" : "circle"} 
-                                            size={18} 
-                                            color={subscription_active === 1 ? theme.high_color : theme.gray} 
+                                        <IconApp
+                                            pack="FI"
+                                            name={subscription_active === 1 ? "check-circle" : "circle"}
+                                            size={18}
+                                            color={subscription_active === 1 ? theme.high_color : theme.gray}
                                         />
-                                        <TextNormalYambi 
-                                            text={(strings as any).active || "Active"} 
-                                            styles={{ marginLeft: 8, color: subscription_active === 1 ? theme.high_color : theme.text }} 
+                                        <TextNormalYambi
+                                            text={(strings as any).active || "Active"}
+                                            styles={{ marginLeft: 8, color: subscription_active === 1 ? theme.high_color : theme.text }}
                                         />
                                     </Pressable>
                                 </View>
@@ -642,9 +642,9 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
 
                             {/* Valid Until Date Picker */}
                             <View style={{ marginBottom: 15 }}>
-                                <TextSmallYambiGray 
-                                    text={(strings as any).valid_until || "Valid Until"} 
-                                    styles={{ marginBottom: 8 }} 
+                                <TextSmallYambiGray
+                                    text={(strings as any).valid_until || "Valid Until"}
+                                    styles={{ marginBottom: 8 }}
                                 />
                                 <Pressable
                                     onPress={() => setShowDatePicker(true)}
@@ -657,8 +657,8 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                         justifyContent: 'space-between',
                                     }}
                                 >
-                                    <TextNormalYambi 
-                                        text={moment(valid_until).format('YYYY-MM-DD HH:mm')} 
+                                    <TextNormalYambi
+                                        text={moment(valid_until).format('YYYY-MM-DD HH:mm')}
                                     />
                                     <IconApp pack="FI" name="calendar" size={18} color={theme.text} />
                                 </Pressable>
@@ -701,7 +701,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                     <TextNormalYambi text={strings.define_as_main_site} styles={{ marginLeft: 8 }} />
                 </Pressable> */}
 
-                <ButtonNormal title={strings.edit_business} loading={loading} onPress={EBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20 }} normal={true} />
+                <ButtonNormal title={strings.edit_business} loading={loading} onPress={EBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }} normal={true} />
 
             </View>
         </ScrollView>

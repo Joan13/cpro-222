@@ -626,9 +626,11 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                                     alignItems: "center",
                                     marginLeft: 2,
                                 }}>
-                                <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} />
+                                {/* <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} /> */}
+                                <IconApp color={theme.high_color} name="circle" size={18} pack={!wholesale_and_retail?"FI":"FA"} />
                                 <YambiText
                                     text={strings.gros + " " + strings.and + " " + strings.detail}
+                                    color="high"
                                     numberLines={1}
                                     style={{ marginLeft: 8 }}
                                 />
@@ -1066,7 +1068,7 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                         title={strings.save}
                         loadEnabled={true}
                         onPress={AddItem}
-                        styles={{ paddingHorizontal: 20, marginVertical: 20 }}
+                        styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }}
                         normal={true}
                     />
 

@@ -32,12 +32,12 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   const playingRecorded = useAppSelector(state => state.app.playingRecorded);
   const [showDeleteMessage, setShowDeleteMessage] = useState<boolean>(false);
   const message = useObject(UsersMessages, message_selected);
-  const userrr = useObject(UserContacts, "");
+  const userrr = user ? useObject(UserContacts, user) : null;
   const chats = useQuery(UserChats);
   const realm = useRealm();
 
   const copyToClipboard = () => {
-    if(message===null)return;
+    if (message === null) return;
     Clipboard.setString(message.main_text_message);
     dispatch(setMessageSelected(""));
   };
@@ -59,7 +59,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   }
 
   const CanEditMessage = () => {
-    if(message===null)return;
+    if (message === null) return;
     if (message.message_read <= 2 && message.message_type === 0 && message.deleted === 0) {
       return true;
     }
@@ -247,7 +247,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: 18,
-                      backgroundColor: app_theme.colors.border + '50',
+                      // backgroundColor: app_theme.colors.border + '50',
                     }}>
                     <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
                   </Pressable>
@@ -323,7 +323,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: 18,
-                backgroundColor: app_theme.colors.border+"50",
+                backgroundColor: app_theme.colors.border + "50",
               }}>
               <Entypo name="reply" size={18} color={app_theme.colors.text_design1} />
             </Pressable>
@@ -359,7 +359,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 18,
-                    backgroundColor: app_theme.colors.border+"50",
+                    backgroundColor: app_theme.colors.border + "50",
                   }}>
                   <IconApp pack='MC' name="content-copy" size={18} color={app_theme.colors.text_design1} />
                 </Pressable> : null : null}
@@ -372,7 +372,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: 18,
-                backgroundColor: app_theme.colors.border+"50",
+                backgroundColor: app_theme.colors.border + "50",
               }}>
               <IconApp pack='FI' name="info" size={18} color={app_theme.colors.text_design1} />
             </Pressable>
@@ -385,7 +385,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: 18,
-                backgroundColor: app_theme.colors.border+"50",
+                backgroundColor: app_theme.colors.border + "50",
                 marginRight: 8,
               }}>
               <IconApp pack='ET' name="forward" size={18} color={app_theme.colors.text_design1} />
