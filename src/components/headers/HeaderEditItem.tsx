@@ -100,7 +100,11 @@ const HeaderEditBusinessItem = ({ navigation, route }: NavProps) => {
                         {!item_deleted ?
                             <TextNormalYambiGray text={strings.delete_item_text} />
                             :
-                            <Animated.View entering={BounceIn}>
+                            <Animated.View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }} entering={BounceIn}>
                                 <IconApp pack="FA" name="check-circle" size={50} color={theme.colors.text} />
                             </Animated.View>}
                     </View>

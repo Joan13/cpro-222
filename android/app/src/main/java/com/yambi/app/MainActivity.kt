@@ -19,7 +19,7 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     // setTheme(R.style.AppTheme);
     // @generated begin expo-splashscreen - expo prebuild (DO NOT MODIFY) sync-f3ff59a738c56c9a6119210cb55f0b613eb8b6af
-    SplashScreenManager.registerOnActivity(this)
+    // SplashScreenManager.registerOnActivity(this)
     // @generated end expo-splashscreen
     // @generated begin bootsplash-init - expo prebuild (DO NOT MODIFY) sync-f0f7dbc46f1d82498f47676b4197e1949dc7790f
     RNBootSplash.init(this, R.style.BootTheme)

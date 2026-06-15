@@ -224,51 +224,81 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
 
     return (
         <ScrollView style={{
-            flex: 1,
             backgroundColor: theme.background,
             paddingHorizontal: 16,
-            paddingTop: 16,
             borderTopColor: theme.border,
             borderTopWidth: 1
         }}>
+            <View style={{
+                marginBottom: 50
+            }}>
 
-            {showUserError ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowUserError(false) }} singleButton title={strings.error}>
-                    <TextNormalYambiGray text={strings.business_level_error} />
-                </ModalApp> : null}
+                {showUserError ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowUserError(false) }} singleButton title={strings.error}>
+                        <TextNormalYambiGray text={strings.business_level_error} />
+                    </ModalApp> : null}
 
-            {showError ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
-                    <TextNormalYambiGray text={strings.fields_error_validation} />
-                </ModalApp> : null}
+                {showError ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
+                        <TextNormalYambiGray text={strings.fields_error_validation} />
+                    </ModalApp> : null}
 
-            {showSuccess ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowSuccess(false) }} singleButton title={strings.success}>
-                    <TextNormalYambiGray text={strings.success_added_user} />
-                </ModalApp> : null}
+                {showSuccess ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowSuccess(false) }} singleButton title={strings.success}>
+                        <TextNormalYambiGray text={strings.success_added_user} />
+                    </ModalApp> : null}
 
-            {showInternetError ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
-                    <TextNormalYambiGray text={strings.connection_failed} />
-                </ModalApp> : null}
+                {showInternetError ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
+                        <TextNormalYambiGray text={strings.connection_failed} />
+                    </ModalApp> : null}
 
-            {showUsers ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.contact_select}>
-                    <Usersss />
-                </ModalApp> : null}
+                {showUsers ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.contact_select}>
+                        <Usersss />
+                    </ModalApp> : null}
 
-            {showSellsPointsList ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowSellsPointsList(false) }} singleButton title={strings.select_sales_point}>
-                    <SalesPoints />
-                </ModalApp> : null}
+                {showSellsPointsList ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowSellsPointsList(false) }} singleButton title={strings.select_sales_point}>
+                        <SalesPoints />
+                    </ModalApp> : null}
 
-            {errorBlockSoleOwner ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setErrorBlockSoleOwner(false) }} singleButton title={strings.error}>
-                    <TextNormalYambiGray text={strings.unable_delete_sole_owner} />
-                </ModalApp> : null}
+                {errorBlockSoleOwner ?
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setErrorBlockSoleOwner(false) }} singleButton title={strings.error}>
+                        <TextNormalYambiGray text={strings.unable_delete_sole_owner} />
+                    </ModalApp> : null}
 
-            {/* Business Info Card */}
-            {business_id !== "" || sales_point_id !== "" ? (
+                {/* Business Info Card */}
+                {business_id !== "" || sales_point_id !== "" ? (
+                    <View style={{
+                        backgroundColor: theme.background,
+                        borderRadius: 12,
+                        padding: 20,
+                        marginBottom: 20,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                        shadowColor: theme.border,
+                        shadowOpacity: 0.1,
+                        shadowRadius: 6,
+                        elevation: 3,
+                    }}>
+                        {business_id !== "" ? (
+                            <View style={{ marginBottom: sales_point_id !== "" && level !== 1 ? 15 : 0 }}>
+                                <TextNormalYambiGray text={strings.business_name} styles={{ marginBottom: 6 }} />
+                                <TextNormalYambi bold text={business.business_name} />
+                            </View>
+                        ) : null}
+
+                        {sales_point_id !== "" && level !== 1 ? (
+                            <View>
+                                <TextNormalYambiGray text={strings.sales_point_name} styles={{ marginBottom: 6 }} />
+                                <TextNormalYambi bold text={sales_point !== null ? sales_point.sells_point_name : ""} />
+                            </View>
+                        ) : null}
+                    </View>
+                ) : null}
+
+                {/* User Details Card */}
                 <View style={{
                     backgroundColor: theme.background,
                     borderRadius: 12,
@@ -281,172 +311,144 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                     shadowRadius: 6,
                     elevation: 3,
                 }}>
-                    {business_id !== "" ? (
-                        <View style={{ marginBottom: sales_point_id !== "" && level !== 1 ? 15 : 0 }}>
-                            <TextNormalYambiGray text={strings.business_name} styles={{ marginBottom: 6 }} />
-                            <TextNormalYambi bold text={business.business_name} />
-                        </View>
-                    ) : null}
+                    <View style={{ marginBottom: 20 }}>
+                        <TextNormalYambiGray text={strings.phone_number} styles={{ marginBottom: 6 }} />
+                        <TextNormalYambi text={phone_number} bold />
+                    </View>
 
-                    {sales_point_id !== "" && level !== 1 ? (
-                        <View>
-                            <TextNormalYambiGray text={strings.sales_point_name} styles={{ marginBottom: 6 }} />
-                            <TextNormalYambi bold text={sales_point !== null ? sales_point.sells_point_name : ""} />
-                        </View>
-                    ) : null}
-                </View>
-            ) : null}
+                    <View style={{ marginBottom: 20 }}>
+                        <TextNormalYambiGray text={strings.user_status} styles={{ marginBottom: 8 }} />
+                        <Pressable
+                            onPress={() => {
+                                if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
+                                    dispatch(setShowModalApp(true));
+                                    setErrorBlockSoleOwner(true);
+                                } else {
+                                    setUser_active(!user_active ? 1 : 0)
+                                }
+                            }}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}>
+                            <SwitchApp value={user_active ? true : false} onPress={() => {
+                                if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
+                                    dispatch(setShowModalApp(true));
+                                    setErrorBlockSoleOwner(true);
+                                } else {
+                                    setUser_active(!user_active ? 1 : 0)
+                                }
+                            }} small />
+                            <TextNormalYambiHighColor text={user_active ? strings.active : strings.blocked} styles={{ marginLeft: 10 }} bold />
+                        </Pressable>
+                    </View>
 
-            {/* User Details Card */}
-            <View style={{
-                backgroundColor: theme.background,
-                borderRadius: 12,
-                padding: 20,
-                marginBottom: 20,
-                borderWidth: 1,
-                borderColor: theme.border,
-                shadowColor: theme.border,
-                shadowOpacity: 0.1,
-                shadowRadius: 6,
-                elevation: 3,
-            }}>
-                <View style={{ marginBottom: 20 }}>
-                    <TextNormalYambiGray text={strings.phone_number} styles={{ marginBottom: 6 }} />
-                    <TextNormalYambi text={phone_number} bold />
-                </View>
+                    <View style={{ marginBottom: 20 }}>
+                        <TextNormalYambiGray text={strings.name} styles={{ marginBottom: 8 }} />
+                        <TextInput
+                            placeholder={strings.name}
+                            placeholderTextColor={theme.gray}
+                            maxLength={50}
+                            style={{
+                                color: theme.text,
+                                backgroundColor: theme.border,
+                                paddingHorizontal: 15,
+                                paddingVertical: 12,
+                                minHeight: 48,
+                                borderRadius: 8,
+                                fontSize: 15,
+                            }}
+                            value={name}
+                            onChangeText={text => setName(text)}
+                        />
+                    </View>
 
-                <View style={{ marginBottom: 20 }}>
-                    <TextNormalYambiGray text={strings.user_status} styles={{ marginBottom: 8 }} />
-                    <Pressable
-                        onPress={() => {
+                    <View>
+                        <TextNormalYambiGray text={strings.access_level} styles={{ marginBottom: 12 }} />
+
+                        {conditionEditBusiness() ? (
+                            <Pressable onPress={() => setLevel(1)} style={{
+                                flexDirection: 'row',
+                                marginBottom: 16,
+                                paddingVertical: 8,
+                            }}>
+                                <IconApp pack="FI" name={level === 1 ? "check-circle" : "circle"} color={level === 1 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
+                                <View style={{ flex: 1, marginLeft: 12 }}>
+                                    <TextNormalYambiHighColor text={strings.owner} bold={level === 1} />
+                                    <TextSmallYambiGray text={strings.admin_text} styles={{ marginTop: 4 }} />
+                                </View>
+                            </Pressable>
+                        ) : null}
+
+                        <Pressable onPress={() => {
                             if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
                                 dispatch(setShowModalApp(true));
                                 setErrorBlockSoleOwner(true);
-                            } else {
-                                setUser_active(!user_active ? 1 : 0)
-                            }
-                        }}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                        }}>
-                        <SwitchApp value={user_active ? true : false} onPress={() => {
-                            if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
-                                dispatch(setShowModalApp(true));
-                                setErrorBlockSoleOwner(true);
-                            } else {
-                                setUser_active(!user_active ? 1 : 0)
-                            }
-                        }} small />
-                        <TextNormalYambiHighColor text={user_active ? strings.active : strings.blocked} styles={{ marginLeft: 10 }} bold />
-                    </Pressable>
-                </View>
-
-                <View style={{ marginBottom: 20 }}>
-                    <TextNormalYambiGray text={strings.name} styles={{ marginBottom: 8 }} />
-                    <TextInput
-                        placeholder={strings.name}
-                        placeholderTextColor={theme.gray}
-                        maxLength={50}
-                        style={{ 
-                            color: theme.text, 
-                            backgroundColor: theme.border, 
-                            paddingHorizontal: 15, 
-                            paddingVertical: 12,
-                            minHeight: 48, 
-                            borderRadius: 8,
-                            fontSize: 15,
-                        }}
-                        value={name}
-                        onChangeText={text => setName(text)}
-                    />
-                </View>
-
-                <View>
-                    <TextNormalYambiGray text={strings.access_level} styles={{ marginBottom: 12 }} />
-
-                    {conditionEditBusiness() ? (
-                        <Pressable onPress={() => setLevel(1)} style={{
+                            } else { setLevel(2) }
+                        }} style={{
                             flexDirection: 'row',
                             marginBottom: 16,
                             paddingVertical: 8,
                         }}>
-                            <IconApp pack="FI" name={level === 1 ? "check-circle" : "circle"} color={level === 1 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
+                            <IconApp pack="FI" name={level === 2 ? "check-circle" : "circle"} color={level === 2 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
                             <View style={{ flex: 1, marginLeft: 12 }}>
-                                <TextNormalYambiHighColor text={strings.owner} bold={level === 1} />
-                                <TextSmallYambiGray text={strings.admin_text} styles={{ marginTop: 4 }} />
+                                <TextNormalYambiHighColor text={strings.salesforce_manager} bold={level === 2} />
+                                <TextSmallYambiGray text={strings.salesforce_manager_text} styles={{ marginTop: 4 }} />
                             </View>
                         </Pressable>
+
+                        <Pressable onPress={() => {
+                            if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
+                                dispatch(setShowModalApp(true));
+                                setErrorBlockSoleOwner(true);
+                            } else { setLevel(3) }
+                        }} style={{
+                            flexDirection: 'row',
+                            marginBottom: 8,
+                            paddingVertical: 8,
+                        }}>
+                            <IconApp pack="FI" name={level === 3 ? "check-circle" : "circle"} color={level === 3 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <TextNormalYambiHighColor text={strings.sale_operator} bold={level === 3} />
+                                <TextSmallYambiGray text={strings.sale_operator_text} styles={{ marginTop: 4 }} />
+                            </View>
+                        </Pressable>
+                    </View>
+
+                    {ShowChangeSalesPointButton() ? (
+                        <Pressable
+                            onPress={() => { dispatch(setShowModalApp(true)); setShowSellsPointsList(true); }}
+                            style={{
+                                paddingVertical: 8,
+                                marginTop: 8,
+                                marginBottom: 4,
+                                borderColor: theme.high_color,
+                                borderBottomWidth: 1,
+                                alignSelf: 'flex-start'
+                            }}>
+                            <TextNormalYambiHighColor text={strings.edit_sales_point} bold />
+                        </Pressable>
                     ) : null}
-
-                    <Pressable onPress={() => {
-                        if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
-                            dispatch(setShowModalApp(true));
-                            setErrorBlockSoleOwner(true);
-                        } else { setLevel(2) }
-                    }} style={{
-                        flexDirection: 'row',
-                        marginBottom: 16,
-                        paddingVertical: 8,
-                    }}>
-                        <IconApp pack="FI" name={level === 2 ? "check-circle" : "circle"} color={level === 2 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <TextNormalYambiHighColor text={strings.salesforce_manager} bold={level === 2} />
-                            <TextSmallYambiGray text={strings.salesforce_manager_text} styles={{ marginTop: 4 }} />
-                        </View>
-                    </Pressable>
-
-                    <Pressable onPress={() => {
-                        if (user.level === 1 && all_owners.length < 2 && user.user_active === 1) {
-                            dispatch(setShowModalApp(true));
-                            setErrorBlockSoleOwner(true);
-                        } else { setLevel(3) }
-                    }} style={{
-                        flexDirection: 'row',
-                        marginBottom: 8,
-                        paddingVertical: 8,
-                    }}>
-                        <IconApp pack="FI" name={level === 3 ? "check-circle" : "circle"} color={level === 3 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <TextNormalYambiHighColor text={strings.sale_operator} bold={level === 3} />
-                            <TextSmallYambiGray text={strings.sale_operator_text} styles={{ marginTop: 4 }} />
-                        </View>
-                    </Pressable>
                 </View>
 
-                {ShowChangeSalesPointButton() ? (
-                    <Pressable
-                        onPress={() => { dispatch(setShowModalApp(true)); setShowSellsPointsList(true); }}
-                        style={{
-                            paddingVertical: 8,
-                            marginTop: 8,
-                            marginBottom: 4,
-                            borderColor: theme.high_color,
-                            borderBottomWidth: 1,
-                            alignSelf: 'flex-start'
-                        }}>
-                        <TextNormalYambiHighColor text={strings.edit_sales_point} bold />
-                    </Pressable>
-                ) : null}
-            </View>
-
-            {/* Action Button */}
-            <View style={{ marginBottom: 50 }}>
-                {button_to_show() === 0 ? (
-                    <ButtonNormal 
-                        title={strings.select_sales_point} 
-                        loadEnabled={true} 
-                        onPress={() => { dispatch(setShowModalApp(true)); setShowSellsPointsList(true) }} 
-                        normal={true} 
-                    />
-                ) : (
-                    <ButtonNormal 
-                        title={strings.continue} 
-                        loadEnabled={true} 
-                        onPress={EditBusinessUserButton} 
-                        normal={true} 
-                    />
-                )}
+                {/* Action Button */}
+                <View style={{ marginBottom: 0 }}>
+                    {button_to_show() === 0 ? (
+                        <ButtonNormal
+                            title={strings.select_sales_point}
+                            loadEnabled={true}
+                            onPress={() => { dispatch(setShowModalApp(true)); setShowSellsPointsList(true) }}
+                            normal={true}
+                        />
+                    ) : (
+                        <ButtonNormal
+                            title={strings.continue}
+                            loadEnabled={true}
+                            onPress={EditBusinessUserButton}
+                            normal={true}
+                        />
+                    )}
+                </View>
             </View>
         </ScrollView>
     )

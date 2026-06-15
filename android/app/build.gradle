@@ -92,7 +92,7 @@ android {
         applicationId 'com.yambi.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 23
+        versionCode 25
         versionName "2.46.28"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
@@ -126,6 +126,21 @@ android {
             def enablePngCrunchInRelease = findProperty('android.enablePngCrunchInReleaseBuilds') ?: 'true'
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }
+
+        // release {
+        //     signingConfig signingConfigs.release
+
+        //     // R8
+        //     minifyEnabled true
+        //     shrinkResources true
+
+        //     // Modern optimized ProGuard
+        //     proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"),
+        //             "proguard-rules.pro"
+
+        //     // Speed build improvement
+        //     crunchPngs false
+        // }
     }
     packagingOptions {
         jniLibs {

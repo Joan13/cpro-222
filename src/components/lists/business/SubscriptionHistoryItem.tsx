@@ -141,7 +141,7 @@ const SubscriptionHistoryItem = ({ item }: SubscriptionHistoryItemProps) => {
                                 />
                             </View>
                         )}
-                        {item.is_expired && !isActiveSubscription && !isPaymentSuccess && (
+                        {item.is_expired && !isActiveSubscription && isPaymentSuccess && (
                             <View style={{
                                 backgroundColor: theme.error,
                                 borderRadius: 12,
@@ -150,7 +150,7 @@ const SubscriptionHistoryItem = ({ item }: SubscriptionHistoryItemProps) => {
                                 marginLeft: 10,
                             }}>
                                 <YambiText
-                                    text={strings.expired_subscription}
+                                    text={strings.expired}
                                     size="small"
                                     color="badge"
                                     style={{ color: '#FFFFFF' }}

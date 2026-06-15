@@ -79,6 +79,10 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
     }
 
     const NewBusinessUserButton = () => {
+
+        if (phone_number === "" || name === "")
+            return;
+
         if (oo !== undefined) {
             if (oo.user_active === 1) {
                 if (phone_number === "") {
@@ -166,13 +170,16 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
     }
 
     return (
-        <View style={{
-            flex: 1, 
+        <ScrollView style={{
+            flex: 1,
             backgroundColor: theme.background,
+            borderTopWidth: 1,
+            borderColor: theme.border
         }}>
-            <ScrollView style={{
+            <View style={{
                 paddingHorizontal: 16,
-                paddingTop: 16,
+                paddingTop: 15,
+                marginBottom: 50
             }}>
                 {/* Business Info Card */}
                 <View style={{
@@ -244,12 +251,12 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                             placeholder={strings.name}
                             placeholderTextColor={theme.gray}
                             maxLength={50}
-                            style={{ 
-                                color: theme.text, 
-                                backgroundColor: theme.border, 
-                                paddingHorizontal: 15, 
+                            style={{
+                                color: theme.text,
+                                backgroundColor: theme.border,
+                                paddingHorizontal: 15,
                                 paddingVertical: 12,
-                                minHeight: 48, 
+                                minHeight: 48,
                                 borderRadius: 8,
                                 fontSize: 15,
                             }}
@@ -307,21 +314,21 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
 
                 {/* Action Button */}
                 {phone_number !== "" ? (
-                    <View style={{ marginBottom: 24 }}>
+                    <View style={{ marginBottom: 0 }}>
                         {raiseAlert ? (
-                            <ButtonNormal 
-                                title={strings.add_user_to_business} 
-                                loadEnabled={true} 
-                                onPress={NewBusinessUserButton} 
-                                normal={true} 
+                            <ButtonNormal
+                                title={strings.add_user_to_business}
+                                loadEnabled={true}
+                                onPress={NewBusinessUserButton}
+                                normal={true}
                             />
                         ) : (
                             <TextNormalYambiError text={strings.user_exists} styles={{ textAlign: 'center', marginVertical: 12 }} />
                         )}
                     </View>
                 ) : null}
-            </ScrollView>
-        </View>
+            </View>
+        </ScrollView>
     )
 }
 

@@ -27,11 +27,11 @@ const SwitchApp: React.FC<IButton> = ({ value, small, disabled, onPress, loadEna
                     uncheckedBorderColor: theme.gray,
 
                     disabledCheckedThumbColor: theme.background,
-                    disabledCheckedTrackColor: theme.border,
+                    disabledCheckedTrackColor: theme.gray + "50",
 
                     disabledUncheckedThumbColor: theme.background,
-                    disabledUncheckedTrackColor: theme.border,
-                    disabledUncheckedBorderColor: theme.border,
+                    disabledUncheckedTrackColor: theme.gray + "50",
+                    disabledUncheckedBorderColor: theme.gray + "50",
                 }}
 
                 enabled={!disabled}

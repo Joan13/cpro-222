@@ -252,14 +252,14 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
      };
 
      return (
-          <View style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+          <View style={{backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1}}>
 
                {showInternetError ?
                     <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
                          <YambiText text={strings.connection_failed} size="normal" color="gray" />
                     </ModalApp> : null}
 
-               <View style={{ flex: 1 }}>
+               <View style={{ flex: 1, marginBottom:  50}}>
                     <StatusBarYambi />
 
                     <Animated.ScrollView
@@ -536,7 +536,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                                   <YambiText text={strings.media_visibility} size="normal" color="default" />
                                                   <YambiText text={strings.media_visibility_text} size="small" color="gray" />
                                              </View>
-                                             <SwitchApp value={false} onPress={() => { }} />
+                                             <SwitchApp value={false} disabled={true} onPress={() => { }} />
                                         </View>
 
                                         {/* Messages Counter */}

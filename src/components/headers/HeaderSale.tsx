@@ -1,6 +1,6 @@
 import { View, Pressable, Text } from "react-native"
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import {  setShowModalApp } from "../../store/reducers/appSlice";
+import { setShowModalApp } from "../../store/reducers/appSlice";
 // import { SocketApp } from "../../../App";
 import { NavProps, TItem, TSale } from "../../types/types";
 import { IconApp } from "../app/IconApp";
@@ -129,7 +129,7 @@ const HeaderSale = ({ navigation, route }: NavProps) => {
                                 <TextSmallYambiError text={strings.delete_sale_nb} styles={{ marginTop: 15 }} />
                             </View>
                             :
-                            <Animated.View entering={BounceIn}>
+                            <Animated.View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} entering={BounceIn}>
                                 <IconApp pack="FA" name="check-circle" size={50} color={theme.colors.text} />
                             </Animated.View>}
                     </View>
