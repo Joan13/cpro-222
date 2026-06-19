@@ -86,7 +86,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
 
     useLayoutEffect(() => {
 
-        if(item.marketplace_visibility!==1)
+        if (item.marketplace_visibility !== 1)
             return
 
         navigation.setOptions({
@@ -195,7 +195,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                     if (phone && !toVerify.includes(phone)) toVerify.push(phone);
                 }
             }
-            
+
             if (toVerify.length === 0) return;
             if (cancelled) return;
             setPhoneStatus(prev => {
@@ -270,23 +270,23 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
             return (
                 <View style={{ flexDirection: 'row', marginTop: 12, flexWrap: 'wrap' }}>
                     {cols.map((c, i) => (
-                        <View 
-                            key={i} 
-                            style={{ 
-                                width: 32, 
-                                height: 32, 
-                                borderRadius: 16, 
-                                backgroundColor: c, 
-                                marginRight: 10, 
-                                marginBottom: 10, 
-                                borderWidth: 2, 
+                        <View
+                            key={i}
+                            style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
+                                backgroundColor: c,
+                                marginRight: 10,
+                                marginBottom: 10,
+                                borderWidth: 2,
                                 borderColor: theme.border,
                                 shadowColor: '#000',
                                 shadowOffset: { width: 0, height: 2 },
                                 shadowOpacity: 0.1,
                                 shadowRadius: 3,
                                 elevation: 3,
-                            }} 
+                            }}
                         />
                     ))}
                 </View>
@@ -302,17 +302,17 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
             return (
                 <View style={{ flexDirection: 'row', marginTop: 12, flexWrap: 'wrap' }}>
                     {sizes.map((s, i) => (
-                        <View 
-                            key={i} 
-                            style={{ 
-                                paddingHorizontal: 14, 
-                                height: 32, 
-                                borderRadius: 16, 
-                                borderWidth: 1.5, 
-                                borderColor: theme.border, 
-                                marginRight: 10, 
-                                marginBottom: 10, 
-                                alignItems: 'center', 
+                        <View
+                            key={i}
+                            style={{
+                                paddingHorizontal: 14,
+                                height: 32,
+                                borderRadius: 16,
+                                borderWidth: 1.5,
+                                borderColor: theme.border,
+                                marginRight: 10,
+                                marginBottom: 10,
+                                alignItems: 'center',
                                 justifyContent: 'center',
                                 backgroundColor: theme.background,
                             }}
@@ -356,12 +356,12 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
     );
 
     return (
-        <View style={{ flex: 1, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }}>
-            <ScrollView 
-                keyboardShouldPersistTaps="handled" 
-                contentContainerStyle={{ padding: 16 }}
-                showsVerticalScrollIndicator={false}
-            >
+        <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+            style={{ backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }}>
+            <View style={{ marginBottom: 50 }}>
                 {/* Image Section — only when the item has at least one image */}
                 {imageView ? (
                     <View style={{ marginBottom: 20, position: 'relative' }}>
@@ -373,13 +373,13 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                             {imageView}
                         </Pressable>
                         {hasDiscount && (
-                            <View style={{ 
-                                position: 'absolute', 
-                                top: 16, 
-                                left: 16, 
-                                backgroundColor: theme.error, 
-                                borderRadius: 12, 
-                                paddingHorizontal: 12, 
+                            <View style={{
+                                position: 'absolute',
+                                top: 16,
+                                left: 16,
+                                backgroundColor: theme.error,
+                                borderRadius: 12,
+                                paddingHorizontal: 12,
                                 paddingVertical: 8,
                                 shadowColor: '#000',
                                 shadowOffset: { width: 0, height: 2 },
@@ -396,11 +396,11 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                 {/* Title & Price Section */}
                 <SectionCard style={{ marginBottom: 16 }}>
                     <YambiText bold size="big" text={item.item_name} style={{ marginBottom: 12 }} />
-                    
+
                     {/* Price Row */}
                     <View style={{
-                        flexDirection: 'row', 
-                        alignItems: 'center', 
+                        flexDirection: 'row',
+                        alignItems: 'center',
                         marginTop: 8,
                         paddingTop: 16,
                         borderTopWidth: 1,
@@ -411,12 +411,12 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                             <View style={{ width: 6 }} />
                             <YambiText bold size="big" text={discountedPrice} style={{ fontSize: 28 }} />
                             {hasDiscount && (
-                                <YambiText 
-                                    lineThrough 
-                                    size="small" 
-                                    color="gray" 
-                                    style={{ marginLeft: 12 }} 
-                                    text={`${renderCurrency(prices.currency, false)}${prices.retail_selling_price}`} 
+                                <YambiText
+                                    lineThrough
+                                    size="small"
+                                    color="gray"
+                                    style={{ marginLeft: 12 }}
+                                    text={`${renderCurrency(prices.currency, false)}${prices.retail_selling_price}`}
                                 />
                             )}
                         </View>
@@ -433,7 +433,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                     </View>
 
                     {/* Add to Cart — only when Marketplace tab is enabled in Customize */}
-                    {tab_visible_marketplace ? (
+                    {tab_visible_marketplace && item.marketplace_visibility === 1 ? (
                         <Pressable
                             onPress={handleAddToCart}
                             style={{
@@ -448,18 +448,18 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                 borderColor: isInCart ? theme.error : theme.badge_background_color,
                             }}
                         >
-                            <IconApp 
-                                pack="FI" 
-                                name={isInCart ? "x" : "shopping-cart"} 
-                                color={isInCart ? theme.error : theme.badge_color} 
-                                size={18} 
+                            <IconApp
+                                pack="FI"
+                                name={isInCart ? "x" : "shopping-cart"}
+                                color={isInCart ? theme.error : theme.badge_color}
+                                size={18}
                             />
-                            <YambiText 
-                                style={{ marginLeft: 8 }} 
-                                color={isInCart ? "error" : "badge"} 
-                                size="small" 
+                            <YambiText
+                                style={{ marginLeft: 8 }}
+                                color={isInCart ? "error" : "badge"}
+                                size="small"
                                 bold
-                                text={isInCart ? strings.remove_from_cart : strings.add_to_cart} 
+                                text={isInCart ? strings.remove_from_cart : strings.add_to_cart}
                             />
                         </Pressable>
                     ) : null}
@@ -550,13 +550,13 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                 const phoneParts = (sp.phones || '').split(',').map(s => s.trim()).filter(Boolean);
                                 const emailParts = (sp.emails || '').split(',').map(s => s.trim()).filter(Boolean);
                                 const hasChecking = salesPointHasChecking(sp);
-                                
+
                                 return (
-                                    <View 
-                                        key={sp._id || i} 
-                                        style={{ 
-                                            paddingVertical: 16, 
-                                            borderBottomWidth: i === sales_points.length - 1 ? 0 : 1, 
+                                    <View
+                                        key={sp._id || i}
+                                        style={{
+                                            paddingVertical: 16,
+                                            borderBottomWidth: i === sales_points.length - 1 ? 0 : 1,
                                             borderBottomColor: theme.border,
                                         }}
                                     >
@@ -566,7 +566,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                 <YambiText bold size="small" text={sp.sells_point_name} style={{ marginLeft: 8 }} />
                                             </View>
                                         )}
-                                        
+
                                         {sp.sells_point_address && (
                                             <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12, marginTop: 4 }}>
                                                 <IconApp pack="FI" name="map-pin" size={14} color={theme.gray} styles={{ marginTop: 2 }} />
@@ -591,7 +591,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                         const phoneKey = raw.trim();
                                                         const status = phoneStatus[phoneKey];
                                                         const isCurrentUser = phoneKey === user_data.phone_number;
-                                                        
+
                                                         if (phoneKey && status === 'exists' && !isCurrentUser) {
                                                             return (
                                                                 <Pressable
@@ -635,8 +635,8 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                 </View>
                                                 <View>
                                                     {emailParts.map((em, ei) => (
-                                                        <Pressable 
-                                                            key={`${em}-${ei}`} 
+                                                        <Pressable
+                                                            key={`${em}-${ei}`}
                                                             onPress={() => openEmail(em)}
                                                             style={{
                                                                 flexDirection: 'row',
@@ -657,8 +657,8 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                         </View>
                     </SectionCard>
                 )}
-            </ScrollView>
-        </View>
+            </View>
+        </ScrollView>
     )
 }
 
@@ -670,7 +670,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
     const fromDeepLink = !!linkItemId?.trim() && !inline;
     const [fetchedCart, setFetchedCart] = useState<TCartItem | null>(null);
     const [loadingItem, setLoadingItem] = useState(false);
-    const [loadFailed, setLoadFailed] = useState(false);  
+    const [loadFailed, setLoadFailed] = useState(false);
     /** Inline navigation: merge latest business + sales points (addresses completed server-side). */
     const [inlineDetailRefresh, setInlineDetailRefresh] = useState<TCartItem | null>(null);
     const inlineRef = useRef<TCartItem | null>(null);
@@ -739,6 +739,14 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
         setInlineDetailRefresh(null);
     }, [inline?.business._id, inline?.item._id]);
 
+    useEffect(() => {
+        // if(item)
+        // console.log(inline.item.item_name)
+        if (inline?.item?.item_name) {
+            navigation.setOptions({ title: inline?.item?.item_name })
+        }
+    }, []);
+
     /**
      * Cart / marketplace / navigation with full row: refresh business + POS on mount and when the row changes.
      * get_item when possible (item + prices + business + points); else get_business with sales_points.
@@ -749,7 +757,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
             return undefined;
         }
 
-        
+
 
         const businessId = inline.business._id;
         const itemId = inline.item._id;
@@ -760,7 +768,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
 
         const run = async () => {
             const fromItemApi = await fetchCartItemFromServerForDeepLink(itemId, phone);
-            if (cancelled) { 
+            if (cancelled) {
                 return;
             }
             const latest = inlineRef.current;

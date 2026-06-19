@@ -44,6 +44,14 @@ const MarketplaceItem = ({ item, index }: { item: TCartItem, index: number }) =>
 
     const GoItem = () => {
         RootNavigation.navigate("BusinessItem", item);
+
+        // RootNavigation.navigate("BusinessItem", {
+        //     business: business as unknown as TBusiness,
+        //     sales_points: Array.from(sales_points) as TSellsPoint[],
+        //     item: item,
+        //     prices: prices as unknown as TItemPrices,
+        //     from_business_inventory: true,
+        // });
     };
 
     const renderColors = () => {

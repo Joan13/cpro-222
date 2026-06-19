@@ -1097,7 +1097,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                                     marginLeft: 2
                                 }}>
                                 {/* <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} /> */}
-                                <IconApp color={theme.high_color} name="circle" size={18} pack={!wholesale_and_retail ? "FI" : "FA"} />
+                                <IconApp color={theme.high_color} name={!wholesale_and_retail ? "circle" : "check-circle"} size={18} pack={!wholesale_and_retail ? "FI" : "FA"} />
                                 <YambiText color="high" text={strings.gros + " " + strings.and + " " + strings.detail} numberLines={1} style={{ marginLeft: 8 }} />
                             </Pressable>
                         </View>

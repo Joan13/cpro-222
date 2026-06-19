@@ -2,9 +2,9 @@ import { Pressable, View, Image } from "react-native";
 import { TItem } from "../../../types/types";
 import { useAppSelector } from "../../../store/app/hooks";
 import { memo } from 'react';
-import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiHighColor2, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextSmallYambiHighColor, TextSmallYambiHighColor3, TextSmallYambiSuccess } from "../../app/Text";
+import { TextNormalYambi, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextSmallYambiHighColor, TextSmallYambiSuccess } from "../../app/Text";
 import { IconApp } from "../../app/IconApp";
-import { renderCurrency, renderDateTime, remote_host_server, media_url } from "../../../../GlobalVariables";
+import { renderCurrency, renderDateTime, media_url } from "../../../../GlobalVariables";
 import { strings } from "../../../lang/lang";
 import { useObject, useQuery } from "@realm/react";
 import { BusinessItemsSale, ItemPrices } from "../../../store/database/Models";
@@ -232,7 +232,7 @@ const BusinessItemsList = ({ item, index, business_id, onSelectItem, flag, can_u
                 </View>
 
                 {/* Stock Badges */}
-                <View style={{ marginBottom: 10 }}>
+                <View style={{ marginBottom: 0 }}>
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',

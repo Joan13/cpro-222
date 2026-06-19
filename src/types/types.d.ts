@@ -751,7 +751,7 @@ export type RootStackParamList = {
     /** flag omitted + sales_point_id omitted ⇒ public catalog (e.g. https://app.yambi.net/business/:business_id) */
     BusinessItems: { business_id: string, flag?: number, sales_point_id?: string, can_upload_images?: boolean, max_articles?: number, hide_inventory_profit_overview?: boolean, from_deep_link?: boolean, from_business_item?: boolean };
     /** Full cart row from marketplace, or `{ item_id }` from https://app.yambi.net/item/:item_id. `from_business_inventory` when opened from BusinessItems catalog. */
-    BusinessItem: (TCartItem | { item_id: string }) & { from_business_inventory?: boolean };
+    BusinessItem: (TCartItem | { item_id: string }) & { from_business_inventory?: boolean } & { from_marketplace?: boolean };
     EditProfile: { user: TUser };
     SalesPoint: { sales_point_id: string };
     ViewPhoto: { source?: string; images?: string[]; initialIndex?: number; title?: string };

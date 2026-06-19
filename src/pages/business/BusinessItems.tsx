@@ -812,7 +812,13 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
             return null;
         }
 
+        const [is_loading_following, setIs_loading_following] = useState<boolean>(false);
+
+        
+
         const handleFollow = async () => {
+            
+            setIs_loading_following(true);
             try {
                 const res = await axios.post(remote_host + "/yambi/API/add_subscription", {
                     business_id: business_id,
@@ -824,7 +830,10 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     // Refresh subscriber count after follow/unfollow
                     fetchSubscriberCount();
                 }
+
+                setIs_loading_following(false)
             } catch (error) {
+                setIs_loading_following(false)
                 console.error("Error toggling follow status:", error);
             }
         };
@@ -1103,7 +1112,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         {!followStatusLoading && followStatusAvailable && !isFollowing ? (<View style={{ flex: 1, marginBottom: 15 }}>
                             <ButtonNormal
                                 title={strings.follow_business}
-                                loadEnabled={false}
+                                loadEnabled={true}
+                                loading={is_loading_following}
                                 normal={true}
                                 onPress={handleFollow}
                                 styles={{ height: 40 }}
@@ -1394,7 +1404,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                                         />
                                                         <YambiText size="small" color="gray"
                                                             text={strings.inventory_overall_margin}
-                                                            style={{ marginTop: 2, textAlign:'center' }}
+                                                            style={{ marginTop: 2, textAlign: 'center' }}
                                                         />
                                                     </View>
                                                 )}
@@ -1643,7 +1653,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                             borderRadius: 8,
                                         }}>
                                         {/* <SwitchApp value={!type_sale} small onPress={SetCash} /> */}
-                                        <IconApp color={theme.high_color} name="circle" size={18} pack="FI" />
+                                        <IconApp color={theme.high_color} name="circle" size={18} pack="FA" />
                                         <YambiText text={strings.cash} style={{ marginLeft: 6 }} />
                                     </Pressable>
 
@@ -1658,7 +1668,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                             borderRadius: 8,
                                         }}>
                                         {/* <SwitchApp value={!wholesale} small onPress={Detail} /> */}
-                                        <IconApp color={theme.high_color} name="circle" size={18} pack={wholesale ? "FI" : "FA"} />
+                                        <IconApp color={theme.high_color} name={wholesale ? "circle" : "check-circle"} size={18} pack={wholesale ? "FI" : "FA"} />
                                         <YambiText text={strings.detail} style={{ marginLeft: 6 }} />
                                     </Pressable>
                                 </View>
@@ -1762,6 +1772,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         locked={!accessibleItemIds.includes(item._id)}
                     />
                 )}
+                contentContainerStyle={{ paddingBottom: 50 }}
             />
         </View>
     )

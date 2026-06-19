@@ -111,7 +111,7 @@ const UserBusinessUsers = ({ navigation, route }: NavProps) => {
                 renderItem={({ item, index }: { item: TSellsPoint, index: number }) => (<SellsPointsList index={index} item={item} show_sell={false} show_users={true} show_edit={true} />)}
             />
 
-            <View style={{ height: 15 }}></View>
+            <View style={{ height: 50 }}></View>
 
         </ScrollView>
     )

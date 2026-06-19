@@ -165,7 +165,8 @@ const SendPictureMessage = ({ navigation, route }: NavProps) => {
                 flexDirection: 'row',
                 backgroundColor: app_theme.colors.border,
                 marginTop: 10,
-                borderRadius: 50
+                borderRadius: 50,
+                marginBottom: 50
             }}>
                 <View style={{
                     flex: 1,

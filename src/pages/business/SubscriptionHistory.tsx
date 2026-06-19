@@ -222,7 +222,7 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
     const isCurrentPlanSuccessful = !!displayPlan && currentPlanPaymentStatus === 1;
 
     return (
-        <View style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             {showError && (
                 <ModalApp 
                     onClose={() => { 
@@ -442,7 +442,7 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
                         )
                     }
                     contentContainerStyle={{
-                        paddingBottom: 30
+                        paddingBottom: 50
                     }}
                 />
             </View>

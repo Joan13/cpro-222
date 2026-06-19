@@ -705,7 +705,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                         <YambiText
                                             color="high"
                                             text={subscriberCount.toString()}
-                                            bold size="small"
+                                             size="small"
                                             style={{ marginRight: 4 }}
                                         />
                                         <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
