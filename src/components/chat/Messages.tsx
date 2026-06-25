@@ -1,78 +1,31 @@
-import {
-    View,
-    Text,
-    Pressable,
-    Vibration,
-} from 'react-native';
-
-import React, {
-    useCallback,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
-
-import { useQuery } from '@realm/react';
-
+import {   View,   Text,  Pressable, Vibration,} from 'react-native';
+import React, { useCallback, useMemo,useRef, useState,} from 'react';
+import { useQuery, useRealm } from '@realm/react';
 import { UsersMessages } from '../../store/database/Models';
-
 import { TMessage } from '../../types/types';
-
-import Animated, {
-    FadeIn,
-    FadeInDown,
-    FadeInUp,
-} from 'react-native-reanimated';
-
+import Animated, { FadeIn, FadeInDown,  FadeInUp,} from 'react-native-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-
-import {
-    useAppDispatch,
-    useAppSelector,
-} from '../../store/app/hooks';
-
+import { useAppDispatch, useAppSelector,} from '../../store/app/hooks';
 import { setMessageSelected } from '../../store/reducers/appSlice';
-
 import { strings } from '../../lang/lang';
-
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 import MessagesList from '../lists/messages/MessagesList';
-
-import { displayDate } from '../../../GlobalVariables';
-
+import { displayDate, SocketApp } from '../../../GlobalVariables';
 import { IconApp } from '../app/IconApp';
-
 import { FlashList } from '@shopify/flash-list';
-
+import moment from 'moment';
 const Messages = ({ user }: { user: string }) => {
-
-    const app_theme = useAppSelector(
-        state => state.app_theme
-    );
-
-    const user_data = useAppSelector(
-        state => state.user_data
-    );
-
-    const app_description = useAppSelector(
-        state => state.persisted_app.app_description
-    );
-
-    const lang = useAppSelector(
-        state => state.persisted_app.langApp
-    );
-
+    const app_theme = useAppSelector( state => state.app_theme);
+    const user_data = useAppSelector( state => state.user_data);
+    const app_description = useAppSelector( state => state.persisted_app.app_description);
+    const lang = useAppSelector(state => state.persisted_app.langApp);
     const dispatch = useAppDispatch();
 
     const flashListRef = useRef<any>(null);
-
     const isProgrammaticScrollRef = useRef(false);
-
     const [stickyDate, setStickyDate] = useState('');
-
-    const [showJumpToBottom, setShowJumpToBottom] =
-        useState(false);
+    const [showJumpToBottom, setShowJumpToBottom] =useState(false);
+    const realm = useRealm();
 
     /**
      * REALM QUERY
@@ -93,6 +46,51 @@ const Messages = ({ user }: { user: string }) => {
         },
         []
     );
+
+    const setChatRead = () => {
+
+        const rawMessages = messages.filter(m => m.receiver === user_data.phone_number && m.message_read < 3);
+
+        try {
+            realm.write(() => {
+                rawMessages.forEach(msg => {
+                    const msgg: TMessage = {
+                        sender: msg.sender,
+                        receiver: msg.receiver,
+                        main_text_message: msg.main_text_message,
+                        caption: msg.caption,
+                        message_type: msg.message_type,
+                        response_to: msg.response_to,
+                        message_read: 3,
+                        flag: msg.flag,
+                        message_effect: msg.message_effect,
+                        reactions: msg.reactions,
+                        token: msg.token,
+                        platform: msg.platform,
+                        deleted: msg.deleted,
+                        read_once: msg.read_once,
+                        alignment: msg.createdAt,
+                        createdAt: msg.createdAt,
+                        receivedAt: msg.receivedAt,
+                        playedAt: msg.playedAt,
+                        readAt: moment().format(),
+                        cc: msg.cc
+                    }
+
+                    realm.create("UsersMessages", msgg, true);
+                });
+            })
+        } catch (error) {
+
+        }
+
+        setTimeout(() => {
+            if (rawMessages.length > 0) {
+                // console.log(rawMessages.length + " "+user_data.phone_number)
+                SocketApp.emit("messagesRead", rawMessages);
+            }
+        }, 500);
+    }
 
     /**
      * ARRAY
@@ -128,11 +126,8 @@ const Messages = ({ user }: { user: string }) => {
      */
 
     const setMS = useCallback((token: string) => {
-
         Vibration.vibrate(20);
-
         dispatch(setMessageSelected(token));
-
     }, []);
 
     /**
@@ -167,7 +162,7 @@ const Messages = ({ user }: { user: string }) => {
 
             } catch (error) {
 
-                console.log(error);
+                // console.log(error);
 
             }
 
@@ -213,14 +208,11 @@ const Messages = ({ user }: { user: string }) => {
             return;
         }
 
-        const offsetY =
-            event.nativeEvent.contentOffset?.y ?? 0;
+        const offsetY = event.nativeEvent.contentOffset?.y ?? 0;
 
-        const contentHeight =
-            event.nativeEvent.contentSize?.height ?? 0;
+        const contentHeight =event.nativeEvent.contentSize?.height ?? 0;
 
-        const layoutHeight =
-            event.nativeEvent.layoutMeasurement?.height ?? 0;
+        const layoutHeight = event.nativeEvent.layoutMeasurement?.height ?? 0;
 
         /**
          * DEBUG
@@ -237,11 +229,8 @@ const Messages = ({ user }: { user: string }) => {
          * bottom = max offset
          */
 
-        const maxOffset =
-            contentHeight - layoutHeight;
-
-        const isAtBottom =
-            offsetY >= maxOffset - 50;
+        const maxOffset = contentHeight - layoutHeight;
+        const isAtBottom = offsetY >= maxOffset - 50;
 
         setShowJumpToBottom(!isAtBottom);
 
@@ -286,7 +275,6 @@ const Messages = ({ user }: { user: string }) => {
                             elevation: 2,
                         }}
                     >
-
                         <Text
                             style={{
                                 paddingVertical: 4,
@@ -298,14 +286,12 @@ const Messages = ({ user }: { user: string }) => {
                                 lineHeight: 18,
                             }}
                         >
-
                             <FontAwesome
                                 name='lock'
                                 size={
                                     app_description.small_general_font_size
                                 }
                             />
-
                             <Text> </Text>
 
                             {
@@ -315,17 +301,11 @@ const Messages = ({ user }: { user: string }) => {
                             {
                                 strings.inbox_encrypt_message_2
                             }
-
                         </Text>
-
                     </Pressable>
-
                 </Animated.View>
-
             </Animated.View>
-
         );
-
     }, []);
 
     return (
@@ -333,13 +313,11 @@ const Messages = ({ user }: { user: string }) => {
         <GestureHandlerRootView
             style={{ flex: 1 }}
         >
-
             <View
                 style={{
                     flex: 1,
                 }}
             >
-
                 <FlashList
                     ref={flashListRef}
                     data={mm}
@@ -374,10 +352,8 @@ const Messages = ({ user }: { user: string }) => {
                                 scrollToMessage
                             }
                         />
-
                     )}
                 />
-
                 {
                     stickyDate !== '' && (
 
@@ -390,7 +366,6 @@ const Messages = ({ user }: { user: string }) => {
                                 justifyContent: 'center',
                             }}
                         >
-
                             <Animated.View
                                 entering={
                                     FadeInUp
@@ -398,7 +373,6 @@ const Messages = ({ user }: { user: string }) => {
                                         .springify()
                                 }
                             >
-
                                 <View
                                     style={{
                                         alignSelf: 'center',
@@ -421,7 +395,6 @@ const Messages = ({ user }: { user: string }) => {
                                         elevation: 3,
                                     }}
                                 >
-
                                     <Text
                                         style={{
                                             fontSize:
@@ -432,25 +405,19 @@ const Messages = ({ user }: { user: string }) => {
                                             textAlign: 'center',
                                         }}
                                     >
-
                                         {
                                             displayDate(
                                                 stickyDate,
                                                 lang
                                             )
                                         }
-
                                     </Text>
-
                                 </View>
-
                             </Animated.View>
-
                         </View>
 
                     )
                 }
-
                 {
                     showJumpToBottom && (
 
@@ -468,7 +435,6 @@ const Messages = ({ user }: { user: string }) => {
                                 zIndex: 10,
                             }}
                         >
-
                             <Pressable
                                 onPress={
                                     jumpToBottom
@@ -493,7 +459,6 @@ const Messages = ({ user }: { user: string }) => {
                                     shadowRadius: 4,
                                 }}
                             >
-
                                 <IconApp
                                     pack='FI'
                                     name='chevrons-down'
@@ -502,16 +467,11 @@ const Messages = ({ user }: { user: string }) => {
                                         app_theme.colors.text
                                     }
                                 />
-
                             </Pressable>
-
                         </Animated.View>
-
                     )
                 }
-
             </View>
-
         </GestureHandlerRootView>
     );
 };

@@ -279,7 +279,8 @@ const NewChat = ({ route, navigation }: NavProps) => {
                         />)}
                     contentContainerStyle={{
                         backgroundColor: app_theme.colors.background,
-                        paddingHorizontal: 15
+                        paddingHorizontal: 15,
+                        paddingBottom: 50
                     }}
                 />
             </View>

@@ -15,7 +15,6 @@ import { SocketApp } from '../../../GlobalVariables';
 import HeaderInbox from '../../components/headers/HeaderInbox';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderRightInbox from '../../components/headers/HeaderRightInbox';
-// import { SocketApp } from '../../../App';
 
 const Inbox = ({ navigation, route }: NavProps) => {
 
@@ -116,77 +115,77 @@ const Inbox = ({ navigation, route }: NavProps) => {
 
   return (
     <View style={{ flex: 1 }}>
-<View
-  style={{
-    paddingTop: insets.top,
-    height: insets.top + 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    // paddingHorizontal: 12,
-    paddingRight:12,
-    backgroundColor:theme.colors.design_tip1
-  }}
->
-  {/* LEFT */}
-  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
-    <HeaderInbox navigation={navigation as any} user={user} />
-  </View>
+      <View
+        style={{
+          paddingTop: insets.top,
+          height: insets.top + 56,
+          flexDirection: 'row',
+          alignItems: 'center',
+          width: '100%',
+          // paddingHorizontal: 12,
+          paddingRight: 12,
+          backgroundColor: theme.colors.design_tip1
+        }}
+      >
+        {/* LEFT */}
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+          <HeaderInbox navigation={navigation as any} user={user} />
+        </View>
 
-  {/* RIGHT */}
-  <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center' }}>
-    <HeaderRightInbox navigation={navigation as any} user={user} />
-  </View>
-</View>
-      
+        {/* RIGHT */}
+        <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center' }}>
+          <HeaderRightInbox navigation={navigation as any} user={user} />
+        </View>
+      </View>
+
       <SafeAreaView
         edges={['top', 'left', 'right']}
         style={{
           flex: 1,
         }}>
-      <StatusBarYambi />
-      {/* <HeaderChat user={user} /> */}
-      {/* <ImageBackground
+        <StatusBarYambi />
+        {/* <HeaderChat user={user} /> */}
+        {/* <ImageBackground
         source={require('./../../assets/bitmap22.png')}
         style={{
           flex: 1
         }}>
       </ImageBackground> */}
 
-      <Canvas
-        style={{
-          flex: 1,
-          backgroundColor: theme.dark ? 'black' : '#e3e3e3',
+        <Canvas
+          style={{
+            flex: 1,
+            backgroundColor: theme.dark ? 'black' : '#e3e3e3',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}>
+          <Image
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            image={image}
+            fit="cover">
+            <Blur blur={0} />
+          </Image>
+        </Canvas>
+
+        <View style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
+          flexDirection: 'column',
+          backgroundColor: 'transparent',
         }}>
-        <Image
-          x={0}
-          y={0}
-          width={width}
-          height={height}
-          image={image}
-          fit="cover">
-          <Blur blur={0} />
-        </Image>
-      </Canvas>
-
-      <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        flexDirection: 'column',
-        backgroundColor: 'transparent',
-      }}>
-        <Messages user={user} />
-        <FooterChat user={user} />
-      </View>
-    </SafeAreaView>
+          <Messages user={user} />
+          <FooterChat user={user} />
+        </View>
+      </SafeAreaView>
     </View>
   )
 }
