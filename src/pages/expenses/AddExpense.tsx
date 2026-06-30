@@ -16,21 +16,22 @@ import { BusinessUsers, Expenses, UserBusinesses, UserSellsPoints } from "../../
 import moment from "moment";
 
 const AddExpense = ({ route, navigation }: NavProps) => {
-    const { category_id } = route.params || {};
+    const { category_id, business_id: param_business_id, sales_point_id: param_sales_point_id } = route.params || {};
 
     const theme = useAppSelector(state => state.app_theme.colors);
     const user_data = useAppSelector(state => state.user_data);
     const persistedSubscriptions = useAppSelector(state => state.persisted_app.business_subscriptions || []);
     const [title, setTitle] = useState<string>("");
     const [amount, setAmount] = useState<string>("");
+    const [quantity, setQuantity] = useState<string>("1");
     const [currency, setCurrency] = useState<number>(1);
     const [category, setCategory] = useState<number>(category_id || 0);
     const [description, setDescription] = useState<string>("");
     const [payment_type, setPayment_type] = useState<number>(1); // 1 = cash, 2 = card, 3 = bank (0 = not paid when debt is checked)
     const [debt, setDebt] = useState<number>(0);
     const [wallet, setWallet] = useState<number>(1);
-    const [business_id, setBusiness_id] = useState<string>("");
-    const [sales_point_id, setSales_point_id] = useState<string>("");
+    const [business_id, setBusiness_id] = useState<string>(param_business_id || "");
+    const [sales_point_id, setSales_point_id] = useState<string>(param_sales_point_id || "");
     const [showError, setShowError] = useState<boolean>(false);
     const [showCurrencies, setShowCurrencies] = useState<boolean>(false);
     const [showCategories, setShowCategories] = useState<boolean>(false);
@@ -165,7 +166,8 @@ const AddExpense = ({ route, navigation }: NavProps) => {
     }, [accessibleSalesPoints, sales_point_id]);
 
     const AddExpenseItem = () => {
-        if (title === "" || amount === "" || category === 0 || parseFloat(amount) <= 0) {
+        const qtyNum = parseInt(quantity || "1");
+        if (title === "" || amount === "" || category === 0 || parseFloat(amount) <= 0 || qtyNum <= 0) {
             dispatch(setShowModalApp(true));
             setShowError(true);
             return;
@@ -179,18 +181,19 @@ const AddExpense = ({ route, navigation }: NavProps) => {
 
         const expense = {
             _id: expenseId24,
-            title: title,
-            business_id: business_id,
-            sales_point_id: sales_point_id,
-            phone_number: user_data.phone_number,
-            amount: amount,
-            currency: currency,
-            description: description,
-            category: category,
-            payment_type: payment_type,
-            debt: debt,
+            title: title || "",
+            business_id: business_id || "",
+            sales_point_id: sales_point_id || "",
+            phone_number: user_data?.phone_number || "",
+            amount: amount || "",
+            quantity: qtyNum,
+            currency: currency || 1,
+            description: description || "",
+            category: category || 0,
+            payment_type: payment_type || 1,
+            debt: debt || 0,
             expense_active: 1,
-            wallet: wallet,
+            wallet: wallet || 1,
             uploaded: 0,
             createdAt: moment(new Date()).format(),
             updatedAt: moment(new Date()).format()
@@ -211,6 +214,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
             setTimeout(() => {
                 setTitle("");
                 setAmount("");
+                setQuantity("1");
                 setDescription("");
                 setCategory(0);
                 setBusiness_id("");
@@ -536,6 +540,20 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                         />
                     </View>
 
+                    {/* Quantity - Required */}
+                    <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
+                        <YambiText text={((strings as any).quantity || "Quantity") + " *"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
+                        <TextInput
+                            placeholderTextColor="gray"
+                            maxLength={10}
+                            keyboardType="numeric"
+                            style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
+                            value={quantity}
+                            onChangeText={text => setQuantity(text.replace(/[^0-9]/g, ''))}
+                            placeholder="1"
+                        />
+                    </View>
+
                     {/* Currency - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
                         <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
@@ -776,7 +794,7 @@ const AddExpense = ({ route, navigation }: NavProps) => {
                         title={strings.save || "Save"}
                         loadEnabled={true}
                         onPress={AddExpenseItem}
-                        styles={{ paddingHorizontal: 20, marginVertical: 20 }}
+                        styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }}
                         normal={true}
                     />
 

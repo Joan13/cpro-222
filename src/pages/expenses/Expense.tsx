@@ -7,20 +7,20 @@ import { renderCurrency, renderDateTime } from "../../../GlobalVariables";
 import { formatAmount } from "../../util/formatAmount";
 import { NavProps } from "../../types/types";
 import { useObject, useQuery } from "@realm/react";
-import { Expenses, UserBusinesses, UserSellsPoints } from "../../store/database/Models";
+import { Expenses, UserBusinesses, UserSellsPoints, BusinessUsers } from "../../store/database/Models";
 import moment from "moment";
 
 const Expense = ({ route, navigation }: NavProps) => {
     const { expense_id } = route.params;
     const theme = useAppSelector(state => state.app_theme.colors);
     const expenses_categories = strings.expenses_categories || [];
-    
+
     const expense = useObject(Expenses, expense_id);
-    
+
     if (expense === null) return null;
-    
+
     const category = expenses_categories.find(c => c.id === expense.category);
-    
+
     // Get business and sales point info if linked
     const businessQuery = useQuery(
         UserBusinesses, businesses => {
@@ -36,10 +36,22 @@ const Expense = ({ route, navigation }: NavProps) => {
             if (expense.sales_point_id && expense.sales_point_id !== "") {
                 return points.filtered('_id == $0', expense.sales_point_id);
             }
-            return points.filtered('_id == $0', 'impossible_id_that_will_never_match');
+            return points.filtered('_id == $0', 'impossible_id_that_never_match');
         }, [expense.sales_point_id]);
     const salesPoint = salesPointQuery.length > 0 ? salesPointQuery[0] : null;
-    
+
+    const expenseMemberQuery = useQuery(
+        BusinessUsers, users => {
+            if (expense.phone_number && expense.phone_number !== "") {
+                if (expense.business_id && expense.business_id !== "") {
+                    return users.filtered('user == $0 && business_id == $1', expense.phone_number, expense.business_id);
+                }
+                return users.filtered('user == $0', expense.phone_number);
+            }
+            return users.filtered('_id == $0', 'impossible_id_that_never_match');
+        }, [expense.phone_number, expense.business_id]);
+    const expenseMember = expenseMemberQuery.length > 0 ? expenseMemberQuery[0] : null;
+
     const hasBusiness = business !== null;
     const hasSalesPoint = salesPoint !== null;
 
@@ -72,7 +84,7 @@ const Expense = ({ route, navigation }: NavProps) => {
             borderTopWidth: 1
         }}>
             <ScrollView style={{ flex: 1 }}>
-                <View style={{ paddingHorizontal: 15, paddingTop: 15, paddingBottom:15 }}>
+                <View style={{ paddingHorizontal: 15, paddingTop: 15, paddingBottom: 15, marginBottom: 50 }}>
                     {/* Main Expense Card */}
                     <View style={{
                         backgroundColor: theme.background,
@@ -106,26 +118,81 @@ const Expense = ({ route, navigation }: NavProps) => {
                             text={expense.title}
                             size="big"
                             color="high"
-                            style={{ 
-                                textAlign: 'center', 
-                                fontWeight: '700', 
-                                fontSize: 24, 
-                                marginBottom: 10 
+                            style={{
+                                textAlign: 'center',
+                                fontWeight: '700',
+                                fontSize: 24,
+                                marginBottom: 10
                             }}
                         />
 
                         {/* Amount */}
                         <View style={{ alignItems: 'center', marginBottom: 20 }}>
                             <YambiText
-                                text={formatAmount(expense.amount) + " " + renderCurrency(expense.currency, false)}
+                                text={formatAmount((parseFloat(expense.amount || "0") * (expense.quantity || 1)).toString()) + " " + renderCurrency(expense.currency, false)}
                                 size="big"
                                 color="high"
-                                style={{ 
-                                    fontWeight: '700', 
-                                    fontSize: 32 
+                                style={{
+                                    fontWeight: '700',
+                                    fontSize: 32
                                 }}
                             />
                         </View>
+
+                        {/* Quantity & Unit Price */}
+                        <View style={{
+                            backgroundColor: theme.background,
+                            borderRadius: 12,
+                            padding: 15,
+                            marginBottom: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <IconApp pack="FI" name="layers" size={18} color={theme.high_color} styles={{ marginRight: 10 }} />
+                                    <YambiText
+                                        text={strings.quantity || "Quantity"}
+                                        size="normal"
+                                        color="gray"
+                                    />
+                                </View>
+                                <YambiText
+                                    text={(expense.quantity || 1).toString()}
+                                    size="normal"
+                                    color="high"
+                                    style={{ fontWeight: '600' }}
+                                />
+                            </View>
+                        </View>
+
+                        {(expense.quantity || 1) > 1 && (
+                            <View style={{
+                                backgroundColor: theme.background,
+                                borderRadius: 12,
+                                padding: 15,
+                                marginBottom: 15,
+                                borderWidth: 1,
+                                borderColor: theme.border
+                            }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <IconApp pack="FI" name="tag" size={18} color={theme.high_color} styles={{ marginRight: 10 }} />
+                                        <YambiText
+                                            text={(strings as any).unit_price || "Unit Price"}
+                                            size="normal"
+                                            color="gray"
+                                        />
+                                    </View>
+                                    <YambiText
+                                        text={formatAmount(expense.amount) + " " + renderCurrency(expense.currency, false)}
+                                        size="normal"
+                                        color="high"
+                                        style={{ fontWeight: '600' }}
+                                    />
+                                </View>
+                            </View>
+                        )}
 
                         {/* Category */}
                         {category && (
@@ -160,17 +227,17 @@ const Expense = ({ route, navigation }: NavProps) => {
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <IconApp 
-                                        pack="FI" 
+                                    <IconApp
+                                        pack="FI"
                                         name={
                                             expense.payment_type === 0 ? "x-circle" :
-                                            expense.payment_type === 1 ? "dollar-sign" :
-                                            expense.payment_type === 2 ? "credit-card" :
-                                            "bank"
-                                        } 
-                                        size={18} 
-                                        color={theme.high_color} 
-                                        styles={{ marginRight: 10 }} 
+                                                expense.payment_type === 1 ? "dollar-sign" :
+                                                    expense.payment_type === 2 ? "credit-card" :
+                                                        "bank"
+                                        }
+                                        size={18}
+                                        color={theme.high_color}
+                                        styles={{ marginRight: 10 }}
                                     />
                                     <YambiText
                                         text={strings.payment_type || "Payment Type"}
@@ -181,9 +248,9 @@ const Expense = ({ route, navigation }: NavProps) => {
                                 <YambiText
                                     text={
                                         expense.payment_type === 0 ? (strings as any).not_paid || "Not Paid" :
-                                        expense.payment_type === 1 ? strings.cash || "Cash" :
-                                        expense.payment_type === 2 ? strings.card || "Card" :
-                                        strings.bank_transfer || "Bank Transfer"
+                                            expense.payment_type === 1 ? strings.cash || "Cash" :
+                                                expense.payment_type === 2 ? strings.card || "Card" :
+                                                    strings.bank_transfer || "Bank Transfer"
                                     }
                                     size="normal"
                                     color="high"
@@ -269,7 +336,7 @@ const Expense = ({ route, navigation }: NavProps) => {
                                 />
                             </View>
                         )}
-                        {hasBusiness && !hasSalesPoint && (
+                        {hasBusiness && (
                             <View style={{
                                 backgroundColor: theme.background,
                                 borderRadius: 12,
@@ -288,6 +355,33 @@ const Expense = ({ route, navigation }: NavProps) => {
                                 </View>
                                 <YambiText
                                     text={business!.business_name}
+                                    size="normal"
+                                    color="high"
+                                    style={{ marginLeft: 28, fontWeight: '600' }}
+                                />
+                            </View>
+                        )}
+
+                        {/* Entered By / User */}
+                        {(expenseMember || expense.phone_number) && (
+                            <View style={{
+                                backgroundColor: theme.background,
+                                borderRadius: 12,
+                                padding: 15,
+                                marginBottom: 15,
+                                borderWidth: 1,
+                                borderColor: theme.border
+                            }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                    <IconApp pack="FI" name="user" size={18} color={theme.high_color} styles={{ marginRight: 10 }} />
+                                    <YambiText
+                                        text={strings.user || "User"}
+                                        size="normal"
+                                        color="gray"
+                                    />
+                                </View>
+                                <YambiText
+                                    text={expenseMember ? expenseMember.user_name : expense.phone_number}
                                     size="normal"
                                     color="high"
                                     style={{ marginLeft: 28, fontWeight: '600' }}

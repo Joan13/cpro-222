@@ -29,7 +29,7 @@ const CustomizeExpenses = () => {
         const newEnabledState = !password_expenses_enabled;
         setPassword_expenses_enabled(newEnabledState);
         dispatch(setRequirePasswordExpenses(newEnabledState));
-        
+
         // If disabling password, clear the password and reset expenses_opened state
         if (!newEnabledState) {
             dispatch(setPasswordExpenses(""));
@@ -50,7 +50,7 @@ const CustomizeExpenses = () => {
             const newEnabledState = !password_expenses_enabled;
             setPassword_expenses_enabled(newEnabledState);
             dispatch(setRequirePasswordExpenses(newEnabledState));
-            
+
             // If disabling, reset expenses_opened state
             if (!newEnabledState) {
                 dispatch(setPasswordExpenses(""));
@@ -94,7 +94,7 @@ const CustomizeExpenses = () => {
 
     const SETCP = (cpp: string) => {
         setCp(cpp);
-        
+
         if (flag_pass === 0) {
             if (cpp.length === 6 && cpp === app_description.password_expenses) {
                 setShowEnterCurrentPassword(false);
@@ -160,8 +160,8 @@ const CustomizeExpenses = () => {
             <StatusBarYambi />
 
             {showEnterCurrentPassword ?
-                <ModalApp onClose={() => { 
-                    dispatch(setShowModalApp(false)); 
+                <ModalApp onClose={() => {
+                    dispatch(setShowModalApp(false));
                     setShowEnterCurrentPassword(false);
                     setCp("");
                     setFlag_pass(0);
@@ -171,7 +171,7 @@ const CustomizeExpenses = () => {
                         paddingVertical: 10,
                     }}>
                         {/* Icon */}
-                        <Animated.View 
+                        <Animated.View
                             entering={BounceIn}
                             style={{
                                 width: 60,
@@ -185,12 +185,12 @@ const CustomizeExpenses = () => {
                             <IconApp name="lock" pack='FI' size={30} color={theme.colors.high_color} />
                         </Animated.View>
 
-                        <TextNormalYambiGray 
-                            text={strings.current_expenses_tab_password} 
-                            styles={{ 
+                        <TextNormalYambiGray
+                            text={strings.current_expenses_tab_password}
+                            styles={{
                                 textAlign: 'center',
-                                marginBottom: 30 
-                            }} 
+                                marginBottom: 30
+                            }}
                         />
 
                         {/* Modern OTP Input */}
@@ -212,24 +212,24 @@ const CustomizeExpenses = () => {
                                             height: 45,
                                             borderRadius: 10,
                                             borderWidth: 2,
-                                            borderColor: cp.length === index 
-                                                ? theme.colors.high_color 
-                                                : cp.length > index 
-                                                    ? theme.colors.success 
+                                            borderColor: cp.length === index
+                                                ? theme.colors.high_color
+                                                : cp.length > index
+                                                    ? theme.colors.success
                                                     : theme.colors.border,
-                                            backgroundColor: cp.length > index 
-                                                ? theme.colors.success + '10' 
+                                            backgroundColor: cp.length > index
+                                                ? theme.colors.success + '10'
                                                 : theme.colors.background,
                                             justifyContent: 'center',
                                             alignItems: 'center',
                                         }}>
                                         {cp[index] && (
                                             <Animated.View entering={BounceIn}>
-                                                <IconApp 
-                                                    name="circle" 
-                                                    pack='FA' 
-                                                    size={10} 
-                                                    color={cp.length > index ? theme.colors.success : theme.colors.high_color} 
+                                                <IconApp
+                                                    name="circle"
+                                                    pack='FA'
+                                                    size={10}
+                                                    color={cp.length > index ? theme.colors.success : theme.colors.high_color}
                                                 />
                                             </Animated.View>
                                         )}
@@ -257,12 +257,12 @@ const CustomizeExpenses = () => {
 
                         {/* Helper Text */}
                         {cp.length > 0 && (
-                            <TextSmallYambiGray 
-                                text={`${cp.length}/6`} 
-                                styles={{ 
+                            <TextSmallYambiGray
+                                text={`${cp.length}/6`}
+                                styles={{
                                     textAlign: 'center',
                                     marginTop: 5
-                                }} 
+                                }}
                             />
                         )}
                     </View>
@@ -335,13 +335,13 @@ const CustomizeExpenses = () => {
                                         marginRight: 10,
                                         borderRadius: 8,
                                         borderWidth: 2,
-                                        borderColor: expenses_password.length === index 
-                                            ? theme.colors.high_color 
-                                            : expenses_password.length > index 
-                                                ? theme.colors.success 
+                                        borderColor: expenses_password.length === index
+                                            ? theme.colors.high_color
+                                            : expenses_password.length > index
+                                                ? theme.colors.success
                                                 : theme.colors.border,
-                                        backgroundColor: expenses_password.length > index 
-                                            ? theme.colors.success + '10' 
+                                        backgroundColor: expenses_password.length > index
+                                            ? theme.colors.success + '10'
                                             : theme.colors.border,
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -349,20 +349,20 @@ const CustomizeExpenses = () => {
                                     {expenses_password[index] && (
                                         <Animated.View entering={BounceIn}>
                                             {passwordVisible ? (
-                                                <IconApp 
-                                                    name="circle" 
-                                                    pack='FA' 
-                                                    size={8} 
-                                                    color={expenses_password.length > index ? theme.colors.success : theme.colors.high_color} 
+                                                <IconApp
+                                                    name="circle"
+                                                    pack='FA'
+                                                    size={8}
+                                                    color={expenses_password.length > index ? theme.colors.success : theme.colors.high_color}
                                                 />
                                             ) : (
-                                                <TextNormalYambi 
-                                                    text={expenses_password[index]} 
-                                                    styles={{ 
+                                                <TextNormalYambi
+                                                    text={expenses_password[index]}
+                                                    styles={{
                                                         fontSize: 20,
                                                         fontWeight: 'bold',
                                                         color: expenses_password.length > index ? theme.colors.success : theme.colors.high_color
-                                                    }} 
+                                                    }}
                                                 />
                                             )}
                                         </Animated.View>
@@ -400,12 +400,12 @@ const CustomizeExpenses = () => {
                             )}
 
                             {/* Password Length Indicator */}
-                            <TextSmallYambiGray 
-                                text={`${expenses_password.length}/6`} 
-                                styles={{ 
+                            <TextSmallYambiGray
+                                text={`${expenses_password.length}/6`}
+                                styles={{
                                     marginRight: 15,
                                     fontSize: 12
-                                }} 
+                                }}
                             />
 
                             {/* Visibility Toggle */}
@@ -434,7 +434,7 @@ const CustomizeExpenses = () => {
                     </View>
                 </Animated.View> : null}
 
-            <TextSmallYambiGray text={strings.this_affect_local} styles={{ paddingVertical: 15, borderColor: theme.colors.border, borderTopWidth: 1, paddingHorizontal: 20 }} />
+            <TextSmallYambiGray text={strings.this_affect_local} styles={{ paddingVertical: 15, borderColor: theme.colors.border, borderTopWidth: 1, paddingHorizontal: 20, marginBottom: 50 }} />
         </ScrollView>
     )
 }

@@ -260,11 +260,19 @@ const ExpenseItem = ({ item, index, onPress }: { item: Expenses, index: number, 
                         alignItems: 'flex-end'
                     }}>
                         <YambiText
-                            text={formatAmount(item.amount) + " " + renderCurrency(item.currency, false)}
+                            text={formatAmount((parseFloat(item.amount || "0") * (item.quantity || 1)).toString()) + " " + renderCurrency(item.currency, false)}
                             size="normal"
                             color={primaryColorText}
-                            style={{ fontWeight: '700', fontSize: 16, marginBottom: 6 }}
+                            style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}
                         />
+                        {(item.quantity || 1) > 1 && (
+                            <YambiText
+                                text={`${formatAmount(item.amount)} x ${item.quantity}`}
+                                size="xsmall"
+                                color="gray"
+                                style={{ fontSize: 10, fontWeight: '600', marginBottom: 6 }}
+                            />
+                        )}
                         <View style={{
                             backgroundColor: item.payment_type === 0 
                                 ? theme.error + "25" 

@@ -34,6 +34,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     const [showPOSList, setShowPOSList] = useState(false);
     const [showBusinessInfo, setShowBusinessInfo] = useState(false);
     const [showLowStock, setShowLowStock] = useState(false);
+    const [showOutOfStock, setShowOutOfStock] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const businessInfoHeight = useRef(new Animated.Value(0)).current;
     const lang = useAppSelector(state => state.persisted_app.langApp);
@@ -150,6 +151,17 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     return qty > 0 && threshold > 0 && qty <= threshold;
                 })
                 .sort((a: any, b: any) => Number(a.items_number_stock) - Number(b.items_number_stock));
+        } catch {
+            return [];
+        }
+    }, [bitems]);
+
+    const outOfStockItems = useMemo(() => {
+        try {
+            const arr = Array.from(bitems as any);
+            return arr
+                .filter((i: any) => Number(i.items_number_stock ?? 0) <= 0)
+                .sort((a: any, b: any) => (a.item_name || "").localeCompare(b.item_name || ""));
         } catch {
             return [];
         }
@@ -967,6 +979,89 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     </Animated.View>
                 </View>
 
+                {/* Out of Stock Alert */}
+                {outOfStockItems.length > 0 ? (
+                    <View
+                        style={{
+                            backgroundColor: app_theme.colors.error + '10',
+                            borderRadius: 12,
+                            padding: 15,
+                            marginBottom: 18,
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.error + '40',
+                        }}
+                    >
+                        <Pressable
+                            onPress={() => {
+                                if (outOfStockItems.length > 3) setShowOutOfStock(!showOutOfStock);
+                            }}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                <IconApp pack="FI" name="alert-circle" size={16} color={app_theme.colors.error} />
+                                <YambiText
+                                    size="small"
+                                    color="error"
+                                    text={`${strings.out_of_stock} (${outOfStockItems.length})`}
+                                    style={{ marginLeft: 8, flex: 1 }}
+                                />
+                            </View>
+                            {outOfStockItems.length > 3 ? (
+                                <IconApp
+                                    pack="FI"
+                                    name={showOutOfStock ? "chevron-up" : "chevron-down"}
+                                    size={16}
+                                    color={app_theme.colors.gray}
+                                />
+                            ) : null}
+                        </Pressable>
+
+                        <View style={{ marginTop: 12 }}>
+                            {(showOutOfStock ? outOfStockItems : outOfStockItems.slice(0, 3)).map((i: any, idx: number) => (
+                                <View
+                                    key={i._id || idx}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        paddingVertical: 8,
+                                        borderBottomWidth: idx === (showOutOfStock ? outOfStockItems : outOfStockItems.slice(0, 3)).length - 1 ? 0 : 1,
+                                        borderBottomColor: app_theme.colors.border,
+                                    }}
+                                >
+                                    <View style={{ flex: 1, marginRight: 10 }}>
+                                        <YambiText color="gray" text={i.item_name} />
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 0 }}>
+                                        <Pressable
+                                            onPress={() =>
+                                                RootNavigation.navigate("RenewStock", {
+                                                    item_id: String(i._id),
+                                                    business_id: item._id,
+                                                })
+                                            }
+                                            style={({ pressed }) => ({ marginRight: 8, opacity: pressed ? 0.65 : 1 })}
+                                        >
+                                            <YambiText size="small" color="high" text={strings.restock} style={{ textDecorationLine: 'underline' }} />
+                                        </Pressable>
+                                        <YambiText
+                                            size="small"
+                                            color="error"
+                                            text={`${Number(i.items_number_stock)}`}
+                                            style={{ marginRight: 6 }}
+                                        />
+                                        <YambiText size="small" color="gray" text={strings.in_store.toLowerCase()} />
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                ) : null}
+
                 {/* Low Stock Alert */}
                 {lowStockItems.length > 0 ? (
                     <View
@@ -1034,7 +1129,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             }
                                             style={({ pressed }) => ({ marginRight: 8, opacity: pressed ? 0.65 : 1 })}
                                         >
-                                            <YambiText size="small" color="high" text={strings.restock} />
+                                            <YambiText size="small" color="high" text={strings.restock} style={{ textDecorationLine: 'underline' }} />
                                         </Pressable>
                                         <YambiText
                                             size="small"
@@ -1177,6 +1272,55 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                         <YambiText size="small" color="gray" text={strings.items} style={{ marginTop: 2 }} />
                     </View>
                 </View>
+
+                <Pressable
+                    onPress={() => {
+                        if (isAdmin) {
+                            RootNavigation.navigate("GetExpenses", { flag: 1, business_id: item._id });
+                            return;
+                        }
+                        if (oo !== undefined && oo.user_active === 1) {
+                            if (oo.level === 1) {
+                                RootNavigation.navigate("GetExpenses", { flag: 1, business_id: item._id });
+                            } else if (oo.level === 2) {
+                                if (oo.sales_point_id && oo.sales_point_id !== "") {
+                                    RootNavigation.navigate("GetExpenses", { flag: 2, sales_point_id: oo.sales_point_id });
+                                } else {
+                                    dispatch(setShowModalApp(true));
+                                    setShowUserError(true);
+                                }
+                            } else {
+                                dispatch(setShowModalApp(true));
+                                setShowUserError(true);
+                            }
+                        } else {
+                            dispatch(setShowModalApp(true));
+                            setShowUserError(true);
+                        }
+                    }}
+                    style={{
+                        backgroundColor: app_theme.colors.border,
+                        borderRadius: 12,
+                        padding: 15,
+                        marginBottom: 15,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
+                    }}
+                >
+                    <View style={{ flexDirection: "row", alignItems: "center", flex: 1, marginRight: 12 }}>
+                        <IconApp pack="FI" name="dollar-sign" size={20} color={app_theme.colors.high_color} styles={{ marginRight: 12 }} />
+                        <YambiText
+                            text={strings.view_expenses}
+                            bold
+                            style={{ flex: 1 }}
+                            numberLines={2}
+                        />
+                    </View>
+                    <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />
+                </Pressable>
 
                 <Pressable
                     onPress={() => {

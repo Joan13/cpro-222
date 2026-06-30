@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { View, TextInput, Pressable } from "react-native";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { View, TextInput, Pressable, InteractionManager } from "react-native";
 import { useAppSelector, useAppDispatch } from "../../../store/app/hooks";
 import MarketplaceItem from "../../../components/lists/marketplace/MarketplaceItem.tsx";
 import { YambiText } from "../../../components/app/Text";
@@ -19,6 +19,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
     const [items, setItems] = useState<TCartItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const inputRef = useRef<TextInput>(null);
 
     const searchItems = useCallback(async (query: string) => {
         if (!query || query.trim() === "") {
@@ -46,8 +47,21 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
         }
     }, [dispatch]);
 
+    // Defer text input focus to run after the navigation animation transitions complete
+    useEffect(() => {
+        const task = InteractionManager.runAfterInteractions(() => {
+            inputRef.current?.focus();
+        });
+        return () => task.cancel();
+    }, []);
+
     // Debounce search - search after user stops typing for 500ms
     useEffect(() => {
+        if (!searchQuery.trim()) {
+            setItems([]);
+            return;
+        }
+
         const timeoutId = setTimeout(() => {
             searchItems(searchQuery);
         }, 500);
@@ -64,11 +78,11 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
         navigation.goBack();
     };
 
-    const renderItem = ({ item, index }) => (
+    const renderItem = useCallback(({ item, index }) => (
         <View style={{ flex: 1, marginRight: index % 2 === 0 ? 5 : 0 }}>
             <MarketplaceItem item={item} index={index} />
         </View>
-    );
+    ), []);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background }}>
@@ -103,6 +117,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
 
                 {/* Text Input */}
                 <TextInput
+                    ref={inputRef}
                     placeholderTextColor={app_theme.colors.gray}
                     style={{
                         color: app_theme.colors.text,
@@ -115,7 +130,6 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
                     value={searchQuery}
                     placeholder={strings.search_marketplace}
                     onChangeText={setSearchQuery}
-                    autoFocus
                 />
 
                 {/* X Button */}

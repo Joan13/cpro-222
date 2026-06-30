@@ -36,7 +36,8 @@ import { NavProps, RootStackParamList, TBusinessBadge, TChat, TContact, TItem, T
 import SplashYambiStart from './src/pages/splash/MainSplash';
 import Signup from './src/pages/signup/Signup';
 import Themes, { themes } from './src/pages/app/Themes';
-import Contacts from 'react-native-contacts';
+import * as Contacts from 'expo-contacts';
+import { contactNameByPhoneRegistry, getDefaultCallingCode, processPhoneContacts } from './src/services/ContactsService';
 import { setRawContacts, setTitle } from './src/store/reducers/appSlice';
 import HomeRootStack from './src/pages/app/HomeRootStack';
 // import HeaderLeftHome from './src/components/headers/HeaderHome';
@@ -120,6 +121,7 @@ import {
     SchedulableTriggerInputTypes,
     type NotificationBehavior,
 } from 'expo-notifications';
+// handleQuickReply and handleMarkAsReadAction are now handled in index.tsx at the top level
 import ViewPhoto from './src/pages/app/ViewPhoto';
 import { setAddBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace } from './src/store/reducers/persistedAppSlice';
 import ContactUs from './src/pages/app/ContactUs';
@@ -163,6 +165,8 @@ import SearchMarketplace from './src/pages/marketplace/components/SearchMarketpl
 import AddExpense from './src/pages/expenses/AddExpense';
 import EditExpense from './src/pages/expenses/EditExpense';
 import Expense from './src/pages/expenses/Expense';
+import ExpensesPage from './src/pages/expenses/Expenses';
+import GetExpenses from './src/pages/expenses/GetExpenses';
 import CategoryExpenses from './src/pages/expenses/CategoryExpenses';
 import HeaderRightExpense from './src/components/headers/HeaderRightExpense';
 import HeaderRightExpenses from './src/components/headers/HeaderRightExpenses';
@@ -198,15 +202,67 @@ export const displayNotification = async (notification: any) => {
         return;
     }
 
-    await Notifications.scheduleNotificationAsync({
-        content: {
-            title: title || 'Yambi',
-            body: body || '',
-            data,
-            categoryIdentifier: 'exampleCategory',
-        },
-        trigger: null,
-    });
+    // For chat messages, accumulate multiple messages in a single notification
+    if (data.screen === 'Inbox') {
+        const identifier = `chat_${data.user}`;
+
+        // Extract the token of the current incoming message
+        let currentToken: string | null = null;
+        if (typeof data.message === 'string') {
+            try {
+                const parsed = JSON.parse(data.message);
+                if (parsed.data?.token) {
+                    currentToken = parsed.data.token;
+                }
+            } catch (_e) { }
+        }
+
+        // Check for an existing notification from this sender
+        let accumulatedBody = body;
+        let messageTokens: string[] = currentToken ? [currentToken] : [];
+
+        try {
+            const presentedNotifications = await Notifications.getPresentedNotificationsAsync();
+            const existing = presentedNotifications.find(
+                (n) => n.request.identifier === identifier
+            );
+
+            if (existing) {
+                const existingBody = existing.request.content.body || '';
+                accumulatedBody = existingBody + '\n' + body;
+
+                // Merge previously stored tokens
+                const existingTokens = existing.request.content.data?.messageTokens;
+                if (Array.isArray(existingTokens)) {
+                    messageTokens = [...existingTokens, ...messageTokens];
+                }
+            }
+        } catch (_e) { }
+
+        await Notifications.scheduleNotificationAsync({
+            identifier,
+            content: {
+                title: title || 'Yambi',
+                body: accumulatedBody,
+                data: {
+                    ...data,
+                    messageTokens,
+                },
+                categoryIdentifier: 'message_notification',
+            },
+            trigger: null,
+        });
+    } else {
+        // Non-chat notifications (business, expenses, etc.)
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: title || 'Yambi',
+                body: body || '',
+                data,
+            },
+            trigger: null,
+        });
+    }
 };
 
 // import UserBusinessItems from './src/store/database/UserBusinessItems';
@@ -330,7 +386,6 @@ const Yambi = ({ navigation }: NavProps) => {
     const lastLowStockReminderDateRef = useRef<string>("");
     const lastNoSalesReminderDateRef = useRef<string>("");
     const lastWeekendExpensesReminderDateRef = useRef<string>("");
-    const contactNameByPhoneRef = useRef<Record<string, string>>({});
 
     useEffect(() => {
         const askPermission = async () => {
@@ -350,27 +405,27 @@ const Yambi = ({ navigation }: NavProps) => {
         UserContacts, ccs => {
             return ccs.filtered('phone_number != $0 && user_active != $1', user_data.phone_number, "0")
                 .sorted('user_names', false);
-        }, []);
+        }, [user_data.phone_number]);
 
     const messagesRead = useQuery(
         UsersMessages, msgs => {
             return msgs.filtered('receiver == $0 && message_read == $1', user_data.phone_number, 3)
-        }, []);
+        }, [user_data.phone_number]);
 
     const messagesQueue = useQuery(
         UsersMessages, msgs => {
             return msgs.filtered('sender == $0 && message_read == $1', user_data.phone_number, 0)
-        }, []);
+        }, [user_data.phone_number]);
 
     const messagesISent = useQuery(
         UsersMessages, msgs => {
             return msgs.filtered('sender == $0', user_data.phone_number)
-        }, []);
+        }, [user_data.phone_number]);
 
     const messagesIReceived = useQuery(
         UsersMessages, msgs => {
             return msgs.filtered('receiver == $0', user_data.phone_number)
-        }, []);
+        }, [user_data.phone_number]);
 
     const itemss = useQuery(
         UserBusinessArticles, items => {
@@ -390,7 +445,7 @@ const Yambi = ({ navigation }: NavProps) => {
     const it = useQuery(
         UserBusinessArticles, items => {
             return items.filtered('phone_number == $0', user_data.phone_number)
-        }, []);
+        }, [user_data.phone_number]);
 
     const businessArticles = useQuery(
         UserBusinessArticles, items => {
@@ -632,78 +687,38 @@ const Yambi = ({ navigation }: NavProps) => {
     //         .catch(e => { });
     // }
 
-    const normalizePhoneNumber = (phone: string) => {
-        return phone.replace(/[^\d+]/g, '');
-    };
-
-    const buildDisplayName = (contact: any) => {
-        return (
-            contact?.displayName?.trim() ||
-            [
-                contact?.givenName,
-                contact?.middleName,
-                contact?.familyName,
-            ]
-                .filter(Boolean)
-                .join(' ')
-                .trim()
-        );
-    };
-
     const loadContacts = () => {
-        Contacts.getAll()
-            .then(contacts => {
-                const contacts_list: Array<TContact> = [];
-                const namesByPhone: Record<string, string> = {};
+        Contacts.requestPermissionsAsync()
+            .then(({ status }) => {
+                if (status === 'granted') {
+                    Contacts.getContactsAsync({
+                        fields: [
+                            Contacts.Fields.Name,
+                            Contacts.Fields.FirstName,
+                            Contacts.Fields.MiddleName,
+                            Contacts.Fields.LastName,
+                            Contacts.Fields.Nickname,
+                            Contacts.Fields.PhoneNumbers,
+                        ],
+                    })
+                        .then(({ data: contacts }) => {
+                            const defaultCallingCode = getDefaultCallingCode(user_data);
+                            const { allContacts } = processPhoneContacts(contacts, defaultCallingCode);
 
-                for (const contact of contacts) {
-                    const phoneNumbers = contact?.phoneNumbers;
+                            dispatch(setRawContacts(allContacts));
+                            dispatch(setRawContactsPersisted(allContacts));
 
-                    if (!Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
-                        continue;
-                    }
-
-                    const displayName = buildDisplayName(contact);
-
-                    for (const phone of phoneNumbers) {
-                        const rawNumber = phone?.number;
-
-                        if (typeof rawNumber !== 'string' || !rawNumber.trim()) {
-                            continue;
-                        }
-
-                        const normalizedNumber = normalizePhoneNumber(rawNumber);
-
-                        if (!normalizedNumber) {
-                            continue;
-                        }
-
-                        const contact_found: TContact = {
-                            displayName,
-                            phoneNumber: normalizedNumber,
-                        };
-
-                        contacts_list.push(contact_found);
-
-                        if (displayName) {
-                            namesByPhone[normalizedNumber] = displayName;
-                        }
-                    }
+                            setTimeout(() => {
+                                SocketApp.emit('update_contacts', allContacts);
+                            }, 1000);
+                        })
+                        .catch(e => {
+                            console.log('LOAD CONTACTS ERROR', e);
+                        });
                 }
-
-                const all_contacts = removeDuplicateNumbers(contacts_list);
-
-                contactNameByPhoneRef.current = namesByPhone;
-
-                dispatch(setRawContacts(all_contacts));
-                dispatch(setRawContactsPersisted(all_contacts));
-
-                setTimeout(() => {
-                    SocketApp.emit('update_contacts', all_contacts);
-                }, 1000);
             })
             .catch(e => {
-                console.log('LOAD CONTACTS ERROR', e);
+                console.log('PERMISSION ERROR', e);
             });
     };
 
@@ -893,9 +908,18 @@ const Yambi = ({ navigation }: NavProps) => {
             // // console.log(filteredContacts.length + " " +all_contacts.length + " " +raw_contacts.length);
 
             if (contacts.length !== 0) {
-                for (let i in contacts) {
-                    const contactFromServer = contacts[i];
-                    const localContactName = contactNameByPhoneRef.current?.[contactFromServer.phone_number];
+                const uniqueContacts = [];
+                const seenIds = new Set<string>();
+                for (const c of contacts) {
+                    const id = c.user_id || c.phone_number;
+                    if (!seenIds.has(id)) {
+                        seenIds.add(id);
+                        uniqueContacts.push(c);
+                    }
+                }
+
+                for (const contactFromServer of uniqueContacts) {
+                    const localContactName = contactNameByPhoneRegistry[contactFromServer.phone_number];
                     const contactToSave = localContactName
                         ? { ...contactFromServer, user_names: localContactName }
                         : contactFromServer;
@@ -1422,6 +1446,7 @@ const Yambi = ({ navigation }: NavProps) => {
                             sales_point_id: expenses[i].sales_point_id,
                             phone_number: expenses[i].phone_number,
                             amount: expenses[i].amount,
+                            quantity: parseInt(expenses[i].quantity || 1),
                             currency: parseInt(expenses[i].currency),
                             description: expenses[i].description,
                             category: parseInt(expenses[i].category),
@@ -2035,6 +2060,28 @@ const Yambi = ({ navigation }: NavProps) => {
 
         requestPermissionMessaging();
 
+        // Register notification categories
+        Notifications.setNotificationCategoryAsync('message_notification', [
+            {
+                identifier: 'reply',
+                buttonTitle: 'Reply',
+                options: {
+                    opensAppToForeground: false,
+                },
+                textInput: {
+                    submitButtonTitle: 'Send',
+                    placeholder: 'Type a reply...',
+                },
+            },
+            {
+                identifier: 'mark_as_read',
+                buttonTitle: 'Mark as read',
+                options: {
+                    opensAppToForeground: false,
+                },
+            },
+        ]).catch((err) => console.log('Error setting notification category:', err));
+
         // Listen for foreground notifications
         //   const unsubscribe = messaging().onMessage(async remoteMessage => {
         //     // console.log('Foreground notification received:', remoteMessage);
@@ -2043,11 +2090,18 @@ const Yambi = ({ navigation }: NavProps) => {
 
         //   const foregroundListener = Notifications.addNotificationReceivedListener((notification) => {
         //     console.log('Notification received in foreground:', notification);
-        //   });
+        //     });
 
         const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
             const notificationData = response.notification.request.content.data;
             const screen = notificationData?.screen;
+            const actionIdentifier = response.actionIdentifier;
+
+            // Quick Reply and Mark as Read actions are handled at the top level in index.tsx
+            // so they work immediately without waiting for the React tree to mount
+            if (actionIdentifier === 'reply' || actionIdentifier === 'mark_as_read') {
+                return;
+            }
 
             // Handle expense reminder notification
             if (screen === "AddExpense" && navigationRef.current) {
@@ -2064,25 +2118,6 @@ const Yambi = ({ navigation }: NavProps) => {
                     }
                     const user = notificationData.user || {};
                     const msg = JSON.parse(raw);
-                    // const data = response.notification.request.content;
-
-                    // console.log(response);
-                    // console.log("User interacted with notification:", response);
-
-                    // Parse the actions if they exist
-                    // const actions = data.actions ? JSON.parse(data.actions) : [];
-
-                    // if (response.actionIdentifier === 'reply') {
-                    //   Alert.alert('Action Triggered', 'Reply action was triggered!');
-                    // } else if (response.actionIdentifier === 'markAsRead') {
-                    //   Alert.alert('Action Triggered', 'Mark as Read action was triggered!');
-                    // } else {
-                    //   console.log('Notification tapped without specific action');
-                    // }
-
-                    // console.log(notification_index);
-
-                    // console.log('Parsed Actions:', actionIdentifier); // Optional: Debug parsed actions
 
                     const inboxUser =
                         typeof user === 'string'
@@ -2129,11 +2164,17 @@ const Yambi = ({ navigation }: NavProps) => {
 
         //   return unsubscribe;
 
+        const contactsSubscription = Contacts.addContactsChangeListener(() => {
+            console.log('Contacts changed in phonebook - reloading');
+            loadContacts();
+        });
+
         // Cleanup the listener
         return () => {
             // subscription.remove();
             responseListener.remove();
             // foregroundListener.remove();
+            contactsSubscription.remove();
         };
     }, []);
 
@@ -3619,6 +3660,50 @@ const Yambi = ({ navigation }: NavProps) => {
                             }
                         }} />
 
+                        <Stack.Screen name="Expenses" component={ExpensesPage} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: route.params?.flag === 1
+                                ? (strings.business_expenses || "Business Expenses")
+                                : route.params?.flag === 2
+                                    ? (strings.pos_expenses || "POS Expenses")
+                                    : (strings.expenses || "Expenses"),
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                            headerRight: (props) => (
+                                <HeaderRightExpenses {...props} navigation={navigation} route={route} />
+                            )
+                        })} />
+
+                        <Stack.Screen name="GetExpenses" component={GetExpenses} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: route.params?.flag === 1
+                                ? (strings.business_expenses || "Business Expenses")
+                                : route.params?.flag === 2
+                                    ? (strings.pos_expenses || "POS Expenses")
+                                    : (strings.expenses || "Expenses"),
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                            headerRight: (props) => (
+                                <HeaderRightExpenses {...props} navigation={navigation} route={route} />
+                            )
+                        })} />
+
                         <Stack.Screen name="AddExpense" component={AddExpense} options={{
                             headerShadowVisible: false,
                             headerShown: true,
@@ -3697,3 +3782,5 @@ const Yambi = ({ navigation }: NavProps) => {
 };
 
 export default Yambi;
+
+

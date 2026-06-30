@@ -21,7 +21,6 @@ import Realm from "realm";
 import AppActivityIndicator from "../../components/app/AppActivityIndicator";
 import * as DropdownMenu from "zeego/dropdown-menu";
 import RNRestart from "react-native-restart";
-import SwitchApp from "../../components/app/SwitchApp";
 
 const pi = (v: unknown, d = 0) => parseInt(String(v ?? d), 10);
 
@@ -664,7 +663,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         sale_operator: user_data.phone_number,
                         sales_point_id: sales_point_id,
                         cost_price: wholesale ? ItemPrices.wholesale_cost_price.toString() : (parseFloat(ItemPrices.wholesale_cost_price) / itemToSell.wholesale_content_number).toString(),
-                        selling_price: wholesale ? ItemPrices.wholesale_selling_price : ItemPrices.retail_selling_price,
+                        selling_price: itemToSellPrice.trim() !== "" ? itemToSellPrice.trim() : (wholesale ? ItemPrices.wholesale_selling_price : ItemPrices.retail_selling_price),
                         delivery_price: "",
                         delivery_address: "",
                         delivery_time: "",
@@ -814,10 +813,10 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
 
         const [is_loading_following, setIs_loading_following] = useState<boolean>(false);
 
-        
+
 
         const handleFollow = async () => {
-            
+
             setIs_loading_following(true);
             try {
                 const res = await axios.post(remote_host + "/yambi/API/add_subscription", {
@@ -1130,6 +1129,9 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
         // Only show in inventory contexts.
         if (!(flag === 2 || flag === 3) || searched_text !== "") return null;
 
+        const isStaff = oo !== null && oo !== undefined && oo.user_active === 1;
+        if (!isStaff) return null;
+
         const outOfStockItems = accessibleActiveItems
             .filter(item => Number(item.items_number_stock) <= 0)
             .sort((a, b) => (a.item_name || "").localeCompare(b.item_name || ""));
@@ -1185,6 +1187,17 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                 <YambiText color="gray" text={i.item_name} style={{ flex: 1 }} />
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Pressable
+                                    onPress={() =>
+                                        navigation.navigate("RenewStock", {
+                                            item_id: String(i._id),
+                                            business_id,
+                                        })
+                                    }
+                                    style={({ pressed }) => ({ marginRight: 8, opacity: pressed ? 0.65 : 1 })}
+                                >
+                                    <YambiText size="small" color="high" text={strings.restock} style={{ textDecorationLine: 'underline' }} />
+                                </Pressable>
                                 <YambiText size="small" color="error"
                                     text={`${Number(i.items_number_stock).toString()} `}
                                     style={{ marginRight: 4 }}
@@ -1201,6 +1214,9 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
     const renderLowStockAlertHeader = () => {
         // Only show in inventory contexts.
         if (!(flag === 2 || flag === 3) || searched_text !== "") return null;
+
+        const isStaff = oo !== null && oo !== undefined && oo.user_active === 1;
+        if (!isStaff) return null;
 
         const lowStockItems = accessibleActiveItems
             .filter(item => {
@@ -1270,7 +1286,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                     }
                                     style={({ pressed }) => ({ marginRight: 8, opacity: pressed ? 0.65 : 1 })}
                                 >
-                                    <YambiText size="small" color="high" text={strings.restock} />
+                                    <YambiText size="small" color="high" text={strings.restock} style={{ textDecorationLine: 'underline' }} />
                                 </Pressable>
                                 <YambiText size="small" color="error"
                                     text={`${Number(i.items_number_stock)} `}

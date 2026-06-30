@@ -2,8 +2,9 @@ import { View, Pressable } from 'react-native'
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { TMessage } from '../../../types/types';
-import { useState, useEffect } from 'react';
-import { AudioStatus, createAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { useState, useEffect, useRef } from 'react';
+import { AudioStatus, createAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
+import { useProximity } from '../../hooks/useProximity';
 import { setVoiceNoteBeingPlayed } from '../../../store/reducers/appSlice';
 // import { SocketApp } from '../../../../App';
 import { useRealm } from '@realm/react';
@@ -32,11 +33,82 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
     const dispatch = useAppDispatch();
     const realm = useRealm();
-    const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
+    const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60, keepAudioSessionActive: true }));
     const status = useAudioPlayerStatus(sound);
+    const isPlaying = status?.isLoaded ? status.playing : false;
     const [fileSize, setFileSize] = useState<string>();
     const [isPaused, setIsPaused] = useState<boolean>(false);
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
+
+    const isNear = useProximity(isPlaying && voice_note_being_played === message.main_text_message);
+
+    useEffect(() => {
+        const setupLockScreen = async () => {
+            if (voice_note_being_played === message.main_text_message) {
+                if (isPlaying) {
+                    try {
+                        await setAudioModeAsync({
+                            playsInSilentMode: true,
+                            shouldPlayInBackground: true,
+                            interruptionMode: 'doNotMix',
+                        });
+                        sound.setActiveForLockScreen(true, {
+                            title: strings.voice_note,
+                            artist: 'Yambi',
+                        });
+                    } catch (e) {
+                        console.warn('Failed to configure audio mode or lock screen:', e);
+                    }
+                } else if (status?.isLoaded && status.didJustFinish) {
+                    try {
+                        sound.setActiveForLockScreen(false);
+                    } catch (e) {}
+                }
+            } else {
+                try {
+                    sound.setActiveForLockScreen(false);
+                } catch (e) {}
+            }
+        };
+
+        setupLockScreen();
+    }, [isPlaying, voice_note_being_played, message.main_text_message, sound, status?.didJustFinish]);
+
+    const wasNearRef = useRef(false);
+
+    useEffect(() => {
+        const updateAudioRoute = async () => {
+            if (voice_note_being_played === message.main_text_message && isPlaying) {
+                try {
+                    if (isNear) {
+                        await setAudioModeAsync({
+                            shouldRouteThroughEarpiece: true,
+                            allowsRecording: true,
+                        });
+                    } else {
+                        if (wasNearRef.current) {
+                            sound.pause();
+                        }
+                        await setAudioModeAsync({
+                            shouldRouteThroughEarpiece: false,
+                            allowsRecording: false,
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Failed to update audio routing:', e);
+                }
+            }
+            wasNearRef.current = isNear;
+        };
+        updateAudioRoute();
+
+        return () => {
+            setAudioModeAsync({
+                shouldRouteThroughEarpiece: false,
+                allowsRecording: false,
+            }).catch(() => {});
+        };
+    }, [isNear, isPlaying, voice_note_being_played, message.main_text_message, sound]);
 
     // const audioPath = RNFS.DocumentDirectoryPath + "YambiVoiceNotes/" + message.main_text_message;
 
@@ -666,7 +738,6 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
         sound.setPlaybackRate(rate);
     }
 
-    const isPlaying = status?.isLoaded ? status.playing : false;
     const position = status?.isLoaded ? status.currentTime * 1000 : 0;
     const duration = status?.isLoaded ? status.duration * 1000 : 1;
     const progress = position / duration;

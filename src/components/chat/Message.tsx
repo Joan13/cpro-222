@@ -84,7 +84,7 @@ const Message = ({ item, index, messages, user }: { item: TMessage, index: numbe
     }
 
     const IconMessageRead = (icon: number) => {
-        if (icon === 3) {
+        if (icon === 3 || icon === 4) {
             return <Animated.View entering={BounceIn.delay(50).springify().damping(10)}>
                 <MaterialCommunityIcons name="checkbox-multiple-marked-circle" size={17}
                     color={app_theme.colors.high_color}

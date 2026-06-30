@@ -1,5 +1,5 @@
 import { Pressable, View, ScrollView, TextInput } from "react-native";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
 import ButtonNormal from "../../components/app/ButtonNormal";
@@ -12,7 +12,7 @@ import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice
 import { renderCurrency, SocketApp, global_currencies } from "../../../GlobalVariables";
 import { NavProps } from "../../types/types";
 import { useRealm, useQuery, useObject } from "@realm/react";
-import { Expenses, UserBusinesses, UserSellsPoints } from "../../store/database/Models";
+import { Expenses, UserBusinesses, UserSellsPoints, BusinessUsers } from "../../store/database/Models";
 import moment from "moment";
 
 const EditExpense = ({ route, navigation }: NavProps) => {
@@ -27,8 +27,41 @@ const EditExpense = ({ route, navigation }: NavProps) => {
 
     if (expense === null) return null;
 
+    const isAdmin = user_data?.user_level === 2;
+
+    const userBusinessAccess = useQuery(
+        BusinessUsers, users => {
+            return users.filtered('user == $0 && user_active == $1', user_data.phone_number, 1);
+        }, [user_data.phone_number]);
+
+    const isOwner = useMemo(() => {
+        if (isAdmin) return true;
+        if (!expense) return false;
+
+        // Creator
+        if (expense.phone_number === user_data.phone_number) return true;
+
+        // Business owner level 1
+        if (expense.business_id) {
+            const membership = userBusinessAccess.find(access => access.business_id === expense.business_id);
+            if (membership && membership.level === 1) return true;
+        }
+        return false;
+    }, [userBusinessAccess, expense, user_data, isAdmin]);
+
+    if (!isOwner) {
+        return (
+            <View style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                <IconApp pack="FI" name="shield" size={60} color={theme.error} styles={{ marginBottom: 15 }} />
+                <YambiText text={strings.access_denied} size="big" color="error" style={{ fontWeight: '700', marginBottom: 10 }} />
+                <YambiText text={strings.business_level_error || "You do not have permission to edit or delete this expense."} size="normal" color="gray" style={{ textAlign: 'center' }} />
+            </View>
+        );
+    }
+
     const [title, setTitle] = useState<string>(expense.title);
     const [amount, setAmount] = useState<string>(expense.amount);
+    const [quantity, setQuantity] = useState<string>((expense.quantity || 1).toString());
     const [currency, setCurrency] = useState<number>(expense.currency);
     const [category, setCategory] = useState<number>(expense.category);
     const [description, setDescription] = useState<string>(expense.description);
@@ -66,7 +99,8 @@ const EditExpense = ({ route, navigation }: NavProps) => {
     const wallets = Array.from({ length: 10 }, (_, i) => i + 1);
 
     const UpdateExpense = () => {
-        if (title === "" || amount === "" || category === 0 || parseFloat(amount) <= 0) {
+        const qtyNum = parseInt(quantity || "1");
+        if (title === "" || amount === "" || category === 0 || parseFloat(amount) <= 0 || qtyNum <= 0) {
             dispatch(setShowModalApp(true));
             setShowError(true);
             return;
@@ -76,18 +110,19 @@ const EditExpense = ({ route, navigation }: NavProps) => {
 
         const updatedExpense = {
             _id: expense._id,
-            title: title,
-            business_id: business_id,
-            sales_point_id: sales_point_id,
-            phone_number: expense.phone_number,
-            amount: amount,
-            currency: currency,
-            description: description,
-            category: category,
-            payment_type: payment_type,
-            debt: debt,
-            expense_active: expense.expense_active,
-            wallet: wallet,
+            title: title || "",
+            business_id: business_id || "",
+            sales_point_id: sales_point_id || "",
+            phone_number: expense.phone_number || "",
+            amount: amount || "",
+            quantity: qtyNum,
+            currency: currency || 1,
+            description: description || "",
+            category: category || 0,
+            payment_type: payment_type || 1,
+            debt: debt || 0,
+            expense_active: expense.expense_active || 1,
+            wallet: wallet || 1,
             uploaded: 0, // Reset to 0 after modification
             createdAt: expense.createdAt,
             updatedAt: moment(new Date()).format()
@@ -445,6 +480,20 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                         />
                     </View>
 
+                    {/* Quantity - Required */}
+                    <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
+                        <YambiText text={((strings as any).quantity || "Quantity") + " *"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
+                        <TextInput
+                            placeholderTextColor="gray"
+                            maxLength={10}
+                            keyboardType="numeric"
+                            style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
+                            value={quantity}
+                            onChangeText={text => setQuantity(text.replace(/[^0-9]/g, ''))}
+                            placeholder="1"
+                        />
+                    </View>
+
                     {/* Currency - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
                         <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
@@ -610,7 +659,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                                 <YambiText
                                     text={strings.cash || "Cash"}
                                     style={{ color: payment_type === 1 ? theme.text_design2 : theme.text, fontSize: 14 }}
-                                     color="design"
+                                    color="design"
                                 />
                             </Pressable>
                             <Pressable
@@ -631,7 +680,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                                 <YambiText
                                     text={strings.card || "Card"}
                                     style={{ color: payment_type === 2 ? theme.text_design2 : theme.text, fontSize: 14 }}
-                                     color="design"
+                                    color="design"
                                 />
                             </Pressable>
                             <Pressable
@@ -642,7 +691,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                                     minWidth: '30%',
                                     backgroundColor: payment_type === 3 ? theme.design_tip2 : theme.gray,
                                     paddingVertical: 12,
-                                    marginBottom:8,
+                                    marginBottom: 8,
                                     borderRadius: 8,
                                     alignItems: 'center',
                                     opacity: debt === 1 ? 0.5 : 1
@@ -685,7 +734,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                         title={strings.save || "Save"}
                         loadEnabled={true}
                         onPress={UpdateExpense}
-                        styles={{ paddingHorizontal: 20, marginVertical: 10 }}
+                        styles={{ paddingHorizontal: 20, marginVertical: 10, marginBottom: 50 }}
                         normal={true}
                     />
 

@@ -3,12 +3,12 @@ import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { IconApp } from "../app/IconApp";
 import { NavProps } from "../../types/types";
 import { setShowModalApp } from "../../store/reducers/appSlice";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ModalApp from "../app/ModalApp";
 import { YambiText } from "../app/Text";
 import { strings } from "../../lang/lang";
-import { useRealm, useObject } from "@realm/react";
-import { Expenses } from "../../store/database/Models";
+import { useRealm, useObject, useQuery } from "@realm/react";
+import { Expenses, BusinessUsers } from "../../store/database/Models";
 import { SocketApp } from "../../../GlobalVariables";
 import moment from "moment";
 import { setLoadingButton } from "../../store/reducers/appSlice";
@@ -23,6 +23,28 @@ const HeaderRightExpense = ({ navigation, route }: NavProps) => {
     // Get expense_id from route params
     const expense_id = route.params?.expense_id;
     const expense = useObject(Expenses, expense_id);
+
+    const userBusinessAccess = useQuery(
+        BusinessUsers, users => {
+            return users.filtered('user == $0 && user_active == $1', user_data.phone_number, 1);
+        }, [user_data.phone_number]);
+
+    const isOwner = useMemo(() => {
+        if (user_data?.user_level === 2) return true; // system admin
+        if (!expense) return false;
+        
+        // Creator
+        if (expense.phone_number === user_data.phone_number) return true;
+        
+        // Business owner level 1
+        if (expense.business_id) {
+            const membership = userBusinessAccess.find(access => access.business_id === expense.business_id);
+            if (membership && membership.level === 1) return true;
+        }
+        return false;
+    }, [userBusinessAccess, expense, user_data]);
+
+    if (!isOwner) return null;
 
     const handleDelete = () => {
         if (!expense) return;

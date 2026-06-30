@@ -1,11 +1,11 @@
-import {   View,   Text,  Pressable, Vibration,} from 'react-native';
-import React, { useCallback, useMemo,useRef, useState,} from 'react';
+import { View, Text, Pressable, Vibration, } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useRealm } from '@realm/react';
 import { UsersMessages } from '../../store/database/Models';
 import { TMessage } from '../../types/types';
-import Animated, { FadeIn, FadeInDown,  FadeInUp,} from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInUp, } from 'react-native-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { useAppDispatch, useAppSelector,} from '../../store/app/hooks';
+import { useAppDispatch, useAppSelector, } from '../../store/app/hooks';
 import { setMessageSelected } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,16 +15,16 @@ import { IconApp } from '../app/IconApp';
 import { FlashList } from '@shopify/flash-list';
 import moment from 'moment';
 const Messages = ({ user }: { user: string }) => {
-    const app_theme = useAppSelector( state => state.app_theme);
-    const user_data = useAppSelector( state => state.user_data);
-    const app_description = useAppSelector( state => state.persisted_app.app_description);
+    const app_theme = useAppSelector(state => state.app_theme);
+    const user_data = useAppSelector(state => state.user_data);
+    const app_description = useAppSelector(state => state.persisted_app.app_description);
     const lang = useAppSelector(state => state.persisted_app.langApp);
     const dispatch = useAppDispatch();
 
     const flashListRef = useRef<any>(null);
     const isProgrammaticScrollRef = useRef(false);
     const [stickyDate, setStickyDate] = useState('');
-    const [showJumpToBottom, setShowJumpToBottom] =useState(false);
+    const [showJumpToBottom, setShowJumpToBottom] = useState(false);
     const realm = useRealm();
 
     /**
@@ -50,6 +50,10 @@ const Messages = ({ user }: { user: string }) => {
     const setChatRead = () => {
 
         const rawMessages = messages.filter(m => m.receiver === user_data.phone_number && m.message_read < 3);
+
+        if (rawMessages.length === 0) {
+            return;
+        }
 
         try {
             realm.write(() => {
@@ -91,6 +95,10 @@ const Messages = ({ user }: { user: string }) => {
             }
         }, 500);
     }
+
+    useEffect(() => {
+        setChatRead();
+    }, [messages, user_data.phone_number]);
 
     /**
      * ARRAY
@@ -210,7 +218,7 @@ const Messages = ({ user }: { user: string }) => {
 
         const offsetY = event.nativeEvent.contentOffset?.y ?? 0;
 
-        const contentHeight =event.nativeEvent.contentSize?.height ?? 0;
+        const contentHeight = event.nativeEvent.contentSize?.height ?? 0;
 
         const layoutHeight = event.nativeEvent.layoutMeasurement?.height ?? 0;
 

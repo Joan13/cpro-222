@@ -120,7 +120,7 @@ const MarketplaceItems = forwardRef<MarketplaceItemsRef>((props, ref) => {
                     renderItem={renderItem}
                     onEndReached={() => fetchItems(true)}
                     onEndReachedThreshold={0.5}
-                    contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 10 }}
+                    contentContainerStyle={{ paddingBottom: 50, paddingHorizontal: 10 }}
                 />) :
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                     <YambiText size="small" color="gray" text={strings.no_items_available} />

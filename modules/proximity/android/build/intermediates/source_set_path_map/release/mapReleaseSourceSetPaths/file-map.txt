@@ -1,0 +1,7 @@
+expo.modules.proximity-pngs-0 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/build/generated/res/pngs/release
+expo.modules.proximity-resValues-1 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/build/generated/res/resValues/release
+expo.modules.proximity-mergeReleaseResources-2 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/build/intermediates/incremental/release/mergeReleaseResources/merged.dir
+expo.modules.proximity-mergeReleaseResources-3 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/build/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+expo.modules.proximity-release-4 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/build/intermediates/merged_res/release/mergeReleaseResources
+expo.modules.proximity-main-5 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/res
+expo.modules.proximity-release-6 /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/release/res

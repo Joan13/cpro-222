@@ -158,7 +158,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                 // Limit the maximum swipe distance for smooth feel
                 const maxSwipe = 100;
                 translateX.value = Math.min(event.translationX, maxSwipe);
-                
+
                 // Trigger haptic feedback when reaching the end of sliding track (95px threshold)
                 if (translateX.value >= 95 && !hasTriggeredHaptic.value) {
                     hasTriggeredHaptic.value = true;
@@ -263,7 +263,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
     if (item.deleted !== 2) {
         // Only animate first 30 messages for smooth performance
         const shouldAnimate = index < 30;
-        
+
         return (
             <Animated.View
                 entering={shouldAnimate ? FadeIn.duration(300).delay(index * 30) : undefined}
@@ -287,13 +287,13 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                             shadowRadius: 2,
                             elevation: 2,
                         }}>
-                            <TextSmallYambiHighColor 
-                                text={displayDate(item.cc, lang)} 
+                            <TextSmallYambiHighColor
+                                text={displayDate(item.cc, lang)}
                                 styles={{
                                     textAlign: 'center',
                                     fontSize: 11,
                                     fontWeight: '600',
-                                }} 
+                                }}
                             />
                         </View>
                     </View> : null}
@@ -326,233 +326,233 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                             },
                             swipeAnimatedStyle
                         ]}>
-                        {can_show_image_left ?
-                            <View
-                                style={{
-                                    paddingLeft: 5,
-                                    flexDirection: 'row',
-                                }}>
-
-                                {item.receiver === user_data.phone_number ?
-                                    <Image
-                                        style={{
-                                            width: app_description.inbox_receiver_image_size,
-                                            height: app_description.inbox_receiver_image_size,
-                                            borderRadius: app_description.inbox_receiver_image_radius,
-                                            marginRight: 2,
-                                            display: app_description.inbox_appearance_style === 1 ? 'flex' : 'none'
-                                        }}
-                                        source={require("./../../../assets/profile_black.jpg")} />
-                                    : null}
-
-                                {item.receiver === user_data.phone_number ?
-                                    <View style={{
-                                        backgroundColor: app_theme.colors.chat_received,
-                                        // borderColor: app_theme.colors.border,
-                                        // borderWidth:1,
-
-                                        width: 20,
-                                        height: 10,
-                                        borderRadius: 1,
-                                        // borderLeftWidth:0,
-                                        // borderTopWidth:1,
-                                        borderBottomLeftRadius: 20,
-                                        display: app_description.inbox_appearance_style === 0 ? 'flex' : 'none',
-                                        // marginRight: app_description.show_receiver_image ? 0 : app_description.inbox_receiver_image_size+12,
-                                        marginRight: -15
-                                    }}></View> : null}
-                            </View>
-                            : null}
-
-                        <View style={{
-                            paddingHorizontal: item.response_to === "" ? 12 : 0,
-                            paddingVertical: 4,
-                            width: item.message_type === 1 || item.message_type === 2 ? 260 : 'auto',
-                            maxWidth: item.message_type === 1 ? 260 : '85%',
-                            borderRadius: 10,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: showShadow ? 0.08 : 0,
-                            shadowRadius: showShadow ? 3 : 0,
-                            elevation: showShadow ? 2 : 0,
-                            marginLeft: can_show_image_left ? 0 : app_description.inbox_appearance_style === 0 ? 10 : app_description.inbox_receiver_image_size + 7,
-                            marginRight: can_show_image_right ? 0 : app_description.inbox_appearance_style === 0 ? 10 : app_description.inbox_sender_image_size + 7,
-                            backgroundColor: item.receiver === user_data.phone_number ? app_theme.colors.chat_received : app_theme.colors.chat_sent
-                        }}>
-                            {item.response_to !== "" ?
-                                message !== null ?
-                                    <View>
-                                        <Pressable
-                                            onPress={() => {
-                                                if (scrollToMessage && item.response_to) {
-                                                    scrollToMessage(item.response_to);
-                                                }
-                                            }}
-                                            style={{
-                                                borderLeftColor: app_theme.colors.high_color,
-                                                borderLeftWidth: 4,
-                                                borderRadius: 8,
-                                                paddingHorizontal: 10,
-                                                backgroundColor: app_theme.colors.border + '80',
-                                                paddingVertical: 8,
-                                                marginHorizontal: 10,
-                                                marginBottom: 6,
-                                                marginTop: 6
-                                            }}
-                                        >
-                                            <Text style={{
-                                                color: '#f59f00',
-                                                fontSize: app_description.small_general_font_size,
-                                                fontWeight: app_description.small_general_font_weight as any
-                                            }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
-                                            <Text numberOfLines={5} style={{
-                                                color: app_theme.colors.text,
-                                                fontSize: app_description.small_general_font_size,
-                                                fontWeight: app_description.small_general_font_weight as any
-                                            }}>{message.message_type === 2 ? strings.picture : message.message_type === 1 ? strings.voice_note : message.main_text_message}</Text>
-                                        </Pressable>
-                                    </View>
-                                    : null : null}
-                            <View style={{
-                                marginHorizontal: item.response_to === "" ? 0 : 10
-                            }}>
-                                {item.deleted === 1 ?
-                                    <Text style={{
-                                        color: app_theme.colors.gray,
-                                        flex: 1,
-                                        marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 100 : 90 : lang === "en" ? 80 : 55 : 10,
-                                        marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
-                                        fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                        fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
+                            {can_show_image_left ?
+                                <View
+                                    style={{
+                                        paddingLeft: 5,
+                                        flexDirection: 'row',
                                     }}>
-                                        <IconApp pack="FI" name="minus-circle" size={17} color={app_theme.colors.gray} />
-                                        {"  " + strings.message_deleted}
-                                    </Text>
-                                    :
-                                    <>
-                                        {item.flag !== 0 ?
-                                            <View style={{
 
-                                                flexDirection: 'row'
-                                            }}>
-                                                {item.flag === 1 ?
-                                                    <TextSmallYambiHighColor text={strings.edited} styles={{
-                                                        paddingBottom: 5,
-                                                        marginBottom: 5,
-                                                        borderBottomWidth: 1,
-                                                        borderColor: app_theme.colors.border,
-                                                        flex: 1
-                                                    }} />
-                                                    : null}
+                                    {item.receiver === user_data.phone_number ?
+                                        <Image
+                                            style={{
+                                                width: app_description.inbox_receiver_image_size,
+                                                height: app_description.inbox_receiver_image_size,
+                                                borderRadius: app_description.inbox_receiver_image_radius,
+                                                marginRight: 2,
+                                                display: app_description.inbox_appearance_style === 1 ? 'flex' : 'none'
+                                            }}
+                                            source={require("./../../../assets/profile_black.jpg")} />
+                                        : null}
 
-                                                {item.flag === 2 && item.receiver === user_data.phone_number ?
-                                                    <TextSmallYambiHighColor text={strings.forwarded} styles={{
-                                                        paddingBottom: 5,
-                                                        marginBottom: 5,
-                                                        borderBottomWidth: 1,
-                                                        borderColor: app_theme.colors.border,
-                                                        flex: 1
-                                                    }} />
-                                                    : null}
-                                            </View>
-                                            : null}
+                                    {item.receiver === user_data.phone_number ?
+                                        <View style={{
+                                            backgroundColor: app_theme.colors.chat_received,
+                                            // borderColor: app_theme.colors.border,
+                                            // borderWidth:1,
 
-                                        {item.message_type === 0 ? <Text style={{
-                                            color: app_theme.colors.text,
+                                            width: 20,
+                                            height: 10,
+                                            borderRadius: 1,
+                                            // borderLeftWidth:0,
+                                            // borderTopWidth:1,
+                                            borderBottomLeftRadius: 20,
+                                            display: app_description.inbox_appearance_style === 0 ? 'flex' : 'none',
+                                            // marginRight: app_description.show_receiver_image ? 0 : app_description.inbox_receiver_image_size+12,
+                                            marginRight: -15
+                                        }}></View> : null}
+                                </View>
+                                : null}
+
+                            <View style={{
+                                paddingHorizontal: item.response_to === "" ? 12 : 0,
+                                paddingVertical: 4,
+                                width: item.message_type === 1 || item.message_type === 2 ? 260 : 'auto',
+                                maxWidth: item.message_type === 1 ? 260 : '85%',
+                                borderRadius: 10,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: showShadow ? 0.08 : 0,
+                                shadowRadius: showShadow ? 3 : 0,
+                                elevation: showShadow ? 2 : 0,
+                                marginLeft: can_show_image_left ? 0 : app_description.inbox_appearance_style === 0 ? 10 : app_description.inbox_receiver_image_size + 7,
+                                marginRight: can_show_image_right ? 0 : app_description.inbox_appearance_style === 0 ? 10 : app_description.inbox_sender_image_size + 7,
+                                backgroundColor: item.receiver === user_data.phone_number ? app_theme.colors.chat_received : app_theme.colors.chat_sent
+                            }}>
+                                {item.response_to !== "" ?
+                                    message !== null ?
+                                        <View>
+                                            <Pressable
+                                                onPress={() => {
+                                                    if (scrollToMessage && item.response_to) {
+                                                        scrollToMessage(item.response_to);
+                                                    }
+                                                }}
+                                                style={{
+                                                    borderLeftColor: app_theme.colors.high_color,
+                                                    borderLeftWidth: 4,
+                                                    borderRadius: 8,
+                                                    paddingHorizontal: 10,
+                                                    backgroundColor: app_theme.colors.border + '80',
+                                                    paddingVertical: 8,
+                                                    marginHorizontal: 10,
+                                                    marginBottom: 6,
+                                                    marginTop: 6
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    color: '#f59f00',
+                                                    fontSize: app_description.small_general_font_size,
+                                                    fontWeight: app_description.small_general_font_weight as any
+                                                }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
+                                                <Text numberOfLines={5} style={{
+                                                    color: app_theme.colors.text,
+                                                    fontSize: app_description.small_general_font_size,
+                                                    fontWeight: app_description.small_general_font_weight as any
+                                                }}>{message.message_type === 2 ? strings.picture : message.message_type === 1 ? strings.voice_note : message.main_text_message}</Text>
+                                            </Pressable>
+                                        </View>
+                                        : null : null}
+                                <View style={{
+                                    marginHorizontal: item.response_to === "" ? 0 : 10
+                                }}>
+                                    {item.deleted === 1 ?
+                                        <Text style={{
+                                            color: app_theme.colors.gray,
                                             flex: 1,
-                                            marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
+                                            marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 100 : 90 : lang === "en" ? 80 : 55 : 10,
                                             marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
                                             fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                            fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size
+                                            fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
+                                        }}>
+                                            <IconApp pack="FI" name="minus-circle" size={17} color={app_theme.colors.gray} />
+                                            {"  " + strings.message_deleted}
+                                        </Text>
+                                        :
+                                        <>
+                                            {item.flag !== 0 ?
+                                                <View style={{
 
-                                        }}>{item.main_text_message.trim()}</Text> : null}
-                                        {/* <Text>{item.alignment}</Text> */}
+                                                    flexDirection: 'row'
+                                                }}>
+                                                    {item.flag === 1 ?
+                                                        <TextSmallYambiHighColor text={strings.edited} styles={{
+                                                            paddingBottom: 5,
+                                                            marginBottom: 5,
+                                                            borderBottomWidth: 1,
+                                                            borderColor: app_theme.colors.border,
+                                                            flex: 1
+                                                        }} />
+                                                        : null}
 
-                                        {/* <Text>{item.sender} {item.receiver}</Text> */}
+                                                    {item.flag === 2 && item.receiver === user_data.phone_number ?
+                                                        <TextSmallYambiHighColor text={strings.forwarded} styles={{
+                                                            paddingBottom: 5,
+                                                            marginBottom: 5,
+                                                            borderBottomWidth: 1,
+                                                            borderColor: app_theme.colors.border,
+                                                            flex: 1
+                                                        }} />
+                                                        : null}
+                                                </View>
+                                                : null}
 
-                                        {item.message_type === 1 ? <VoiceMessageItem message={item} /> : null}
-
-                                        {item.message_type === 2 ? <PictureMessageItem message={item} /> : null}
-
-                                        {item.caption !== "" ?
-                                            <Text style={{
-                                                // marginRight:40,
-                                                color: item.message_type === 0 ? app_theme.colors.gray : app_theme.colors.text,
-                                                // maxWidth: '50%',
+                                            {item.message_type === 0 ? <Text style={{
+                                                color: app_theme.colors.text,
                                                 flex: 1,
-                                                marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 90 : 65 : lang === "en" ? 70 : 45 : 10,
-                                                marginBottom: item.main_text_message.length < 35 ? -12 : 0,
-                                                marginTop: item.message_type === 0 ? 10 : 0,
-                                                paddingTop: 10,
-                                                borderColor: app_theme.colors.border,
-                                                borderTopWidth: item.message_type === 0 ? 1 : 0,
+                                                marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
+                                                marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
                                                 fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                                fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
+                                                fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size
 
-                                            }}>{item.caption.trim()}</Text> : null}
-                                    </>}
+                                            }}>{item.main_text_message.trim()}</Text> : null}
+                                            {/* <Text>{item.alignment}</Text> */}
 
-                                <View style={{
-                                    flexDirection: 'row',
-                                    alignSelf: 'flex-end',
-                                    alignItems: 'center',
-                                    // paddingLeft: 10,
-                                    // backgroundColor: 'yellow'
-                                }}>
-                                    <Text style={{
-                                        marginTop: 0,
-                                        marginLeft: 10,
-                                        color: app_theme.colors.gray,
-                                        fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                        fontSize: app_description.small_general_font_size,
-                                        // marginLeft: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? 65 : 45 : 10,
+                                            {/* <Text>{item.sender} {item.receiver}</Text> */}
 
-                                    }}>{moment(item.createdAt).format('LT')}</Text>
+                                            {item.message_type === 1 ? <VoiceMessageItem message={item} /> : null}
+
+                                            {item.message_type === 2 ? <PictureMessageItem message={item} /> : null}
+
+                                            {item.caption !== "" ?
+                                                <Text style={{
+                                                    // marginRight:40,
+                                                    color: item.message_type === 0 ? app_theme.colors.gray : app_theme.colors.text,
+                                                    // maxWidth: '50%',
+                                                    flex: 1,
+                                                    marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 90 : 65 : lang === "en" ? 70 : 45 : 10,
+                                                    marginBottom: item.main_text_message.length < 35 ? -12 : 0,
+                                                    marginTop: item.message_type === 0 ? 10 : 0,
+                                                    paddingTop: 10,
+                                                    borderColor: app_theme.colors.border,
+                                                    borderTopWidth: item.message_type === 0 ? 1 : 0,
+                                                    fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
+                                                    fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
+
+                                                }}>{item.caption.trim()}</Text> : null}
+                                        </>}
 
                                     <View style={{
                                         flexDirection: 'row',
-                                        alignItems: 'center'
+                                        alignSelf: 'flex-end',
+                                        alignItems: 'center',
+                                        // paddingLeft: 10,
+                                        // backgroundColor: 'yellow'
                                     }}>
-                                        {item.sender === user_data.phone_number ? IconMessageRead(item.message_read) : null}
+                                        <Text style={{
+                                            marginTop: 0,
+                                            marginLeft: 10,
+                                            color: app_theme.colors.gray,
+                                            fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
+                                            fontSize: app_description.small_general_font_size,
+                                            // marginLeft: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? 65 : 45 : 10,
 
-                                        {/* <IconApp pack="FA" name="check-circle" size={15} color={app_theme.colors.high_color} styles={{marginLeft: 10}} /> */}
+                                        }}>{moment(item.createdAt).format('LT')}</Text>
+
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center'
+                                        }}>
+                                            {item.sender === user_data.phone_number ? IconMessageRead(item.message_read) : null}
+
+                                            {/* <IconApp pack="FA" name="check-circle" size={15} color={app_theme.colors.high_color} styles={{marginLeft: 10}} /> */}
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
 
-                        {can_show_image_right ?
-                            <View
-                                style={{
-                                    paddingRight: 5
-                                }}>
-                                {item.sender === user_data.phone_number ?
-                                    <View style={{
-                                        backgroundColor: app_theme.colors.chat_sent,
-                                        // borderColor: app_theme.colors.border,
-                                        // borderWidth:1,
-                                        width: 20,
-                                        height: 10,
-                                        borderRadius: 1,
-                                        // borderLeftWidth:0,
-                                        // borderTopWidth:1,
-                                        borderBottomRightRadius: 15,
-                                        display: app_description.inbox_appearance_style === 0 ? 'flex' : 'none',
-                                        marginLeft: -15
-                                    }}></View> : null}
+                            {can_show_image_right ?
+                                <View
+                                    style={{
+                                        paddingRight: 5
+                                    }}>
+                                    {item.sender === user_data.phone_number ?
+                                        <View style={{
+                                            backgroundColor: app_theme.colors.chat_sent,
+                                            // borderColor: app_theme.colors.border,
+                                            // borderWidth:1,
+                                            width: 20,
+                                            height: 10,
+                                            borderRadius: 1,
+                                            // borderLeftWidth:0,
+                                            // borderTopWidth:1,
+                                            borderBottomRightRadius: 15,
+                                            display: app_description.inbox_appearance_style === 0 ? 'flex' : 'none',
+                                            marginLeft: -15
+                                        }}></View> : null}
 
-                                {item.sender === user_data.phone_number ?
-                                    <Image
-                                        style={{
-                                            width: app_description.inbox_sender_image_size,
-                                            height: app_description.inbox_sender_image_size,
-                                            borderRadius: app_description.inbox_sender_image_size,
-                                            marginLeft: 2,
-                                            display: app_description.inbox_appearance_style === 1 ? 'flex' : 'none'
-                                        }}
-                                        source={require("./../../../assets/profile_black.jpg")} /> : null}
-                            </View>
-                            : null}
+                                    {item.sender === user_data.phone_number ?
+                                        <Image
+                                            style={{
+                                                width: app_description.inbox_sender_image_size,
+                                                height: app_description.inbox_sender_image_size,
+                                                borderRadius: app_description.inbox_sender_image_size,
+                                                marginLeft: 2,
+                                                display: app_description.inbox_appearance_style === 1 ? 'flex' : 'none'
+                                            }}
+                                            source={require("./../../../assets/profile_black.jpg")} /> : null}
+                                </View>
+                                : null}
                         </Animated.View>
                     </GestureDetector>
                 </Pressable>

@@ -1272,6 +1272,7 @@
   "no_image": "Aucune photo",
   "cart": "Panier",
   "cart_empty": "Votre panier est vide",
+  "cart_empty_subtitle": "Explorez le marché pour trouver des articles qui vous plaisent et ajoutez-les à votre panier.",
   "verifying_phone_number": "Vérification du numéro de téléphone...",
   "chat_with_the_seller": "Discuter avec le vendeur",
   "no_items_available": "Aucun article disponible",
@@ -1346,10 +1347,14 @@
   "error_checking_follow_status": "Erreur lors ya ku vérifier statut ya follow",
   "no_subscribers": "Pas encore za subscribers",
   "expenses": "Dépenses",
+  "view_expenses": "Angalia dépense",
+  "view_pos_expenses": "Angalia dépense za Point de vente",
+  "business_expenses": "Dépense za entreprise",
+  "pos_expenses": "Dépense za Point de vente",
   "expense": "Dépense",
   "add_expense": "Ajouter dépense",
   "edit_expense": "Modifier dépense",
-  "wallet": "Portefeuille",
+  "wallet": "Porte-monnaie",
   "primary": "Principal",
   "debt": "Dette",
   "card": "Carte",
@@ -2015,14 +2020,15 @@
   "processing_payment": "Inashughulikia malipo...",
   "subscription_duration_months_label": "Muda",
   "months": "miezi",
-  "confirm_payment": "Thibitisha Malipo"
-  ,"add_subscription_to_activate_locked_items": "Umeshafikia idadi ya juu ya items kwa plan yako ya abonnement. Renew plan yako ili kuendelea kutumia hizi items zilizofungwa."
-  ,"basic_plan": "Basic"
-  ,"premium_x_plan": "Premium X"
-  ,"ultimate_plan": "Ultimate",
-  "failed": "Echoué"
-  ,"outdated": "Expiré",
+  "confirm_payment": "Thibitisha Malipo",
+  "add_subscription_to_activate_locked_items": "Umeshafikia idadi ya juu ya items kwa plan yako ya abonnement. Renew plan yako ili kuendelea kutumia hizi items zilizofungwa.",
+  "basic_plan": "Basic",
+  "premium_x_plan": "Premium X",
+  "ultimate_plan": "Ultimate",
+  "failed": "Echoué",
+  "outdated": "Expiré",
   "follower": "Abonné",
   "share": "Partager",
-  "expired": "Expiré"
+  "expired": "Expiré",
+  "access_denied": "Accès refusé"
 }

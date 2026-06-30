@@ -96,10 +96,10 @@ const OnboardingItemComponent = ({ item, index, scrollX, app_theme, lang, go_sig
 
         return {
             transform: [
-                { translateX: withSpring(translateX, { damping: 20, stiffness: 90 }) },
-                { scale: withSpring(scale, { damping: 20, stiffness: 90 }) }
+                { translateX },
+                { scale }
             ],
-            opacity: withSpring(opacity, { damping: 20, stiffness: 90 }),
+            opacity,
         } as any;
     });
 
@@ -107,16 +107,12 @@ const OnboardingItemComponent = ({ item, index, scrollX, app_theme, lang, go_sig
         <View style={[styles.slide, { width }]}>
             <Animated.View style={[styles.slideContent, itemAnimatedStyle]}>
                 {/* Icon */}
-                <Animated.View
-                    entering={FadeInUp.delay(200).springify()}
-                    style={styles.iconContainer}>
+                <View style={styles.iconContainer}>
                     {/* <MaterialIcons name={item.icon} size={80} color={app_theme.colors.primary} /> */}
-                </Animated.View>
+                </View>
 
                 {/* Image */}
-                <Animated.View
-                    entering={FadeInUp.delay(300).springify()}
-                    style={styles.imageContainer}>
+                <View style={styles.imageContainer}>
                     {index === 0 && (
                         <LottieView
                             source={require('./../../assets/Welcome.json')}
@@ -143,23 +139,20 @@ const OnboardingItemComponent = ({ item, index, scrollX, app_theme, lang, go_sig
                             style={styles.carouselImage}
                         />
                     )}
-                </Animated.View>
+                </View>
 
                 {/* Text Content */}
-                <Animated.View
-                    entering={FadeInUp.delay(400).springify()}
-                    style={styles.textContainer}>
+                <View style={styles.textContainer}>
                     <TextBigYambi text={item.title} bold styles={{ textAlign: 'center', marginBottom: 15 }} />
                     <TextNormalYambiGray text={item.description} styles={{ textAlign: 'center', paddingHorizontal: 30, lineHeight: 22 }} />
-                </Animated.View>
+                </View>
             </Animated.View>
 
 
 
             {/* Bottom Section */}
             {index === 2 && (
-                <Animated.View
-                    entering={FadeInUp.delay(200).springify()}
+                <View
                     style={[styles.bottomContainer, { borderTopWidth: 1, marginHorizontal: 20, borderColor: app_theme.colors.border, paddingTop: 15, marginTop: 10 }]}>
                     <View style={styles.privacyContainer}>
                         <TextSmallYambiGray text={strings.info_privacy_policy1 + " "} styles={{ textAlign: 'center' }} />
@@ -181,7 +174,7 @@ const OnboardingItemComponent = ({ item, index, scrollX, app_theme, lang, go_sig
                             normal={true}
                             onPress={go_signin} />
                     </View>
-                </Animated.View>
+                </View>
             )}
         </View>
     );
@@ -302,18 +295,9 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
             );
 
             return {
-                width: withSpring(widthOutput, {
-                    damping: 15,
-                    stiffness: 100,
-                }),
-                opacity: withSpring(opacityOutput, {
-                    damping: 15,
-                    stiffness: 100,
-                }),
-                transform: [{ scale: withSpring(scaleOutput, {
-                    damping: 15,
-                    stiffness: 100,
-                }) }],
+                width: widthOutput,
+                opacity: opacityOutput,
+                transform: [{ scale: scaleOutput }],
                 backgroundColor: backgroundColor,
             };
         });
@@ -360,12 +344,12 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
 
             {/* Top Navigation Bar */}
             <Animated.View
-                entering={FadeInDown.delay(100).springify()}
+                entering={FadeInDown.duration(300)}
                 style={styles.topBar}>
                 
                 {currentIndex !== 2 ? (
                     <Animated.View
-                        entering={SlideInLeft.delay(150).springify()}
+                        entering={SlideInLeft.duration(250)}
                         exiting={FadeOut.duration(200)}>
                     <Pressable
                     onPress={handleSkip}
@@ -404,7 +388,7 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
                     </Pressable>
                     {currentIndex < onboardingData.length - 1 ? (
                         <Animated.View
-                            entering={SlideInRight.delay(150).springify()}
+                            entering={SlideInRight.duration(250)}
                             exiting={FadeOut.duration(200)}>
                             <Pressable
                                 onPress={handleNext}
@@ -418,7 +402,7 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
 
             {/* Logo */}
             <Animated.View
-                entering={FadeInDown.delay(200).springify()}
+                entering={FadeInDown.delay(100).duration(300)}
                 style={styles.logoContainer}>
                 <Animated.Image
                     sharedTransitionTag='okImage'
@@ -447,7 +431,7 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
 
             {/* Page Indicators */}
             <Animated.View
-                entering={FadeInUp.delay(300).springify()}
+                entering={FadeInUp.delay(200).duration(300)}
                 style={styles.indicatorContainer}>
                 {onboardingData.map((_, index) => (
                     <PageIndicator 

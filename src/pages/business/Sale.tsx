@@ -58,108 +58,106 @@ const Sale = ({ navigation, route }: NavProps) => {
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body { 
-                            font-family: 'Courier New', monospace; 
-                            padding: 20px;
-                            max-width: 800px;
+                            font-family: 'Courier New', Courier, monospace; 
+                            width: 100%;
+                            max-width: 280px;
                             margin: 0 auto;
                             background: white;
+                            color: #000;
+                            padding: 5px;
                         }
                         .receipt-container { 
-                            border: 2px solid #333;
-                            padding: 30px;
+                            width: 100%;
                             background: white;
                         }
                         .header { 
                             text-align: center;
-                            border-bottom: 2px dashed #333;
-                            padding-bottom: 20px;
-                            margin-bottom: 25px;
+                            border-bottom: 1px dashed #000;
+                            padding-bottom: 10px;
+                            margin-bottom: 12px;
                         }
                         .header h1 { 
-                            font-size: 28px;
-                            margin-bottom: 10px;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
                             text-transform: uppercase;
                         }
                         .header-info { 
-                            font-size: 13px;
-                            line-height: 1.6;
-                            color: #555;
+                            font-size: 11px;
+                            line-height: 1.4;
                         }
                         .section-title {
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin: 20px 0 10px 0;
-                            text-transform: uppercase;
-                            border-bottom: 1px solid #ddd;
-                            padding-bottom: 5px;
-                        }
-                        table { 
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 15px 0;
-                        }
-                        th, td { 
-                            padding: 12px;
-                            text-align: left;
-                            border-bottom: 1px solid #ddd;
-                        }
-                        th { 
-                            background-color: #f8f8f8;
-                            font-weight: bold;
-                            text-transform: uppercase;
                             font-size: 12px;
+                            font-weight: bold;
+                            margin: 10px 0 6px 0;
+                            text-transform: uppercase;
+                            border-bottom: 1px solid #000;
+                            padding-bottom: 3px;
                         }
-                        td { font-size: 14px; }
-                        .text-right { text-align: right; }
-                        .text-center { text-align: center; }
-                        .item-name { font-weight: bold; }
+                        .item-list {
+                            margin: 10px 0;
+                            border-bottom: 1px dashed #000;
+                            padding-bottom: 8px;
+                        }
+                        .item-row {
+                            margin-bottom: 8px;
+                        }
+                        .item-name {
+                            font-size: 12px;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            word-wrap: break-word;
+                        }
+                        .item-details {
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 11px;
+                            margin-top: 2px;
+                        }
                         .summary {
-                            margin-top: 25px;
-                            border-top: 2px solid #333;
-                            padding-top: 15px;
+                            margin-top: 10px;
+                            border-bottom: 1px dashed #000;
+                            padding-bottom: 8px;
                         }
                         .summary-row {
                             display: flex;
                             justify-content: space-between;
-                            padding: 8px 0;
-                            font-size: 14px;
+                            padding: 4px 0;
+                            font-size: 11px;
                         }
                         .summary-row.total {
-                            font-size: 18px;
+                            font-size: 13px;
                             font-weight: bold;
-                            border-top: 2px solid #333;
-                            margin-top: 10px;
-                            padding-top: 15px;
+                            border-top: 1px dashed #000;
+                            margin-top: 4px;
+                            padding-top: 6px;
                         }
                         .info-section {
-                            margin: 25px 0;
-                            padding: 15px;
-                            background: #f8f8f8;
-                            border-radius: 5px;
+                            margin: 12px 0;
+                            font-size: 11px;
+                            line-height: 1.5;
                         }
                         .info-row {
                             display: flex;
                             justify-content: space-between;
-                            padding: 5px 0;
-                            font-size: 13px;
+                            padding: 2px 0;
                         }
                         .info-label { 
                             font-weight: bold;
-                            color: #555;
                         }
                         .footer {
                             text-align: center;
-                            margin-top: 30px;
-                            padding-top: 20px;
-                            border-top: 2px dashed #333;
+                            margin-top: 15px;
+                            padding-top: 10px;
+                            border-top: 1px dashed #000;
                         }
                         .footer h2 {
-                            font-size: 32px;
-                            margin-bottom: 10px;
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
                         }
                         .footer p {
-                            font-size: 14px;
-                            color: #666;
+                            font-size: 11px;
                         }
                     </style>
                 </head>
@@ -168,34 +166,23 @@ const Sale = ({ navigation, route }: NavProps) => {
                         <div class="header">
                             <h1>${business.business_name}</h1>
                             <div class="header-info">
-                                <div>${business.national_number}</div>
-                                <div>${business.national_id}</div>
-                                <div>${business.business_address}</div>
+                                ${business.national_number ? `<div>${business.national_number}</div>` : ''}
+                                ${business.national_id ? `<div>${business.national_id}</div>` : ''}
+                                ${business.business_address ? `<div>${business.business_address}</div>` : ''}
                                 <div>${business.phones}${business.emails ? ' | ' + business.emails : ''}</div>
                             </div>
                         </div>
 
                         <div class="section-title">${strings.invoice_details}</div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>${strings.item_name}</th>
-                                    <th class="text-center">${strings.quantity_small}</th>
-                                    <th class="text-right">${strings.price}</th>
-                                    <th class="text-center">${strings.currency_small}</th>
-                                    <th class="text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="item-name">${item.item_name.toUpperCase()}</td>
-                                    <td class="text-center">${sale.number}</td>
-                                    <td class="text-right">${parseFloat(sale.selling_price).toFixed(2)}</td>
-                                    <td class="text-center">${renderCurrency(sale.currency, false)}</td>
-                                    <td class="text-right">${totalPrice.toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="item-list">
+                            <div class="item-row">
+                                <div class="item-name">${item.item_name.toUpperCase()}</div>
+                                <div class="item-details">
+                                    <span>${sale.number} x ${parseFloat(sale.selling_price).toFixed(2)} ${renderCurrency(sale.currency, false)}</span>
+                                    <span>${totalPrice.toFixed(2)} ${renderCurrency(sale.currency, false)}</span>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="summary">
                             <div class="summary-row">
@@ -527,6 +514,7 @@ const Sale = ({ navigation, route }: NavProps) => {
 
             <View style={{
                 padding: 15,
+                marginBottom: 30,
                 backgroundColor: app_theme.colors.background,
                 borderTopWidth: 1,
                 borderColor: app_theme.colors.border,

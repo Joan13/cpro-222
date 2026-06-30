@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Modal, ScrollView, Dimensions, Platform, Image } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
@@ -8,7 +8,7 @@ import { strings } from '../../lang/lang';
 import Animated, { BounceIn, SlideInDown, SlideInLeft, FadeInUp, FadeIn, SlideInRight, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { GoogleSignin, statusCodes, isSuccessResponse, isCancelledResponse } from '@react-native-google-signin/google-signin';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import ButtonNormal from '../../components/app/ButtonNormal';
 import StatusBarYambi from '../../components/app/StatusBar';
@@ -55,6 +55,16 @@ const Signup = ({ navigation, route }: NavProps) => {
     const raw_contacts = useAppSelector(state => state.app.raw_contacts);
     const user_data = useAppSelector(state => state.user_data);
     const realm = useRealm();
+
+    const scrollViewRef = useRef<ScrollView>(null);
+    const mainScrollViewRef = useRef<ScrollView>(null);
+    const [isNameFocused, setIsNameFocused] = useState(false);
+    const [isPhoneFocused, setIsPhoneFocused] = useState(false);
+
+    useEffect(() => {
+        // Smoothly page transition between steps
+        scrollViewRef.current?.scrollTo({ x: step * width, animated: true });
+    }, [step]);
 
     // const save_session = async (userData) => {
     // const realm = database;
@@ -913,6 +923,8 @@ const Signup = ({ navigation, route }: NavProps) => {
         );
     };
 
+
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: app_theme.colors.background }]}>
             <StatusBarYambi />
@@ -925,6 +937,53 @@ const Signup = ({ navigation, route }: NavProps) => {
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowErrorInternet(false) }} singleButton title={strings.error}>
                     <YambiText text={strings.connection_failed} size="normal" color="gray" />
                 </ModalApp> : null}
+
+            {openModal ?
+                <Modal animationType='fade'>
+                    <View style={{
+                        backgroundColor: app_theme.colors.background,
+                        flex: 1,
+                        paddingVertical: 20,
+                        marginTop: 50
+                    }}>
+                        <View style={{ marginBottom: 0, marginHorizontal: 15, paddingLeft: 10, paddingVertical: 0, borderColor: app_theme.colors.border, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1 }}>
+                            <FontAwesome name="search" size={16} style={{ marginRight: 10, color: app_theme.colors.gray }} />
+                            <TextInput
+                                onChangeText={(text) => {
+                                    setSearch(text);
+                                    SearchCountry(text);
+                                }}
+                                value={search}
+                                placeholder={strings.search}
+                                placeholderTextColor={app_theme.colors.gray}
+                                style={{ flex: 1, paddingVertical: 7, borderWidth: 0, borderColor: app_theme.colors.background, color: app_theme.colors.text }}
+                            />
+                            {search !== "" ?
+                                <Pressable
+                                    onPress={() => {
+                                        setSearch("");
+                                        SearchCountry("");
+                                    }}
+                                    style={{
+                                        height: 30,
+                                        width: 30,
+                                        justifyContent: 'center',
+                                        alignItems: 'center'
+                                    }}>
+                                    <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
+                                </Pressable> : null}
+                        </View>
+                        <FlashList
+                            estimatedItemSize={50}
+                            data={ccc}
+                            keyboardShouldPersistTaps='handled'
+                            renderItem={renderItem}
+                            contentContainerStyle={{
+                                paddingHorizontal: 15,
+                            }}
+                        />
+                    </View>
+                </Modal> : null}
 
             {/* Header with Back Button (theme lives under progress while steps 0–2) */}
             <View style={styles.header}>
@@ -966,6 +1025,7 @@ const Signup = ({ navigation, route }: NavProps) => {
             </View>
 
             <ScrollView
+                ref={mainScrollViewRef}
                 keyboardShouldPersistTaps="handled"
                 automaticallyAdjustKeyboardInsets
                 keyboardDismissMode="on-drag"
@@ -1025,99 +1085,115 @@ const Signup = ({ navigation, route }: NavProps) => {
                     </Animated.Text>
                 )}
 
-                {/* Step 0: Name Input */}
-                {step === 0 && (
-                    <Animated.View
-                        entering={FadeInUp.delay(500)}
-                        style={styles.stepContainer}>
-                        {/* Google Sign-In Button */}
-                        {/* {can_show_google_button() && (
-                            <Animated.View entering={FadeInUp.delay(550)} style={{ width: '100%', marginBottom: 20 }}>
-                                <Pressable
-                                    onPress={signInWithGoogle}
-                                    style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Image source={require('./../../assets/google.png')} style={{ width: 25, height: 25, marginRight: 10 }} />
-                                        <YambiText text={strings.sign_in_with_google || "Sign in with Google"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
+                {/* Programmatic Sliding Steps Container */}
+                <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    pagingEnabled
+                    scrollEnabled={false}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ alignItems: 'flex-start' }}
+                    style={{ minHeight: step === 3 ? 320 : 250, marginVertical: 10 }}
+                >
+                    {/* Step 0 Page: Landing or Name */}
+                    <View style={{ width, paddingHorizontal: 30, alignItems: 'center' }}>
+                        <View style={{ width: '100%', alignItems: 'center' }}>
+                            {/* Google Sign-In Button */}
+                            {/* {can_show_google_button() && (
+                                <Animated.View entering={FadeInUp.delay(200)} style={{ width: '100%', marginBottom: 20 }}>
+                                    <Pressable
+                                        onPress={signInWithGoogle}
+                                        style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Image source={require('./../../assets/google.png')} style={{ width: 25, height: 25, marginRight: 10 }} />
+                                            <YambiText text={strings.sign_in_with_google || "Sign in with Google"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
+                                        </View>
+                                    </Pressable>
+                                </Animated.View>
+                            )} */}
+
+                            {/* Divider */}
+                            {/* {can_show_google_button() && (
+                                <Animated.View entering={FadeInUp.delay(250)} style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 20 }}>
+                                    <View style={{ flex: 1, height: 1, backgroundColor: app_theme.colors.border }} />
+                                    <YambiText text={strings.or || "OR"} size="small" color="gray" style={{ marginHorizontal: 15 }} />
+                                    <View style={{ flex: 1, height: 1, backgroundColor: app_theme.colors.border }} />
+                                </Animated.View>
+                            )} */}
+
+                            {can_show_phone_button() && (
+                                <Animated.View entering={FadeInUp.delay(200)} style={{ width: '100%', marginBottom: 20 }}>
+                                    <Pressable
+                                        onPress={handleContinueWithPhone}
+                                        style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                            <MaterialIcons name="phone" size={20} color={app_theme.colors.design_tip2} style={{ marginRight: 10 }} />
+                                            <YambiText text={strings.continue_with_phone || "Continue with phone"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
+                                        </View>
+                                    </Pressable>
+                                </Animated.View>
+                            )}
+
+                            {showPhoneInput && (
+                                <View style={{ width: '100%', alignItems: 'center' }}>
+                                    <View style={styles.stepIconContainer}>
+                                        <MaterialIcons name="person" size={50} color={app_theme.colors.primary} />
                                     </View>
-                                </Pressable>
-                            </Animated.View>
-                        )} */}
+                                    <YambiText text={strings.whats_your_name} size="normal" color="default" bold style={{ textAlign: 'center', marginBottom: 10 }} />
+                                    <YambiText text={strings.enter_full_name} size="small" color="gray" style={{ textAlign: 'center', marginBottom: 20 }} />
 
-                        {/* Divider */}
-                        {/* {can_show_google_button() && (
-                            <Animated.View entering={FadeInUp.delay(580)} style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 20 }}>
-                                <View style={{ flex: 1, height: 1, backgroundColor: app_theme.colors.border }} />
-                                <YambiText text={strings.or || "OR"} size="small" color="gray" style={{ marginHorizontal: 15 }} />
-                                <View style={{ flex: 1, height: 1, backgroundColor: app_theme.colors.border }} />
-                            </Animated.View>
-                        )} */}
-
-                        {/* Continue with Phone Button */}
-                        {can_show_phone_button() && (
-                            <Animated.View entering={FadeInUp.delay(610)} style={{ width: '100%', marginBottom: 20 }}>
-                                <Pressable
-                                    onPress={handleContinueWithPhone}
-                                    style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                                        <MaterialIcons name="phone" size={20} color={app_theme.colors.primary} style={{ marginRight: 10 }} />
-                                        <YambiText text={strings.continue_with_phone || "Continue with phone"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
+                                    <View
+                                        style={[
+                                            styles.inputContainerCard,
+                                            {
+                                                backgroundColor: app_theme.colors.border,
+                                                borderColor: isNameFocused ? app_theme.colors.design_tip2 : 'transparent',
+                                                borderWidth: 1.5,
+                                            }
+                                        ]}>
+                                        <FontAwesome name="user" color={isNameFocused ? app_theme.colors.design_tip2 : app_theme.colors.text} size={18} />
+                                        <View style={[styles.verticalDivider, { backgroundColor: app_theme.colors.gray + '40' }]} />
+                                        <TextInput
+                                            placeholder={strings.names}
+                                            placeholderTextColor={app_theme.colors.gray || "gray"}
+                                            maxLength={30}
+                                            value={names}
+                                            style={[styles.input_texts, { color: app_theme.colors.text }]}
+                                            onChangeText={text => setNames(text)}
+                                            editable={!isGoogleSignIn}
+                                            onFocus={() => {
+                                                setIsNameFocused(true);
+                                                setTimeout(() => {
+                                                    mainScrollViewRef.current?.scrollToEnd({ animated: true });
+                                                }, 100);
+                                            }}
+                                            onBlur={() => setIsNameFocused(false)}
+                                        />
+                                        {names.length > 0 && (
+                                            <Text style={{ color: 'gray', marginRight: 5 }}>
+                                                {names.length}/30
+                                            </Text>
+                                        )}
+                                        {names.length > 2 ? (
+                                            <Animatable.View style={{ marginLeft: 4 }} animation="bounceIn">
+                                                <Feather name="check-circle" size={18} color="green" />
+                                            </Animatable.View>
+                                        ) : null}
                                     </View>
-                                </Pressable>
-                            </Animated.View>
-                        )}
-
-                        {/* Title texts and icon - Only show after clicking "Continue with phone" */}
-                        {showPhoneInput && (
-                            <>
-                                <View style={styles.stepIconContainer}>
-                                    <MaterialIcons name="person" size={50} color={app_theme.colors.primary} />
                                 </View>
-                                <YambiText text={strings.whats_your_name} size="normal" color="default" bold style={{ textAlign: 'center', marginBottom: 10 }} />
-                                <YambiText text={strings.enter_full_name} size="small" color="gray" style={{ textAlign: 'center', marginBottom: 30 }} />
-                            </>
-                        )}
+                            )}
+                        </View>
+                    </View>
 
-                        {/* Name Input - Only show after clicking "Continue with phone" */}
-                        {showPhoneInput && (
-                            <Animated.View
-                                entering={SlideInRight.delay(600).springify()}
-                                style={[styles.input_view, { backgroundColor: app_theme.colors.border }]}>
-                                <FontAwesome name="user" color={app_theme.colors.text} size={18} />
-                                <TextInput
-                                    placeholder={strings.names}
-                                    placeholderTextColor="gray"
-                                    maxLength={30}
-                                    value={names}
-                                    style={[styles.input_texts, { color: app_theme.colors.text }]}
-                                    onChangeText={text => setNames(text)}
-                                    editable={!isGoogleSignIn}
-                                />
-                                <Text style={{ color: 'gray' }}>
-                                    {names.length !== 0 ? names.length + '/30' : null}
-                                </Text>
-                                {names.length > 2 ? (
-                                    <Animatable.View style={{ marginLeft: 4 }} animation="bounceIn">
-                                        <Feather name="check-circle" size={18} color="green" />
-                                    </Animatable.View>
-                                ) : null}
-                            </Animated.View>
-                        )}
-                    </Animated.View>
-                )}
-
-                {/* Step 1: Phone Number */}
-                {step === 1 && (
-                    <Animated.View
-                        entering={FadeInUp.delay(500)}
-                        style={styles.stepContainer}>
+                    {/* Step 1 Page: Phone number */}
+                    <View style={{ width, paddingHorizontal: 30, alignItems: 'center' }}>
                         {is_loading && isGoogleSignIn ? (
-                            <Animatable.View animation="bounceIn" style={{ alignItems: 'center', justifyContent: 'center' }}>
-                                <AppActivityIndicator color={app_theme.colors.primary} size={40} />
+                            <Animatable.View animation="bounceIn" style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 20 }}>
+                                <AppActivityIndicator color={app_theme.colors.design_tip2} size={40} />
                                 <YambiText text={strings.creating_user || "Creating account..."} size="normal" color="default" style={{ marginTop: 20, textAlign: 'center', color: app_theme.colors.text }} />
                             </Animatable.View>
                         ) : (
-                            <>
+                            <View style={{ width: '100%', alignItems: 'center' }}>
                                 <View style={styles.stepIconContainer}>
                                     <MaterialIcons name="phone" size={50} color={app_theme.colors.primary} />
                                 </View>
@@ -1126,159 +1202,106 @@ const Signup = ({ navigation, route }: NavProps) => {
                                     text={isGoogleSignIn ? (strings.enter_phone_number_google || "Please enter your phone number to complete registration") : strings.send_verification_code}
                                     size="small"
                                     color="gray"
-                                    style={{ textAlign: 'center', marginBottom: 30 }}
+                                    style={{ textAlign: 'center', marginBottom: 20 }}
                                 />
 
-                                <Animated.View
-                                    entering={SlideInRight.delay(600).springify()}
-                                    style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+                                <View
+                                    style={[
+                                        styles.inputContainerCard,
+                                        {
+                                            backgroundColor: app_theme.colors.border,
+                                            borderColor: isPhoneFocused ? app_theme.colors.design_tip2 : 'transparent',
+                                            borderWidth: 1.5,
+                                        }
+                                    ]}>
                                     <Pressable
                                         onPress={() => setOpenModal(!openModal)}
-                                        style={styles.countrySelector}>
-                                        <FontAwesome name="chevron-down" size={10} style={{ marginHorizontal: 10, color: app_theme.colors.gray }} />
-                                        <Text style={{ color: app_theme.colors.text }}>
-                                            {code_country} <Text style={{ fontWeight: 'bold' }}>  {code}</Text>
+                                        style={styles.countrySelectorCohesive}>
+                                        <Text style={{ color: app_theme.colors.text, fontSize: 15 }}>
+                                            {code_country} <Text style={{ fontWeight: 'bold' }}>{code}</Text>
                                         </Text>
+                                        <FontAwesome name="chevron-down" size={10} style={{ marginLeft: 8, color: app_theme.colors.gray }} />
                                     </Pressable>
-                                    <View style={[styles.phoneInput, { borderColor: app_theme.colors.gray }]}>
-                                        <TextInput
-                                            onChangeText={(text) => setPhone_number(text)}
-                                            value={phone_number}
-                                            keyboardType='numeric'
-                                            placeholder={strings.phone_number}
-                                            placeholderTextColor={app_theme.colors.gray}
-                                            style={{ flex: 1, paddingVertical: 7, color: app_theme.colors.text }}
-                                            editable={!is_loading}
-                                        />
-                                    </View>
-                                </Animated.View>
-                            </>
-                        )}
-                    </Animated.View>
-                )}
-
-                {openModal ?
-                    <Modal animationType='fade'>
-                        <View style={{
-                            backgroundColor: app_theme.colors.background,
-                            flex: 1,
-                            paddingVertical: 20,
-                            marginTop: 50
-                        }}>
-                            <View style={{ marginBottom: 0, marginHorizontal: 15, paddingLeft: 10, paddingVertical: 0, borderColor: app_theme.colors.border, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1 }}>
-                                <FontAwesome name="search" size={16} style={{ marginRight: 10, color: app_theme.colors.gray }} />
-                                <TextInput
-                                    onChangeText={(text) => {
-                                        setSearch(text);
-                                        SearchCountry(text);
-                                    }}
-                                    value={search}
-                                    placeholder={strings.search}
-                                    placeholderTextColor={app_theme.colors.gray}
-                                    style={{ flex: 1, paddingVertical: 7, borderWidth: 0, borderColor: app_theme.colors.background, color: app_theme.colors.text }}
-                                />
-                                {search !== "" ?
-                                    <Pressable
-                                        onPress={() => {
-                                            setSearch("");
-                                            SearchCountry("");
+                                    <View style={[styles.verticalDivider, { backgroundColor: app_theme.colors.gray + '40' }]} />
+                                    <TextInput
+                                        onChangeText={(text) => setPhone_number(text)}
+                                        value={phone_number}
+                                        keyboardType='numeric'
+                                        placeholder={strings.phone_number}
+                                        placeholderTextColor={app_theme.colors.gray || "gray"}
+                                        style={{ flex: 1, paddingVertical: 7, color: app_theme.colors.text }}
+                                        editable={!is_loading}
+                                        onFocus={() => {
+                                            setIsPhoneFocused(true);
+                                            setTimeout(() => {
+                                                mainScrollViewRef.current?.scrollToEnd({ animated: true });
+                                            }, 100);
                                         }}
-                                        style={{
-                                            height: 30,
-                                            width: 30,
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
-                                        }}>
-                                        <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
-                                    </Pressable> : null}
+                                        onBlur={() => setIsPhoneFocused(false)}
+                                    />
+                                </View>
                             </View>
-                            <FlashList
-                                estimatedItemSize={50}
-                                data={ccc}
-                                keyboardShouldPersistTaps='handled'
-                                renderItem={renderItem}
-                                contentContainerStyle={{
-                                    paddingHorizontal: 15,
-                                }}
-                            />
-                        </View>
-                    </Modal> : null}
+                        )}
+                    </View>
 
-                {/* Step 2: Code Verification */}
-                {step === 2 && (
-                    <Animated.View
-                        entering={FadeInUp.delay(500)}
-                        style={styles.stepContainer}>
+                    {/* Step 2 Page: Code Verification */}
+                    <View style={{ width, paddingHorizontal: 30, alignItems: 'center' }}>
                         {is_loading ? (
-                            <Animatable.View animation="bounceIn">
-                                <AppActivityIndicator color={app_theme.colors.primary} size={40} />
+                            <Animatable.View animation="bounceIn" style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 20 }}>
+                                <AppActivityIndicator color={app_theme.colors.design_tip2} size={40} />
                                 <Text style={{ color: app_theme.colors.text, textAlign: 'center', marginTop: 20 }}>
                                     {strings.creating_user}
                                 </Text>
                             </Animatable.View>
                         ) : (
-                            <>
+                            <View style={{ width: '100%', alignItems: 'center' }}>
                                 <View style={styles.stepIconContainer}>
                                     <MaterialIcons name="sms" size={50} color={app_theme.colors.primary} />
                                 </View>
                                 <YambiText text={strings.enter_verification_code} size="normal" color="default" bold style={{ textAlign: 'center', marginBottom: 10 }} />
-                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 30 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
                                     <YambiText text={strings.enter_code_sent + " "} size="small" color="gray" style={{ textAlign: 'center' }} />
                                     <YambiText text={code + phone_number} size="small" color="default" bold style={{ textAlign: 'center' }} />
                                 </View>
 
-                                <Animated.View entering={SlideInRight.delay(600).springify()}>
-                                    <TextInput
-                                        numberOfLines={1}
-                                        style={[
-                                            styles.codeInput,
-                                            {
-                                                backgroundColor: app_theme.colors.background,
-                                                color: app_theme.colors.text,
-                                                borderColor: app_theme.colors.border,
-                                                borderWidth: 2,
-                                                paddingTop: 5
-                                            }
-                                        ]}
-                                        keyboardType="numeric"
-                                        maxLength={6}
-                                        value={codeEntered}
-                                        onChangeText={setCodeEntered}
-                                        placeholderTextColor={app_theme.colors.border}
-                                        placeholder="000000" />
-                                </Animated.View>
-                            </>
+                                <OtpInput
+                                    value={codeEntered}
+                                    onChangeText={setCodeEntered}
+                                    app_theme={app_theme}
+                                    onFocus={() => {
+                                        setTimeout(() => {
+                                            mainScrollViewRef.current?.scrollToEnd({ animated: true });
+                                        }, 100);
+                                    }}
+                                />
+                            </View>
                         )}
-                    </Animated.View>
-                )}
+                    </View>
 
-                {/* Step 3: Success */}
-                {step === 3 && (
-                    <Animated.View
-                        entering={FadeInUp.delay(300)}
-                        style={styles.stepContainer}>
+                    {/* Step 3 Page: Success Screen */}
+                    <View style={{ width, paddingHorizontal: 30, alignItems: 'center' }}>
                         <Animated.View
                             style={styles.successIconContainer}
                             entering={BounceIn}>
                             <MaterialIcons name="check-circle" size={100} color="green" />
                         </Animated.View>
                         <YambiText text={strings.all_set} size="big" color="success" bold style={{ textAlign: 'center', marginBottom: 10 }} />
-                        <YambiText text={strings.account_created_success} size="normal" color="gray" style={{ textAlign: 'center', marginBottom: 40 }} />
+                        <YambiText text={strings.account_created_success} size="normal" color="gray" style={{ textAlign: 'center', marginBottom: 30 }} />
 
-                        <View style={{ width: '100%' }}>
+                        <View style={{ width: '100%', marginTop: 10 }}>
                             <ButtonNormal
                                 title={strings.signin}
                                 loadEnabled={false}
                                 normal={true}
                                 onPress={GoHome} />
                         </View>
-                    </Animated.View>
-                )}
+                    </View>
+                </ScrollView>
 
                 {/* Continue Button */}
                 {!is_loading && step < 3 && (
                     <Animated.View
-                        entering={FadeInUp.delay(700)}
+                        entering={FadeInUp.delay(200)}
                         style={styles.buttonContainer}>
                         {can_show_button() && (
                             <ButtonNormal
@@ -1295,6 +1318,68 @@ const Signup = ({ navigation, route }: NavProps) => {
     );
 
 }
+
+const OtpInput = ({ value, onChangeText, length = 6, onFocus, app_theme }: { value: string; onChangeText: (text: string) => void; length?: number; onFocus?: () => void; app_theme: any }) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const inputRef = useRef<TextInput>(null);
+
+    const handlePress = () => {
+        inputRef.current?.focus();
+    };
+
+    return (
+        <Pressable onPress={handlePress} style={styles.otpContainer}>
+            <TextInput
+                ref={inputRef}
+                value={value}
+                onChangeText={onChangeText}
+                keyboardType="numeric"
+                maxLength={length}
+                style={styles.hiddenTextInput}
+                onFocus={() => {
+                    setIsFocused(true);
+                    onFocus?.();
+                }}
+                onBlur={() => setIsFocused(false)}
+            />
+            <View style={styles.otpBoxesRow}>
+                {Array.from({ length }).map((_, index) => {
+                    const char = value[index] || "";
+                    const isCurrent = value.length === index;
+                    const hasValue = char !== "";
+                    
+                    return (
+                        <View
+                            key={index}
+                            style={[
+                                styles.otpBox,
+                                {
+                                    backgroundColor: app_theme.colors.border,
+                                    borderColor: isFocused && isCurrent 
+                                        ? app_theme.colors.design_tip2 
+                                        : (hasValue ? app_theme.colors.text : app_theme.colors.border),
+                                    borderWidth: isFocused && isCurrent ? 2 : 1,
+                                }
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    styles.otpText,
+                                    { color: app_theme.colors.text }
+                                ]}
+                            >
+                                {char}
+                            </Text>
+                            {isFocused && isCurrent && (
+                                <View style={[styles.cursor, { backgroundColor: app_theme.colors.design_tip2 }]} />
+                            )}
+                        </View>
+                    );
+                })}
+            </View>
+        </Pressable>
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -1440,6 +1525,61 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 1,
         width: '100%',
+    },
+    inputContainerCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+        borderRadius: 12,
+        width: '100%',
+        minHeight: 52,
+    },
+    verticalDivider: {
+        width: 1,
+        height: 24,
+        marginHorizontal: 12,
+    },
+    countrySelectorCohesive: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: 4,
+    },
+    otpContainer: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 20,
+    },
+    hiddenTextInput: {
+        position: 'absolute',
+        width: 0,
+        height: 0,
+        opacity: 0,
+    },
+    otpBoxesRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 10,
+        gap: 8,
+    },
+    otpBox: {
+        width: 40,
+        height: 50,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    otpText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    cursor: {
+        position: 'absolute',
+        width: 2,
+        height: 18,
+        bottom: 16,
     },
 });
 

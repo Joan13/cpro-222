@@ -1272,6 +1272,7 @@
   "no_image": "Aucune photo",
   "cart": "Panier",
   "cart_empty": "Votre panier est vide",
+  "cart_empty_subtitle": "Explorez le marché pour trouver des articles qui vous plaisent et ajoutez-les à votre panier.",
   "verifying_phone_number": "Vérification du numéro de téléphone...",
   "chat_with_the_seller": "Discuter avec le vendeur",
   "no_items_available": "Aucun article disponible",
@@ -1347,6 +1348,10 @@
   "error_checking_follow_status": "Erreur lors de la vérification du statut de suivi",
   "no_subscribers": "Aucun abonné pour le moment",
   "expenses": "Dépenses",
+  "view_expenses": "Voir les dépenses",
+  "view_pos_expenses": "Voir les dépenses du point de vente",
+  "business_expenses": "Dépenses d'entreprise",
+  "pos_expenses": "Dépenses de point de vente",
   "expense": "Dépense",
   "add_expense": "Ajouter une dépense",
   "edit_expense": "Modifier la dépense",
@@ -2025,5 +2030,6 @@
   "outdated": "Expiré",
   "follower": "Abonné",
   "share": "Partager",
-  "expired": "Expiré"
+  "expired": "Expiré",
+  "access_denied": "Accès refusé"
 }

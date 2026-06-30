@@ -1,0 +1,14 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml:1:1-2:12
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml:1:1-2:12
+	package
+		INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml
+uses-sdk
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/proximity/android/src/main/AndroidManifest.xml

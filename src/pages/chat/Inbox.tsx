@@ -15,6 +15,7 @@ import { SocketApp } from '../../../GlobalVariables';
 import HeaderInbox from '../../components/headers/HeaderInbox';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderRightInbox from '../../components/headers/HeaderRightInbox';
+import * as Notifications from 'expo-notifications';
 
 const Inbox = ({ navigation, route }: NavProps) => {
 
@@ -51,6 +52,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
     // }
 
     dispatch(setCurrentUser(user));
+    Notifications.dismissNotificationAsync(`chat_${user}`).catch((err) => console.log('Failed to dismiss notification:', err));
     // console.log(user);
 
     // SocketApp.on('newMessage'+user_data.phone_number, msg=>{
@@ -138,8 +140,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
         </View>
       </View>
 
-      <SafeAreaView
-        edges={['top', 'left', 'right']}
+      <View
         style={{
           flex: 1,
         }}>
@@ -174,18 +175,14 @@ const Inbox = ({ navigation, route }: NavProps) => {
         </Canvas>
 
         <View style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          flex: 1,
           flexDirection: 'column',
           backgroundColor: 'transparent',
         }}>
           <Messages user={user} />
           <FooterChat user={user} />
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   )
 }

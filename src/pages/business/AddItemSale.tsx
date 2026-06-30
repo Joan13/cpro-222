@@ -123,7 +123,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                     sale_operator: user_data.phone_number,
                     sales_point_id: sales_point_id,
                     cost_price: wholesale ? ItemPrices.wholesale_cost_price.toString() : (parseInt(ItemPrices.wholesale_cost_price) / itemToSell.wholesale_content_number).toString(),
-                    selling_price: wholesale ? ItemPrices.wholesale_selling_price : ItemPrices.retail_selling_price,
+                    selling_price: itemToSellPrice.trim() !== "" ? itemToSellPrice.trim() : (wholesale ? ItemPrices.wholesale_selling_price : ItemPrices.retail_selling_price),
                     delivery_price: "",
                     delivery_address: "",
                     delivery_time: "",

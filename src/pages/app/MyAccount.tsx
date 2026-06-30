@@ -56,49 +56,44 @@ const MyAccount = () => {
             // console.log('Google Sign-Out error:', error);
         }
 
-        // Clear Realm database
-        try {
-            realm.write(() => {
-                realm.deleteAll();
-            });
-        } catch (e) {
-            // console.log('Realm delete error:', e);
-        }
+        dispatch(updateUser({
+            user_id: "0",
+            user_names: "",
+            phone_number: "",
+            gender: 0,
+            birth_date: "",
+            country: "",
+            user_profile: "",
+            profession: "",
+            notification_token: "",
+            bio: "",
+            user_email: "",
+            user_address: "",
+            status_information: "",
+            user_password: "",
+            account_privacy: 0,
+            user_level: 0,
+            user_active: 0,
+            user_verified: 0,
+            user_verified_at: "",
+            createdAt: "",
+            updatedAt: ""
+        }));
+        setLoading(false);
+        dispatch(setShowModalApp(false));
+        setShowSignOut(false);
 
+        // Clear Realm database and restart immediately afterwards to prevent mounted screens from re-rendering and accessing invalidated objects
         setTimeout(() => {
-            dispatch(updateUser({
-                user_id: "0",
-                user_names: "",
-                phone_number: "",
-                gender: 0,
-                birth_date: "",
-                country: "",
-                user_profile: "",
-                profession: "",
-                notification_token: "",
-                bio: "",
-                user_email: "",
-                user_address: "",
-                status_information: "",
-                user_password: "",
-                account_privacy: 0,
-                user_level: 0,
-                user_active: 0,
-                user_verified: 0,
-                user_verified_at: "",
-                createdAt: "",
-                updatedAt: ""
-            }))
-            setLoading(false);
-            dispatch(setShowModalApp(false));
-            setShowSignOut(false)
-            // navigation.navigate("SplashStartYambi");
-
-        }, 2500);
-
-        setTimeout(() => {
+            try {
+                realm.write(() => {
+                    realm.deleteAll();
+                });
+            } catch (e) {
+                // console.log('Realm delete error:', e);
+            }
             RNRestart.restart();
-        }, 3000);
+        }, 500);
     }
 
     const DeleteMyAccount = async () => {
@@ -136,23 +131,22 @@ const MyAccount = () => {
             user_verified_at: "",
             createdAt: "",
             updatedAt: ""
-        }))
+        }));
 
         dispatch(setShowModalApp(false));
         setShowDeleteAccount(false);
 
-        // Clear Realm database
-        try {
-            realm.write(() => {
-                realm.deleteAll();
-            });
-        } catch (e) {
-            // console.log('Realm delete error:', e);
-        }
-
+        // Clear Realm database and restart immediately afterwards to prevent mounted screens from re-rendering and accessing invalidated objects
         setTimeout(() => {
+            try {
+                realm.write(() => {
+                    realm.deleteAll();
+                });
+            } catch (e) {
+                // console.log('Realm delete error:', e);
+            }
             RNRestart.restart();
-        }, 1500);
+        }, 500);
     }
 
     return (

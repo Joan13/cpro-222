@@ -2,18 +2,20 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import {
   Keyboard,
+  KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  View,
   type KeyboardEvent,
 } from 'react-native';
+
 type Props = {
   children: ReactNode;
 };
 
 /**
- * Tracks software keyboard height. On hide, height is reset to 0 so no gap
- * persists (unlike KeyboardAvoidingView with behavior="height" on Android).
+ * Tracks software keyboard height.
+ * Useful for manual offset calculations in individual screens (e.g. FooterInbox).
+ * On hide, height is reset to 0.
  */
 export function useKeyboardHeight() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -44,22 +46,54 @@ export function useKeyboardHeight() {
 }
 
 /**
- * Keeps focused TextInputs above the software keyboard.
- * Uses bottom padding from keyboard events on all platforms.
+ * Root-level keyboard avoidance wrapper.
  *
- * Chat screens (Inbox) should use SafeAreaView edges without "bottom" and let
- * FooterInbox manage home-indicator padding when the keyboard is closed.
+ * Uses KeyboardAvoidingView with the `enabled` prop tied to keyboard visibility
+ * to solve two problems at once:
+ *
+ *  1. While the keyboard is OPEN (`enabled={true}`):
+ *     - iOS   → behavior="padding": pushes content up by the keyboard height.
+ *     - Android → behavior="height": shrinks layout to keep content visible.
+ *
+ *  2. After the keyboard is DISMISSED (`enabled={false}`):
+ *     - KeyboardAvoidingView acts as a plain View with flex: 1.
+ *     - This removes any residual explicit height/padding that would otherwise
+ *       leave an empty gap at the bottom of the screen (the ghost-gap bug).
+ *
+ * The `enabled` flag transitions only AFTER the keyboard animation completes
+ * (keyboardDidHide / keyboardWillHide) so there is no visual jump.
  */
 export default function KeyboardRootView({ children }: Props) {
-  const keyboardHeight = useKeyboardHeight();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  // Full keyboard height: chat screens opt out of bottom SafeArea (see Inbox).
-  const bottomPadding = keyboardHeight > 0 ? keyboardHeight : 0;
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true),
+    );
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false),
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   return (
-    <View style={[styles.flex, bottomPadding > 0 && { paddingBottom: bottomPadding }]}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      enabled={keyboardVisible}
+      keyboardVerticalOffset={0}
+    >
       {children}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

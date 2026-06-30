@@ -16,7 +16,12 @@
       "googleServicesFile": "GoogleService-Info.plist",
       "associatedDomains": [
         "applinks:app.yambi.net"
-      ]
+      ],
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {

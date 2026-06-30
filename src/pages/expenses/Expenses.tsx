@@ -21,7 +21,7 @@ import { formatAmount } from "../../util/formatAmount";
 import RNPrint from 'react-native-print';
 import Reanimated, { FadeInUp, BounceIn } from "react-native-reanimated";
 
-const ExpensesPage = ({ navigation }: NavProps) => {
+const ExpensesPage = ({ navigation, route }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme.colors);
     const app_theme = useAppSelector(state => state.app_theme);
     const app_language = useAppSelector(state => state.persisted_app.langApp);
@@ -29,6 +29,9 @@ const ExpensesPage = ({ navigation }: NavProps) => {
     const expenses_opened = useAppSelector(state => state.app.expenses_opened);
     const title = useAppSelector(state => state.app.title);
     const dispatch = useAppDispatch();
+
+    // Context filter parameters
+    const { flag = 0, business_id = "", sales_point_id = "" } = route?.params || {};
 
     // Filter states
     const [date_start, setDate_start] = useState<string>("");
@@ -62,8 +65,16 @@ const ExpensesPage = ({ navigation }: NavProps) => {
 
     const allExpenses = useQuery(
         Expenses, expenses => {
-            return expenses.filtered('expense_active == $0', 1).sorted('createdAt', true);
-        }, []);
+            let query = expenses.filtered('expense_active == $0', 1);
+            if (flag === 1) {
+                query = query.filtered('business_id == $0', business_id);
+            } else if (flag === 2) {
+                query = query.filtered('sales_point_id == $0', sales_point_id);
+            } else {
+                query = query.filtered('phone_number == $0 && business_id == $1 && sales_point_id == $1', user_data.phone_number, "");
+            }
+            return query.sorted('createdAt', true);
+        }, [flag, business_id, sales_point_id, user_data.phone_number]);
 
     // Filter expenses based on all criteria
     const filteredExpenses = allExpenses.filter(expense => {
@@ -105,11 +116,17 @@ const ExpensesPage = ({ navigation }: NavProps) => {
     const expenses = filteredExpenses;
 
     useEffect(() => {
-        dispatch(setTitle(strings.expenses));
-    }, []);
+        if (flag === 1) {
+            dispatch(setTitle(strings.business_expenses || "Business Expenses"));
+        } else if (flag === 2) {
+            dispatch(setTitle(strings.pos_expenses || "POS Expenses"));
+        } else {
+            dispatch(setTitle(strings.expenses));
+        }
+    }, [flag]);
 
     useEffect(() => {
-        if (title === strings.expenses) {
+        if (title === strings.expenses || title === strings.business_expenses || title === strings.pos_expenses) {
             RequestExpensesPassword();
         }
     }, [title]);
@@ -166,7 +183,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
     ].filter(Boolean).length;
 
     // Calculate filtered total
-    const filteredTotal = filteredExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount || "0"), 0);
+    const filteredTotal = filteredExpenses.reduce((sum, exp) => sum + (parseFloat(exp.amount || "0") * (exp.quantity || 1)), 0);
 
     // Print expenses function
     const PrintExpenses = async () => {
@@ -186,7 +203,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
         // Calculate totals by currency
         const totalsByCurrency: { [key: number]: number } = {};
         Object.entries(expensesByCurrency).forEach(([currency, exps]) => {
-            totalsByCurrency[parseInt(currency)] = exps.reduce((sum, exp) => sum + parseFloat(exp.amount || "0"), 0);
+            totalsByCurrency[parseInt(currency)] = exps.reduce((sum, exp) => sum + (parseFloat(exp.amount || "0") * (exp.quantity || 1)), 0);
         });
 
         const expenses_categories = strings.expenses_categories || [];
@@ -322,7 +339,10 @@ const ExpensesPage = ({ navigation }: NavProps) => {
                                     return `
                                         <tr>
                                             <td>${exp.title || ""}</td>
-                                            <td class="text-right">${formatAmount(exp.amount)} ${renderCurrency(exp.currency, false)}</td>
+                                            <td class="text-right">
+                                                ${formatAmount((parseFloat(exp.amount || "0") * (exp.quantity || 1)).toString())} ${renderCurrency(exp.currency, false)}
+                                                ${(exp.quantity || 1) > 1 ? `<br/><small style="color: gray; font-size: 10px;">${formatAmount(exp.amount)} x ${exp.quantity}</small>` : ''}
+                                            </td>
                                             <td>${category?.name || ""}</td>
                                             <td>${paymentType}</td>
                                             <td>${renderDateTime(exp.createdAt, 0, false, false)}</td>
@@ -378,7 +398,10 @@ const ExpensesPage = ({ navigation }: NavProps) => {
             
             // Fetch expenses from server
             const response = await axios.post(remote_host + '/yambi/API/get_expenses', {
-                phone_number: user_data.phone_number
+                phone_number: user_data.phone_number,
+                flag: flag,
+                business_id: business_id,
+                sales_point_id: sales_point_id
             });
 
             if (response.data.success === "1" && response.data.data) {
@@ -419,7 +442,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
         } finally {
             setRefreshing(false);
         }
-    }, [realm, user_data.phone_number]);
+    }, [realm, user_data.phone_number, flag, business_id, sales_point_id]);
 
     const expenses_categories = strings.expenses_categories || [];
 
@@ -711,7 +734,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
                                     if (!currency_stats[currency]) {
                                         currency_stats[currency] = { amount: 0, count: 0 };
                                     }
-                                    currency_stats[currency].amount += parseFloat(expense.amount || "0");
+                                    currency_stats[currency].amount += parseFloat(expense.amount || "0") * (expense.quantity || 1);
                                     currency_stats[currency].count++;
                                 });
                                 
@@ -1227,7 +1250,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
                                 style={{ fontSize: 16, fontWeight: '700' }}
                             />
                             {/* <Pressable
-                                onPress={() => navigation.navigate('AddExpense', {})}
+                                onPress={() => navigation.navigate('AddExpense', { business_id, sales_point_id })}
                                 style={{
                                     backgroundColor: theme.design_tip2,
                                     paddingHorizontal: 12,
@@ -1241,7 +1264,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
                                 <YambiText text={strings.add_expense} style={{ fontSize: 14 }} color="design"  />
                             </Pressable> */}
                         </View>
-
+ 
                         <LegendList
                             data={expenses_categories as never}
                             keyExtractor={(item: any) => item.id.toString()}
@@ -1252,6 +1275,9 @@ const ExpensesPage = ({ navigation }: NavProps) => {
                                     item={item} 
                                     expenses={expenses}
                                     navigation={navigation}
+                                    flag={flag}
+                                    business_id={business_id}
+                                    sales_point_id={sales_point_id}
                                 />
                             )}
                             scrollEnabled={false}
@@ -1660,7 +1686,7 @@ const ExpensesPage = ({ navigation }: NavProps) => {
 
             {/* Floating Action Button */}
             {/* <Pressable
-                onPress={() => navigation.navigate('AddExpense', {})}
+                onPress={() => navigation.navigate('AddExpense', { business_id, sales_point_id })}
                 style={{
                     position: 'absolute',
                     bottom: 80,

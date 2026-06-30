@@ -53,7 +53,7 @@ export const YambiText: React.FC<IYambiText> = ({
                     color: textColor,
                     fontSize,
                     fontWeight: bold ? app_description.general_font_weight as any : 'normal',
-                    textDecorationLine: lineThrough ? 'line-through' : 'none'
+                    textDecorationLine: lineThrough ? 'line-through' : (style?.textDecorationLine || 'none')
                 }
             ]}
         >

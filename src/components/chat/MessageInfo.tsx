@@ -8,7 +8,6 @@ import { View, Pressable, Text, ScrollView, TextInput } from 'react-native';
 import { strings } from '../../lang/lang';
 // import changeNavigationBarColor from 'react-native-navigation-bar-color';
 // import { PermissionsAndroid } from 'react-native';
-// import Contacts from 'react-native-contacts';
 // import { connect, useDispatch, useSelector } from 'react-redux';
 // import Realm, { BSON } from 'realm';
 // import { useNavigation } from '@react-navigation/native';

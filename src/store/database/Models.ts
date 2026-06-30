@@ -799,6 +799,7 @@ export class Expenses extends Realm.Object<Expenses> {
     sales_point_id!: string;
     phone_number!: string;
     amount!: string;
+    quantity!: number;
     currency!: number;
     description!: string;
     category!: number;
@@ -819,6 +820,7 @@ export class Expenses extends Realm.Object<Expenses> {
             sales_point_id: 'string',
             phone_number: 'string',
             amount: 'string',
+            quantity: { type: 'int', default: 1 },
             currency: 'int',
             description: 'string',
             category: 'int',

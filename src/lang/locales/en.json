@@ -799,7 +799,7 @@
   "signout_text": "By signing out, your account will be temporarely disconnected. Hit 'Confirm' to continue.",
   "delete_account": "Delete account",
   "delete_account_warning": "Do you really want to delete your account ? You'll lose all the data associated to your account. Hit 'Confirm' to continue.",
-"need_access_welcome_message": "Yambi needs access to your contacts to help you find people from your phonebook who are already using the app. The names and phone numbers from your contacts may be securely sent to our servers in order to identify Yambi users you may know. This data is only used for this feature and is not shared with third parties. By tapping “Accept and Close”, you agree to this collection and processing of data.",
+  "need_access_welcome_message": "Yambi needs access to your contacts to help you find people from your phonebook who are already using the app. The names and phone numbers from your contacts may be securely sent to our servers in order to identify Yambi users you may know. This data is only used for this feature and is not shared with third parties. By tapping “Accept and Close”, you agree to this collection and processing of data.",
   "accept": "Accept",
   "i_accept": "I accept",
   "accept_and_close": "Accept and close",
@@ -1273,6 +1273,7 @@
   "no_image": "No image",
   "cart": "Cart",
   "cart_empty": "Your cart is empty",
+  "cart_empty_subtitle": "Explore the marketplace to find items you like and add them to your cart.",
   "verifying_phone_number": "Verifying phone number...",
   "chat_with_the_seller": "Chat with the seller",
   "no_items_available": "No items available",
@@ -1347,6 +1348,10 @@
   "error_checking_follow_status": "Error checking follow status",
   "no_subscribers": "No subscribers yet",
   "expenses": "Expenses",
+  "view_expenses": "View expenses",
+  "view_pos_expenses": "View POS expenses",
+  "business_expenses": "Business Expenses",
+  "pos_expenses": "POS Expenses",
   "expense": "Expense",
   "add_expense": "Add Expense",
   "edit_expense": "Edit Expense",
@@ -2015,14 +2020,15 @@
   "processing_payment": "Processing payment...",
   "subscription_duration_months_label": "Duration",
   "months": "months",
-  "confirm_payment": "Confirm Payment"
-  ,"add_subscription_to_activate_locked_items": "You've reached the max number of items for your subscription plan. Renew your plan to continue using these locked items."
-  ,"basic_plan": "Basic"
-  ,"premium_x_plan": "Premium X"
-  ,"ultimate_plan": "Ultimate",
+  "confirm_payment": "Confirm Payment",
+  "add_subscription_to_activate_locked_items": "You've reached the max number of items for your subscription plan. Renew your plan to continue using these locked items.",
+  "basic_plan": "Basic",
+  "premium_x_plan": "Premium X",
+  "ultimate_plan": "Ultimate",
   "failed": "Failed",
   "outdated": "Outdated",
   "follower": "Follower",
   "share": "Share",
-  "expired": "Expired"
+  "expired": "Expired",
+  "access_denied": "Access denied"
 }

@@ -5,11 +5,11 @@ import { IconApp } from "../../components/app/IconApp";
 import { YambiText } from "../../components/app/Text";
 import { NavProps } from "../../types/types";
 import { useQuery } from "@realm/react";
-import { Expenses } from "../../store/database/Models";
+import { Expenses, BusinessUsers, UserSellsPoints } from "../../store/database/Models";
 import { LegendList } from '@legendapp/list';
 import ExpenseItem from "../../components/lists/expenses/ExpenseItem";
 import { setShowModalApp } from "../../store/reducers/appSlice";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useAppDispatch } from "../../store/app/hooks";
 import { global_currencies, renderCurrency, renderDateTime } from "../../../GlobalVariables";
 import ModalApp from "../../components/app/ModalApp";
@@ -19,10 +19,64 @@ import RNPrint from 'react-native-print';
 import moment from "moment";
 
 const CategoryExpenses = ({ navigation, route }: NavProps) => {
-    const { category_id } = route.params;
+    const { category_id, flag = 0, business_id = "", sales_point_id = "" } = route.params;
     const theme = useAppSelector(state => state.app_theme.colors);
     const app_theme = useAppSelector(state => state.app_theme);
     const app_language = useAppSelector(state => state.persisted_app.langApp);
+    const user_data = useAppSelector(state => state.user_data);
+
+    const isAdmin = user_data?.user_level === 2;
+
+    const sellsPointQuery = useQuery(
+        UserSellsPoints, points => {
+            return points.filtered('_id == $0', sales_point_id || 'impossible_id_that_never_matches');
+        }, [sales_point_id]);
+    const salesPointBusinessId = sellsPointQuery.length > 0 ? sellsPointQuery[0].business_id : "";
+
+    const userBusinessAccess = useQuery(
+        BusinessUsers, users => {
+            return users.filtered('user == $0 && user_active == $1', user_data.phone_number, 1);
+        }, [user_data.phone_number]);
+
+    const membership = useMemo(() => {
+        if (isAdmin) return null;
+        if (flag === 1 && business_id) {
+            return userBusinessAccess.find(access => access.business_id === business_id);
+        } else if (flag === 2 && sales_point_id) {
+            const posAccess = userBusinessAccess.find(access => access.sales_point_id === sales_point_id);
+            if (posAccess) return posAccess;
+            if (salesPointBusinessId) {
+                return userBusinessAccess.find(access => access.business_id === salesPointBusinessId && access.level === 1);
+            }
+        }
+        return null;
+    }, [userBusinessAccess, flag, business_id, sales_point_id, salesPointBusinessId, isAdmin]);
+
+    const hasAccess = useMemo(() => {
+        if (isAdmin) return true;
+        if (flag === 0) return true; // personal expenses are always allowed
+
+        if (!membership) return false;
+
+        if (flag === 1) {
+            return membership.level === 1;
+        } else if (flag === 2) {
+            if (membership.level === 1) return true;
+            if (membership.level === 2 && membership.sales_point_id === sales_point_id) return true;
+            return false;
+        }
+        return false;
+    }, [membership, flag, sales_point_id, isAdmin]);
+
+    if (!hasAccess) {
+        return (
+            <View style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                <IconApp pack="FI" name="shield" size={60} color={theme.error} styles={{ marginBottom: 15 }} />
+                <YambiText text={strings.access_denied} size="big" color="error" style={{ fontWeight: '700', marginBottom: 10 }} />
+                <YambiText text={strings.business_level_error || "You do not have permission to view these expenses."} size="normal" color="gray" style={{ textAlign: 'center' }} />
+            </View>
+        );
+    }
     const dispatch = useAppDispatch();
     const expenses_categories = strings.expenses_categories || [];
     const category = expenses_categories.find(c => c.id === category_id);
@@ -51,8 +105,16 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
     // Get all expenses for the category
     const allCategoryExpenses = useQuery(
         Expenses, expenses => {
-            return expenses.filtered('category == $0 && expense_active == $1', category_id, 1).sorted('createdAt', true);
-        }, [category_id]);
+            let query = expenses.filtered('category == $0 && expense_active == $1', category_id, 1);
+            if (flag === 1) {
+                query = query.filtered('business_id == $0', business_id);
+            } else if (flag === 2) {
+                query = query.filtered('sales_point_id == $0', sales_point_id);
+            } else {
+                query = query.filtered('phone_number == $0', user_data.phone_number);
+            }
+            return query.sorted('createdAt', true);
+        }, [category_id, flag, business_id, sales_point_id, user_data.phone_number]);
 
     // Filter expenses based on all criteria
     const filteredExpenses = allCategoryExpenses.filter(expense => {
@@ -124,16 +186,16 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
     // Calculate currency statistics
     const getCurrencyStats = () => {
         const currency_stats: { [key: number]: { amount: number, count: number } } = {};
-        
+
         filteredExpenses.forEach(expense => {
             const currency = expense.currency;
             if (!currency_stats[currency]) {
                 currency_stats[currency] = { amount: 0, count: 0 };
             }
-            currency_stats[currency].amount += parseFloat(expense.amount || "0");
+            currency_stats[currency].amount += parseFloat(expense.amount || "0") * (expense.quantity || 1);
             currency_stats[currency].count++;
         });
-        
+
         return currency_stats;
     };
 
@@ -155,10 +217,10 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
             borderTopWidth: 1
         }}>
             <ScrollView style={{ flex: 1 }}>
-                <View style={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 15 }}>
+                <View style={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 55 }}>
                     {/* Category Header Card */}
                     <View style={{
-                        backgroundColor: theme.design_tip1,
+                        backgroundColor: theme.background,
                         borderRadius: 14,
                         padding: 15,
                         marginBottom: 15,
@@ -200,10 +262,10 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                             // Calculate totals by currency
                                             const totalsByCurrency: { [key: number]: number } = {};
                                             Object.entries(expensesByCurrency).forEach(([currency, exps]) => {
-                                                totalsByCurrency[parseInt(currency)] = exps.reduce((sum, exp) => sum + parseFloat(exp.amount || "0"), 0);
+                                                totalsByCurrency[parseInt(currency)] = exps.reduce((sum, exp) => sum + (parseFloat(exp.amount || "0") * (exp.quantity || 1)), 0);
                                             });
 
-                                            const dateRangeText = date_start !== "" && date_end !== "" 
+                                            const dateRangeText = date_start !== "" && date_end !== ""
                                                 ? `${renderDateTime(date_start, 3, true)} - ${renderDateTime(date_end, 3, true)}`
                                                 : strings.all || "All";
 
@@ -323,22 +385,25 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                                                                 </thead>
                                                                 <tbody>
                                                                     ${exps.map(exp => {
-                                                                        const paymentType = exp.payment_type === 0 
-                                                                            ? (strings as any).not_paid || "Not Paid"
-                                                                            : exp.payment_type === 1 
-                                                                                ? strings.cash || "Cash"
-                                                                                : exp.payment_type === 2 
-                                                                                    ? strings.card || "Card"
-                                                                                    : strings.bank_transfer || "Bank Transfer";
-                                                                        return `
+                                                const paymentType = exp.payment_type === 0
+                                                    ? (strings as any).not_paid || "Not Paid"
+                                                    : exp.payment_type === 1
+                                                        ? strings.cash || "Cash"
+                                                        : exp.payment_type === 2
+                                                            ? strings.card || "Card"
+                                                            : strings.bank_transfer || "Bank Transfer";
+                                                return `
                                                                             <tr>
                                                                                 <td>${exp.title || ""}</td>
-                                                                                <td class="text-right">${formatAmount(exp.amount)} ${renderCurrency(exp.currency, false)}</td>
+                                                                                <td class="text-right">
+                                                                                    ${formatAmount((parseFloat(exp.amount || "0") * (exp.quantity || 1)).toString())} ${renderCurrency(exp.currency, false)}
+                                                                                    ${(exp.quantity || 1) > 1 ? `<br/><small style="color: gray; font-size: 10px;">${formatAmount(exp.amount)} x ${exp.quantity}</small>` : ''}
+                                                                                </td>
                                                                                 <td>${paymentType}</td>
                                                                                 <td>${renderDateTime(exp.createdAt, 0, false, false)}</td>
                                                                             </tr>
                                                                         `;
-                                                                    }).join('')}
+                                            }).join('')}
                                                                 </tbody>
                                                             </table>
                                                             <div class="summary">
@@ -416,7 +481,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
 
                     {/* Add Expense Button */}
                     {/* <Pressable
-                        onPress={() => navigation.navigate('AddExpense', { category_id })}
+                        onPress={() => navigation.navigate('AddExpense', { category_id, business_id, sales_point_id })}
                         style={{
                             backgroundColor: theme.design_tip2,
                             borderRadius: 12,

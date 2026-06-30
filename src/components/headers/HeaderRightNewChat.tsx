@@ -6,7 +6,8 @@ import { IconApp } from "../app/IconApp";
 import { removeDuplicateNumbers, removeWhiteSpaces, SocketApp } from "../../../GlobalVariables";
 import { useEffect, useState } from "react";
 import { TContact } from "../../types/types";
-import Contacts from 'react-native-contacts';
+import * as Contacts from 'expo-contacts';
+import { contactNameByPhoneRegistry, getDefaultCallingCode, processPhoneContacts } from '../../services/ContactsService';
 import AppActivityIndicator from "../app/AppActivityIndicator";
 import { useRealm } from "@realm/react";
 const HeaderRightNewChat = () => {
@@ -19,38 +20,42 @@ const HeaderRightNewChat = () => {
     const realm = useRealm();
     const dispatch = useAppDispatch();
 
+    const user_data = useAppSelector(state => state.user_data);
+
     const loadContacts = () => {
-        Contacts.getAll()
-            .then(contacts => {
-                let contacts_list: Array<TContact> = [];
+        Contacts.requestPermissionsAsync()
+            .then(({ status }) => {
+                if (status === 'granted') {
+                    Contacts.getContactsAsync({
+                        fields: [
+                            Contacts.Fields.Name,
+                            Contacts.Fields.FirstName,
+                            Contacts.Fields.MiddleName,
+                            Contacts.Fields.LastName,
+                            Contacts.Fields.Nickname,
+                            Contacts.Fields.PhoneNumbers,
+                        ],
+                    })
+                        .then(({ data: contacts }) => {
+                            const defaultCallingCode = getDefaultCallingCode(user_data);
+                            const { allContacts } = processPhoneContacts(contacts, defaultCallingCode);
 
-                for (let i in contacts) {
-                    let contact = contacts[i];
-                    let phoneNumbers = contact.phoneNumbers;
-                    if (!Array.isArray(phoneNumbers)) {
-                        continue;
-                    }
-                    for (let k in phoneNumbers) {
-                        const rawNumber = phoneNumbers[k]?.number;
-                        if (typeof rawNumber !== 'string' || !rawNumber.trim()) {
-                            continue;
-                        }
-                        let contact_found: TContact = { displayName: contact.displayName, phoneNumber: removeWhiteSpaces(rawNumber) };
-                        contacts_list.push(contact_found);
-                    }
+                            dispatch(setRawContacts(allContacts));
+                            setRefreshing_contacts(true);
+
+                            setTimeout(() => {
+                                SocketApp.emit('update_contacts', allContacts);
+                            }, 1000);
+                        })
+                        .catch(e => {
+                            console.log('LOAD CONTACTS ERROR', e);
+                        });
                 }
-
-                let all_contacts = removeDuplicateNumbers(contacts_list);
-                dispatch(setRawContacts(all_contacts));
-
-                setRefreshing_contacts(true);
-
-                setTimeout(() => {
-                    SocketApp.emit('update_contacts', all_contacts);
-                }, 1000);
             })
-            .catch(e => { });
-    }
+            .catch(e => {
+                console.log('PERMISSION ERROR', e);
+            });
+    };
 
     const openSearchContact = () => {
         dispatch(setSearchContactEnabled(!search_contact_enabled));
@@ -59,14 +64,28 @@ const HeaderRightNewChat = () => {
     useEffect(() => {
 
         SocketApp.on('update_contacts', contacts => {
-
             setRefreshing_contacts(false);
 
             if (contacts.length !== 0) {
-                for (let i in contacts) {
+                const uniqueContacts = [];
+                const seenIds = new Set<string>();
+                for (const c of contacts) {
+                    const id = c.user_id || c.phone_number;
+                    if (!seenIds.has(id)) {
+                        seenIds.add(id);
+                        uniqueContacts.push(c);
+                    }
+                }
+
+                for (const contactFromServer of uniqueContacts) {
+                    const localContactName = contactNameByPhoneRegistry[contactFromServer.phone_number];
+                    const contactToSave = localContactName
+                        ? { ...contactFromServer, user_names: localContactName }
+                        : contactFromServer;
+
                     realm.write(() => {
                         try {
-                            realm.create('UserContacts', contacts[i], true);
+                            realm.create('UserContacts', contactToSave, true);
                         } catch (error) { }
                     });
                 }

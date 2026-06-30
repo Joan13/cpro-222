@@ -811,15 +811,17 @@ export type RootStackParamList = {
     CategoryItems: { category: string };
     SearchMarketplace: undefined;
     Calculator: undefined;
-    AddExpense: { category_id?: number };
+    AddExpense: { category_id?: number, business_id?: string, sales_point_id?: string };
     EditExpense: { expense_id: string };
     Expense: { expense_id: string };
-    CategoryExpenses: { category_id: number; category_name?: string };
+    CategoryExpenses: { category_id: number; category_name?: string; flag?: number; business_id?: string; sales_point_id?: string };
+    Expenses: { flag?: number; business_id?: string; sales_point_id?: string };
+    GetExpenses: { flag?: number; business_id?: string; sales_point_id?: string };
     PostNews: { company: TCompany, flag: number };
     News: { flag?: number, company_id?: string };
     Post: { post?: TNews; id?: string };
     PostReactions: { post: TNews };
 };
 
-type NavProps = NativeStackScreenProps<RootStackParamList, 'Home', 'Inbox', 'SplashStartYambi', 'Signup', 'Themes', 'NewGroup', 'NewChat', 'SettingsYambi', 'Languages', 'PictureMessage', 'ViewFullInboxImage', 'NewBusiness', 'AboutYambi', 'NewBusinessItem', 'BusinessItems', 'EditBusinessItem', 'RenewStock', 'NewSalesPoint', 'EditBusiness', 'EditSalesPoint', 'BusinessSales', 'SalesPointSales', 'NewBusinessUser', 'Sale', 'BusinessItem', 'BusinessModern', 'EditSalesPoint', 'CustomizeBusiness', 'MessageUs', 'UserBusinessUsers', 'BusinessSubscribers', 'EditBusinessUser', 'ItemSales', 'EditProfile', 'ViewPhoto', 'ContactUs', 'MyAccount', 'Companies', 'Company', 'NewCompany', 'NewCompanyUser', 'EditCompany', 'EditCompanyUser', 'CompanyUser', 'ForwardMessage', 'MessageInfo', 'UserProfileInfo', 'AllMessages', 'NewStory', 'Stories', 'UserStories', 'UpdateYambi', 'AddItemSale', 'Cart', 'CategoryItems', 'SearchMarketplace', 'Calculator', 'PostNews', 'EditNews', 'News', 'Post', 'PostReactions', 'BusinessInventoryMovementHistory', 'InventoryMovement', 'ShareBusiness'>;
+type NavProps = NativeStackScreenProps<RootStackParamList, 'Home', 'Inbox', 'SplashStartYambi', 'Signup', 'Themes', 'NewGroup', 'NewChat', 'SettingsYambi', 'Languages', 'PictureMessage', 'ViewFullInboxImage', 'NewBusiness', 'AboutYambi', 'NewBusinessItem', 'BusinessItems', 'EditBusinessItem', 'RenewStock', 'NewSalesPoint', 'EditBusiness', 'EditSalesPoint', 'BusinessSales', 'SalesPointSales', 'NewBusinessUser', 'Sale', 'BusinessItem', 'BusinessModern', 'EditSalesPoint', 'CustomizeBusiness', 'MessageUs', 'UserBusinessUsers', 'BusinessSubscribers', 'EditBusinessUser', 'ItemSales', 'EditProfile', 'ViewPhoto', 'ContactUs', 'MyAccount', 'Companies', 'Company', 'NewCompany', 'NewCompanyUser', 'EditCompany', 'EditCompanyUser', 'CompanyUser', 'ForwardMessage', 'MessageInfo', 'UserProfileInfo', 'AllMessages', 'NewStory', 'Stories', 'UserStories', 'UpdateYambi', 'AddItemSale', 'Cart', 'CategoryItems', 'SearchMarketplace', 'Calculator', 'PostNews', 'EditNews', 'News', 'Post', 'PostReactions', 'BusinessInventoryMovementHistory', 'InventoryMovement', 'ShareBusiness', 'Expenses', 'AddExpense', 'EditExpense', 'Expense', 'CategoryExpenses', 'GetExpenses'>;
 

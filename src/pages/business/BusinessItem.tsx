@@ -104,7 +104,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                     alignItems: 'flex-end',
                                     justifyContent: 'center'
                                 }}>
-                                <IconApp pack="FI" name="more-vertical" size={20} color={theme.text} />
+                                <IconApp pack="FI" name="more-vertical" size={20} color={theme.text_design1} />
                             </Pressable>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>

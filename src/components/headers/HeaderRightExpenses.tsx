@@ -5,7 +5,7 @@ import { NavProps } from "../../types/types";
 
 const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme.colors);
-    const { category_id } = route.params || {};
+    const { category_id, business_id, sales_point_id } = route.params || {};
 
     return (
         <View style={{
@@ -29,7 +29,7 @@ const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
             </Pressable>
             <Pressable
                 onPress={() => {
-                    navigation.navigate('AddExpense', { category_id: category_id });
+                    navigation.navigate('AddExpense', { category_id: category_id, business_id: business_id, sales_point_id: sales_point_id });
                 }}
                 style={{
                     height: 30,

@@ -17,9 +17,12 @@ interface ExpensesCategoriesItemProps {
     };
     expenses: Expenses[];
     navigation: NavProps['navigation'];
+    flag?: number;
+    business_id?: string;
+    sales_point_id?: string;
 }
 
-const ExpensesCategoriesItem = ({ item, expenses, navigation }: ExpensesCategoriesItemProps) => {
+const ExpensesCategoriesItem = ({ item, expenses, navigation, flag, business_id, sales_point_id }: ExpensesCategoriesItemProps) => {
     const theme = useAppSelector(state => state.app_theme.colors);
 
     // Get category icon
@@ -90,9 +93,9 @@ const ExpensesCategoriesItem = ({ item, expenses, navigation }: ExpensesCategori
         <Pressable
             onPress={() => {
                 if (hasExpenses) {
-                    navigation.navigate('CategoryExpenses', { category_id: item.id });
+                    navigation.navigate('CategoryExpenses', { category_id: item.id, flag: flag, business_id: business_id, sales_point_id: sales_point_id });
                 } else {
-                    navigation.navigate('AddExpense', { category_id: item.id });
+                    navigation.navigate('AddExpense', { category_id: item.id, business_id: business_id, sales_point_id: sales_point_id });
                 }
             }}
             style={{
