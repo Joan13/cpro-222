@@ -2031,5 +2031,12 @@
   "follower": "Follower",
   "share": "Share",
   "expired": "Expired",
-  "access_denied": "Access denied"
+  "access_denied": "Access denied",
+  "group_chat": "Group Chat",
+  "no_messages": "No messages",
+  "search_chats_and_messages": "Search chats and messages...",
+  "search_conversations_placeholder": "Search through your conversations",
+  "no_results_found": "No matching chats or messages found",
+  "messages": "Messages",
+  "found": "found"
 }

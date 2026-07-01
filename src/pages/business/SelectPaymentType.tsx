@@ -26,9 +26,9 @@ type MobileProviderId = 'airtel' | 'mpesa' | 'orange' | 'afrimoney';
 
 /** Maps our provider ID to the SerdiPay telecom code */
 const TELECOM_CODES: Record<MobileProviderId, string> = {
-    airtel:    'AM',
-    mpesa:     'MP',
-    orange:    'OM',
+    airtel: 'AM',
+    mpesa: 'MP',
+    orange: 'OM',
     afrimoney: 'AF',
 };
 
@@ -37,34 +37,34 @@ const mobileMoneyProviders: Array<{
     nameKey: string;
     logo: ReturnType<typeof require>;
 }> = [
-    {
-        id: 'airtel',
-        nameKey: 'payment_provider_airtel_money',
-        logo: require('../../assets/airtel.png'),
-    },
-    {
-        id: 'mpesa',
-        nameKey: 'payment_provider_vodacom_mpesa',
-        logo: require('../../assets/mpesa.png'),
-    },
-    {
-        id: 'orange',
-        nameKey: 'payment_provider_orange_money',
-        logo: require('../../assets/orange.png'),
-    },
-    {
-        id: 'afrimoney',
-        nameKey: 'payment_provider_afrimoney',
-        logo: require('../../assets/afrimoney.png'),
-    },
-];
+        {
+            id: 'airtel',
+            nameKey: 'payment_provider_airtel_money',
+            logo: require('../../assets/airtel.png'),
+        },
+        {
+            id: 'mpesa',
+            nameKey: 'payment_provider_vodacom_mpesa',
+            logo: require('../../assets/mpesa.png'),
+        },
+        {
+            id: 'orange',
+            nameKey: 'payment_provider_orange_money',
+            logo: require('../../assets/orange.png'),
+        },
+        {
+            id: 'afrimoney',
+            nameKey: 'payment_provider_afrimoney',
+            logo: require('../../assets/afrimoney.png'),
+        },
+    ];
 
 // --- Component ---
 
 const SelectPaymentType = ({ navigation, route }: NavProps) => {
-    const theme     = useAppSelector(state => state.app_theme);
+    const theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
-    const dispatch  = useAppDispatch();
+    const dispatch = useAppDispatch();
 
     // Single typed alias – avoids repeated `(strings as any)` casts throughout the JSX
     const s = strings as any;
@@ -73,15 +73,15 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
 
     // Modal & provider selection
     const [selectedProvider, setSelectedProvider] = useState<MobileProviderId | null>(null);
-    const [showPhoneModal,   setShowPhoneModal]   = useState(false);
-    const [phoneNumber,      setPhoneNumber]      = useState('');
+    const [showPhoneModal, setShowPhoneModal] = useState(false);
+    const [phoneNumber, setPhoneNumber] = useState('');
 
     // Loading / result states
-    const [loading,          setLoading]          = useState(false);
+    const [loading, setLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [showErrorModal,   setShowErrorModal]   = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
     const [showInitiatedModal, setShowInitiatedModal] = useState(false);
-    const [errorMessage,     setErrorMessage]     = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     // --- Handlers ---
 
@@ -120,14 +120,14 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
             const response = await axios.post(
                 remote_host + '/yambi/API/add_business_subscription_momo',
                 {
-                    phone_number:               user_data.phone_number,
+                    phone_number: user_data.phone_number,
                     business_id,
                     amount,
-                    currency:                   'usd',
+                    currency: 'usd',
                     subscription_plan,
                     subscription_duration_months: duration_months,
-                    payment_phone_number:        phoneNumber.trim(),
-                    telecom:                     TELECOM_CODES[selectedProvider],
+                    payment_phone_number: phoneNumber.trim(),
+                    telecom: TELECOM_CODES[selectedProvider],
                 },
                 {
                     timeout: 60000, // 60 s – mobile money can be slow
@@ -190,11 +190,8 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
 
     // --- Render ---
     return (
-        <SafeAreaView
-            style={[
-                { backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 },
-                StyleSheet.absoluteFill,
-            ]}
+        <View
+            style={{ flex: 1, backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderTopWidth: 1 }}
         >
             {/* ── Phone-number modal (mobile money) ── */}
             {showPhoneModal && selectedProvider && (
@@ -221,12 +218,12 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                         />
                         <TextInput
                             style={{
-                                backgroundColor:    theme.colors.border,
-                                borderRadius:       8,
-                                padding:            12,
-                                color:              theme.colors.text,
-                                fontSize:           16,
-                                textAlign:          'center',
+                                backgroundColor: theme.colors.border,
+                                borderRadius: 8,
+                                padding: 12,
+                                color: theme.colors.text,
+                                fontSize: 16,
+                                textAlign: 'center',
                             }}
                             placeholder={s.phone_number}
                             placeholderTextColor={theme.colors.gray}
@@ -318,9 +315,9 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                         style={{
                             ...StyleSheet.absoluteFillObject,
                             backgroundColor: theme.colors.background + 'CC',
-                            justifyContent:  'center',
-                            alignItems:      'center',
-                            zIndex:          100,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 100,
                         }}
                     >
                         <ActivityIndicator size="large" color={theme.colors.high_color} />
@@ -343,22 +340,22 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                         <View
                             style={{
                                 backgroundColor: theme.colors.border,
-                                marginTop:        20,
-                                marginBottom:     20,
-                                borderRadius:     16,
-                                padding:          24,
-                                alignItems:       'center',
+                                marginTop: 20,
+                                marginBottom: 20,
+                                borderRadius: 16,
+                                padding: 24,
+                                alignItems: 'center',
                             }}
                         >
                             <View
                                 style={{
-                                    width:           70,
-                                    height:          70,
-                                    borderRadius:    35,
+                                    width: 70,
+                                    height: 70,
+                                    borderRadius: 35,
                                     backgroundColor: theme.colors.high_color + '20',
-                                    justifyContent:  'center',
-                                    alignItems:      'center',
-                                    marginBottom:    16,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginBottom: 16,
                                 }}
                             >
                                 <IconApp pack="FI" name="credit-card" size={35} color={theme.colors.high_color} />
@@ -403,11 +400,11 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                                         key={provider.id}
                                         style={{
                                             backgroundColor: theme.colors.border,
-                                            borderRadius:    12,
-                                            padding:         16,
-                                            flexDirection:   'row',
-                                            alignItems:      'center',
-                                            borderWidth:     2,
+                                            borderRadius: 12,
+                                            padding: 16,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            borderWidth: 2,
                                             borderColor:
                                                 selectedProvider === provider.id
                                                     ? theme.colors.high_color
@@ -481,9 +478,9 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                         <View
                             style={{
                                 backgroundColor: theme.colors.border + '40',
-                                borderRadius:    12,
-                                padding:         16,
-                                marginBottom:    20,
+                                borderRadius: 12,
+                                padding: 16,
+                                marginBottom: 20,
                             }}
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
@@ -507,7 +504,7 @@ const SelectPaymentType = ({ navigation, route }: NavProps) => {
                     </View>
                 </ScrollView>
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 

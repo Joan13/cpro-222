@@ -2031,5 +2031,12 @@
   "follower": "Abonné",
   "share": "Partager",
   "expired": "Expiré",
-  "access_denied": "Accès refusé"
+  "access_denied": "Accès refusé",
+  "group_chat": "Group Chat",
+  "no_messages": "Hakuna ujumbe",
+  "search_chats_and_messages": "Tafuta ma chat na meseji...",
+  "search_conversations_placeholder": "Tafuta mu ma chat yako",
+  "no_results_found": "Hakuna chat au meseji yoyote iliyo patikana",
+  "messages": "Meseji",
+  "found": "zimepatikana"
 }

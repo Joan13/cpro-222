@@ -96,63 +96,16 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
         }, 500);
     }
 
-    useEffect(() => {
-        setChatRead();
-    }, [messages, user_data.phone_number]);
-
-    useEffect(() => {
-        if (highlightMessageToken) {
-            dispatch(setMessageSelected(highlightMessageToken));
-            setTimeout(() => {
-                scrollToMessage(highlightMessageToken);
-            }, 400);
-        }
-    }, [highlightMessageToken, scrollToMessage, dispatch]);
-
     /**
      * ARRAY
      */
-
     const mm = useMemo(() => {
         return [...messages];
     }, [messages]);
 
-
-
-    /**
-     * STICKY DATE
-     */
-
-    const updateStickyDate = useCallback(
-        ({ viewableItems }) => {
-
-            if (!viewableItems?.length) {
-                return;
-            }
-
-            const item = viewableItems[0];
-
-            if (item?.item?.cc) {
-                setStickyDate(item.item.cc);
-            }
-
-        },
-        []
-    );
-
-    /**
-     * SELECT MESSAGE
-     */
-
-    const setMS = useCallback((token: string) => {
-        Vibration.vibrate(20);
-        dispatch(setMessageSelected(token));
-    }, []);
-
     /**
      * SCROLL TO SPECIFIC MESSAGE
      */
-
     const scrollToMessage = useCallback(
         (messageToken: string) => {
 
@@ -192,6 +145,47 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
         },
         [mm]
     );
+
+    useEffect(() => {
+        setChatRead();
+    }, [messages, user_data.phone_number]);
+
+    useEffect(() => {
+        if (highlightMessageToken) {
+            dispatch(setMessageSelected(highlightMessageToken));
+            setTimeout(() => {
+                scrollToMessage(highlightMessageToken);
+            }, 400);
+        }
+    }, [highlightMessageToken, scrollToMessage, dispatch]);
+
+    /**
+     * STICKY DATE
+     */
+    const updateStickyDate = useCallback(
+        ({ viewableItems }) => {
+
+            if (!viewableItems?.length) {
+                return;
+            }
+
+            const item = viewableItems[0];
+
+            if (item?.item?.cc) {
+                setStickyDate(item.item.cc);
+            }
+
+        },
+        []
+    );
+
+    /**
+     * SELECT MESSAGE
+     */
+    const setMS = useCallback((token: string) => {
+        Vibration.vibrate(20);
+        dispatch(setMessageSelected(token));
+    }, []);
 
     /**
      * JUMP TO BOTTOM

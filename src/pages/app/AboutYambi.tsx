@@ -10,7 +10,7 @@ import { TextBigYambi, TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray 
 import { remote_host, isRemoteAppVersionNewer } from '../../../GlobalVariables';
 import { NavProps } from '../../types/types';
 import { IconApp } from '../../components/app/IconApp';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AboutYambi = ({ navigation }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
@@ -73,7 +73,7 @@ const AboutYambi = ({ navigation }: NavProps) => {
 
 
     return (
-        <SafeAreaView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
             <ScrollView
                 showsVerticalScrollIndicator={false}>
@@ -87,9 +87,9 @@ const AboutYambi = ({ navigation }: NavProps) => {
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}>
-                        <Image 
-                            source={require("./../../assets/logo.png")} 
-                            style={{ width: 50, height: 50 }} 
+                        <Image
+                            source={require("./../../assets/logo.png")}
+                            style={{ width: 50, height: 50 }}
                         />
                     </View>
 
@@ -117,9 +117,9 @@ const AboutYambi = ({ navigation }: NavProps) => {
                             borderColor: theme.colors.success + '30',
                         }}>
                             <IconApp pack="FI" name="check-circle" size={18} color={theme.colors.success} />
-                            <TextNormalYambiGray 
-                                text={strings.everything_is_up_to_date || 'Everything is up to date'} 
-                                styles={{ marginLeft: 8, color: theme.colors.success }} 
+                            <TextNormalYambiGray
+                                text={strings.everything_is_up_to_date || 'Everything is up to date'}
+                                styles={{ marginLeft: 8, color: theme.colors.success }}
                             />
                         </View>
                     )}
@@ -187,7 +187,7 @@ const AboutYambi = ({ navigation }: NavProps) => {
                     </View>
 
                 </View>
-                
+
                 {/* Modern Footer with Copyright and Built with Heart */}
                 <View style={{
                     marginTop: 32,
@@ -242,22 +242,22 @@ const AboutYambi = ({ navigation }: NavProps) => {
                             </Text>
                         </View>
                     </View>
-                    
+
                     {/* Copyright and Footer Date - Centered */}
                     <View style={{
                         alignItems: 'center',
                         justifyContent: 'center',
                     }}>
-                        <TextSmallYambiGray 
-                            text={strings.footer || 'Yambi © 2018 - 2025'} 
-                            styles={{ textAlign: 'center', color: theme.colors.gray, fontSize: 12 }} 
+                        <TextSmallYambiGray
+                            text={strings.footer || 'Yambi © 2018 - 2025'}
+                            styles={{ textAlign: 'center', color: theme.colors.gray, fontSize: 12 }}
                         />
                     </View>
                 </View>
             </ScrollView>
 
-            
-        </SafeAreaView>
+
+        </View>
     );
 }
 

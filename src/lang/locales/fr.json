@@ -2032,5 +2032,12 @@
   "follower": "Abonné",
   "share": "Partager",
   "expired": "Expiré",
-  "access_denied": "Accès refusé"
+  "access_denied": "Accès refusé",
+  "group_chat": "Discussion de groupe",
+  "no_messages": "Aucun message",
+  "search_chats_and_messages": "Rechercher des discussions et messages...",
+  "search_conversations_placeholder": "Rechercher dans vos conversations",
+  "no_results_found": "Aucun chat ou message correspondant trouvé",
+  "messages": "Messages",
+  "found": "trouvé(s)"
 }

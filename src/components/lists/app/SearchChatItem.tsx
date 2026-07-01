@@ -7,6 +7,7 @@ import { YambiText } from "../../app/Text";
 import { IconApp } from "../../app/IconApp";
 import { formatPhoneInternational, media_url, renderDateTime } from "../../../../GlobalVariables";
 import { Image as ExpoImage } from 'expo-image';
+import { strings } from "../../../lang/lang";
 
 interface SearchChatItemProps {
     item: any;
@@ -27,18 +28,18 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
     const contactInfo = useObject(UserContacts, targetId);
     const groupInfo = useObject(YambiGroups, targetId);
 
-    const displayName = isGroup 
-        ? (groupInfo?.user_names || "Group Chat") 
+    const displayName = isGroup
+        ? (groupInfo?.user_names || strings.group_chat)
         : (() => {
             const systemContact = contacts?.find(c => c.phoneNumber === targetId);
             if (systemContact) return systemContact.displayName;
             if (contactInfo?.user_names && contactInfo.user_names !== targetId) return contactInfo.user_names;
-            return formatPhoneInternational({ phone_number: targetId });
+            return formatPhoneInternational({ phone_number: targetId, country: contactInfo?.country || "" } as any);
         })();
 
     const profilePic = isGroup ? groupInfo?.group_profile : contactInfo?.user_profile;
-    const profilePicUrl = profilePic 
-        ? `${media_url}/profile_pictures/${profilePic}` 
+    const profilePicUrl = profilePic
+        ? `${media_url}/profile_pictures/${profilePic}`
         : null;
 
     // Helper to highlight matching text in search results
@@ -60,38 +61,38 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
         );
     };
 
-    const subtitleText = type === 'chat' 
-        ? item.last_message_text || "No messages" 
+    const subtitleText = type === 'chat'
+        ? item.last_message_text || strings.no_messages
         : item.main_text_message;
 
     const timeStamp = type === 'chat' ? item.updatedAt : item.createdAt;
 
     return (
-        <Pressable 
+        <Pressable
             onPress={onPress}
             style={({ pressed }) => [
                 styles.container,
-                { 
-                    backgroundColor: pressed ? theme.colors.border : 'transparent',
-                    borderBottomColor: theme.colors.border 
+                {
+                    backgroundColor: theme.colors.background,
+                    borderBottomColor: "transparent"
                 }
             ]}
         >
             {/* Avatar / Profile picture */}
             <View style={styles.avatarContainer}>
                 {profilePicUrl ? (
-                    <ExpoImage 
+                    <ExpoImage
                         source={{ uri: profilePicUrl }}
                         style={styles.avatar}
                         contentFit="cover"
                     />
                 ) : (
                     <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.border }]}>
-                        <IconApp 
-                            pack="FI" 
-                            name={isGroup ? "users" : "user"} 
-                            size={20} 
-                            color={theme.colors.gray} 
+                        <IconApp
+                            pack="FI"
+                            name={isGroup ? "users" : "user"}
+                            size={20}
+                            color={theme.colors.gray}
                         />
                     </View>
                 )}
@@ -102,21 +103,21 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
                 <View style={styles.headerRow}>
                     <YambiText bold text={displayName} size="normal" color="default" style={{ flex: 1 }} numberLines={1} />
                     {timeStamp ? (
-                        <YambiText 
-                            text={renderDateTime(timeStamp, 0, true, true)} 
-                            size="small" 
-                            color="gray" 
+                        <YambiText
+                            text={renderDateTime(timeStamp, 0, true, true)}
+                            size="small"
+                            color="gray"
                         />
                     ) : null}
                 </View>
-                
+
                 <View style={styles.bodyRow}>
                     <View style={{ flex: 1 }}>
                         {renderHighlightedText(subtitleText, searchKeyword)}
                     </View>
                     {isGroup && type === 'message' && (
                         <View style={[styles.badge, { backgroundColor: theme.colors.border }]}>
-                            <YambiText text="Group" size="small" color="gray" />
+                            <YambiText text={strings.group} size="small" color="gray" />
                         </View>
                     )}
                 </View>
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 12,
-        paddingHorizontal: 16,
+        // paddingHorizontal: 16,
         borderBottomWidth: StyleSheet.hairlineWidth,
     },
     avatarContainer: {

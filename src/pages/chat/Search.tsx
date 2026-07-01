@@ -29,14 +29,14 @@ const Search = ({ navigation }: any) => {
     // Filter conversations where contact name, group name, or last message matches
     const filteredChats = useMemo(() => {
         if (!keyword.trim()) return [];
-        
+
         const cleanKeyword = keyword.toLowerCase().trim();
         return allChats.filter(chat => {
             if (chat.deleted !== 0) return false;
 
             const isGroup = chat.type_chat === 2;
             const targetId = chat._id;
-            
+
             let displayName = "";
             if (isGroup) {
                 const group = allGroups.find(g => g._id === targetId);
@@ -89,43 +89,43 @@ const Search = ({ navigation }: any) => {
         <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
             {/* Header bar */}
             <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-                <Pressable 
-                    onPress={() => navigation.goBack()} 
+                <Pressable
+                    onPress={() => navigation.goBack()}
                     style={styles.backButton}
                 >
-                    <IconApp 
-                        pack="FI" 
-                        name="arrow-left" 
-                        size={22} 
-                        color={theme.colors.text_design1} 
+                    <IconApp
+                        pack="FI"
+                        name="chevron-left"
+                        size={24}
+                        color={theme.colors.text}
                     />
                 </Pressable>
-                
+
                 <TextInput
                     autoFocus
                     value={keyword}
                     onChangeText={setKeyword}
-                    placeholder={strings.search || "Search chats and messages..."}
+                    placeholder={strings.search_chats_and_messages}
                     placeholderTextColor={theme.colors.gray}
                     style={[
-                        styles.searchInput, 
-                        { 
-                            color: theme.colors.text, 
-                            backgroundColor: theme.colors.border 
+                        styles.searchInput,
+                        {
+                            color: theme.colors.text,
+                            backgroundColor: theme.colors.border
                         }
                     ]}
                 />
 
                 {keyword !== "" ? (
-                    <Pressable 
-                        onPress={() => setKeyword("")} 
+                    <Pressable
+                        onPress={() => setKeyword("")}
                         style={styles.clearButton}
                     >
-                        <IconApp 
-                            pack="MC" 
-                            name="close-circle" 
-                            size={20} 
-                            color={theme.colors.gray} 
+                        <IconApp
+                            pack="MC"
+                            name="close-circle"
+                            size={20}
+                            color={theme.colors.gray}
                         />
                     </Pressable>
                 ) : null}
@@ -134,30 +134,30 @@ const Search = ({ navigation }: any) => {
             {/* Results */}
             {keyword.trim() === "" ? (
                 <View style={styles.stateContainer}>
-                    <IconApp 
-                        pack="FI" 
-                        name="search" 
-                        size={48} 
-                        color={theme.colors.border} 
+                    <IconApp
+                        pack="FI"
+                        name="search"
+                        size={48}
+                        color={theme.colors.border}
                     />
-                    <YambiText 
-                        text="Search through your conversations" 
-                        color="gray" 
-                        style={{ marginTop: 12 }} 
+                    <YambiText
+                        text={strings.search_conversations_placeholder}
+                        color="gray"
+                        style={{ marginTop: 12 }}
                     />
                 </View>
             ) : filteredChats.length === 0 && filteredMessages.length === 0 ? (
                 <View style={styles.stateContainer}>
-                    <IconApp 
-                        pack="MC" 
-                        name="message-text-outline" 
-                        size={48} 
-                        color={theme.colors.border} 
+                    <IconApp
+                        pack="MC"
+                        name="message-text-outline"
+                        size={48}
+                        color={theme.colors.border}
                     />
-                    <YambiText 
-                        text="No matching chats or messages found" 
-                        color="gray" 
-                        style={{ marginTop: 12 }} 
+                    <YambiText
+                        text={strings.no_results_found}
+                        color="gray"
+                        style={{ marginTop: 12 }}
                     />
                 </View>
             ) : (
@@ -171,10 +171,10 @@ const Search = ({ navigation }: any) => {
                         <View style={{ marginBottom: 8 }}>
                             {/* Conversations Card (Matching Chats) */}
                             {filteredChats.length > 0 ? (
-                                <View style={[styles.card, { backgroundColor: theme.colors.design_tip1 || theme.colors.border }]}>
+                                <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
                                     <View style={styles.cardHeader}>
-                                        <YambiText bold text="Conversations" size="normal" color="high" />
-                                        <YambiText text={`${filteredChats.length} found`} size="small" color="gray" />
+                                        <YambiText bold text={strings.chats} size="normal" color="high" />
+                                        <YambiText text={`${filteredChats.length} ${strings.found}`} size="small" color="gray" />
                                     </View>
                                     {filteredChats.map((chat) => (
                                         <SearchChatItem
@@ -191,8 +191,8 @@ const Search = ({ navigation }: any) => {
                             {/* Messages Section Header */}
                             {filteredMessages.length > 0 ? (
                                 <View style={styles.sectionHeader}>
-                                    <YambiText bold text="Messages" size="normal" color="high" />
-                                    <YambiText text={`${filteredMessages.length} found`} size="small" color="gray" />
+                                    <YambiText bold text={strings.messages} size="normal" color="high" />
+                                    <YambiText text={`${filteredMessages.length} ${strings.found}`} size="small" color="gray" />
                                 </View>
                             ) : null}
                         </View>
@@ -250,6 +250,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingBottom: 24,
+        paddingHorizontal: 15
     },
     card: {
         margin: 16,
@@ -260,12 +261,13 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
+        marginHorizontal: 0
     },
     cardHeader: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 16,
+        // paddingHorizontal: 1
         paddingTop: 12,
         paddingBottom: 8,
     },
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 16,
+        // paddingHorizontal: 16,
         marginTop: 16,
         marginBottom: 8,
     }
