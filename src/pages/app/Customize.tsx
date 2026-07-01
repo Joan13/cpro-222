@@ -15,7 +15,6 @@ import {
     setTabVisibleAdmin,
     setTabVisibleNoticeboard
 } from '../../store/reducers/persistedAppSlice';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Customize = ({ navigation }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
