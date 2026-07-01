@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.46.28</string>
+	<string>2.46.29</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -57,10 +57,10 @@
 	<string>To help you easily connect with people from your phonebook on Yambi, we need access to your contacts. By uploading your contacts to our servers, we can show you which people from your contacts are already on Yambi, making it easier for you to find them.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Yambi needs access to your microphone so you can record voice messages and participate in audio conversations.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Yambi needs access to your photo library so you can upload a profile picture, share photos with other users, and send images in conversations.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to save photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Yambi needs access to your photo library so you can upload a profile picture, share photos with other users, and send images in conversations.</string>
 	<key>NSPrivacyUsageDescription</key>
 	<string>We need access to your contacts in order to help you easily connect with people from your phonebook available on Yambi. Also, we need access to your microphone and your camera to help you upload files on our platform. Your personal information data (name, phone number, etc.) will be stored on our servers during your entire use of Yambi.</string>
 	<key>RCTNewArchEnabled</key>

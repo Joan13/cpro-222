@@ -111,10 +111,29 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
         }
     }
 
+    const isGroup = item.type_chat === 2;
+
     const unread = useQuery(
         UsersMessages, msgs => {
-            return msgs.filtered('receiver == $0 && sender == $1 && (message_read == $2)', user_data.phone_number, item._id, 2);
-        }, []);
+            if (isGroup) {
+                return msgs.filtered(
+                    'receiver == $0 && sender != $1 && message_read < $2 && deleted == $3',
+                    item._id,
+                    user_data.phone_number,
+                    3,
+                    0
+                );
+            } else {
+                return msgs.filtered(
+                    'receiver == $0 && sender == $1 && message_read < $2 && deleted == $3',
+                    user_data.phone_number,
+                    item._id,
+                    3,
+                    0
+                );
+            }
+        }, [isGroup, item._id, user_data.phone_number]
+    );
 
     // console.log(unread.length)
 
