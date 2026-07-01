@@ -179,7 +179,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
           flexDirection: 'column',
           backgroundColor: 'transparent',
         }}>
-          <Messages user={user} />
+          <Messages user={user} highlightMessageToken={route.params?.highlight_message_token} />
           <FooterChat user={user} />
         </View>
       </View>

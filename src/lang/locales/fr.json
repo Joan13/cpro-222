@@ -467,6 +467,7 @@
   "select_category": "Sélectionner une catégorie",
   "define_as_main_site": "Définir comme point de vente principal",
   "fields_error_validation": "Vous devez remplir tous les champs obligatoires avant de continuer",
+  "invalid_number_error": "Veuillez saisir uniquement des nombres valides pour les prix et les quantités",
   "impossible_edit": "Impossible de modifier ces informations pour le moment",
   "sells_points": "Points de vente",
   "sales": "Ventes",

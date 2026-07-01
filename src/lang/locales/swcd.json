@@ -509,6 +509,7 @@
   "select_category": "Sélectionner catégorie",
   "define_as_main_site": "Définir comme point de vente principal",
   "fields_error_validation": "Una pashwa remplir ma champs obligatoires zote mbele ya ku endeleya",
+  "invalid_number_error": "Una pashwa ku andika namba ya kweli ku bei na kiasi",
   "impossible_edit": "Impossible ku modifier izi ma informations saa iyi moment",
   "sells_points": "Points de vente",
   "sales": "Ventes",

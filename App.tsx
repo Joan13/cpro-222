@@ -44,6 +44,7 @@ import HomeRootStack from './src/pages/app/HomeRootStack';
 // import HeaderRightHome from './src/components/headers/HeaderRightHome';
 import { changeLanguage, strings } from './src/lang/lang';
 import NewChat from './src/pages/chat/NewChat';
+import Search from './src/pages/chat/Search';
 import HeaderRightNewChat from './src/components/headers/HeaderRightNewChat';
 import Inbox from './src/pages/chat/Inbox';
 // import notifee, { AndroidImportance, AndroidVisibility, EventType } from '@notifee/react-native';
@@ -2655,6 +2656,10 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerRight: () => (
                                 <HeaderRightNewChat />
                             ),
+                        }} />
+
+                        <Stack.Screen name="Search" component={Search} options={{
+                            headerShown: false
                         }} />
 
                         <Stack.Screen name="Business" component={Business} options={({ navigation, route }) => ({

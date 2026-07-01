@@ -500,6 +500,21 @@ const HeaderRightHome = () => {
                     </Animated.View>
                     )}
 
+                {title === strings.chats ?
+                    <Animated.View entering={FadeIn}>
+                        <Pressable
+                            onPress={() => { RootNavigation.navigate("Search") }}
+                            style={{
+                                height: 30,
+                                width: 30,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginHorizontal: 15,
+                            }}>
+                            <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
+                        </Pressable>
+                    </Animated.View> : null}
+
                 {title === strings.business || title === strings.expenses ?
                     <Animated.View entering={FadeIn}>
                         <Pressable

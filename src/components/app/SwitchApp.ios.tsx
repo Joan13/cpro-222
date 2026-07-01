@@ -69,14 +69,22 @@ export interface IButton {
 
 const SwitchApp: React.FC<IButton> = ({
   value,
+  small,
   disabled,
   onPress,
   styles,
 }) => {
   const theme = useAppSelector(state => state.app_theme.colors);
 
+  const defaultStyle: ViewStyle = {
+    width: small ? 46 : 51,
+    height: small ? 28 : 31,
+    justifyContent: 'center',
+    alignItems: 'center',
+  };
+
   return (
-    <Host matchContents style={styles}>
+    <Host matchContents style={[defaultStyle, styles]}>
       <Toggle
     //   tint='blue'
         isOn={value}

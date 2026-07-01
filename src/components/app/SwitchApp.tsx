@@ -14,8 +14,15 @@ export interface IButton {
 const SwitchApp: React.FC<IButton> = ({ value, small, disabled, onPress, loadEnabled, styles }) => {
     const theme = useAppSelector(state => state.app_theme.colors);
 
+    const defaultStyle: ViewStyle = {
+        width: small ? 46 : 52,
+        height: small ? 28 : 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+    };
+
     return (
-        <Host matchContents style={styles}>
+        <Host matchContents style={[defaultStyle, styles]}>
             <Switch
                 onCheckedChange={onPress}
                 value={value}

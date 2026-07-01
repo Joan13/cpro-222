@@ -179,7 +179,7 @@ const NewBusinesses = () => {
                         dispatch(setLoadingButton(false));
 
                         setTimeout(() => {
-                            RootNavigation.navigate("Home");
+                            RootNavigation.navigate("BusinessSales", { business_id: new_business._id, sales_point_id: "", item_id: "" });
                         }, 300);
                     }
                 })
@@ -262,7 +262,7 @@ const NewBusinesses = () => {
                 setDefine_as_main_site(false);
 
                 setTimeout(() => {
-                    RootNavigation.navigate("Home");
+                    RootNavigation.navigate("BusinessSales", { business_id: NewBusiness._id, sales_point_id: "", item_id: "" });
                 }, 300);
             })
             .catch(error => {

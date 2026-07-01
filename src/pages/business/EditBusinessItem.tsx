@@ -42,6 +42,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
     const [wholesale_content_number, setWholesale_content_number] = useState<string>("");
     const [wholesale_and_retail, setWholesale_and_retail] = useState<boolean>(true);
     const [showError, setShowError] = useState<boolean>(false);
+    const [validationErrorMsg, setValidationErrorMsg] = useState<string>("");
     const [showCurrencies, setShowCurrencies] = useState<boolean>(false);
     const [showSizesModal, setShowSizesModal] = useState<boolean>(false);
     const [showInternetError, setShowInternetError] = useState<boolean>(false);
@@ -722,10 +723,20 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
     const EditBusinessItem = () => {
         if (name === "" || wholesale_cost_price === "" || wholesale_selling_price === "" || wholesale_content_number === "") {
-
+            setValidationErrorMsg(strings.fields_error_validation);
             dispatch(setShowModalApp(true));
             setShowError(true);
-
+        } else if (
+            !/^\d+([.,]\d+)?$/.test(wholesale_cost_price) ||
+            !/^\d+([.,]\d+)?$/.test(wholesale_selling_price) ||
+            (retail_selling_price !== "" && !/^\d+([.,]\d+)?$/.test(retail_selling_price)) ||
+            !/^\d+$/.test(wholesale_content_number) ||
+            (stockStoreInput !== "" && !/^\d+$/.test(stockStoreInput)) ||
+            (stockWarehouseInput !== "" && !/^\d+$/.test(stockWarehouseInput))
+        ) {
+            setValidationErrorMsg(strings.invalid_number_error);
+            dispatch(setShowModalApp(true));
+            setShowError(true);
         } else {
 
             dispatch(setLoadingButton(true));
@@ -953,7 +964,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
                     {showError ?
                         <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
-                            <YambiText color="gray" text={strings.fields_error_validation} />
+                            <YambiText color="gray" text={validationErrorMsg || strings.fields_error_validation} />
                         </ModalApp> : null}
 
                     {showInternetError ?

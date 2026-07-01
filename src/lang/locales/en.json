@@ -492,6 +492,7 @@
   "select_category": "Select Category",
   "define_as_main_site": "Define as main point of sale",
   "fields_error_validation": "You must fill all required fields before you continue",
+  "invalid_number_error": "Please enter only valid numbers for price and quantity fields",
   "impossible_edit": "You're unable to edit this information at moment",
   "sells_points": "Points of sale",
   "sales": "Sales",

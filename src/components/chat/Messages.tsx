@@ -14,7 +14,7 @@ import { displayDate, SocketApp } from '../../../GlobalVariables';
 import { IconApp } from '../app/IconApp';
 import { LegendList } from '@legendapp/list';
 import moment from 'moment';
-const Messages = ({ user }: { user: string }) => {
+const Messages = ({ user, highlightMessageToken }: { user: string; highlightMessageToken?: string }) => {
     const app_theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
@@ -44,7 +44,7 @@ const Messages = ({ user }: { user: string }) => {
                 )
                 .sorted('alignment', false);
         },
-        []
+        [user, user_data.phone_number]
     );
 
     const setChatRead = () => {
@@ -99,6 +99,15 @@ const Messages = ({ user }: { user: string }) => {
     useEffect(() => {
         setChatRead();
     }, [messages, user_data.phone_number]);
+
+    useEffect(() => {
+        if (highlightMessageToken) {
+            dispatch(setMessageSelected(highlightMessageToken));
+            setTimeout(() => {
+                scrollToMessage(highlightMessageToken);
+            }, 400);
+        }
+    }, [highlightMessageToken, scrollToMessage, dispatch]);
 
     /**
      * ARRAY

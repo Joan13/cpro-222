@@ -45,6 +45,7 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
     const [wholesale_number_warehouse, setWholesale_number_warehouse] = useState<string>("0");
     const [wholesale_and_retail, setWholesale_and_retail] = useState<boolean>(true);
     const [showError, setShowError] = useState<boolean>(false);
+    const [validationErrorMsg, setValidationErrorMsg] = useState<string>("");
     const [showCurrencies, setShowCurrencies] = useState<boolean>(false);
     const [showInternetError, setShowInternetError] = useState<boolean>(false);
     const [showPlanLimitModal, setShowPlanLimitModal] = useState<boolean>(false);
@@ -373,6 +374,18 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
             wholesale_content_number === "" ||
             wholesale_content_number === "0"
         ) {
+            setValidationErrorMsg(strings.fields_error_validation);
+            dispatch(setShowModalApp(true));
+            setShowError(true);
+        } else if (
+            !/^\d+([.,]\d+)?$/.test(wholesale_cost_price) ||
+            !/^\d+([.,]\d+)?$/.test(wholesale_selling_price) ||
+            (retail_selling_price !== "" && !/^\d+([.,]\d+)?$/.test(retail_selling_price)) ||
+            !/^\d+$/.test(wholesale_content_number) ||
+            !/^\d+$/.test(wholesale_number_stock) ||
+            !/^\d+$/.test(wholesale_number_warehouse)
+        ) {
+            setValidationErrorMsg(strings.invalid_number_error);
             dispatch(setShowModalApp(true));
             setShowError(true);
         } else {
@@ -561,7 +574,7 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                             }}
                             singleButton
                             title={strings.error}>
-                            <YambiText color="gray" text={strings.fields_error_validation} />
+                            <YambiText color="gray" text={validationErrorMsg || strings.fields_error_validation} />
                         </ModalApp>
                     ) : null}
 

@@ -731,7 +731,7 @@ export type TInventoryMovement = {
 
 export type RootStackParamList = {
     Home: undefined;
-    Inbox: { user: string };
+    Inbox: { user: string; highlight_message_token?: string };
     SplashStartYambi: undefined;
     Signup: undefined;
     Themes: undefined;
