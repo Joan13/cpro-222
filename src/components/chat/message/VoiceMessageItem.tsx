@@ -2,7 +2,7 @@ import { View, Pressable } from 'react-native'
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { TMessage } from '../../../types/types';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { AudioStatus, createAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { useProximity } from '../../hooks/useProximity';
 import { setVoiceNoteBeingPlayed } from '../../../store/reducers/appSlice';
@@ -12,9 +12,80 @@ import { strings } from '../../../lang/lang';
 import { remote_host, SocketApp, media_url } from '../../../../GlobalVariables';
 import { IconApp } from '../../app/IconApp';
 import axios from 'axios';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, withTiming, useSharedValue, withRepeat, SharedValue, interpolateColor, runOnJS } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { TextSmallYambi, TextSmallYambiGray, TextSmallYambiHighColor2 } from '../../app/Text';
+
+const getWaveformHeights = (token: string, count: number) => {
+    let hash = 0;
+    for (let i = 0; i < token.length; i++) {
+        hash = token.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const heights: number[] = [];
+    const minHeight = 4;
+    const maxHeight = 26;
+    for (let i = 0; i < count; i++) {
+        const t = i / count;
+        // Speech envelope creates word gaps dynamically based on the hash
+        const envelope = Math.max(0, Math.sin(hash + t * Math.PI * 3.5));
+        const speechSignal = 0.3 + 0.7 * Math.abs(Math.sin(hash * 2 + i * 1.8));
+        const normalizedVal = envelope * speechSignal;
+        heights.push(minHeight + normalizedVal * (maxHeight - minHeight));
+    }
+    return heights;
+};
+
+const WaveformPlayer = ({ message, progressValue, pulseValue, isPlaying, app_theme, waveformGesture }: { message: TMessage, progressValue: SharedValue<number>, pulseValue: SharedValue<number>, isPlaying: boolean, app_theme: any, waveformGesture: any }) => {
+    const BARS_COUNT = 18;
+    const heights = useMemo(() => getWaveformHeights(message.token, BARS_COUNT), [message.token]);
+
+    return (
+        <GestureDetector gesture={waveformGesture}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', height: 35, width: 110 }}>
+                {heights.map((barHeight, i) => {
+                    const animatedStyle = useAnimatedStyle(() => {
+                        const barProgress = i / BARS_COUNT;
+                        
+                        const color = interpolateColor(
+                            progressValue.value,
+                            [barProgress - 0.08, barProgress],
+                            [app_theme.colors.border + 'A0', app_theme.colors.high_color]
+                        );
+                        
+                        let scale = 1.0;
+                        if (isPlaying) {
+                            const dist = Math.abs(progressValue.value - barProgress);
+                            if (dist < 0.15) {
+                                const ripple = Math.sin((0.15 - dist) / 0.15 * Math.PI);
+                                scale = 1.0 + ripple * 0.25 * Math.sin(pulseValue.value * Math.PI * 2);
+                            }
+                        }
+
+                        return {
+                            height: barHeight * scale,
+                            backgroundColor: color,
+                        };
+                    });
+
+                    return (
+                        <Animated.View
+                            key={i}
+                            style={[
+                                animatedStyle,
+                                {
+                                    width: 3,
+                                    marginHorizontal: 1,
+                                    borderRadius: 1.5,
+                                }
+                            ]}
+                        />
+                    );
+                })}
+            </View>
+        </GestureDetector>
+    );
+};
 
 const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
@@ -754,118 +825,156 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
         // withTiming(progress * 100, { duration: 100 })
     }))
 
+    const progressValue = useSharedValue(0);
+    const pulseValue = useSharedValue(0);
+
+    useEffect(() => {
+        if (status?.isLoaded) {
+            progressValue.value = status.currentTime / status.duration;
+        } else {
+            progressValue.value = 0;
+        }
+    }, [status?.currentTime, status?.duration, status?.isLoaded]);
+
+    useEffect(() => {
+        if (isPlaying && voice_note_being_played === message.main_text_message) {
+            pulseValue.value = withRepeat(
+                withTiming(1, { duration: 500 }),
+                -1,
+                true
+            );
+        } else {
+            pulseValue.value = 0;
+        }
+    }, [isPlaying, voice_note_being_played, message.main_text_message]);
+
+    const seekAudio = (seconds: number) => {
+        if (status?.isLoaded) {
+            try {
+                progressValue.value = seconds / status.duration;
+                sound.seekTo(seconds);
+            } catch (e) {}
+        }
+    };
+
+    const tapGesture = Gesture.Tap().onStart((event) => {
+        if (status?.isLoaded) {
+            const ratio = Math.max(0, Math.min(1, event.x / 110));
+            const targetSeconds = ratio * status.duration;
+            runOnJS(seekAudio)(targetSeconds);
+        }
+    });
+
+    const panGesture = Gesture.Pan().onUpdate((event) => {
+        if (status?.isLoaded) {
+            const ratio = Math.max(0, Math.min(1, event.x / 110));
+            const targetSeconds = ratio * status.duration;
+            runOnJS(seekAudio)(targetSeconds);
+        }
+    });
+
+    const waveformGesture = Gesture.Simultaneous(tapGesture, panGesture);
+
     return (
         <View style={{
             flexDirection: 'row',
-            // justifyContent: 'center',
-            // alignItems: 'center',
-            marginBottom: -18,
-            marginTop: 2
+            alignItems: 'center',
+            paddingVertical: 6,
+            paddingHorizontal: 4,
+            minWidth: 220,
         }}>
-            {/* <Text>{message.main_text_message}</Text> */}
+            {/* Play/Pause Button / Download Progress */}
             {downloadingAudio ?
                 <Pressable
                     onPress={FirstActions}
                     style={{
-                        height: 50,
-                        width: 50,
-                        borderRadius: 30,
+                        height: 42,
+                        width: 42,
+                        borderRadius: 21,
                         justifyContent: 'center',
                         alignItems: 'center',
                         backgroundColor: app_theme.colors.border,
                     }}>
-                    {/* <ActivityIndicator color={app_theme.colors.high_color} size={20} /> */}
-
-                    <TextSmallYambiHighColor2 text={downloadProgress.toFixed() + "%"} styles={{}} />
+                    <TextSmallYambiHighColor2 text={downloadProgress.toFixed() + "%"} styles={{ fontSize: 11, fontWeight: 'bold' }} />
                 </Pressable> :
                 <Pressable
                     onPress={PlayVoice}
                     style={{
-                        height: 50,
-                        width: 50,
-                        borderRadius: 30,
+                        height: 42,
+                        width: 42,
+                        borderRadius: 21,
                         justifyContent: 'center',
                         alignItems: 'center',
-                        backgroundColor: app_theme.colors.border,
+                        backgroundColor: app_theme.colors.high_color,
+                        shadowColor: app_theme.colors.high_color,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.5,
+                        elevation: 3,
                     }}>
                     {!isPlaying ?
-                        <IconApp pack='FA6' name="play" color={app_theme.colors.high_color} size={20} />
+                        <IconApp pack='FA6' name="play" color="#ffffff" size={16} />
                         :
-                        <IconApp pack='FA6' name="pause" color={app_theme.colors.high_color} size={20} />}
-                </Pressable>}
+                        <IconApp pack='FA6' name="pause" color="#ffffff" size={16} />}
+                </Pressable>
+            }
 
+            {/* Waveform & Playback Status */}
             <View style={{
-                marginLeft: 10,
-                width: 'auto',
-                // flex:1
+                marginLeft: 14,
+                flexDirection: 'column',
+                justifyContent: 'center',
+                width: 110,
             }}>
-                <View style={{
-                    height: 8,
-                    width: 102,
-                    backgroundColor: app_theme.colors.border,
-                    borderColor: app_theme.colors.border,
-                    borderWidth: 1,
-                    borderRadius: 10
-                }}>
-                    <Animated.View style={[{
-                        height: 6,
-                        backgroundColor: status?.isLoaded && status?.playing ? app_theme.colors.high_color : app_theme.colors.gray,
-                        borderRadius: 15
-                    }, progressStyle]}></Animated.View>
-                </View>
+                <WaveformPlayer
+                    message={message}
+                    progressValue={progressValue}
+                    pulseValue={pulseValue}
+                    isPlaying={isPlaying && voice_note_being_played === message.main_text_message}
+                    app_theme={app_theme}
+                    waveformGesture={waveformGesture}
+                />
 
                 <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    height: 25,
-                    marginBottom: -2
+                    marginTop: 5,
+                    height: 18,
                 }}>
                     <TextSmallYambiGray text={isPlaying ? formatMilliseconds(position || 0) : formatMilliseconds(duration || 0)} />
-
-                    {isPlaying ?
-                        <Animated.View entering={FadeIn} exiting={FadeOut}>
-                            <Pressable
-                                onPress={stopVoice}
-                                style={{
-                                    height: 20,
-                                    width: 20,
-                                    justifyContent: 'center'
-                                }}>
-                                <FontAwesome6 name="stop" color={app_theme.colors.text} size={20} />
-                            </Pressable>
-                        </Animated.View> : null}
-
-                    {/* <Text style={{ color: app_theme.colors.gray }}>
-                        {formatMilliseconds(position || 0)} / {formatMilliseconds(duration || 0)}
-                    </Text> */}
-
+                    <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: app_theme.colors.gray + '40', marginHorizontal: 6 }} />
+                    <TextSmallYambiGray 
+                        styles={{ maxWidth: 65 }} 
+                        numberLines={1} 
+                        text={!downloadingAudio ? (fileSize ? fileSize : "") : strings.downloading.toLowerCase()} 
+                    />
                 </View>
-
-                <TextSmallYambiGray styles={{ marginBottom: -5, width: 90 }} numberLines={1} text={!downloadingAudio ? fileSize ? fileSize : "" : strings.downloading.toLowerCase()} />
             </View>
 
-            {/* {status?.isLoaded && isPlaying ? */}
+            {/* Playback Rate / Speed Badge */}
             {status?.isLoaded ?
                 <Animated.View
                     entering={FadeIn}
                     exiting={FadeOut}
                     style={{
-                        // backgroundColor:'green',
                         flex: 1,
-                        alignItems: 'flex-end'
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
                     }}>
                     <Pressable
                         onPress={PlaybackRate}
                         style={{
-                            height: 30,
-                            width: 60,
-                            borderRadius: 5,
+                            height: 24,
+                            paddingHorizontal: 8,
+                            borderRadius: 12,
                             justifyContent: 'center',
                             alignItems: 'center',
-                            backgroundColor: app_theme.colors.border
+                            backgroundColor: app_theme.colors.high_color + '15',
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.high_color + '25',
+                            marginLeft: 10,
                         }}>
-                        <TextSmallYambi text={status?.playbackRate + "x"} />
+                        <TextSmallYambi text={status?.playbackRate + "x"} styles={{ color: app_theme.colors.high_color, fontWeight: '600' }} />
                     </Pressable>
                 </Animated.View> : null}
         </View>

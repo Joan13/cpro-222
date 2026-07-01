@@ -11,11 +11,11 @@ export interface IButton {
     onPress?: () => void;
 }
 
-const SwitchApp: React.FC<IButton> = ({ value, small, disabled, onPress, loadEnabled }) => {
+const SwitchApp: React.FC<IButton> = ({ value, small, disabled, onPress, loadEnabled, styles }) => {
     const theme = useAppSelector(state => state.app_theme.colors);
 
     return (
-        <Host matchContents>
+        <Host matchContents style={styles}>
             <Switch
                 onCheckedChange={onPress}
                 value={value}

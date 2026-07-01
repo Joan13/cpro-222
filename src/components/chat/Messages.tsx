@@ -12,7 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MessagesList from '../lists/messages/MessagesList';
 import { displayDate, SocketApp } from '../../../GlobalVariables';
 import { IconApp } from '../app/IconApp';
-import { FlashList } from '@shopify/flash-list';
+import { LegendList } from '@legendapp/list';
 import moment from 'moment';
 const Messages = ({ user }: { user: string }) => {
     const app_theme = useAppSelector(state => state.app_theme);
@@ -107,6 +107,8 @@ const Messages = ({ user }: { user: string }) => {
     const mm = useMemo(() => {
         return [...messages];
     }, [messages]);
+
+
 
     /**
      * STICKY DATE
@@ -326,10 +328,13 @@ const Messages = ({ user }: { user: string }) => {
                     flex: 1,
                 }}
             >
-                <FlashList
+                <LegendList
                     ref={flashListRef}
                     data={mm}
-                    inverted={true}
+                    alignItemsAtEnd
+                    initialScrollIndex={mm.length > 0 ? mm.length - 1 : undefined}
+                    maintainScrollAtEnd
+                    recycleItems
                     estimatedItemSize={40}
                     keyboardShouldPersistTaps='handled'
                     showsVerticalScrollIndicator={false}

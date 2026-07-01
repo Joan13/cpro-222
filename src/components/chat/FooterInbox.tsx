@@ -1,6 +1,6 @@
 import { View, Text, Pressable, Platform, TextInput, Keyboard, useWindowDimensions, BackHandler } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
-import Animated, { BounceIn, BounceOut, FadeIn, FadeInDown, FadeInUp, FadeOut, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { BounceIn, BounceOut, FadeIn, FadeInDown, FadeInUp, FadeOut, useAnimatedStyle, useSharedValue, withTiming, SharedValue } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { strings } from '../../lang/lang';
 import Feather from 'react-native-vector-icons/Feather';
@@ -34,11 +34,35 @@ import { IconApp } from '../app/IconApp';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../layout/KeyboardRootView';
 // const KeyboardRegistry = Keyboard.KeyboardRegistry;
-
+ 
 const audioRecorderPlayer = AudioRecorderPlayer;
-
+ 
 const emojiis = ['😊', '👍', '❤️', '🫴🏽', '😢', '😍', '😎', '🫠', '😶‍🌫️', '☹', '🇿🇦', '👩🏿‍❤️‍👩🏿', '😎', '😎', '😎', '😎'];
+ 
+const RecordingWaveform = ({ amplitudes, app_theme }: { amplitudes: number[], app_theme: any }) => {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', height: 25 }}>
+      {amplitudes.map((amp, i) => {
+        const baseHeight = 3;
+        const maxHeight = 20;
+        const targetHeight = baseHeight + amp * maxHeight;
 
+        return (
+          <View
+            key={i}
+            style={{
+              width: 2.5,
+              height: targetHeight,
+              marginHorizontal: 1,
+              borderRadius: 1.25,
+              backgroundColor: i % 2 === 0 ? app_theme.colors.high_color : app_theme.colors.high_color + '90',
+            }}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 const FooterChat = ({ user }: { user: string }) => {
   // const navigation = useNavigation();
@@ -82,6 +106,7 @@ const FooterChat = ({ user }: { user: string }) => {
   const [status, setStatus] = useState<AudioStatus>();
   const [fileSize, setFileSize] = useState<number>();
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isRecordingPaused, setIsRecordingPaused] = useState<boolean>(false);
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [tk, setTk] = useState(randomString(30) + renderDateUpToMilliseconds());
   const audioPath = RNFS.DocumentDirectoryPath + "/YambiVoiceNotes/" + tk + ".mp3";
@@ -92,8 +117,11 @@ const FooterChat = ({ user }: { user: string }) => {
   const chats = useQuery(UserChats);
 
   const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const recorderState = useAudioRecorderState(recorder, 500);
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
+  const recorderState = useAudioRecorderState(recorder, 100);
   const playerStatus = useAudioPlayerStatus(sound);
 
   useEffect(() => {
@@ -258,6 +286,7 @@ const FooterChat = ({ user }: { user: string }) => {
 
 
   const recordVoiceNote = async () => {
+    dispatch(setVoiceNoteBeingPlayed(""));
 
     // playActionSound(1);
     // setRecordTime('00:00:00');
@@ -321,6 +350,7 @@ const FooterChat = ({ user }: { user: string }) => {
       PlayActionSound(1);
       setRecordTime('00:00:00');
       setPlayTime(0);
+      setIsRecordingPaused(false);
 
       if (openPlaySurface) {
         setOpenPlaySurface(false);
@@ -332,18 +362,75 @@ const FooterChat = ({ user }: { user: string }) => {
         setPlayingRecorded(false);
       }
 
-      await recorder.prepareToRecordAsync();
+      await recorder.prepareToRecordAsync({
+        ...RecordingPresets.HIGH_QUALITY,
+        isMeteringEnabled: true,
+      });
       recorder.record();
     } catch (err) {
       // console.error('Failed to start recording', err);
     }
   };
   
+  const [recordingAmplitudes, setRecordingAmplitudes] = useState<number[]>(new Array(12).fill(0.05));
+
+  useEffect(() => {
+    if (recordingAudio) {
+      if (recorderState?.metering !== undefined) {
+        const db = recorderState.metering;
+        const normalized = Math.max(0.05, Math.min(1, (db - (-60)) / 60));
+        setRecordingAmplitudes(prev => {
+          const next = [...prev.slice(1), normalized];
+          return next;
+        });
+      }
+    } else {
+      setRecordingAmplitudes(new Array(12).fill(0.05));
+    }
+  }, [recorderState?.metering, recordingAudio]);
+
   useEffect(() => {
     if (recorderState?.isRecording) {
       setRecordTime(formatMilliseconds(recorderState.durationMillis));
     }
   }, [recorderState?.durationMillis, recorderState?.isRecording]);
+
+  const togglePauseResumeRecording = async () => {
+    if (isRecordingPaused) {
+      dispatch(setVoiceNoteBeingPlayed(""));
+      recorder.record();
+      setIsRecordingPaused(false);
+    } else {
+      recorder.pause();
+      setIsRecordingPaused(true);
+    }
+  };
+
+  const stopAndSendVoiceNote = async () => {
+    dispatch(setRecordingAudio(false));
+    setIsRecordingPaused(false);
+
+    if (recorderState?.isRecording || isRecordingPaused) {
+      try {
+        await recorder.stop();
+      } catch (e) {}
+      await setAudioModeAsync({ allowsRecording: false });
+    }
+
+    const urii = recorder.uri;
+    if (urii) {
+      setUri(urii);
+      sendMessage(urii, 1);
+    }
+
+    setOpenPlaySurface(false);
+    setReadyToSendVoiceNote(false);
+
+    setTimeout(async () => {
+      sound.pause();
+      await sound.seekTo(0);
+    }, 100);
+  };
 
   const onStopRecord = async () => {
     // // console.log("Starts stopping...")
@@ -657,12 +744,15 @@ const FooterChat = ({ user }: { user: string }) => {
     // audioRecorderPlayer.removeRecordBackListener();
 
     // console.log('Stopping recording..');
-    if (recorderState?.isRecording) {
-      await recorder.stop();
+    if (recorderState?.isRecording || isRecordingPaused) {
+      try {
+        await recorder.stop();
+      } catch (e) {}
       await setAudioModeAsync({ allowsRecording: false });
     }
 
     setReadyToSendVoiceNote(false);
+    setIsRecordingPaused(false);
     // setUri(uri);
     // console.log('Recording stopped and stored at', urii);
 
@@ -681,8 +771,15 @@ const FooterChat = ({ user }: { user: string }) => {
     const backAction = () => {
 
       if (recordingAudio) {
-        stopBeforeQuit();
-        return true;
+        if (!isRecordingPaused) {
+          recorder.pause();
+          setIsRecordingPaused(true);
+          return true;
+        } else {
+          stopBeforeQuit();
+          setIsRecordingPaused(false);
+          return false;
+        }
       }
 
       if (playingRecorded) {
@@ -720,7 +817,7 @@ const FooterChat = ({ user }: { user: string }) => {
       //   }
       //   : undefined;
     };
-  }, [recordingAudio, playingRecorded, sound]);
+  }, [recordingAudio, playingRecorded, sound, isRecordingPaused]);
 
   useEffect(() => {
     setKeyboardVisible(keyboardHeight > 0);
@@ -1003,11 +1100,15 @@ const FooterChat = ({ user }: { user: string }) => {
               }}>
                 <View style={{
                   flexDirection: 'row',
-                  // marginBottom: 8
-                  // flex: 1
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: width - 110,
                 }}>
-                  <YambiText text={`${strings.recording}     `} size="small" color="high" />
-                  <YambiText text={`   ${recordTime}`} size="small" color="gray" />
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <YambiText text={`${isRecordingPaused ? "Recording Paused" : strings.recording}     `} size="small" color="high" />
+                    <YambiText text={`   ${recordTime}`} size="small" color="gray" />
+                  </View>
+                  <RecordingWaveform amplitudes={recordingAmplitudes} app_theme={app_theme} />
                 </View>
 
                 <View style={{
@@ -1036,18 +1137,22 @@ const FooterChat = ({ user }: { user: string }) => {
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}>
-                    {/* <Pressable
+                    <Pressable
                       style={{
-                        height: 40,
-                        width: 40,
-                        borderRadius: 30,
+                        height: 44,
+                        width: 44,
+                        borderRadius: 22,
                         justifyContent: 'center',
                         alignItems: 'center',
-                        backgroundColor: app_theme.colors.border,
+                        backgroundColor: app_theme.colors.high_color + '20',
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.high_color + '40',
                       }}
-                      onPress={onStopRecord}>
-                      <FontAwesome6 name="stop" color={app_theme.colors.text} size={20} />
-                    </Pressable> */}
+                      onPress={togglePauseResumeRecording}>
+                      {isRecordingPaused ?
+                        <FontAwesome6 name="play" color={app_theme.colors.high_color} size={18} /> :
+                        <FontAwesome6 name="pause" color={app_theme.colors.high_color} size={18} />}
+                    </Pressable>
                   </View>
                 </View>
               </View> : null}
@@ -1210,7 +1315,7 @@ const FooterChat = ({ user }: { user: string }) => {
           {recordingAudio ?
             <Animated.View entering={FadeIn} exiting={FadeOut}>
               <Pressable
-                onPress={onStopRecord}
+                onPress={stopAndSendVoiceNote}
                 style={{
                   height: 48,
                   width: 48,
@@ -1222,9 +1327,8 @@ const FooterChat = ({ user }: { user: string }) => {
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
-                  // elevation: 4,
                 }}>
-                <Ionicons name="stop" size={20} color={app_theme.colors.text_design2} />
+                <Ionicons name="send" size={20} color={app_theme.colors.text_design2} />
               </Pressable></Animated.View> : null}
 
           {/* {RecordingOrPlaying() ?

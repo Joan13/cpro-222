@@ -56,7 +56,7 @@
 import { ViewStyle } from "react-native";
 import { useAppSelector } from "../../store/app/hooks";
 import { Host, Toggle } from "@expo/ui/swift-ui";
-import { disabled as disabledModifier, tint } from "@expo/ui/swift-ui/modifiers";
+import { disabled as disabledModifier, tint, labelsHidden } from "@expo/ui/swift-ui/modifiers";
 
 export interface IButton {
   value: boolean;
@@ -71,11 +71,12 @@ const SwitchApp: React.FC<IButton> = ({
   value,
   disabled,
   onPress,
+  styles,
 }) => {
   const theme = useAppSelector(state => state.app_theme.colors);
 
   return (
-    <Host matchContents>
+    <Host matchContents style={styles}>
       <Toggle
     //   tint='blue'
         isOn={value}
@@ -83,6 +84,7 @@ const SwitchApp: React.FC<IButton> = ({
         modifiers={[
             tint(theme.high_color),
             disabledModifier(!!disabled),
+            labelsHidden(),
           ]}
       />
     </Host>

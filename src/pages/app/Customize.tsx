@@ -7,13 +7,13 @@ import { TextNormalYambi, TextSmallYambiGray } from '../../components/app/Text';
 import { IconApp } from '../../components/app/IconApp';
 import { NavProps } from '../../types/types';
 import SwitchApp from '../../components/app/SwitchApp';
-import { 
-    setTabVisibleChats, 
-    setTabVisibleMarketplace, 
-    setTabVisibleBusiness, 
-    setTabVisibleExpenses, 
+import {
+    setTabVisibleChats,
+    setTabVisibleMarketplace,
+    setTabVisibleBusiness,
+    setTabVisibleExpenses,
     setTabVisibleAdmin,
-    setTabVisibleNoticeboard 
+    setTabVisibleNoticeboard
 } from '../../store/reducers/persistedAppSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -150,7 +150,7 @@ const Customize = ({ navigation }: NavProps) => {
                     }} /> */}
 
                     {/* Customize Application Section */}
-                    <View style={{ paddingHorizontal: 15 }}>
+                    <View style={{ paddingHorizontal: 15, marginBottom: 50 }}>
                         <TextNormalYambi text={strings.customize_application} bold styles={{ marginBottom: 15, fontSize: 18 }} />
 
                         {/* Tabs Submenu */}
@@ -178,7 +178,7 @@ const Customize = ({ navigation }: NavProps) => {
                                 <IconApp pack='SLI' name="bubbles" size={18} color={theme.colors.gray} styles={{ marginRight: 15 }} />
                                 <TextNormalYambi styles={{ flex: 1, marginRight: 10 }} text={strings.chats} />
                                 <View>
-                                    <SwitchApp disabled={true} value={tabVisibleChats} onPress={() => {}} />
+                                    <SwitchApp disabled={true} value={tabVisibleChats} onPress={() => { }} />
                                 </View>
                             </View>
 
@@ -193,7 +193,7 @@ const Customize = ({ navigation }: NavProps) => {
                                 <IconApp pack='SLI' name="layers" size={18} color={theme.colors.gray} styles={{ marginRight: 15 }} />
                                 <TextNormalYambi styles={{ flex: 1, marginRight: 10 }} text={strings.marketplace} />
                                 <View>
-                                    <SwitchApp disabled={true} value={tabVisibleMarketplace} onPress={() => {}} />
+                                    <SwitchApp disabled={true} value={tabVisibleMarketplace} onPress={() => { }} />
                                 </View>
                             </View>
 
@@ -223,7 +223,7 @@ const Customize = ({ navigation }: NavProps) => {
                                 <IconApp pack='FI' name="dollar-sign" size={18} color={theme.colors.gray} styles={{ marginRight: 15 }} />
                                 <TextNormalYambi styles={{ flex: 1, marginRight: 10 }} text={strings.expenses} />
                                 <View>
-                                    <SwitchApp disabled={true} value={tabVisibleExpenses} onPress={() => {}} />
+                                    <SwitchApp disabled={true} value={tabVisibleExpenses} onPress={() => { }} />
                                 </View>
                             </View>
 

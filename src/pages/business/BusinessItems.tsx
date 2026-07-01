@@ -378,7 +378,11 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
     };
 
     useEffect(() => {
-        const activeItems = items.filter(item => item.item_active === 1) as unknown as TItem[];
+        const activeItems = items.filter(item => {
+            if (item.item_active !== 1) return false;
+            if (from_deep_link_catalog && item.marketplace_visibility !== 1) return false;
+            return true;
+        }) as unknown as TItem[];
         const sortedItems = sortItemsByFilter(activeItems);
 
         const unlockedIds = sortedItems.slice(0, maxArticlesAllowed).map(i => i._id);
@@ -415,7 +419,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
         }
         // }
 
-    }, [items, uuser, business_items_filter, maxArticlesAllowed, searched_text, business, navigation, flag]);
+    }, [items, uuser, business_items_filter, maxArticlesAllowed, searched_text, business, navigation, flag, from_deep_link_catalog]);
 
     // Animate business info expand/collapse
     useEffect(() => {
@@ -511,8 +515,12 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
     };
 
     const accessibleActiveItems = useMemo(
-        () => (items.filter((i) => i.item_active === 1 && accessibleItemIds.includes(i._id)) as unknown as TItem[]),
-        [items, accessibleItemIds]
+        () => (items.filter((i) => {
+            if (i.item_active !== 1) return false;
+            if (from_deep_link_catalog && i.marketplace_visibility !== 1) return false;
+            return accessibleItemIds.includes(i._id);
+        }) as unknown as TItem[]),
+        [items, accessibleItemIds, from_deep_link_catalog]
     );
 
     const activeItemsCount = useMemo(() => accessibleActiveItems.length, [accessibleActiveItems]);

@@ -53,7 +53,7 @@ const realmConfig = {
     Expenses,
     CompanyUsers,
   ],
-  schemaVersion: 18,
+  schemaVersion: 19,
 };
 
 export const openRealmInstance = async () => {
