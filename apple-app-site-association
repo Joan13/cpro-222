@@ -1,0 +1,15 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appID": "C2J8DC664M.com.yambi.app",
+                "paths": [
+                    "/post/*",
+                    "/item/*",
+                    "/business/*"
+                ]
+            }
+        ]
+    }
+}

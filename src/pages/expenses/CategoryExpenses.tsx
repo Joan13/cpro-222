@@ -13,7 +13,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useAppDispatch } from "../../store/app/hooks";
 import { global_currencies, renderCurrency, renderDateTime } from "../../../GlobalVariables";
 import ModalApp from "../../components/app/ModalApp";
-import DateRangePicker from "rn-select-date-range";
+import DateRangePicker from "../../components/app/DateRangePicker";
 import { formatAmount } from "../../util/formatAmount";
 import RNPrint from 'react-native-print';
 import moment from "moment";

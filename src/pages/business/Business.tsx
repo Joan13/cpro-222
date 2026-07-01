@@ -13,7 +13,7 @@ import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNo
 import { global_currencies, renderBusinessUserLevel, renderCurrency, renderDateTime } from '../../../GlobalVariables';
 import ModalApp from '../../components/app/ModalApp';
 import ButtonNormal from '../../components/app/ButtonNormal';
-import DateRangePicker from "rn-select-date-range";
+import DateRangePicker from "../../components/app/DateRangePicker";
 import moment from "moment";
 
 const Business = ({ navigation, route }: NavProps) => {

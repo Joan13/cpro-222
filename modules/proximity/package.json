@@ -1,0 +1,10 @@
+{
+  "name": "proximity",
+  "version": "1.0.0",
+  "description": "Proximity Sensor Module for Expo",
+  "main": "index.ts",
+  "types": "index.ts",
+  "peerDependencies": {
+    "expo": "*"
+  }
+}

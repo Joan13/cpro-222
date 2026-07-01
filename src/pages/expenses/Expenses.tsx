@@ -16,7 +16,7 @@ import moment from "moment";
 import { global_currencies, renderCurrency, renderDateTime, SocketApp, remote_host } from "../../../GlobalVariables";
 import axios from "axios";
 import ModalApp from "../../components/app/ModalApp";
-import DateRangePicker from "rn-select-date-range";
+import DateRangePicker from "../../components/app/DateRangePicker";
 import { formatAmount } from "../../util/formatAmount";
 import RNPrint from 'react-native-print';
 import Reanimated, { FadeInUp, BounceIn } from "react-native-reanimated";

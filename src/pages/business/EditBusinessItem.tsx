@@ -17,7 +17,6 @@ import moment from "moment";
 import { UserBusinessArticles, ItemPrices, BusinessItemsSale } from "../../store/database/Models";
 // import { SocketApp } from "../../../App";
 import SwitchApp from "../../components/app/SwitchApp";
-import DateRangePicker from "rn-select-date-range";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Image as ExpoImage } from 'expo-image';

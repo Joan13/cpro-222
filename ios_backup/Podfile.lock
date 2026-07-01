@@ -286,8 +286,6 @@ PODS:
     - ReactNativeDependencies
     - Yoga
   - PromisesObjC (2.4.0)
-  - Proximity (1.0.0):
-    - ExpoModulesCore
   - RCTDeprecation (0.83.6)
   - RCTRequired (0.83.6)
   - RCTSwiftUI (0.83.6)
@@ -3007,7 +3005,6 @@ DEPENDENCIES:
   - lottie-react-native (from `../node_modules/lottie-react-native`)
   - NitroAudioRecorderPlayer (from `../node_modules/react-native-audio-recorder-player`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
-  - Proximity (from `../modules/proximity/ios`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTSwiftUI (from `../node_modules/react-native/ReactApple/RCTSwiftUI`)
@@ -3218,8 +3215,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-audio-recorder-player"
   NitroModules:
     :path: "../node_modules/react-native-nitro-modules"
-  Proximity:
-    :path: "../modules/proximity/ios"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -3483,7 +3478,6 @@ SPEC CHECKSUMS:
   NitroAudioRecorderPlayer: 8901d8a6c05a2ad3c8242678ba253eb7d7df38a7
   NitroModules: d11f6267e7e59198a3305e1971559a8844c94a5b
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  Proximity: 2677fa58d2e3c93887d7538996f8b63209671fa1
   RCTDeprecation: 9502b5eb8e3c9eb75ff5a333b2c591bab9d91e28
   RCTRequired: 0268a5d86aef1defea2e04289d74fdf3570197c1
   RCTSwiftUI: cff211c5e4d94e491dda240d663b8effd25296d7
@@ -3604,6 +3598,6 @@ SPEC CHECKSUMS:
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888
   Yoga: e41d64347f52d634dd8c2f6bac33f95081959fd3
 
-PODFILE CHECKSUM: b3b34a72f2a6ea949c89d8869f266e8824105324
+PODFILE CHECKSUM: 83be6bc7c0b042df25f3efcc44cfc7078c694624
 
 COCOAPODS: 1.16.2

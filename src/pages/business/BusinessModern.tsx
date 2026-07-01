@@ -10,7 +10,7 @@ import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses 
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextSmallYambiSuccess, TextBigYambi, TextNormalYambiGray } from '../../components/app/Text';
 import { global_currencies, renderCurrency, renderDateTime } from '../../../GlobalVariables';
 import ModalApp from '../../components/app/ModalApp';
-import DateRangePicker from "rn-select-date-range";
+import DateRangePicker from "../../components/app/DateRangePicker";
 import moment from "moment";
 import axios from 'axios';
 import { remote_host } from '../../../GlobalVariables';
