@@ -2,7 +2,7 @@
   "expo": {
     "name": "yambi",
     "slug": "yambi",
-    "version": "2.46.29",
+    "version": "2.46.30",
     "scheme": "yambi",
     "orientation": "portrait",
     "icon": "./src/assets/logo_icon.png",
@@ -19,8 +19,22 @@
       ],
       "infoPlist": {
         "UIBackgroundModes": [
-          "audio"
-        ]
+          "audio",
+          "remote-notification"
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "yambi.net": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0",
+              "NSExceptionRequiresForwardSecrecy": false,
+              "NSIncludesSubdomains": true,
+              "NSTemporaryExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        }
       }
     },
     "android": {

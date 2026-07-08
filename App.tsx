@@ -2456,70 +2456,73 @@ const Yambi = ({ navigation }: NavProps) => {
     // }
 
     const GetUserToken = async () => {
-        // Register the device with FCM
+        try {
+            // Register the device with FCM
 
-        // async function requestUserPermission() {
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+            // async function requestUserPermission() {
+            const authStatus = await messaging().requestPermission();
+            const enabled =
+                authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+                authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-        if (enabled) {
-            // console.log('Authorization status:', authStatus);
-        }
-        //   }
-        await messaging().registerDeviceForRemoteMessages();
+            if (enabled) {
+                // console.log('Authorization status:', authStatus);
+            }
+            //   }
+            await messaging().registerDeviceForRemoteMessages();
 
-        // Get the token
-        const token = await messaging().getToken();
+            // Get the token
+            const token = await messaging().getToken();
 
-        // console.log(token);
+            // console.log(token);
 
-        // if (token !== user_data.notification_token) {
-        const user_assemble_data: TUser = {
-            user_id: user_data.user_id,
-            user_names: user_data.user_names,
-            phone_number: user_data.phone_number,
-            gender: user_data.gender || 0,
-            birth_date: user_data.birth_date,
-            country: user_data.country,
-            user_profile: user_data.user_profile,
-            profession: user_data.profession,
-            bio: user_data.bio,
-            user_email: user_data.user_email,
-            user_address: user_data.user_address,
-            status_information: user_data.status_information,
-            user_password: user_data.user_password,
-            account_privacy: user_data.account_privacy || 0,
-            user_verified: user_data.user_verified || 0,
-            user_verified_at: user_data.user_verified_at || "",
-            user_level: user_data.user_level || 0,
-            user_active: user_data.user_active || 1,
-            notification_token: token,
-            createdAt: user_data.createdAt,
-            updatedAt: user_data.updatedAt
-        }
+            // if (token !== user_data.notification_token) {
+            const user_assemble_data: TUser = {
+                user_id: user_data.user_id,
+                user_names: user_data.user_names,
+                phone_number: user_data.phone_number,
+                gender: user_data.gender || 0,
+                birth_date: user_data.birth_date,
+                country: user_data.country,
+                user_profile: user_data.user_profile,
+                profession: user_data.profession,
+                bio: user_data.bio,
+                user_email: user_data.user_email,
+                user_address: user_data.user_address,
+                status_information: user_data.status_information,
+                user_password: user_data.user_password,
+                account_privacy: user_data.account_privacy || 0,
+                user_verified: user_data.user_verified || 0,
+                user_verified_at: user_data.user_verified_at || "",
+                user_level: user_data.user_level || 0,
+                user_active: user_data.user_active || 1,
+                notification_token: token,
+                createdAt: user_data.createdAt,
+                updatedAt: user_data.updatedAt
+            }
 
-        await axios.post(remote_host + '/yambi/API/update_user_data', {
-            assemble: user_assemble_data
-        })
-            .then(response => {
-
-                // console.log(response.data);
-
-                if (response.data.success === "1") {
-                    realm.write(() => {
-                        try {
-                            realm.create('UserData', user_assemble_data, true);
-                        } catch (error) { }
-                    });
-
-                    dispatch(updateUser(user_assemble_data));
-                }
+            await axios.post(remote_host + '/yambi/API/update_user_data', {
+                assemble: user_assemble_data
             })
-            .catch((error) => { });
-        // }
+                .then(response => {
 
+                    // console.log(response.data);
+
+                    if (response.data.success === "1") {
+                        realm.write(() => {
+                            try {
+                                realm.create('UserData', user_assemble_data, true);
+                            } catch (error) { }
+                        });
+
+                        dispatch(updateUser(user_assemble_data));
+                    }
+                })
+                .catch((error) => { });
+            // }
+        } catch (error) {
+            console.warn('FCM token registration failed:', error);
+        }
     }
 
     // Deep linking configuration
