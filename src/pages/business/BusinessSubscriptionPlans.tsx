@@ -63,7 +63,7 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
     };
 
     return (
-        <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+        <View style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
             <View style={{ flex: 1 }}>
                 <StatusBarYambi />
 
@@ -117,18 +117,46 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                                 <Pressable
                                     key={plan.id}
                                     style={{
-                                        backgroundColor: theme.colors.border + '40',
+                                        backgroundColor: theme.colors.border,
                                         borderRadius: 12,
                                         padding: 20,
+                                        marginTop: plan.id === 2 ? 8 : 0,
                                         marginBottom: 16,
                                         borderWidth: 2,
-                                        borderColor: theme.colors.border,
+                                        borderColor: plan.id === 2 ? theme.colors.high_color : theme.colors.border,
                                         opacity: plan.id === 0 ? 0.6 : 1
                                     }}
                                     onPress={() => handleSelectPlan(plan.id)}
                                     disabled={plan.id === 0}
                                 >
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    {plan.id === 2 && (
+                                        <View style={{
+                                            position: 'absolute',
+                                            top: -14,
+                                            left: 0,
+                                            right: 0,
+                                            alignItems: 'center',
+                                            zIndex: 10,
+                                        }}>
+                                            <View style={{
+                                                backgroundColor: theme.colors.high_color,
+                                                paddingHorizontal: 12,
+                                                paddingVertical: 4,
+                                                borderRadius: 20,
+                                                borderWidth: 1.5,
+                                                borderColor: theme.colors.background,
+                                            }}>
+                                                <YambiText
+                                                    text={((strings as any).most_valuable_badge || "Most Valuable")}
+                                                    size="small"
+                                                    color="badge"
+                                                    bold
+                                                    style={{ fontSize: 10, lineHeight: 12 }}
+                                                />
+                                            </View>
+                                        </View>
+                                    )}
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <View style={{ flex: 1 }}>
                                             <YambiText
                                                 text={plan.name}
@@ -146,17 +174,25 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                                             )}
                                         </View>
                                         {plan.price > 0 ? (
-                                            <View style={{ alignItems: 'flex-end' }}>
-                                                <YambiText
-                                                    text={`$${plan.price.toFixed(2)}`}
-                                                    size="big"
-                                                    color="high"
-                                                    bold
-                                                />
-                                                <YambiText
-                                                    text="/month"
-                                                    size="small"
-                                                    color="gray"
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <View style={{ alignItems: 'flex-end', marginRight: 8 }}>
+                                                    <YambiText
+                                                        text={`$${plan.price.toFixed(2)}`}
+                                                        size="big"
+                                                        color="high"
+                                                        bold
+                                                    />
+                                                    <YambiText
+                                                        text={((strings as any).per_month || "/month")}
+                                                        size="small"
+                                                        color="gray"
+                                                    />
+                                                </View>
+                                                <IconApp
+                                                    pack="FI"
+                                                    name="chevron-right"
+                                                    size={18}
+                                                    color={theme.colors.high_color}
                                                 />
                                             </View>
                                         ) : plan.id === 0 ? (
@@ -168,15 +204,20 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                                         ) : null}
                                     </View>
 
-                                    <View style={{ marginTop: 12 }}>
+                                    <View style={{
+                                        marginTop: 16,
+                                        paddingTop: 16,
+                                        borderTopWidth: 1,
+                                        borderTopColor: theme.colors.border + '80',
+                                    }}>
                                         {/* Max Points of Sale */}
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                                             <IconApp
-                                                pack="FI"
-                                                name={plan.id === 0 ? "x-circle" : "check-circle"}
+                                                pack="OC"
+                                                name={plan.id === 0 ? "x-circle-fill" : "check-circle-fill"}
                                                 size={16}
                                                 color={plan.id === 0 ? theme.colors.gray : theme.colors.high_color}
-                                                styles={{ marginRight: 8 }}
+                                                styles={{ marginRight: 10 }}
                                             />
                                             <YambiText
                                                 text={strings.max_points_of_sale.replace('{count}', plan.maxPointsOfSale.toString()).replace('{plural}', plan.maxPointsOfSale > 1 ? 's' : '')}
@@ -185,16 +226,16 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                                             />
                                         </View>
                                         {/* Images */}
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                                             <IconApp
-                                                pack="FI"
-                                                name={plan.id === 0 ? "x-circle" : "check-circle"}
+                                                pack="OC"
+                                                name={plan.id === 0 ? "x-circle-fill" : "check-circle-fill"}
                                                 size={16}
                                                 color={plan.id === 0 ? theme.colors.gray : theme.colors.high_color}
-                                                styles={{ marginRight: 8 }}
+                                                styles={{ marginRight: 10 }}
                                             />
                                             <YambiText
-                                                text={plan.imagesAllowed 
+                                                text={plan.imagesAllowed
                                                     ? strings.images_per_article.replace('{count}', plan.maxImagesPerArticle.toString()).replace('{plural}', plan.maxImagesPerArticle > 1 ? 's' : '')
                                                     : strings.no_images_allowed}
                                                 size="normal"
@@ -202,13 +243,13 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                                             />
                                         </View>
                                         {/* Max Articles */}
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <IconApp
-                                                pack="FI"
-                                                name={plan.id === 0 ? "x-circle" : "check-circle"}
+                                                pack="OC"
+                                                name={plan.id === 0 ? "x-circle-fill" : "check-circle-fill"}
                                                 size={16}
                                                 color={plan.id === 0 ? theme.colors.gray : theme.colors.high_color}
-                                                styles={{ marginRight: 8 }}
+                                                styles={{ marginRight: 10 }}
                                             />
                                             <YambiText
                                                 text={strings.max_articles.replace('{count}', plan.maxArticles.toString()).replace('{plural}', plan.maxArticles > 1 ? 's' : '')}
@@ -223,13 +264,15 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
 
                         {/* Info Section */}
                         <View style={{
-                            backgroundColor: theme.colors.border + '40',
+                            backgroundColor: theme.colors.border + '20',
                             marginHorizontal: 20,
                             marginTop: 20,
                             borderRadius: 12,
                             padding: 16,
+                            borderWidth: 1,
+                            borderColor: theme.colors.border + '60',
                         }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                                 <IconApp pack="FI" name="info" size={16} color={theme.colors.high_color} styles={{ marginRight: 8, marginTop: 2 }} />
                                 <View style={{ flex: 1 }}>
                                     <YambiText
@@ -244,7 +287,7 @@ const BusinessSubscriptionPlans = ({ navigation, route }: NavProps) => {
                     </View>
                 </ScrollView>
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 

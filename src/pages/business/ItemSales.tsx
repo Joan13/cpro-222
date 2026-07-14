@@ -5,8 +5,9 @@ import { setShowModalApp } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
 import { IconApp } from '../../components/app/IconApp';
 import { NavProps, TBusinessUser, TItem, TItemPrices, TSale } from '../../types/types';
-import { useObject, useQuery } from '@realm/react';
-import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses, UserSellsPoints } from '../../store/database/Models';
+import { useObject, useQuery, useRealm } from '@realm/react';
+import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses, UserSellsPoints, Payments } from '../../store/database/Models';
+import { getSalePaymentDetails } from '../../utils/paymentHelpers';
 import { FlashList } from '@shopify/flash-list';
 import SalesList from '../../components/lists/business/SalesList';
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiHighColor2, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextSmallYambiHighColor, TextSmallYambiHighColor2, TextSmallYambiSuccess } from '../../components/app/Text';
@@ -27,6 +28,7 @@ const ItemSales = ({ navigation, route }: NavProps) => {
     const user_data = useAppSelector(state => state.user_data);
     const app_language = useAppSelector(state => state.persisted_app.langApp);
     const dispatch = useAppDispatch();
+    const realm = useRealm();
     const [date_start, setDate_start] = useState<string>("");
     const [date_end, setDate_end] = useState<string>("");
     const [user_filter, setUser_filter] = useState<string>("");
@@ -143,7 +145,9 @@ const ItemSales = ({ navigation, route }: NavProps) => {
     const setSS = () => {
         let fs = bs.filter(salee => {
             // category_filter: 0 = all sales (both cash and credit), 1 = only credit sales
-            const categoryMatch = category_filter === 0 ? true : salee.type_sale === category_filter;
+            const { isPaid } = getSalePaymentDetails(salee, realm);
+            const isCredit = !isPaid;
+            const categoryMatch = category_filter === 0 ? true : isCredit;
 
             if (date_end !== "" && date_start !== "") {
                 return moment(salee.createdAt).format("YYYY-MM-DD") >= date_start 

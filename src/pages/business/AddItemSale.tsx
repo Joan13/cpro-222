@@ -9,7 +9,8 @@ import { IconApp } from "../../components/app/IconApp";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import * as RootNavigation from '../../services/Navigation_ref';
 import { useObject, useQuery, useRealm } from "@realm/react";
-import { UserBusinessArticles, ItemPrices, UserBusinesses, UserSellsPoints } from "../../store/database/Models";
+import { UserBusinessArticles, ItemPrices, UserBusinesses, UserSellsPoints, Payments, Reservations } from "../../store/database/Models";
+import { createPaymentObject } from "../../utils/paymentHelpers";
 import { setShowModalApp } from "../../store/reducers/appSlice";
 import { YambiText } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
@@ -43,6 +44,8 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
     const [buyer_name, setBuyer_name] = useState<string>("");
     const [buyer_phone, setBuyer_phone] = useState<string>("");
     const [showSaleSuccess, setShowSaleSuccess] = useState<boolean>(false);
+    const [isReservation, setIsReservation] = useState<boolean>(false);
+    const [depositAmount, setDepositAmount] = useState<string>("");
     // const businesses = useAppSelector(state => state.businesses);
     // const businesses = [];
     // const items = [];
@@ -50,7 +53,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
     const realm = useRealm();
     const sales_point = useObject(UserSellsPoints, sales_point_id);
 
-    if(sales_point===null)return;
+    if (sales_point === null) return;
 
     // const items = useQuery(
     //     UserBusinessArticles, items => {
@@ -114,6 +117,128 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
             if (!error_number()) {
                 // console.log("Error")
             } else {
+                if (isReservation) {
+                    const reservationId = renderDateUpToMilliseconds() + randomString(5);
+                    const sellingPrice = itemToSellPrice.trim() !== "" ? itemToSellPrice.trim() : (wholesale ? ItemPrices.wholesale_selling_price : ItemPrices.retail_selling_price);
+                    const qty = parseInt(numberItemToSell);
+                    const totalAmt = (qty * parseFloat(sellingPrice)).toString();
+                    const depAmt = depositAmount.trim() !== "" ? parseFloat(depositAmount.trim()) : 0;
+                    const remAmt = Math.max(0, parseFloat(totalAmt) - depAmt).toString();
+
+                    const reservation = {
+                        _id: reservationId,
+                        business_id: itemToSell.business_id,
+                        sales_point_id: sales_point_id,
+                        item_id: itemToSell._id,
+                        customer_id: "",
+                        customer_name: buyer_name,
+                        customer_phone: buyer_phone,
+                        quantity: qty,
+                        total_amount: totalAmt,
+                        deposit_amount: depAmt.toString(),
+                        remaining_amount: remAmt,
+                        currency: ItemPrices.currency,
+                        status: 1, // 1 = Pending
+                        sale_id: "",
+                        uploaded: 0,
+                        createdAt: moment(new Date()).format(),
+                        updatedAt: ""
+                    };
+
+                    const item: TItem = {
+                        _id: itemToSell._id,
+                        business_id: itemToSell.business_id,
+                        phone_number: itemToSell.phone_number,
+                        item_name: itemToSell.item_name,
+                        slogan: itemToSell.slogan,
+                        item_type: itemToSell.item_type,
+                        category: itemToSell.category,
+                        subcategory: itemToSell.subcategory,
+                        manufacture_date: itemToSell.manufacture_date,
+                        expiry_date: itemToSell.expiry_date,
+                        wholesale_content_number: itemToSell.wholesale_content_number,
+                        items_number_stock: !wholesale ? itemToSell.items_number_stock - qty : itemToSell.items_number_stock - qty * itemToSell.wholesale_content_number,
+                        items_number_warehouse: itemToSell.items_number_warehouse,
+                        description_item: itemToSell.description_item,
+                        keywords: itemToSell.keywords,
+                        images: itemToSell.images,
+                        background: itemToSell.background,
+                        item_active: itemToSell.item_active,
+                        supplier: itemToSell.supplier,
+                        other_information: itemToSell.other_information,
+                        alert_low_stock: itemToSell.alert_low_stock,
+                        uploaded: 0,
+                        createdAt: itemToSell.createdAt,
+                        updatedAt: itemToSell.updatedAt,
+                        colors: itemToSell.colors,
+                        discount_percentage: itemToSell.discount_percentage,
+                        discount_start_date: itemToSell.discount_start_date,
+                        discount_end_date: itemToSell.discount_end_date,
+                        marketplace_visibility: itemToSell.marketplace_visibility,
+                        weights: itemToSell.weights,
+                        sizes: itemToSell.sizes,
+                        flag: itemToSell.flag,
+                        is_best_seller: itemToSell.is_best_seller,
+                        visibility_rank: itemToSell.visibility_rank,
+                        is_featured: itemToSell.is_featured
+                    };
+
+                    realm.write(() => {
+                        try {
+                            realm.create('Reservations', reservation);
+                        } catch (error) { }
+
+                        let payment;
+                        if (depAmt > 0) {
+                            payment = {
+                                _id: renderDateUpToMilliseconds() + randomString(5),
+                                sale_id: "",
+                                reservation_id: reservationId,
+                                item_id: itemToSell._id,
+                                sales_point_id: sales_point_id,
+                                amount: depAmt.toString(),
+                                currency: ItemPrices.currency,
+                                payment_method: 1, // Default Cash for deposit
+                                payment_status: 2, // Success
+                                payment_details: "{}",
+                                agent_paid: user_data.phone_number,
+                                uploaded: 0,
+                                createdAt: moment(new Date()).format(),
+                                updatedAt: moment(new Date()).format()
+                            };
+                            try {
+                                realm.create('Payments', payment);
+                            } catch (error) { }
+                        }
+
+                        try {
+                            realm.create('UserBusinessArticles', item, true);
+                        } catch (error) { }
+
+                        SocketApp.emit("newItems", JSON.stringify({ phone_number: user_data.phone_number, items: [item] }));
+                        SocketApp.emit("newReservations", JSON.stringify({ phone_number: user_data.phone_number, items: [reservation] }));
+                        if (payment) {
+                            SocketApp.emit("newPayments", JSON.stringify({ phone_number: user_data.phone_number, items: [payment] }));
+                        }
+                    });
+
+                    setNumberItemToSell("");
+                    setBuyer_name("");
+                    setBuyer_phone("");
+                    setDepositAmount("");
+                    setWholesale(false);
+                    setIsReservation(false);
+
+                    dispatch(setShowModalApp(false));
+                    setShowSaleFrame(false);
+
+                    setTimeout(() => {
+                        dispatch(setShowModalApp(true));
+                        setShowSaleSuccess(true);
+                    }, 100);
+
+                    return;
+                }
 
                 const sale: TSale = {
                     _id: renderDateUpToMilliseconds() + randomString(5),
@@ -185,6 +310,19 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                         realm.create('BusinessItemsSale', sale);
                     } catch (error) { }
 
+                    const paymentAmount = (sale.number * parseFloat(sale.selling_price) + (parseFloat(sale.delivery_price) || 0) - (parseFloat(sale.discount_price) || 0)).toString();
+                    const payment = createPaymentObject(
+                        sale,
+                        paymentAmount,
+                        1,
+                        type_sale === 0 ? 2 : 1,
+                        type_sale === 0 ? user_data.phone_number : ""
+                    );
+
+                    try {
+                        realm.create('Payments', payment);
+                    } catch (error) { }
+
                     try {
                         realm.create('UserBusinessArticles', item, true);
                     } catch (error) { }
@@ -192,6 +330,8 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                     SocketApp.emit("newItems", JSON.stringify({ phone_number: user_data.phone_number, items: [item] }));
 
                     SocketApp.emit("newSales", JSON.stringify({ phone_number: user_data.phone_number, items: [sale] }));
+
+                    SocketApp.emit("newPayments", JSON.stringify({ phone_number: user_data.phone_number, items: [payment] }));
                 });
 
                 setNumberItemToSell("");
@@ -302,15 +442,15 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                             alignItems: 'center',
                         }}>
                             <IconApp pack="FI" name="package" size={14} color={itemToSell.items_number_stock > 0 ? theme.success : theme.error} />
-                            <YambiText 
-                                text={itemToSell.items_number_stock.toString() + " " + strings.in_store.toLowerCase()} 
+                            <YambiText
+                                text={itemToSell.items_number_stock.toString() + " " + strings.in_store.toLowerCase()}
                                 size="small"
                                 color={itemToSell.items_number_stock > 0 ? "success" : "error"}
                                 bold
-                                style={{ 
-                                    marginLeft: 6, 
+                                style={{
+                                    marginLeft: 6,
                                     fontSize: 12,
-                                }} 
+                                }}
                             />
                         </View>
                         {itemToSell.items_number_warehouse > 0 && (
@@ -323,12 +463,12 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 alignItems: 'center',
                             }}>
                                 <IconApp pack="FI" name="home" size={14} color={theme.high_color} />
-                                <YambiText 
-                                    text={itemToSell.items_number_warehouse.toString() + " " + strings.in_warehouse.toLowerCase()} 
+                                <YambiText
+                                    text={itemToSell.items_number_warehouse.toString() + " " + strings.in_warehouse.toLowerCase()}
                                     size="small"
                                     color="high"
                                     bold
-                                    style={{ marginLeft: 6, fontSize: 12 }} 
+                                    style={{ marginLeft: 6, fontSize: 12 }}
                                 />
                             </View>
                         )}
@@ -356,34 +496,36 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                         marginBottom: 16,
                         flexWrap: 'wrap',
                     }}>
-                        <Pressable
-                            onPress={() => setType_sale(type_sale === 0 ? 1 : 0)}
-                            style={{
-                                flex: 1,
-                                minWidth: 140,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                padding: 12,
-                                backgroundColor: type_sale === 0 ? theme.high_color + '20' : theme.border,
-                                borderRadius: 12,
-                                borderWidth: 2,
-                                borderColor: type_sale === 0 ? theme.high_color : 'transparent',
-                            }}>
-                            <View style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 10,
-                                borderWidth: 2,
-                                borderColor: type_sale === 0 ? theme.high_color : theme.gray,
-                                backgroundColor: type_sale === 0 ? theme.high_color : 'transparent',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginRight: 8,
-                            }}>
-                                {type_sale === 0 && <IconApp pack="FI" name="check" size={12} color={theme.background} />}
-                            </View>
-                            <YambiText text={strings.cash} size="normal" color="default" bold={type_sale === 0} />
-                        </Pressable>
+                        {!isReservation && (
+                            <Pressable
+                                onPress={() => setType_sale(type_sale === 0 ? 1 : 0)}
+                                style={{
+                                    flex: 1,
+                                    minWidth: 140,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    padding: 12,
+                                    backgroundColor: type_sale === 0 ? theme.high_color + '20' : theme.border,
+                                    borderRadius: 12,
+                                    borderWidth: 2,
+                                    borderColor: type_sale === 0 ? theme.high_color : 'transparent',
+                                }}>
+                                <View style={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: 10,
+                                    borderWidth: 2,
+                                    borderColor: type_sale === 0 ? theme.high_color : theme.gray,
+                                    backgroundColor: type_sale === 0 ? theme.high_color : 'transparent',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 8,
+                                }}>
+                                    {type_sale === 0 && <IconApp pack="FI" name="check" size={12} color={theme.background} />}
+                                </View>
+                                <YambiText text={strings.cash} size="normal" color="default" bold={type_sale === 0} />
+                            </Pressable>
+                        )}
 
                         <Pressable
                             onPress={Detail}
@@ -413,6 +555,35 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                             </View>
                             <YambiText text={strings.detail} size="normal" color="default" bold={!wholesale} />
                         </Pressable>
+
+                        <Pressable
+                            onPress={() => setIsReservation(!isReservation)}
+                            style={{
+                                flex: 1,
+                                minWidth: 140,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                padding: 12,
+                                backgroundColor: isReservation ? theme.high_color + '20' : theme.border,
+                                borderRadius: 12,
+                                borderWidth: 2,
+                                borderColor: isReservation ? theme.high_color : 'transparent',
+                            }}>
+                            <View style={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: 10,
+                                borderWidth: 2,
+                                borderColor: isReservation ? theme.high_color : theme.gray,
+                                backgroundColor: isReservation ? theme.high_color : 'transparent',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginRight: 8,
+                            }}>
+                                {isReservation && <IconApp pack="FI" name="check" size={12} color={theme.background} />}
+                            </View>
+                            <YambiText text={(strings as any).make_reservation || "Make reservation"} size="normal" color="default" bold={isReservation} />
+                        </Pressable>
                     </View>
 
                     {/* Price Input */}
@@ -429,10 +600,10 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 placeholder="0.00"
                                 maxLength={20}
                                 keyboardType="numeric"
-                                style={{ 
-                                    color: theme.text, 
-                                    paddingHorizontal: 16, 
-                                    paddingVertical: 14, 
+                                style={{
+                                    color: theme.text,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 14,
                                     fontSize: 16,
                                     fontWeight: '600',
                                 }}
@@ -446,8 +617,8 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             {error_number() ?
                                 <YambiText text={strings.quantity} size="small" color="gray" style={{ marginLeft: 2 }} /> :
-                                <View style={{ 
-                                    flexDirection: 'row', 
+                                <View style={{
+                                    flexDirection: 'row',
                                     alignItems: 'center',
                                     backgroundColor: theme.error + '15',
                                     paddingHorizontal: 10,
@@ -470,9 +641,9 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 placeholder="0"
                                 maxLength={20}
                                 keyboardType="numeric"
-                                style={{ 
-                                    color: theme.text, 
-                                    paddingHorizontal: 16, 
+                                style={{
+                                    color: theme.text,
+                                    paddingHorizontal: 16,
                                     paddingVertical: 14,
                                     fontSize: 16,
                                     fontWeight: '600',
@@ -485,7 +656,7 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
 
                     {/* Buyer/Debtor Name */}
                     <View style={{ marginBottom: 16 }}>
-                        <YambiText text={type_sale === 0 ? strings.buyer_name : strings.debtor_name} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 8 }} />
+                        <YambiText text={isReservation ? (strings.buyer_name || "Client name") : (type_sale === 0 ? strings.buyer_name : strings.debtor_name)} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 8 }} />
                         <View style={{
                             backgroundColor: theme.border,
                             borderRadius: 12,
@@ -494,11 +665,11 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                         }}>
                             <TextInput
                                 placeholderTextColor="gray"
-                                placeholder={type_sale === 0 ? strings.buyer_name : strings.debtor_name}
+                                placeholder={isReservation ? (strings.buyer_name || "Client name") : (type_sale === 0 ? strings.buyer_name : strings.debtor_name)}
                                 maxLength={50}
-                                style={{ 
-                                    color: theme.text, 
-                                    paddingHorizontal: 16, 
+                                style={{
+                                    color: theme.text,
+                                    paddingHorizontal: 16,
                                     paddingVertical: 14,
                                     fontSize: 15,
                                 }}
@@ -509,8 +680,8 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                     </View>
 
                     {/* Buyer/Debtor Phone */}
-                    <View style={{ marginBottom: 0 }}>
-                        <YambiText text={type_sale === 0 ? strings.buyer_phone : strings.debtor_phone} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 8 }} />
+                    <View style={{ marginBottom: isReservation ? 16 : 0 }}>
+                        <YambiText text={isReservation ? (strings.buyer_phone || "Client phone") : (type_sale === 0 ? strings.buyer_phone : strings.debtor_phone)} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 8 }} />
                         <View style={{
                             backgroundColor: theme.border,
                             borderRadius: 12,
@@ -522,9 +693,9 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                                 placeholder="+243..."
                                 maxLength={20}
                                 keyboardType="phone-pad"
-                                style={{ 
-                                    color: theme.text, 
-                                    paddingHorizontal: 16, 
+                                style={{
+                                    color: theme.text,
+                                    paddingHorizontal: 16,
                                     paddingVertical: 14,
                                     fontSize: 15,
                                 }}
@@ -533,34 +704,46 @@ const AddItemSale = ({ navigation, route }: NavProps) => {
                             />
                         </View>
                     </View>
+
+                    {/* Paid/Deposit Amount (Only in reservation mode) */}
+                    {isReservation && (
+                        <View style={{ marginBottom: 0 }}>
+                            <YambiText text={(strings as any).deposit_amount || "Paid/Deposit amount"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 8 }} />
+                            <View style={{
+                                backgroundColor: theme.border,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: theme.border,
+                            }}>
+                                <TextInput
+                                    placeholderTextColor="gray"
+                                    placeholder="0.00"
+                                    maxLength={20}
+                                    keyboardType="numeric"
+                                    style={{
+                                        color: theme.text,
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 14,
+                                        fontSize: 16,
+                                        fontWeight: '600',
+                                    }}
+                                    value={depositAmount}
+                                    onChangeText={text => setDepositAmount(text)}
+                                />
+                            </View>
+                        </View>
+                    )}
                 </View>
 
                 {/* Submit Button */}
-                <View style={{ paddingHorizontal: 16, paddingBottom: 20, paddingTop: 8 }}>
-                    <Pressable
+                <View style={{ paddingHorizontal: 16, paddingBottom: 20, paddingTop: 8, marginBottom: 50 }}>
+                    <ButtonNormal
+                        title={strings.proceed}
                         onPress={ConfirmSale}
                         disabled={!numberItemToSell || !error_number()}
-                        style={{
-                            backgroundColor: (!numberItemToSell || !error_number()) ? theme.gray : theme.design_tip2,
-                            paddingVertical: 16,
-                            borderRadius: 16,
-                            alignItems: 'center',
-                            shadowColor: theme.design_tip2,
-                            shadowOffset: { width: 0, height: 3 },
-                            shadowOpacity: (!numberItemToSell || !error_number()) ? 0 : 0.3,
-                            shadowRadius: 4,
-                            elevation: (!numberItemToSell || !error_number()) ? 0 : 4,
-                        }}>
-                        <YambiText 
-                            text={strings.proceed} 
-                            size="normal"
-                            color="design"
-                            style={{  
-                                fontSize: 16, 
-                                fontWeight: '600' 
-                            }} 
-                        />
-                    </Pressable>
+                        loadEnabled={true}
+                        normal={true}
+                    />
                 </View>
             </ScrollView>
         </View>

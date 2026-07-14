@@ -6,7 +6,8 @@ import { strings } from '../../lang/lang';
 import { IconApp } from '../../components/app/IconApp';
 import { NavProps, TBusiness } from '../../types/types';
 import { useObject, useQuery, useRealm } from '@realm/react';
-import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses } from '../../store/database/Models';
+import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses, Payments } from '../../store/database/Models';
+import { getSalePaymentDetails } from '../../utils/paymentHelpers';
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextSmallYambiSuccess, TextBigYambi, TextNormalYambiGray } from '../../components/app/Text';
 import { global_currencies, renderCurrency, renderDateTime } from '../../../GlobalVariables';
 import ModalApp from '../../components/app/ModalApp';
@@ -192,7 +193,10 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
 
         userMatch = sale.sale_operator.includes(user_filter);
         currencyMatch = sale.currency.toString().includes(currency_filter.toString());
-        statusMatch = sale.sale_active === sale_active_filter && sale.type_sale === category_filter;
+        const { isPaid } = getSalePaymentDetails(sale, realm);
+        const isCredit = !isPaid;
+        const categoryMatch = category_filter === 0 ? true : isCredit;
+        statusMatch = sale.sale_active === sale_active_filter && categoryMatch;
 
         return dateMatch && userMatch && currencyMatch && statusMatch;
     });

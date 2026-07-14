@@ -1,4 +1,4 @@
-import {  View, Image, TextInput, RefreshControl, ScrollView } from "react-native";
+import {  View, Image, RefreshControl, ScrollView, Pressable } from "react-native";
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { NavProps, TBusiness, TBusinessSubscription, TBusinessUser, TItem, TItemPrices, TSale, TSellsPoint } from "../../types/types";
 import { strings } from "../../lang/lang";
@@ -7,7 +7,7 @@ import { IconApp } from "../../components/app/IconApp";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import * as RootNavigation from './../../services/Navigation_ref';
 import { useQuery, useRealm } from "@realm/react";
-import { BusinessUsers, UserBusinesses } from "../../store/database/Models";
+import { BusinessUsers, UserBusinesses, Payments } from "../../store/database/Models";
 import { setBusinessOpened, setShowModalApp, setLoadingHeader } from "../../store/reducers/appSlice";
 import { setBusinessSubscriptions } from "../../store/reducers/persistedAppSlice";
 import { TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray } from "../../components/app/Text";
@@ -27,8 +27,9 @@ const Businesses = ({}: NavProps) => {
     const business_opened = useAppSelector(state => state.app.business_opened);
     const [showEnterCurrentPassword, setShowEnterCurrentPassword] = useState<boolean>(false);
     const [showSuccessPasswordEntered, setShowSuccessPasswordEntered] = useState<boolean>(false);
+    const [showWrongPassword, setShowWrongPassword] = useState<boolean>(false);
     const [passwordInput, setPasswordInput] = useState<string>("");
-    const passwordInputRef = useRef<TextInput>(null);
+    const isUnlocking = useRef<boolean>(false);
     const title = useAppSelector(state => state.app.title);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ const Businesses = ({}: NavProps) => {
     const itemss = [];
     const itemssPrices = [];
     const saless = [];
+    const paymentss = [];
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -56,6 +58,7 @@ const Businesses = ({}: NavProps) => {
                 o_items: itemss,
                 o_prices: itemssPrices,
                 o_sales: saless,
+                o_payments: paymentss,
                 phone_number: user_data.phone_number
             })
                 .then(json => {
@@ -222,6 +225,33 @@ const Businesses = ({}: NavProps) => {
                                 } catch (error) { }
                             });
                         }
+
+                        const payments = json.data.payments || [];
+                        try {
+                            realm.write(() => {
+                                for (let i in payments) {
+                                    const payment = {
+                                        _id: payments[i]._id,
+                                        sale_id: payments[i].sale_id,
+                                        reservation_id: payments[i].reservation_id,
+                                        item_id: payments[i].item_id,
+                                        sales_point_id: payments[i].sales_point_id,
+                                        amount: payments[i].amount,
+                                        currency: parseInt(payments[i].currency),
+                                        payment_method: parseInt(payments[i].payment_method),
+                                        payment_status: parseInt(payments[i].payment_status),
+                                        payment_details: typeof payments[i].payment_details === 'string' ? payments[i].payment_details : JSON.stringify(payments[i].payment_details),
+                                        agent_paid: payments[i].agent_paid,
+                                        uploaded: 1,
+                                        createdAt: payments[i].createdAt,
+                                        updatedAt: payments[i].updatedAt
+                                    };
+                                    try {
+                                        realm.create('Payments', payment, true);
+                                    } catch (error) { }
+                                }
+                            });
+                        } catch (error) { }
 
                         const bb = json.data.businesses;
 
@@ -452,26 +482,10 @@ const Businesses = ({}: NavProps) => {
     }, [activeBusinesses.length, currentBusinessIndex]);
 
     const RequestBusinessPassword = () => {
-        if (app_description.require_password_business) {
+        if (app_description.require_password_business && app_description.password_business && app_description.password_business.length === 6) {
             if (!business_opened) {
-                // console.log("Require password");
-                // dispatch(setShowModalApp(true));
                 setShowEnterCurrentPassword(true);
-                // dispatch(setBusinessOpened(true));
-
-                // return true;
-            } else {
-                // console.log("Can open Business");
-                // dispatch(setShowModalApp(false));
-                // dispatch(setBusinessOpened(false));
-                // return false;
             }
-        }
-        else {
-            // console.log("Can open Business");
-            // dispatch(setShowModalApp(false));
-            // dispatch(setBusinessOpened(false));
-            // return false;
         }
     }
 
@@ -537,24 +551,48 @@ const Businesses = ({}: NavProps) => {
     const SETCP = (cpp: string) => {
         setPasswordInput(cpp);
         setShowSuccessPasswordEntered(false);
+        setShowWrongPassword(false);
 
-        if (cpp.length === 6 && cpp === app_description.password_business) {
-            setShowSuccessPasswordEntered(true);
-            setTimeout(() => {
-                setShowEnterCurrentPassword(false);
-                setPasswordInput("");
-                dispatch(setBusinessOpened(true));
-            }, 500);
+        if (cpp.length === 6) {
+            if (cpp === app_description.password_business) {
+                // Correct password
+                isUnlocking.current = true;
+                setShowSuccessPasswordEntered(true);
+                setTimeout(() => {
+                    setShowEnterCurrentPassword(false);
+                    setPasswordInput("");
+                    dispatch(setBusinessOpened(true));
+                    isUnlocking.current = false;
+                }, 500);
+            } else {
+                // Wrong password — show error briefly, then auto-clear
+                setShowWrongPassword(true);
+                setTimeout(() => {
+                    setPasswordInput("");
+                    setShowWrongPassword(false);
+                }, 800);
+            }
         }
     }
 
-    // Focus input when password modal opens
-    useEffect(() => {
-        if (showEnterCurrentPassword) {
-            setTimeout(() => {
-                passwordInputRef.current?.focus();
-            }, 100);
+    const handleKeyPress = (key: string) => {
+        // Block input during unlock animation or wrong-password clear
+        if (isUnlocking.current || showWrongPassword) return;
+
+        if (key === 'backspace') {
+            if (passwordInput.length > 0) {
+                SETCP(passwordInput.slice(0, -1));
+            }
         } else {
+            if (passwordInput.length < 6) {
+                SETCP(passwordInput + key);
+            }
+        }
+    }
+
+    // Reset password input when modal closes
+    useEffect(() => {
+        if (!showEnterCurrentPassword) {
             setPasswordInput("");
         }
     }, [showEnterCurrentPassword]);
@@ -626,6 +664,18 @@ const Businesses = ({}: NavProps) => {
                         </Animated.View>
                     )}
 
+                    {/* Wrong Password Indicator */}
+                    {showWrongPassword && (
+                        <Animated.View 
+                            entering={BounceIn}
+                            style={{ 
+                                marginBottom: 20,
+                                alignItems: 'center'
+                            }}>
+                            <IconApp name="x-circle" pack='FI' size={32} color={theme.error} />
+                        </Animated.View>
+                    )}
+
                     {/* Modern OTP Input */}
                     <View style={{
                         width: '100%',
@@ -645,11 +695,13 @@ const Businesses = ({}: NavProps) => {
                                         height: 60,
                                         borderRadius: 12,
                                         borderWidth: 2,
-                                        borderColor: passwordInput.length === index 
-                                            ? theme.high_color 
-                                            : passwordInput.length > index 
-                                                ? theme.success 
-                                                : theme.border,
+                                        borderColor: showWrongPassword
+                                            ? theme.error
+                                            : passwordInput.length === index 
+                                                ? theme.high_color 
+                                                : passwordInput.length > index 
+                                                    ? theme.success 
+                                                    : theme.border,
                                         backgroundColor: passwordInput.length > index 
                                             ? theme.success + '10' 
                                             : theme.background,
@@ -669,23 +721,6 @@ const Businesses = ({}: NavProps) => {
                                 </Animated.View>
                             ))}
                         </View>
-
-                        {/* Hidden TextInput for actual input */}
-                        <TextInput
-                            ref={passwordInputRef}
-                            style={{
-                                position: 'absolute',
-                                width: '100%',
-                                height: 60,
-                                opacity: 0,
-                            }}
-                            value={passwordInput}
-                            onChangeText={SETCP}
-                            keyboardType="number-pad"
-                            maxLength={6}
-                            secureTextEntry={false}
-                            autoFocus
-                        />
                     </View>
 
                     {/* Helper Text */}
@@ -693,9 +728,78 @@ const Businesses = ({}: NavProps) => {
                         text={passwordInput.length > 0 ? `${passwordInput.length}/6` : ""} 
                         styles={{ 
                             textAlign: 'center',
-                            marginTop: 10
+                            marginTop: 10,
+                            marginBottom: 20,
                         }} 
                     />
+
+                    {/* Custom Numeric Keypad */}
+                    <Animated.View 
+                        entering={FadeInUp.delay(500)}
+                        style={{
+                            width: '100%',
+                            maxWidth: 300,
+                            alignSelf: 'center',
+                        }}
+                    >
+                        {[
+                            ['1', '2', '3'],
+                            ['4', '5', '6'],
+                            ['7', '8', '9'],
+                            ['', '0', 'backspace'],
+                        ].map((row, rowIndex) => (
+                            <View 
+                                key={rowIndex}
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    marginBottom: 12,
+                                }}
+                            >
+                                {row.map((key, keyIndex) => (
+                                    <View key={keyIndex} style={{ width: 80, height: 56, alignItems: 'center', justifyContent: 'center' }}>
+                                        {key === '' ? (
+                                            <View style={{ width: 80, height: 56 }} />
+                                        ) : (
+                                            <Pressable
+                                                onPress={() => handleKeyPress(key)}
+                                                style={({ pressed }) => ({
+                                                    width: 72,
+                                                    height: 52,
+                                                    borderRadius: 26,
+                                                    backgroundColor: pressed 
+                                                        ? theme.high_color + '30'
+                                                        : key === 'backspace'
+                                                            ? 'transparent'
+                                                            : theme.border + '80',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    transform: [{ scale: pressed ? 0.92 : 1 }],
+                                                })}
+                                            >
+                                                {key === 'backspace' ? (
+                                                    <IconApp 
+                                                        name="delete" 
+                                                        pack='FI' 
+                                                        size={24} 
+                                                        color={theme.text} 
+                                                    />
+                                                ) : (
+                                                    <TextNormalYambi 
+                                                        text={key} 
+                                                        styles={{
+                                                            fontSize: 24,
+                                                            fontWeight: '500',
+                                                        }} 
+                                                    />
+                                                )}
+                                            </Pressable>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        ))}
+                    </Animated.View>
                 </Animated.View>
                 :
                 activeBusinesses.length === 0 ?

@@ -11,17 +11,20 @@ import { IconApp } from "../../app/IconApp";
 import { renderCategoryName, renderCurrency, renderDateTime } from "../../../../GlobalVariables";
 import { strings } from "../../../lang/lang";
 import * as RootNavigation from "../../../services/Navigation_ref";
-import { useObject } from "@realm/react";
-import { ItemPrices, UserBusinessArticles } from "../../../store/database/Models";
+import { useObject, useRealm } from "@realm/react";
+import { ItemPrices, UserBusinessArticles, Payments } from "../../../store/database/Models";
+import { getSalePaymentDetails } from "../../../utils/paymentHelpers";
 import SwitchApp from "../../app/SwitchApp";
 
 const SalesList = ({ item, index, onLongPress }: { item: TSale, onLongPress, index: number }) => {
     const app_theme = useAppSelector(state => state.app_theme);
+    const realm = useRealm();
     const article = useObject(UserBusinessArticles, item.item_id);
 
     if (article === null) return;
     const prices = useObject(ItemPrices, "G" + article._id);
     const language = useAppSelector(state => state.persisted_app.langApp);
+    const { isPaid } = getSalePaymentDetails(item, realm);
 
     // console.log("sale displayed")
 
@@ -80,16 +83,31 @@ const SalesList = ({ item, index, onLongPress }: { item: TSale, onLongPress, ind
 
                     <View style={{
                         flexDirection: 'row',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        gap: 8
                     }}>
-                        <TextSmallYambiGray text={renderDateTime(item.createdAt, 1, false)} styles={{ flex: 1 }} />
-                        {item.sale_active === 1 && item.agent_paid === "" ?
+                        <TextSmallYambiGray text={renderDateTime(item.createdAt, 1, false)} />
+                        {!isPaid && (
                             <View style={{
+                                backgroundColor: app_theme.colors.error + '18',
+                                paddingHorizontal: 8,
+                                paddingVertical: 2,
+                                borderRadius: 10,
                                 flexDirection: 'row',
                                 alignItems: 'center'
                             }}>
+                                <Feather name="alert-circle" size={10} color={app_theme.colors.error} style={{ marginRight: 4 }} />
+                                <TextSmallYambiError text={strings.debt || "Debt"} styles={{ fontSize: 10 }} />
+                            </View>
+                        )}
+                        {item.sale_active === 1 && item.agent_paid === "" ?
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginLeft: 'auto'
+                            }}>
                                 <TextSmallYambi text={strings.cash.toLowerCase()} styles={{ marginRight: 3 }} numberLines={1} />
-                                <IconApp pack="MC" name="check-all" size={17} color={item.type_sale === 0 ? app_theme.colors.high_color : app_theme.colors.gray} />
+                                <IconApp pack="MC" name="check-all" size={17} color={isPaid ? app_theme.colors.high_color : app_theme.colors.gray} />
                             </View> : null}
                     </View>
 

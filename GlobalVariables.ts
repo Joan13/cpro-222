@@ -181,10 +181,10 @@ export const copyToClipboard = (text: string) => {
 
 export const default_profile = "require('./src/assets/profile_black.jpg')";
 
-// export const remote_host = 'http://192.168.43.146:3452';
-// export const remote_host_server = 'http://192.168.43.146';
-// export const remote_host_web_socket = 'ws://192.168.43.146:3453';
-// export const media_url = 'http://192.168.43.146/backnode/media'
+// export const remote_host = 'http://192.168.43.147:3452';
+// export const remote_host_server = 'http://192.168.43.147';
+// export const remote_host_web_socket = 'ws://192.168.43.147:3453';
+// export const media_url = 'http://192.168.43.147/backnode/media'
 
 export const remote_host = 'https://server.yambi.net';
 export const remote_host_server = 'https://server.yambi.net';
@@ -196,9 +196,9 @@ export const media_url = 'https://server.yambi.net/media'
 // export const remote_host_web_socket = 'ws://147.79.114.220:3453';
 // export const media_url = 'https://server.yambi.net/backnode/media'
 
-// export const remote_host = 'http://10.42.0.1:3452'; 
-// export const remote_host_server = 'http://10.42.0.1';
-// export const remote_host_web_socket = 'http://10.42.0.1:3453';
+// export const remote_host = 'http://10.62.66.41:3452';
+// export const remote_host_server = 'http://10.62.66.41';
+// export const remote_host_web_socket = 'http://10.62.66.41:3453';
 // export const media_url = 'https://server.yambi.net/backnode/media'
 
 // export const remote_host = 'http://192.168.0.113:3452'; 
@@ -210,7 +210,7 @@ export const SocketApp = io(remote_host_server, {
     path: "/ws"
 });
 
-//   export const SocketApp = io(remote_host_web_socket);
+// export const SocketApp = io(remote_host_web_socket);
 
 export const randomString = (length: number) => {
     for (var s = ''; s.length < length; s += 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.charAt(Math.random() * 62 | 0));

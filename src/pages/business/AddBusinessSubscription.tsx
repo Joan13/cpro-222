@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, ScrollView, SafeAreaView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { strings } from '../../lang/lang';
 import { useAppSelector, useAppDispatch } from '../../store/app/hooks';
@@ -25,20 +25,23 @@ const PLAN_NAMES: { [key: number]: string } = {
     3: 'Ultimate'
 };
 
-/** One-time: 1 month full; 6 months pay 5 (1 free); 12 months pay 9 (3 free) */
+/** One-time: 1 month full; 6 months pay 5 (1 free); 12 months pay 9 (3 free)
+ *  NOTE: Basic plan (1) has NO bonus months — pays full price for all durations. */
 type OneTimeDurationKey = 1 | 6 | 12;
 
 const DURATION_OPTIONS: OneTimeDurationKey[] = [1, 6, 12];
 
-const getBillableMonths = (durationKey: OneTimeDurationKey): number => {
+const getBillableMonths = (planKey: number, durationKey: OneTimeDurationKey): number => {
+    // Basic plan has no bonus months
+    if (planKey === 1) return durationKey;
     if (durationKey === 6) return 5;
-    if (durationKey === 12) return 9;
+    if (durationKey === 12) return 10;
     return 1;
 };
 
 const getOneTimeAmount = (planKey: number, durationKey: OneTimeDurationKey): number => {
     const monthly = PLAN_PRICES[planKey] || PLAN_PRICES[1];
-    return monthly * getBillableMonths(durationKey);
+    return monthly * getBillableMonths(planKey, durationKey);
 };
 
 const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
@@ -71,21 +74,33 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
         if (durationMonths === 1) {
             return ((strings as any).one_time_subscription_details_1m as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
         }
+        if (subscription_plan === 1) {
+            if (durationMonths === 6) {
+                return ((strings as any).one_time_subscription_details_6m_basic as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
+            }
+            return ((strings as any).one_time_subscription_details_12m_basic as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
+        }
         if (durationMonths === 6) {
             return ((strings as any).one_time_subscription_details_6m as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
         }
         return ((strings as any).one_time_subscription_details_12m as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
-    }, [durationMonths, amount]);
+    }, [durationMonths, amount, subscription_plan]);
 
     const confirmModalDurationInfo = useMemo(() => {
         if (durationMonths === 1) {
             return ((strings as any).confirm_one_time_info_1m as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
         }
+        if (subscription_plan === 1) {
+            if (durationMonths === 6) {
+                return ((strings as any).confirm_one_time_info_6m_basic as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
+            }
+            return ((strings as any).confirm_one_time_info_12m_basic as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
+        }
         if (durationMonths === 6) {
             return ((strings as any).confirm_one_time_info_6m as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
         }
         return ((strings as any).confirm_one_time_info_12m as string)?.replace('{amount}', amount.toFixed(2)) ?? '';
-    }, [durationMonths, amount]);
+    }, [durationMonths, amount, subscription_plan]);
 
     // Auto-trigger Stripe flow when coming back from SelectPaymentType with card option
     React.useEffect(() => {
@@ -283,7 +298,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
     };
 
     return (
-        <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
+        <View style={[{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }, StyleSheet.absoluteFill]}>
             {showSuccessModal ? (
                 <ModalApp
                     onClose={() => {
@@ -320,7 +335,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                             alignItems: 'center',
                             marginBottom: 12,
                         }}>
-                            <IconApp pack="FI" name="check-circle" size={30} color={theme.colors.high_color} />
+                            <IconApp pack="OC" name="check-circle-fill" size={30} color={theme.colors.high_color} />
                         </View>
                         <YambiText
                             text={strings.subscription_summary || "Subscription Summary"}
@@ -343,8 +358,8 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                                     durationMonths === 1
                                         ? ((strings as any).subscription_duration_1_month || "")
                                         : durationMonths === 6
-                                            ? `${(strings as any).subscription_duration_6_months || ""}${(strings as any).subscription_one_month_free_badge ? ` · ${(strings as any).subscription_one_month_free_badge}` : ""}`
-                                            : `${(strings as any).subscription_duration_12_months || ""}${(strings as any).subscription_three_months_free_badge ? ` · ${(strings as any).subscription_three_months_free_badge}` : ""}`
+                                            ? `${(strings as any).subscription_duration_6_months || ""}${subscription_plan !== 1 && (strings as any).subscription_one_month_free_badge ? ` · ${(strings as any).subscription_one_month_free_badge}` : ""}`
+                                            : `${(strings as any).subscription_duration_12_months || ""}${subscription_plan !== 1 && (strings as any).subscription_two_months_free_badge ? ` · ${(strings as any).subscription_two_months_free_badge}` : ""}`
                                 }
                                 size="normal"
                                 color="default"
@@ -414,7 +429,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                                 alignItems: 'center',
                                 marginBottom: 16,
                             }}>
-                                <IconApp pack="FI" name="check-circle" size={40} color={theme.colors.high_color} />
+                                <IconApp pack="OC" name="check-circle-fill" size={40} color={theme.colors.high_color} />
                             </View>
 
                             <YambiText
@@ -458,100 +473,104 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
 
                             <View style={{ gap: 12 }}>
                                 {DURATION_OPTIONS.map((d) => (
-                                (() => {
-                                    const disabled = isDurationDisabled(d);
-                                    return (
-                                <Pressable
-                                        key={d}
-                                    style={{
-                                            backgroundColor: durationMonths === d ? theme.colors.high_color + '20' : theme.colors.border,
-                                        borderRadius: 12,
-                                        padding: 16,
-                                        borderWidth: 2,
-                                            borderColor: durationMonths === d ? theme.colors.high_color : theme.colors.border,
-                                            opacity: disabled ? 0.45 : 1,
-                                    }}
-                                        disabled={disabled}
-                                        onPress={() => {
-                                            if (!disabled) {
-                                                setDurationMonths(d);
-                                            }
-                                        }}
-                                >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                        <IconApp
-                                            pack="FI"
-                                                    name="calendar"
-                                            size={18}
-                                                    color={durationMonths === d ? theme.colors.high_color : theme.colors.gray}
-                                        />
-                                        <YambiText
+                                    (() => {
+                                        const disabled = isDurationDisabled(d);
+                                        return (
+                                            <Pressable
+                                                key={d}
+                                                style={{
+                                                    backgroundColor: durationMonths === d ? theme.colors.high_color + '20' : theme.colors.border,
+                                                    borderRadius: 12,
+                                                    padding: 16,
+                                                    borderWidth: 2,
+                                                    borderColor: durationMonths === d ? theme.colors.high_color : theme.colors.border,
+                                                    opacity: disabled ? 0.45 : 1,
+                                                }}
+                                                disabled={disabled}
+                                                onPress={() => {
+                                                    if (!disabled) {
+                                                        setDurationMonths(d);
+                                                    }
+                                                }}
+                                            >
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                                        <IconApp
+                                                            pack="FI"
+                                                            name="calendar"
+                                                            size={18}
+                                                            color={durationMonths === d ? theme.colors.high_color : theme.colors.gray}
+                                                        />
+                                                        <YambiText
+                                                            text={
+                                                                d === 1
+                                                                    ? ((strings as any).subscription_duration_1_month || "")
+                                                                    : d === 6
+                                                                        ? ((strings as any).subscription_duration_6_months || "")
+                                                                        : ((strings as any).subscription_duration_12_months || "")
+                                                            }
+                                                            size="normal"
+                                                            color={durationMonths === d ? "high" : "default"}
+                                                            bold
+                                                            style={{ marginLeft: 8 }}
+                                                        />
+                                                    </View>
+                                                    {d === 6 && subscription_plan !== 1 ? (
+                                                        <View style={{
+                                                            backgroundColor: theme.colors.high_color + '30',
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 4,
+                                                            borderRadius: 8,
+                                                        }}>
+                                                            <YambiText
+                                                                text={(strings as any).subscription_one_month_free_badge || ""}
+                                                                size="small"
+                                                                color="high"
+                                                                style={{ fontSize: 11 }}
+                                                            />
+                                                        </View>
+                                                    ) : d === 12 && subscription_plan !== 1 ? (
+                                                        <View style={{
+                                                            backgroundColor: theme.colors.high_color + '30',
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 4,
+                                                            borderRadius: 8,
+                                                        }}>
+                                                            <YambiText
+                                                                text={(strings as any).subscription_two_months_free_badge || ""}
+                                                                size="small"
+                                                                color="high"
+                                                                style={{ fontSize: 11 }}
+                                                            />
+                                                        </View>
+                                                    ) : null}
+                                                </View>
+                                                <YambiText
                                                     text={
                                                         d === 1
-                                                            ? ((strings as any).subscription_duration_1_month || "")
-                                                            : d === 6
-                                                                ? ((strings as any).subscription_duration_6_months || "")
-                                                                : ((strings as any).subscription_duration_12_months || "")
+                                                            ? ((strings as any).subscription_duration_1_subtext || "")
+                                                            : subscription_plan === 1
+                                                                ? (d === 6
+                                                                    ? ((strings as any).subscription_duration_6_subtext_basic || "")
+                                                                    : ((strings as any).subscription_duration_12_subtext_basic || ""))
+                                                                : (d === 6
+                                                                    ? ((strings as any).subscription_duration_6_subtext || "")
+                                                                    : ((strings as any).subscription_duration_12_subtext || ""))
                                                     }
-                                            size="normal"
-                                                    color={durationMonths === d ? "high" : "default"}
-                                            bold
-                                                    style={{ marginLeft: 8 }}
+                                                    size="small"
+                                                    color="gray"
+                                                    style={{ fontSize: 11, marginLeft: 26 }}
                                                 />
-                                            </View>
-                                            {d === 6 ? (
-                                                <View style={{
-                                                    backgroundColor: theme.colors.high_color + '30',
-                                                    paddingHorizontal: 8,
-                                                    paddingVertical: 4,
-                                                    borderRadius: 8,
-                                                }}>
-                                                    <YambiText
-                                                        text={(strings as any).subscription_one_month_free_badge || ""}
-                                                        size="small"
-                                                        color="high"
-                                                        style={{ fontSize: 11 }}
-                                        />
-                                    </View>
-                                            ) : d === 12 ? (
-                                                <View style={{
-                                                    backgroundColor: theme.colors.high_color + '30',
-                                                    paddingHorizontal: 8,
-                                                    paddingVertical: 4,
-                                                    borderRadius: 8,
-                                                }}>
-                                    <YambiText
-                                                        text={(strings as any).subscription_three_months_free_badge || ""}
-                                        size="small"
-                                                        color="high"
-                                        style={{ fontSize: 11 }}
-                                    />
-                                                </View>
-                                            ) : null}
-                                        </View>
-                                        <YambiText
-                                            text={
-                                                d === 1
-                                                    ? ((strings as any).subscription_duration_1_subtext || "")
-                                                    : d === 6
-                                                        ? ((strings as any).subscription_duration_6_subtext || "")
-                                                        : ((strings as any).subscription_duration_12_subtext || "")
-                                            }
-                                            size="small"
-                                            color="gray"
-                                            style={{ fontSize: 11, marginLeft: 26 }}
-                                        />
-                                        <YambiText
-                                            text={`$${getOneTimeAmount(subscription_plan, d).toFixed(2)}`}
-                                            size="normal"
-                                            color={durationMonths === d ? "high" : "default"}
-                                            bold
-                                            style={{ marginLeft: 26, marginTop: 6 }}
-                                    />
-                                </Pressable>
-                                    );
-                                })()
+                                                <YambiText
+                                                    text={`$${getOneTimeAmount(subscription_plan, d).toFixed(2)}`}
+                                                    size="normal"
+                                                    color={durationMonths === d ? "high" : "default"}
+                                                    bold
+                                                    style={{ marginLeft: 26, marginTop: 6 }}
+                                                />
+                                            </Pressable>
+                                        );
+                                    })()
                                 ))}
                             </View>
                         </View>
@@ -653,7 +672,7 @@ const AddBusinessSubscription = ({ navigation, route }: NavProps) => {
                     </View>
                 </ScrollView>
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 

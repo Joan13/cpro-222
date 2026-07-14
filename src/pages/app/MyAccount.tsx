@@ -13,6 +13,8 @@ import AppActivityIndicator from '../../components/app/AppActivityIndicator';
 import { useRealm } from '@realm/react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import messaging from '@react-native-firebase/messaging';
+import { resetPersistedApp } from '../../store/reducers/persistedAppSlice';
 
 const MyAccount = () => {
 
@@ -56,6 +58,13 @@ const MyAccount = () => {
             // console.log('Google Sign-Out error:', error);
         }
 
+        // Delete Firebase notification token from device
+        try {
+            await messaging().deleteToken();
+        } catch (error) {
+            // console.log('FCM token deletion error:', error);
+        }
+
         dispatch(updateUser({
             user_id: "0",
             user_names: "",
@@ -79,6 +88,7 @@ const MyAccount = () => {
             createdAt: "",
             updatedAt: ""
         }));
+        dispatch(resetPersistedApp());
         setLoading(false);
         dispatch(setShowModalApp(false));
         setShowSignOut(false);
@@ -109,6 +119,13 @@ const MyAccount = () => {
             // console.log('Google Sign-Out error:', error);
         }
 
+        // Delete Firebase notification token from device
+        try {
+            await messaging().deleteToken();
+        } catch (error) {
+            // console.log('FCM token deletion error:', error);
+        }
+
         dispatch(updateUser({
             user_id: "0",
             user_names: "",
@@ -132,6 +149,7 @@ const MyAccount = () => {
             createdAt: "",
             updatedAt: ""
         }));
+        dispatch(resetPersistedApp());
 
         dispatch(setShowModalApp(false));
         setShowDeleteAccount(false);

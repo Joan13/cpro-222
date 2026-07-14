@@ -18,7 +18,6 @@ import { NavProps } from '../../types/types';
 import ModalApp from '../../components/app/ModalApp';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import { remote_host } from '../../../GlobalVariables';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Types ---
 

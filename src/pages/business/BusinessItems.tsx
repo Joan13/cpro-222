@@ -5,7 +5,8 @@ import { strings } from "../../lang/lang";
 import { IconApp } from "../../components/app/IconApp";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { useObject, useQuery, useRealm } from "@realm/react";
-import { UserBusinessArticles, ItemPrices, UserSellsPoints, BusinessUsers, UserBusinesses } from "../../store/database/Models";
+import { UserBusinessArticles, ItemPrices, UserSellsPoints, BusinessUsers, UserBusinesses, Payments } from "../../store/database/Models";
+import { createPaymentObject } from "../../utils/paymentHelpers";
 import { PieChart } from "react-native-gifted-charts";
 import { setBusinessItemsFilter, setShowModalApp } from "../../store/reducers/appSlice";
 import { YambiText } from "../../components/app/Text";
@@ -733,6 +734,19 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                             realm.create('BusinessItemsSale', sale);
                         } catch (error) { }
 
+                        const paymentAmount = (sale.number * parseFloat(sale.selling_price) + (parseFloat(sale.delivery_price) || 0) - (parseFloat(sale.discount_price) || 0)).toString();
+                        const payment = createPaymentObject(
+                            sale,
+                            paymentAmount,
+                            1,
+                            type_sale === 0 ? 2 : 1,
+                            type_sale === 0 ? user_data.phone_number : ""
+                        );
+
+                        try {
+                            realm.create('Payments', payment);
+                        } catch (error) { }
+
                         try {
                             realm.create('UserBusinessArticles', item, true);
                         } catch (error) { }
@@ -740,6 +754,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         SocketApp.emit("newItems", JSON.stringify({ phone_number: user_data.phone_number, items: [item] }));
 
                         SocketApp.emit("newSales", JSON.stringify({ phone_number: user_data.phone_number, items: [sale] }));
+
+                        SocketApp.emit("newPayments", JSON.stringify({ phone_number: user_data.phone_number, items: [payment] }));
                     });
 
                     setNumberItemToSell("");

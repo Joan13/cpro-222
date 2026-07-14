@@ -871,3 +871,160 @@ export class CompanyUsers extends Realm.Object<CompanyUsers> {
         primaryKey: '_id',
     };
 }
+
+export class Reservations extends Realm.Object<Reservations> {
+    _id!: string;
+    business_id!: string;
+    sales_point_id!: string;
+    item_id!: string;
+    customer_id!: string;
+    customer_name!: string;
+    customer_phone!: string;
+    quantity!: number;
+    total_amount!: string;
+    deposit_amount!: string;
+    remaining_amount!: string;
+    currency!: number;
+    status!: number;
+    sale_id!: string;
+    uploaded!: number;
+    createdAt!: string;
+    updatedAt!: string;
+
+    static schema: ObjectSchema = {
+        name: 'Reservations',
+        properties: {
+            _id: {
+                type: 'string',
+                indexed: true
+            },
+            business_id: 'string',
+            sales_point_id: 'string',
+            item_id: 'string',
+            customer_id: {
+                type: 'string',
+                default: ''
+            },
+            customer_name: {
+                type: 'string',
+                default: ''
+            },
+            customer_phone: {
+                type: 'string',
+                default: ''
+            },
+            quantity: {
+                type: 'int',
+                default: 1
+            },
+            total_amount: 'string',
+            deposit_amount: {
+                type: 'string',
+                default: '0'
+            },
+            remaining_amount: {
+                type: 'string',
+                default: '0'
+            },
+            currency: {
+                type: 'int',
+                default: 1
+            },
+            status: {
+                type: 'int',
+                default: 1
+            },
+            /*
+                1 = Pending
+                2 = Confirmed
+                3 = Completed
+                4 = Cancelled
+                5 = Expired
+            */
+            sale_id: {
+                type: 'string',
+                default: ''
+            },
+            uploaded: {
+                type: 'int',
+                default: 0
+            },
+            createdAt: 'string',
+            updatedAt: 'string'
+        },
+        primaryKey: '_id',
+    };
+}
+
+
+export class Payments extends Realm.Object<Payments> {
+    _id!: string;
+    sale_id!: string;
+    reservation_id!: string;
+    item_id!: string;
+    sales_point_id!: string;
+    amount!: string;
+    currency!: number;
+    payment_method!: number;
+    payment_status!: number;
+    payment_details!: string;
+    agent_paid!: string;
+    uploaded!: number;
+    createdAt!: string;
+    updatedAt!: string;
+
+    static schema: ObjectSchema = {
+        name: 'Payments',
+        properties: {
+            _id: {
+                type: 'string',
+                indexed: true
+            },
+            sale_id: {
+                type: 'string',
+                default: ''
+            },
+            reservation_id: {
+                type: 'string',
+                default: ''
+            },
+            item_id: 'string',
+            sales_point_id: 'string',
+            amount: 'string',
+            currency: {
+                type: 'int',
+                default: 1
+            },
+            payment_method: {
+                type: 'int',
+                default: 1
+            },
+            // 1 = Cash
+            // 2 = Mobile Money
+            // 3 = Card
+            payment_status: {
+                type: 'int',
+                default: 1
+            },
+            // 1 = Pending
+            // 2 = Success
+            // 3 = Failed
+            // 4 = Cancelled
+            payment_details: {
+                type: 'string',
+                default: '{}'
+            },
+            agent_paid: {
+                type: 'string',
+                default: ''
+            },
+            uploaded: {
+                type: 'int',
+                default: 0
+            },
+            createdAt: 'string',
+            updatedAt: 'string'
+        },
+        primaryKey: '_id',
+    };
+}

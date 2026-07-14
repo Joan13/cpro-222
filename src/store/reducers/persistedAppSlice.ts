@@ -209,6 +209,25 @@ export const persistedAppSlice = createSlice({
         },
         setResetCart: (state) => {
             state.cart = []
+        },
+        resetPersistedApp: (state) => {
+            state.raw_contacts = [];
+            state.business_badge = [];
+            state.business_subscriptions = [];
+            state.cart = [];
+            if (state.app_description) {
+                state.app_description.require_password_business = false;
+                state.app_description.require_password_chat = false;
+                state.app_description.require_password_inbox = false;
+                state.app_description.require_password_app = false;
+                state.app_description.require_password_expenses = false;
+                state.app_description.password_business = "";
+                state.app_description.password_chat = "";
+                state.app_description.password_inbox = "";
+                state.app_description.password_app = "";
+                state.app_description.password_expenses = "";
+                state.app_description.enable_expense_reminder_notifications = true;
+            }
         }
     }
 })
@@ -239,6 +258,7 @@ export const {
     setRawContactsPersisted,
     setAddRemoveCartItem,
     setResetCart,
+    resetPersistedApp,
     setDefaultMessageSettingsData } = persistedAppSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type

@@ -414,6 +414,31 @@ const Signup = ({ navigation, route }: NavProps) => {
                             // }
                         }
 
+                        const payments = json.data.payments || [];
+                        for (let i in payments) {
+                            const payment = {
+                                _id: payments[i]._id,
+                                sale_id: payments[i].sale_id,
+                                reservation_id: payments[i].reservation_id,
+                                item_id: payments[i].item_id,
+                                sales_point_id: payments[i].sales_point_id,
+                                amount: payments[i].amount,
+                                currency: parseInt(payments[i].currency),
+                                payment_method: parseInt(payments[i].payment_method),
+                                payment_status: parseInt(payments[i].payment_status),
+                                payment_details: typeof payments[i].payment_details === 'string' ? payments[i].payment_details : JSON.stringify(payments[i].payment_details),
+                                agent_paid: payments[i].agent_paid,
+                                uploaded: 1,
+                                createdAt: payments[i].createdAt,
+                                updatedAt: payments[i].updatedAt
+                            };
+                            realm.write(() => {
+                                try {
+                                    realm.create('Payments', payment, true);
+                                } catch (error) { console.log(error); }
+                            });
+                        }
+
                         const user_assemble_data = {
                             user_id: assemble._id,
                             user_names: assemble.user_names,

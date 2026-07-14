@@ -613,6 +613,23 @@ export type TSale = {
     updatedAt: string
 }
 
+export type TPayment = {
+    _id: string,
+    sale_id: string,
+    reservation_id: string,
+    item_id: string,
+    sales_point_id: string,
+    amount: string,
+    currency: number,
+    payment_method: number,
+    payment_status: number,
+    payment_details: string,
+    agent_paid: string,
+    uploaded: number,
+    createdAt: string,
+    updatedAt: string
+}
+
 export type TExpense = {
     _id: string,
     title: string,
@@ -765,6 +782,8 @@ export type RootStackParamList = {
     ItemSales: { business_id: string; sales_point_id: string; item_id: string };
     SalesPointSales: { sales_point_id: string };
     Sale: { item_id: string, sales_point_id: string };
+    EditSalePayments: { sale: any; item: any; prices: any };
+    SalePayment: { paymentId: any; sale: any };
     EditBusiness: { business: TBusiness };
     EditSalesPoint: { sales_point: TSellsPoint };
     UserBusinessUsers: { business_id: string };
@@ -818,11 +837,16 @@ export type RootStackParamList = {
     CategoryExpenses: { category_id: number; category_name?: string; flag?: number; business_id?: string; sales_point_id?: string };
     Expenses: { flag?: number; business_id?: string; sales_point_id?: string };
     GetExpenses: { flag?: number; business_id?: string; sales_point_id?: string };
+    Reservations: { business_id?: string; sales_point_id?: string };
+    Reservation: { reservationId: string };
+    EditReservation: { reservationId: string };
     PostNews: { company: TCompany, flag: number };
     News: { flag?: number, company_id?: string };
     Post: { post?: TNews; id?: string };
     PostReactions: { post: TNews };
 };
 
-type NavProps = NativeStackScreenProps<RootStackParamList, 'Home', 'Inbox', 'SplashStartYambi', 'Signup', 'Themes', 'NewGroup', 'NewChat', 'SettingsYambi', 'Languages', 'PictureMessage', 'ViewFullInboxImage', 'NewBusiness', 'AboutYambi', 'NewBusinessItem', 'BusinessItems', 'EditBusinessItem', 'RenewStock', 'NewSalesPoint', 'EditBusiness', 'EditSalesPoint', 'BusinessSales', 'SalesPointSales', 'NewBusinessUser', 'Sale', 'BusinessItem', 'BusinessModern', 'EditSalesPoint', 'CustomizeBusiness', 'MessageUs', 'UserBusinessUsers', 'BusinessSubscribers', 'EditBusinessUser', 'ItemSales', 'EditProfile', 'ViewPhoto', 'ContactUs', 'MyAccount', 'Companies', 'Company', 'NewCompany', 'NewCompanyUser', 'EditCompany', 'EditCompanyUser', 'CompanyUser', 'ForwardMessage', 'MessageInfo', 'UserProfileInfo', 'AllMessages', 'NewStory', 'Stories', 'UserStories', 'UpdateYambi', 'AddItemSale', 'Cart', 'CategoryItems', 'SearchMarketplace', 'Calculator', 'PostNews', 'EditNews', 'News', 'Post', 'PostReactions', 'BusinessInventoryMovementHistory', 'InventoryMovement', 'ShareBusiness', 'Expenses', 'AddExpense', 'EditExpense', 'Expense', 'CategoryExpenses', 'GetExpenses'>;
+type NavProps = NativeStackScreenProps<RootStackParamList, 'Home', 'Inbox', 'SplashStartYambi', 'Signup', 'Themes', 'NewGroup', 'NewChat', 'SettingsYambi', 'Languages', 'PictureMessage', 'ViewFullInboxImage', 'NewBusiness', 'AboutYambi', 'NewBusinessItem', 'BusinessItems', 'EditBusinessItem', 'RenewStock', 'NewSalesPoint', 'EditBusiness', 'EditSalesPoint', 'BusinessSales', 'SalesPointSales', 'NewBusinessUser', 'Sale', 'EditSalePayments', 'SalePayment', 'BusinessItem', 'BusinessModern', 'EditSalesPoint', 'CustomizeBusiness', 'MessageUs', 'UserBusinessUsers', 'BusinessSubscribers', 'EditBusinessUser', 'ItemSales', 'EditProfile', 'ViewPhoto', 'ContactUs', 'MyAccount', 'Companies', 'Company', 'NewCompany', 'NewCompanyUser', 'EditCompany', 'EditCompanyUser', 'CompanyUser', 'ForwardMessage', 'MessageInfo', 'UserProfileInfo', 'AllMessages', 'NewStory', 'Stories', 'UserStories', 'UpdateYambi', 'AddItemSale', 'Cart', 'CategoryItems', 'SearchMarketplace', 'Calculator', 'PostNews', 'EditNews', 'News', 'Post', 'PostReactions', 'BusinessInventoryMovementHistory', 'InventoryMovement', 'ShareBusiness', 'Expenses', 'AddExpense', 'EditExpense', 'Expense', 'CategoryExpenses', 'GetExpenses', 'Reservations', 'Reservation', 'EditReservation'>;
+
+
 

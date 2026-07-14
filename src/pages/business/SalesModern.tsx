@@ -5,8 +5,9 @@ import { setShowModalApp } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
 import { IconApp } from '../../components/app/IconApp';
 import { NavProps } from '../../types/types';
-import { useObject, useQuery } from '@realm/react';
-import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses, UserSellsPoints } from '../../store/database/Models';
+import { useObject, useQuery, useRealm } from '@realm/react';
+import { BusinessItemsSale, BusinessUsers, UserBusinessArticles, UserBusinesses, UserSellsPoints, Payments, Expenses, Reservations } from '../../store/database/Models';
+import { getSalePaymentDetails } from '../../utils/paymentHelpers';
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextBigYambi, TextNormalYambiGray, YambiText } from '../../components/app/Text';
 import { global_currencies, renderCurrency, renderDateTime } from '../../../GlobalVariables';
 import ModalApp from '../../components/app/ModalApp';
@@ -31,6 +32,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
     const user_data = useAppSelector(state => state.user_data);
     const isAdmin = user_data?.user_level === 2;
     const dispatch = useAppDispatch();
+    const realm = useRealm();
 
     const [date_start, setDate_start] = useState<string>("");
     const [date_end, setDate_end] = useState<string>("");
@@ -67,6 +69,26 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                 .sorted('createdAt', true)
         }, [business_id, sales_point_id, item_id]);
 
+    const reservations = useQuery(
+        Reservations, res => {
+            return res.filtered(
+                'business_id == $0 || sales_point_id == $1',
+                business_id !== '' ? business_id : (sales_point?.business_id || ''),
+                sales_point_id
+            ).sorted('createdAt', true);
+        }, [business_id, sales_point_id, sales_point]);
+
+    const expenses = useQuery(
+        Expenses, exp => {
+            return exp.filtered(
+                '(business_id == $0 || sales_point_id == $1) && expense_active == $2',
+                business_id !== '' ? business_id : (sales_point?.business_id || ''),
+                sales_point_id,
+                1
+            ).sorted('createdAt', true);
+        }, [business_id, sales_point_id, sales_point]);
+
+
     // Get unique sellers
     const uniqueSellers = Array.from(new Set(bs.map(sale => sale.sale_operator)));
 
@@ -94,7 +116,9 @@ const SalesModern = ({ navigation, route }: NavProps) => {
         userMatch = sale.sale_operator.includes(user_filter);
         currencyMatch = sale.currency.toString().includes(currency_filter.toString());
         // category_filter: 0 = all (cash + credit), 1 = credit only
-        const categoryMatch = category_filter === 0 ? true : sale.type_sale === category_filter;
+        const { isPaid } = getSalePaymentDetails(sale, realm);
+        const isCredit = !isPaid;
+        const categoryMatch = category_filter === 0 ? true : isCredit;
         statusMatch = sale.sale_active === sale_active_filter && categoryMatch;
 
         return dateMatch && userMatch && currencyMatch && statusMatch;
@@ -154,7 +178,110 @@ const SalesModern = ({ navigation, route }: NavProps) => {
         return { total_sales_count, total_items_sold, currency_stats };
     };
 
+    // Calculate extended per-currency stats (debts, reservations, expenses, net cash)
+    // Respects all active filters (date, user, currency, category)
+    const getExtendedStats = () => {
+        const per_currency: {
+            [key: number]: {
+                // Sales
+                totalSelling: number;
+                totalCost: number;
+                paidAmount: number;
+                // Debts (on-credit sales with remaining balance)
+                debtAmount: number;
+                debtCount: number;
+                // Reservations
+                reservationCount: number;
+                reservationTotal: number;
+                reservationDeposit: number;
+                reservationRemaining: number;
+                // Expenses
+                expenseAmount: number;
+                expenseCount: number;
+                // Net
+                netCash: number;
+            }
+        } = {};
+
+        const ensureCurrency = (cu: number) => {
+            if (!per_currency[cu]) {
+                per_currency[cu] = {
+                    totalSelling: 0, totalCost: 0, paidAmount: 0,
+                    debtAmount: 0, debtCount: 0,
+                    reservationCount: 0, reservationTotal: 0, reservationDeposit: 0, reservationRemaining: 0,
+                    expenseAmount: 0, expenseCount: 0,
+                    netCash: 0,
+                };
+            }
+        };
+
+        // Sales — use filtered_sales so date, user, currency & category filters all apply
+        filtered_sales.forEach(sale => {
+            const cu = sale.currency;
+            ensureCurrency(cu);
+            const { paidAmount, remainingAmount } = getSalePaymentDetails(sale, realm);
+            per_currency[cu].totalSelling += (parseFloat(sale.selling_price) || 0) * sale.number;
+            per_currency[cu].totalCost += (parseFloat(sale.cost_price) || 0) * sale.number;
+            per_currency[cu].paidAmount += paidAmount;
+            if (remainingAmount > 0) {
+                per_currency[cu].debtAmount += remainingAmount;
+                per_currency[cu].debtCount++;
+            }
+        });
+
+        // Reservations — apply date range and currency filters when active
+        reservations
+            .filter(r => {
+                if (r.status !== 1 && r.status !== 2) return false;
+                if (currency_filter !== "" && r.currency !== parseInt(currency_filter)) return false;
+                if (date_start !== "" && date_end !== "") {
+                    const d = moment(r.createdAt).format("YYYY-MM-DD");
+                    if (d < date_start || d > date_end) return false;
+                }
+                return true;
+            })
+            .forEach(res => {
+                const cu = res.currency;
+                ensureCurrency(cu);
+                per_currency[cu].reservationCount++;
+                per_currency[cu].reservationTotal += parseFloat(res.total_amount) || 0;
+                per_currency[cu].reservationDeposit += parseFloat(res.deposit_amount) || 0;
+                per_currency[cu].reservationRemaining += parseFloat(res.remaining_amount) || 0;
+            });
+
+        // Expenses — apply date range and currency filters when active
+        expenses
+            .filter(exp => {
+                if (currency_filter !== "" && exp.currency !== parseInt(currency_filter)) return false;
+                if (date_start !== "" && date_end !== "") {
+                    const d = moment(exp.createdAt).format("YYYY-MM-DD");
+                    if (d < date_start || d > date_end) return false;
+                }
+                return true;
+            })
+            .forEach(exp => {
+                const cu = exp.currency;
+                ensureCurrency(cu);
+                per_currency[cu].expenseAmount += (parseFloat(exp.amount) || 0) * (exp.quantity || 1);
+                per_currency[cu].expenseCount++;
+            });
+
+        // Net cash per currency
+        Object.keys(per_currency).forEach(k => {
+            const cu = parseInt(k);
+            per_currency[cu].netCash =
+                (per_currency[cu].paidAmount + per_currency[cu].reservationDeposit)
+                - per_currency[cu].expenseAmount;
+        });
+
+        return per_currency;
+    };
+
+
+
     const stats = getStats();
+    const extendedStats = getExtendedStats();
+
 
     const activeFiltersCount = [
         date_start !== "" && date_end !== "",
@@ -463,42 +590,46 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                 estimatedItemSize={140}
                 ListHeaderComponent={() => (
                     <View style={{ padding: 15 }}>
-                        {/* Summary Cards */}
+                        {/* ── Overview strip ── */}
                         <TextNormalYambi text={strings.business_overview} bold styles={{ marginBottom: 15, fontSize: 18 }} />
 
-                        <View style={{ flexDirection: 'row', marginBottom: 15 }}>
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+                            {/* Total transactions */}
                             <View style={{
                                 flex: 1,
+                                borderRadius: 16,
+                                padding: 16,
                                 backgroundColor: app_theme.colors.border,
-                                borderRadius: 12,
-                                padding: 15,
-                                marginRight: 8,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#6366F1',
                                 borderWidth: 1,
                                 borderColor: app_theme.colors.border,
                             }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                    <IconApp pack="FI" name="shopping-bag" size={16} color="#10B981" />
-                                    <TextSmallYambiGray text={strings.total_sales} styles={{ marginLeft: 5 }} />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                    <IconApp pack="FI" name="shopping-bag" size={14} color="#6366F1" />
+                                    <TextSmallYambiGray text={strings.total_sales} styles={{ marginLeft: 6, fontSize: 11 }} />
                                 </View>
-                                <TextBigYambi text={stats.total_sales_count.toString()} bold styles={{ fontSize: 28, color: app_theme.colors.high_color }} />
-                                <TextSmallYambiGray text={strings.completed_sales} styles={{ marginTop: 2 }} />
+                                <TextBigYambi text={stats.total_sales_count.toString()} bold styles={{ fontSize: 30, color: '#6366F1', lineHeight: 34 }} />
+                                <TextSmallYambiGray text={strings.completed_sales} styles={{ fontSize: 11, marginTop: 2 }} />
                             </View>
 
+                            {/* Total items */}
                             <View style={{
                                 flex: 1,
+                                borderRadius: 16,
+                                padding: 16,
                                 backgroundColor: app_theme.colors.border,
-                                borderRadius: 12,
-                                padding: 15,
-                                marginLeft: 8,
+                                borderLeftWidth: 4,
+                                borderLeftColor: '#F59E0B',
                                 borderWidth: 1,
                                 borderColor: app_theme.colors.border,
                             }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                    <IconApp pack="FI" name="package" size={16} color="#F59E0B" />
-                                    <TextSmallYambiGray text={strings.items} styles={{ marginLeft: 5 }} />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                    <IconApp pack="FI" name="package" size={14} color="#F59E0B" />
+                                    <TextSmallYambiGray text={strings.items} styles={{ marginLeft: 6, fontSize: 11 }} />
                                 </View>
-                                <TextBigYambi text={stats.total_items_sold.toString()} bold styles={{ fontSize: 28, color: app_theme.colors.high_color }} />
-                                <TextSmallYambiGray text={strings.sold} styles={{ marginTop: 2 }} />
+                                <TextBigYambi text={stats.total_items_sold.toString()} bold styles={{ fontSize: 30, color: '#F59E0B', lineHeight: 34 }} />
+                                <TextSmallYambiGray text={strings.sold} styles={{ fontSize: 11, marginTop: 2 }} />
                             </View>
                         </View>
 
@@ -656,7 +787,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                                     </View>
                                 </Pressable>
 
-                                {/* Payment Type Filter (Completed vs On Credit) */}
+                                {/* Payment Type Filter */}
                                 <View style={{
                                     backgroundColor: app_theme.colors.background,
                                     padding: 15,
@@ -763,7 +894,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                             </Pressable>
                         )}
 
-                        {/* Currency Statistics */}
+                        {/* ── Per-currency stats cards ── */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 10 }}>
                             <TextNormalYambi text={`${strings.stats} (${filtered_sales.length})`} bold styles={{ fontSize: 18 }} />
                             <Pressable
@@ -787,94 +918,167 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                             </Pressable>
                         </View>
 
-                        {Object.entries(stats.currency_stats).map(([currency, data]) => {
-                            const salesInCurrency = filtered_sales.filter(s => s.currency === parseInt(currency));
+                        {Object.entries(extendedStats).map(([currency, ext]) => {
+                            const cu = parseInt(currency);
+                            const salesData = stats.currency_stats[cu];
+                            const salesInCurrency = bs.filter(s => s.currency === cu && s.sale_active === 1);
+                            if (!conditionShowGlobal(salesInCurrency)) return null;
 
-                            if (!conditionShowGlobal(salesInCurrency)) {
-                                return null;
-                            }
+                            const profit = (salesData?.selling || 0) - (salesData?.cost || 0);
+                            const profitPct = (salesData?.selling || 0) > 0 ? (profit / (salesData?.selling || 1)) * 100 : 0;
+                            const netCashPositive = ext.netCash >= 0;
+                            const cur = renderCurrency(cu, false);
 
-                            const profit = data.selling - data.cost;
-                            const profitPercentage = data.selling > 0 ? (profit / data.selling) * 100 : 0;
+                            const StatRow = ({ icon, label, value, color, bold = false }: { icon: string, label: string, value: string, color?: string, bold?: boolean }) => (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8, minWidth: 0 }}>
+                                        <IconApp pack="FI" name={icon} size={13} color={color || app_theme.colors.gray} />
+                                        <TextSmallYambiGray text={label} styles={{ marginLeft: 6, flexShrink: 1 }} numberLines={1} />
+                                    </View>
+                                    <TextNormalYambi text={value} bold={bold} styles={{ color: color || app_theme.colors.text, flexShrink: 1, textAlign: 'right' }} numberLines={1} />
+                                </View>
+                            );
+
+
+                            const SectionHeader = ({ icon, title, color }: { icon: string, title: string, color: string }) => (
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginTop: 14,
+                                    marginBottom: 6,
+                                    paddingBottom: 6,
+                                    borderBottomWidth: 1,
+                                    borderColor: color + '40',
+                                }}>
+                                    <View style={{
+                                        width: 26,
+                                        height: 26,
+                                        borderRadius: 8,
+                                        backgroundColor: color + '22',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: 8,
+                                    }}>
+                                        <IconApp pack="FI" name={icon} size={13} color={color} />
+                                    </View>
+                                    <TextNormalYambi text={title} bold styles={{ color, fontSize: 13 }} />
+                                </View>
+                            );
 
                             return (
                                 <View key={currency} style={{
-                                    backgroundColor: app_theme.colors.border,
-                                    borderRadius: 12,
-                                    padding: 15,
-                                    marginBottom: 15,
+                                    borderRadius: 18,
+                                    padding: 18,
+                                    marginBottom: 16,
+                                    backgroundColor: app_theme.colors.background,
                                     borderWidth: 1,
                                     borderColor: app_theme.colors.border,
+                                    overflow: 'hidden',
+                                    // Premium shadow
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.08,
+                                    shadowRadius: 12,
+                                    // elevation: 4,
                                 }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-                                        <IconApp pack="FI" name="dollar-sign" size={18} color={app_theme.colors.high_color} />
-                                        <TextNormalYambiHighColor text={renderCurrency(parseInt(currency), true)} bold styles={{ marginLeft: 8 }} />
-                                    </View>
-
-                                    <View style={{ marginBottom: 10 }}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
-                                            <TextSmallYambiGray text={strings.total_cost_price} />
-                                            <TextNormalYambi text={`${data.cost.toFixed(2)} ${renderCurrency(parseInt(currency), false)}`} bold />
-                                        </View>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
-                                            <TextSmallYambiGray text={strings.total_selling_price} />
-                                            <TextNormalYambi text={`${data.selling.toFixed(2)} ${renderCurrency(parseInt(currency), false)}`} bold />
-                                        </View>
-                                    </View>
-
+                                    {/* Card header: currency badge */}
                                     <View style={{
-                                        borderTopWidth: 1,
-                                        borderColor: profit > 0 ? app_theme.colors.success : app_theme.colors.error,
-                                        paddingTop: 10,
                                         flexDirection: 'row',
-                                        justifyContent: 'space-between',
                                         alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        marginBottom: 4,
                                     }}>
-                                        <TextNormalYambi text={strings.total_profit} />
-                                        <View style={{ alignItems: 'flex-end' }}>
-                                            {profit > 0 ? (
-                                                <>
-                                                    <TextNormalYambiSuccess text={`${profit.toFixed(2)} ${renderCurrency(parseInt(currency), false)}`} bold />
-                                                    <View style={{
-                                                        backgroundColor: app_theme.colors.success + "20",
-                                                        paddingHorizontal: 8,
-                                                        paddingVertical: 2,
-                                                        borderRadius: 10,
-                                                        marginTop: 5,
-                                                    }}>
-                                                        <TextSmallYambiGray text={`+${profitPercentage.toFixed(2)}%`} styles={{ color: app_theme.colors.success }} />
-                                                    </View>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <TextNormalYambiError text={`${profit.toFixed(2)} ${renderCurrency(parseInt(currency), false)}`} bold />
-                                                    <View style={{
-                                                        backgroundColor: app_theme.colors.error + "20",
-                                                        paddingHorizontal: 8,
-                                                        paddingVertical: 2,
-                                                        borderRadius: 10,
-                                                        marginTop: 5,
-                                                    }}>
-                                                        <TextSmallYambiError text={`${profitPercentage.toFixed(2)}%`} />
-                                                    </View>
-                                                </>
-                                            )}
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            backgroundColor: app_theme.colors.high_color + '18',
+                                            paddingHorizontal: 12,
+                                            paddingVertical: 6,
+                                            borderRadius: 20,
+                                        }}>
+                                            <IconApp pack="FI" name="credit-card" size={14} color={app_theme.colors.high_color} />
+                                            <TextNormalYambi text={renderCurrency(cu, true)} bold styles={{ marginLeft: 6, color: app_theme.colors.high_color }} />
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, marginLeft: 8 }}>
+                                            <IconApp pack="FI" name="package" size={12} color={app_theme.colors.gray} />
+                                            <TextSmallYambiGray text={`${(salesData?.items || 0)} ${strings.items.toLowerCase()} · ${(salesData?.sales || 0)} ${strings.sales.toLowerCase()}`} styles={{ marginLeft: 5, fontSize: 11 }} numberLines={1} />
                                         </View>
                                     </View>
 
-                                    <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center' }}>
-                                        <IconApp pack="FI" name="package" size={14} color={app_theme.colors.gray} />
-                                        <TextSmallYambiGray text={`${data.items} ${strings.items.toLowerCase()} • ${data.sales} ${strings.sales.toLowerCase()}`} styles={{ marginLeft: 5 }} />
+                                    {/* ── Sales Section ── */}
+                                    <SectionHeader icon="trending-up" title={strings.sales} color="#6366F1" />
+                                    <StatRow icon="tag" label={strings.total_cost_price} value={`${(salesData?.cost || 0).toFixed(2)} ${cur}`} />
+                                    <StatRow icon="dollar-sign" label={strings.total_selling_price} value={`${(salesData?.selling || 0).toFixed(2)} ${cur}`} />
+                                    <StatRow
+                                        icon={profit >= 0 ? "trending-up" : "trending-down"}
+                                        label={strings.total_profit}
+                                        value={`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${cur} (${profitPct.toFixed(1)}%)`}
+                                        color={profit >= 0 ? app_theme.colors.success : app_theme.colors.error}
+                                        bold
+                                    />
+
+                                    {/* ── Debts Section ── */}
+                                    {ext.debtCount > 0 && (
+                                        <>
+                                            <SectionHeader icon="alert-circle" title={(strings as any).debts || "Debts"} color="#EF4444" />
+                                            <StatRow icon="users" label={(strings as any).total_debts || "Outstanding debts"} value={`${ext.debtAmount.toFixed(2)} ${cur}`} color="#EF4444" bold />
+                                            <StatRow icon="file-text" label={strings.on_credit} value={`${ext.debtCount} ${strings.sales.toLowerCase()}`} />
+                                        </>
+                                    )}
+
+                                    {/* ── Reservations Section ── */}
+                                    {ext.reservationCount > 0 && (
+                                        <>
+                                            <SectionHeader icon="bookmark" title={(strings as any).reservations || "Reservations"} color="#8B5CF6" />
+                                            <StatRow icon="layers" label={(strings as any).total_reserved || "Total reserved"} value={`${ext.reservationTotal.toFixed(2)} ${cur}`} />
+                                            <StatRow icon="check-circle" label={(strings as any).deposit_paid || "Deposit paid"} value={`${ext.reservationDeposit.toFixed(2)} ${cur}`} color={app_theme.colors.success} />
+                                            <StatRow icon="clock" label={(strings as any).remaining_reserved || "Remaining to collect"} value={`${ext.reservationRemaining.toFixed(2)} ${cur}`} color="#F59E0B" bold />
+                                            <StatRow icon="grid" label={(strings as any).reservations || "Reservations"} value={`${ext.reservationCount}`} />
+                                        </>
+                                    )}
+
+                                    {/* ── Expenses Section ── */}
+                                    {ext.expenseCount > 0 && (
+                                        <>
+                                            <SectionHeader icon="minus-circle" title={(strings as any).expenses_summary || "Expenses"} color="#F97316" />
+                                            <StatRow icon="shopping-cart" label={(strings as any).expenses_summary || "Expenses"} value={`${ext.expenseAmount.toFixed(2)} ${cur}`} color="#F97316" bold />
+                                            <StatRow icon="list" label={strings.quantity} value={`${ext.expenseCount}`} />
+                                        </>
+                                    )}
+
+                                    {/* ── Net Cash ── */}
+                                    <View style={{
+                                        marginTop: 16,
+                                        borderRadius: 12,
+                                        padding: 14,
+                                        overflow: 'hidden',
+                                        backgroundColor: netCashPositive ? app_theme.colors.success + '14' : app_theme.colors.error + '14',
+                                        borderWidth: 1,
+                                        borderColor: netCashPositive ? app_theme.colors.success + '50' : app_theme.colors.error + '50',
+                                    }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                            <IconApp pack="FI" name="briefcase" size={15} color={netCashPositive ? app_theme.colors.success : app_theme.colors.error} />
+                                            <TextNormalYambi text={(strings as any).total_cash || "Net cash"} bold styles={{ marginLeft: 7, color: netCashPositive ? app_theme.colors.success : app_theme.colors.error, flexShrink: 1 }} numberLines={1} />
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                            <TextSmallYambiGray text={(strings as any).cash_in || "Cash in"} styles={{ fontSize: 11, flex: 1 }} numberLines={1} />
+                                            <TextNormalYambi text={`${(ext.paidAmount + ext.reservationDeposit).toFixed(2)} ${cur}`} styles={{ color: app_theme.colors.success, flexShrink: 1, textAlign: 'right' }} bold numberLines={1} />
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                            <TextSmallYambiGray text={(strings as any).cash_out || "Cash out"} styles={{ fontSize: 11, flex: 1 }} numberLines={1} />
+                                            <TextNormalYambi text={`${ext.expenseAmount.toFixed(2)} ${cur}`} styles={{ color: app_theme.colors.error, flexShrink: 1, textAlign: 'right' }} bold numberLines={1} />
+                                        </View>
+                                        <View style={{ borderTopWidth: 1, borderColor: netCashPositive ? app_theme.colors.success + '40' : app_theme.colors.error + '40', paddingTop: 10 }}>
+                                            <TextBigYambi text={`${ext.netCash >= 0 ? '+' : ''}${ext.netCash.toFixed(2)} ${cur}`} bold styles={{ fontSize: 20, color: netCashPositive ? app_theme.colors.success : app_theme.colors.error, textAlign: 'right', flexShrink: 1 }} numberLines={1} />
+                                        </View>
                                     </View>
                                 </View>
+
                             );
                         })}
 
-                        {Object.keys(stats.currency_stats).length === 0 && (
-                            <View style={{
-                                alignItems: 'center',
-                                padding: 40,
-                            }}>
+                        {Object.keys(extendedStats).length === 0 && (
+                            <View style={{ alignItems: 'center', padding: 40 }}>
                                 <IconApp pack="FI" name="inbox" size={48} color={app_theme.colors.gray} />
                                 <TextNormalYambiGray text={strings.no_sales_available} styles={{ marginTop: 15, textAlign: 'center' }} />
                             </View>

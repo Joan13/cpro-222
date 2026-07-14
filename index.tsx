@@ -26,6 +26,8 @@ import {
   Stories,
   Expenses,
   CompanyUsers,
+  Payments,
+  Reservations
 } from './src/store/database/Models';
 import { RealmProvider } from '@realm/react';
 import { insertBackgroundMessage, openRealmInstance, safeRealmWrite } from './src/services/RealmInstance';
@@ -64,8 +66,10 @@ const RootYambi = () => {
         YambiGroups,
         Expenses,
         CompanyUsers,
+        Payments,
+        Reservations,
       ]}
-      schemaVersion={19}
+      schemaVersion={23}
     >
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
@@ -80,6 +84,15 @@ const RootYambi = () => {
 registerRootComponent(RootYambi);
 
 const backgroundMessageHandler = async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+  const state = store.getState();
+  const userId = state.user_data?.user_id;
+  const phoneNumber = state.user_data?.phone_number;
+
+  // Only handle notifications and database synchronization if a user is connected
+  if (!userId || userId === "0" || !phoneNumber) {
+    return;
+  }
+
   displayNotification(remoteMessage);
 
   try {
@@ -272,3 +285,10 @@ Notifications.addNotificationResponseReceivedListener(async (response) => {
     return;
   }
 });
+
+
+// before the detailed sales, in the statistics cards, there should be a card, there should be information about the statistics (already done) but also the infos about the reservations (per each currency. show data if available), all the debts and the business/point of sale expenses (each expense in the right currency card).
+
+// And down should be the total cash.
+
+// Then modernize the statistics cards

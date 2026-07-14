@@ -14,7 +14,7 @@ import axios from "axios";
 import { useQuery, useRealm } from "@realm/react";
 import { TBusiness, TBusinessSubscription, TBusinessUser, TItem, TItemPrices, TSale, TSellsPoint } from "../../types/types";
 import * as RootNavigation from './../../services/Navigation_ref';
-import { UserChats } from "../../store/database/Models";
+import { UserChats, Payments } from "../../store/database/Models";
 import AppActivityIndicator from "../app/AppActivityIndicator";
 
 const HeaderRightHome = () => {
@@ -33,6 +33,7 @@ const HeaderRightHome = () => {
     const itemss = [];
     const itemssPrices = [];
     const saless = [];
+    const paymentss = [];
 
     const chats = useQuery(
         UserChats, chts => {
@@ -68,6 +69,7 @@ const HeaderRightHome = () => {
                 o_items: itemss,
                 o_prices: itemssPrices,
                 o_sales: saless,
+                o_payments: paymentss,
                 phone_number: user_data.phone_number
             })
                 .then(json => {
@@ -238,6 +240,33 @@ const HeaderRightHome = () => {
                                 } catch (error) { }
                             });
                         }
+
+                        const payments = json.data.payments || [];
+                        try {
+                            realm.write(() => {
+                                for (let i in payments) {
+                                    const payment = {
+                                        _id: payments[i]._id,
+                                        sale_id: payments[i].sale_id,
+                                        reservation_id: payments[i].reservation_id,
+                                        item_id: payments[i].item_id,
+                                        sales_point_id: payments[i].sales_point_id,
+                                        amount: payments[i].amount,
+                                        currency: parseInt(payments[i].currency),
+                                        payment_method: parseInt(payments[i].payment_method),
+                                        payment_status: parseInt(payments[i].payment_status),
+                                        payment_details: typeof payments[i].payment_details === 'string' ? payments[i].payment_details : JSON.stringify(payments[i].payment_details),
+                                        agent_paid: payments[i].agent_paid,
+                                        uploaded: 1,
+                                        createdAt: payments[i].createdAt,
+                                        updatedAt: payments[i].updatedAt
+                                    };
+                                    try {
+                                        realm.create('Payments', payment, true);
+                                    } catch (error) { }
+                                }
+                            });
+                        } catch (error) { }
 
                         const bb = json.data.businesses;
 

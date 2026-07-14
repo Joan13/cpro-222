@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Platform } from 'react-native';
 import Animated, { BounceIn, FadeInDown, FadeInUp, SlideInDown, SlideInUp } from 'react-native-reanimated';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -30,6 +30,7 @@ const CustomizeBusiness = () => {
      const [passwordChangeable, setPasswordChangeable] = useState<boolean>(false);
      const [passwordVisible, setPasswordVisible] = useState<boolean>(true);
      const passwordModalInputRef = useRef<TextInput>(null);
+     const passwordSetupInputRef = useRef<TextInput>(null);
 
      const SetValue = (val: boolean, type: number) => {
           if (type === 1) {
@@ -54,7 +55,7 @@ const CustomizeBusiness = () => {
           const newEnabledState = !password_business_enabled;
           setPassword_business_enabled(newEnabledState);
           dispatch(setRequirePasswordBusiness(newEnabledState));
-          
+
           // If disabling password, clear the password and reset business_opened state
           if (!newEnabledState) {
                dispatch(setPasswordBusiness(""));
@@ -71,13 +72,15 @@ const CustomizeBusiness = () => {
                dispatch(setShowModalApp(true));
                setCp("");
           } else {
-               // No valid password exists, toggle directly
+               // No valid password exists
                const newEnabledState = !password_business_enabled;
                setPassword_business_enabled(newEnabledState);
-               dispatch(setRequirePasswordBusiness(newEnabledState));
-               
-               // If disabling, reset business_opened state
+
+               // Only reveal the input area; do NOT dispatch setRequirePasswordBusiness(true)
+               // until a valid 6-digit password is actually committed via SetPP.
+               // If disabling, clear everything.
                if (!newEnabledState) {
+                    dispatch(setRequirePasswordBusiness(false));
                     dispatch(setPasswordBusiness(""));
                     setBusiness_password("");
                     dispatch(setBusinessOpened(false));
@@ -86,6 +89,9 @@ const CustomizeBusiness = () => {
      }
 
      const SetPP = (pp: string) => {
+          // Only allow numeric characters
+          const numericOnly = pp.replace(/[^0-9]/g, '');
+
           // If password is not changeable yet, check if we need to verify current password
           if (!passwordChangeable) {
                // If there's an existing password, require verification before allowing change
@@ -97,29 +103,34 @@ const CustomizeBusiness = () => {
                } else {
                     // No existing password, allow setting new password directly
                     setPasswordChangeable(true);
-                    setBusiness_password(pp);
-                    dispatch(setPasswordBusiness(pp));
-                    if (pp.length === 6) {
+                    setBusiness_password(numericOnly);
+                    // Only persist to Redux when exactly 6 digits are entered
+                    if (numericOnly.length === 6) {
+                         dispatch(setPasswordBusiness(numericOnly));
                          dispatch(setRequirePasswordBusiness(true));
-                    } else {
-                         dispatch(setRequirePasswordBusiness(false));
                     }
                }
           } else {
-               // Password changeable - allow direct editing
-               setBusiness_password(pp);
-               dispatch(setPasswordBusiness(pp));
-               if (pp.length === 6) {
+               // Password changeable - update local state while typing
+               setBusiness_password(numericOnly);
+               // Only persist to Redux when exactly 6 digits are entered
+               if (numericOnly.length === 6) {
+                    dispatch(setPasswordBusiness(numericOnly));
                     dispatch(setRequirePasswordBusiness(true));
                } else {
-                    dispatch(setRequirePasswordBusiness(false));
+                    // If user backspaces below 6 digits, clear the persisted password
+                    // so partial passwords are never stored
+                    if (app_description.password_business && app_description.password_business.length === 6) {
+                         dispatch(setPasswordBusiness(""));
+                         dispatch(setRequirePasswordBusiness(false));
+                    }
                }
           }
      }
 
      const SETCP = (cpp: string) => {
           setCp(cpp);
-          
+
           if (flag_pass === 0) {
                if (cpp.length === 6 && cpp === app_description.password_business) {
                     setShowEnterCurrentPassword(false);
@@ -183,16 +194,16 @@ const CustomizeBusiness = () => {
 
      }, []);
 
-     // Focus password input when modal opens
-     useEffect(() => {
-          if (showEnterCurrentPassword) {
-               setTimeout(() => {
-                    passwordModalInputRef.current?.focus();
-               }, 100);
-          } else {
-               setCp("");
-          }
-     }, [showEnterCurrentPassword]);
+      // Focus password input when modal opens (using 400ms delay to let the native Modal transition finish)
+      useEffect(() => {
+           if (showEnterCurrentPassword) {
+                setTimeout(() => {
+                     passwordModalInputRef.current?.focus();
+                }, 400);
+           } else {
+                setCp("");
+           }
+      }, [showEnterCurrentPassword]);
 
      return (
           <ScrollView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
@@ -200,8 +211,8 @@ const CustomizeBusiness = () => {
                <StatusBarYambi />
 
                {showEnterCurrentPassword ?
-                    <ModalApp onClose={() => { 
-                         dispatch(setShowModalApp(false)); 
+                    <ModalApp onClose={() => {
+                         dispatch(setShowModalApp(false));
                          setShowEnterCurrentPassword(false);
                          setCp("");
                          setFlag_pass(0);
@@ -211,7 +222,7 @@ const CustomizeBusiness = () => {
                               paddingVertical: 10,
                          }}>
                               {/* Icon */}
-                              <Animated.View 
+                              <Animated.View
                                    entering={BounceIn}
                                    style={{
                                         width: 60,
@@ -225,12 +236,12 @@ const CustomizeBusiness = () => {
                                    <IconApp name="lock" pack='FI' size={30} color={theme.colors.high_color} />
                               </Animated.View>
 
-                              <TextNormalYambiGray 
-                                   text={strings.current_business_tab_password} 
-                                   styles={{ 
+                              <TextNormalYambiGray
+                                   text={strings.current_business_tab_password}
+                                   styles={{
                                         textAlign: 'center',
-                                        marginBottom: 30 
-                                   }} 
+                                        marginBottom: 30
+                                   }}
                               />
 
                               {/* Modern OTP Input */}
@@ -238,11 +249,14 @@ const CustomizeBusiness = () => {
                                    width: '100%',
                                    marginBottom: 15,
                               }}>
-                                   <View style={{
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-between',
-                                        marginBottom: 15,
-                                   }}>
+                                   <Pressable
+                                        onPress={() => passwordModalInputRef.current?.focus()}
+                                        style={{
+                                             flexDirection: 'row',
+                                             justifyContent: 'space-between',
+                                             marginBottom: 15,
+                                        }}
+                                   >
                                         {[0, 1, 2, 3, 4, 5].map((index) => (
                                              <Animated.View
                                                   key={index}
@@ -252,57 +266,57 @@ const CustomizeBusiness = () => {
                                                        height: 45,
                                                        borderRadius: 10,
                                                        borderWidth: 2,
-                                                       borderColor: cp.length === index 
-                                                            ? theme.colors.high_color 
-                                                            : cp.length > index 
-                                                                ? theme.colors.success 
-                                                                : theme.colors.border,
-                                                       backgroundColor: cp.length > index 
-                                                            ? theme.colors.success + '10' 
+                                                       borderColor: cp.length === index
+                                                            ? theme.colors.high_color
+                                                            : cp.length > index
+                                                                 ? theme.colors.success
+                                                                 : theme.colors.border,
+                                                       backgroundColor: cp.length > index
+                                                            ? theme.colors.success + '10'
                                                             : theme.colors.background,
                                                        justifyContent: 'center',
                                                        alignItems: 'center',
                                                   }}>
                                                   {cp[index] && (
                                                        <Animated.View entering={BounceIn}>
-                                                            <IconApp 
-                                                                 name="circle" 
-                                                                 pack='FA' 
-                                                                 size={10} 
-                                                                 color={cp.length > index ? theme.colors.success : theme.colors.high_color} 
+                                                            <IconApp
+                                                                 name="circle"
+                                                                 pack='FA'
+                                                                 size={10}
+                                                                 color={cp.length > index ? theme.colors.success : theme.colors.high_color}
                                                             />
                                                        </Animated.View>
                                                   )}
                                              </Animated.View>
                                         ))}
-                                   </View>
+                                   </Pressable>
 
-                                   {/* Hidden TextInput for actual input */}
-                                   <TextInput
-                                        ref={passwordModalInputRef}
-                                        style={{
-                                             position: 'absolute',
-                                             width: '100%',
-                                             height: 55,
-                                             opacity: 0,
-                                        }}
-                                        value={cp}
+                                    {/* Hidden TextInput — positioned off-screen + caretHidden to fix keyboard issues */}
+                                    <TextInput
+                                         ref={passwordModalInputRef}
+                                         style={{
+                                              position: 'absolute',
+                                              left: -9999,
+                                              width: 100,
+                                              height: 40,
+                                         }}
+                                         value={cp}
                                         onChangeText={SETCP}
                                         keyboardType="number-pad"
                                         maxLength={6}
                                         secureTextEntry={false}
-                                        autoFocus
+                                        caretHidden={true}
                                    />
                               </View>
 
                               {/* Helper Text */}
                               {cp.length > 0 && (
-                                   <TextSmallYambiGray 
-                                        text={`${cp.length}/6`} 
-                                        styles={{ 
+                                   <TextSmallYambiGray
+                                        text={`${cp.length}/6`}
+                                        styles={{
                                              textAlign: 'center',
                                              marginTop: 5
-                                        }} 
+                                        }}
                                    />
                               )}
                          </View>
@@ -386,12 +400,13 @@ const CustomizeBusiness = () => {
                               marginBottom: 20,
                               marginLeft: 40,
                          }}>
-                              <View style={{
-                                   flexDirection: 'row',
-                                   // flex: 1,
-                                   // justifyContent: 'space-between',
-                                   marginBottom: 15,
-                              }}>
+                              <Pressable
+                                   onPress={() => passwordSetupInputRef.current?.focus()}
+                                   style={{
+                                        flexDirection: 'row',
+                                        marginBottom: 15,
+                                   }}
+                              >
                                    {[0, 1, 2, 3, 4, 5].map((index) => (
                                         <Animated.View
                                              key={index}
@@ -402,13 +417,13 @@ const CustomizeBusiness = () => {
                                                   marginRight: 10,
                                                   borderRadius: 8,
                                                   borderWidth: 2,
-                                                  borderColor: business_password.length === index 
-                                                       ? theme.colors.high_color 
-                                                       : business_password.length > index 
-                                                           ? theme.colors.success 
-                                                           : theme.colors.border,
-                                                  backgroundColor: business_password.length > index 
-                                                       ? theme.colors.success + '10' 
+                                                  borderColor: business_password.length === index
+                                                       ? theme.colors.high_color
+                                                       : business_password.length > index
+                                                            ? theme.colors.success
+                                                            : theme.colors.border,
+                                                  backgroundColor: business_password.length > index
+                                                       ? theme.colors.success + '10'
                                                        : theme.colors.border,
                                                   justifyContent: 'center',
                                                   alignItems: 'center',
@@ -416,41 +431,43 @@ const CustomizeBusiness = () => {
                                              {business_password[index] && (
                                                   <Animated.View entering={BounceIn}>
                                                        {passwordVisible ? (
-                                                            <IconApp 
-                                                                 name="circle" 
-                                                                 pack='FA' 
-                                                                 size={8} 
-                                                                 color={business_password.length > index ? theme.colors.success : theme.colors.high_color} 
+                                                            <IconApp
+                                                                 name="circle"
+                                                                 pack='FA'
+                                                                 size={8}
+                                                                 color={business_password.length > index ? theme.colors.success : theme.colors.high_color}
                                                             />
                                                        ) : (
-                                                            <TextNormalYambi 
-                                                                 text={business_password[index]} 
-                                                                 styles={{ 
+                                                            <TextNormalYambi
+                                                                 text={business_password[index]}
+                                                                 styles={{
                                                                       fontSize: 20,
                                                                       fontWeight: 'bold',
                                                                       color: business_password.length > index ? theme.colors.success : theme.colors.high_color
-                                                                 }} 
+                                                                 }}
                                                             />
                                                        )}
                                                   </Animated.View>
                                              )}
                                         </Animated.View>
                                    ))}
-                              </View>
+                              </Pressable>
 
-                              {/* Hidden TextInput for actual input */}
-                              <TextInput
-                                   style={{
-                                        position: 'absolute',
-                                        width: '100%',
-                                        height: 45,
-                                        opacity: 0,
-                                   }}
-                                   value={business_password}
+                               {/* Hidden TextInput — positioned off-screen + caretHidden to fix keyboard issues */}
+                               <TextInput
+                                    ref={passwordSetupInputRef}
+                                    style={{
+                                         position: 'absolute',
+                                         left: -9999,
+                                         width: 100,
+                                         height: 40,
+                                    }}
+                                    value={business_password}
                                    onChangeText={SetPP}
                                    keyboardType="number-pad"
                                    maxLength={6}
                                    secureTextEntry={false}
+                                   caretHidden={true}
                               />
 
                               {/* Action Buttons Row */}
@@ -468,12 +485,12 @@ const CustomizeBusiness = () => {
                                    )}
 
                                    {/* Password Length Indicator */}
-                                   <TextSmallYambiGray 
-                                        text={`${business_password.length}/6`} 
-                                        styles={{ 
+                                   <TextSmallYambiGray
+                                        text={`${business_password.length}/6`}
+                                        styles={{
                                              marginRight: 15,
                                              fontSize: 12
-                                        }} 
+                                        }}
                                    />
 
                                    {/* Visibility Toggle */}
@@ -502,7 +519,7 @@ const CustomizeBusiness = () => {
                          </View>
                     </Animated.View> : null}
 
-               <TextSmallYambiGray text={strings.this_affect_local} styles={{ paddingVertical: 15, borderColor: theme.colors.border, borderTopWidth: 1, paddingHorizontal: 20 }} />
+               <TextSmallYambiGray text={strings.this_affect_local} styles={{ paddingVertical: 15, borderColor: theme.colors.border, borderTopWidth: 1, paddingHorizontal: 20, marginBottom: 30 }} />
           </ScrollView>
      )
 }

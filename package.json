@@ -1,6 +1,6 @@
 {
   "name": "yambi",
-  "version": "2.46.29",
+  "version": "2.47.0",
   "version_name": "Vanilla",
   "main": "index.tsx",
   "scripts": {

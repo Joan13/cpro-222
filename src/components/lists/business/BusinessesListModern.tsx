@@ -16,6 +16,23 @@ import * as DropdownMenu from 'zeego/dropdown-menu';
 import axios from "axios";
 import SalesCharts from "../../../pages/business/SalesCharts";
 
+const ClockDisplay = ({ lang }: { lang: any }) => {
+    const [currentTime, setCurrentTime] = useState(new Date());
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <>
+            <YambiText size="big" bold color="gray" text={getDateFormat(currentTime.toISOString(), lang)} style={{ marginBottom: 8 }} />
+            <YambiText size="big" bold color="high" text={getHourFormat(currentTime.toISOString(), lang, 1)} style={{ fontSize: 36 }} />
+        </>
+    );
+};
+
 interface BusinessesListModernProps {
     businesses: TBusiness[];
     currentBusinessIndex: number;
@@ -35,7 +52,6 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     const [showBusinessInfo, setShowBusinessInfo] = useState(false);
     const [showLowStock, setShowLowStock] = useState(false);
     const [showOutOfStock, setShowOutOfStock] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
     const businessInfoHeight = useRef(new Animated.Value(0)).current;
     const lang = useAppSelector(state => state.persisted_app.langApp);
     const dispatch = useAppDispatch();
@@ -167,13 +183,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
         }
     }, [bitems]);
 
-    // Live clock update every second
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
+
 
     // Animate business info expand/collapse
     useEffect(() => {
@@ -1232,8 +1242,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     borderWidth: 1,
                     borderColor: app_theme.colors.border,
                 }}>
-                    <YambiText size="big" bold color="gray" text={getDateFormat(currentTime.toISOString(), lang)} style={{ marginBottom: 8 }} />
-                    <YambiText size="big" bold color="high" text={getHourFormat(currentTime.toISOString(), lang, 1)} style={{ fontSize: 36 }} />
+                    <ClockDisplay lang={lang} />
                 </View>
 
                 {/* Quick Stats Row */}
@@ -1321,6 +1330,56 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     </View>
                     <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />
                 </Pressable>
+
+                <Pressable
+                    onPress={() => {
+                        if (isAdmin) {
+                            RootNavigation.navigate("Reservations", { business_id: item._id });
+                            return;
+                        }
+                        if (oo !== undefined && oo.user_active === 1) {
+                            if (oo.level === 1) {
+                                RootNavigation.navigate("Reservations", { business_id: item._id });
+                            } else if (oo.level === 2 || oo.level === 3) {
+                                if (oo.sales_point_id && oo.sales_point_id !== "") {
+                                    RootNavigation.navigate("Reservations", { sales_point_id: oo.sales_point_id });
+                                } else {
+                                    dispatch(setShowModalApp(true));
+                                    setShowUserError(true);
+                                }
+                            } else {
+                                dispatch(setShowModalApp(true));
+                                setShowUserError(true);
+                            }
+                        } else {
+                            dispatch(setShowModalApp(true));
+                            setShowUserError(true);
+                        }
+                    }}
+                    style={{
+                        backgroundColor: app_theme.colors.border,
+                        borderRadius: 12,
+                        padding: 15,
+                        marginBottom: 15,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
+                    }}
+                >
+                    <View style={{ flexDirection: "row", alignItems: "center", flex: 1, marginRight: 12 }}>
+                        <IconApp pack="FI" name="bookmark" size={20} color={app_theme.colors.high_color} styles={{ marginRight: 12 }} />
+                        <YambiText
+                            text={(strings as any).view_reservations || "View Reservations"}
+                            bold
+                            style={{ flex: 1 }}
+                            numberLines={2}
+                        />
+                    </View>
+                    <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />
+                </Pressable>
+
 
                 <Pressable
                     onPress={() => {

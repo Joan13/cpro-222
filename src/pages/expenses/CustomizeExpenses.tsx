@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Platform } from 'react-native';
 import Animated, { BounceIn, FadeInUp } from 'react-native-reanimated';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -23,6 +23,7 @@ const CustomizeExpenses = () => {
     const [passwordChangeable, setPasswordChangeable] = useState<boolean>(false);
     const [passwordVisible, setPasswordVisible] = useState<boolean>(true);
     const passwordModalInputRef = useRef<TextInput>(null);
+    const passwordSetupInputRef = useRef<TextInput>(null);
     const [expenseReminderEnabled, setExpenseReminderEnabled] = useState<boolean>(app_description.enable_expense_reminder_notifications ?? true);
 
     const SetValuePassword = () => {
@@ -46,13 +47,15 @@ const CustomizeExpenses = () => {
             dispatch(setShowModalApp(true));
             setCp("");
         } else {
-            // No valid password exists, toggle directly
+            // No valid password exists
             const newEnabledState = !password_expenses_enabled;
             setPassword_expenses_enabled(newEnabledState);
-            dispatch(setRequirePasswordExpenses(newEnabledState));
 
-            // If disabling, reset expenses_opened state
+            // Only reveal the input area; do NOT dispatch setRequirePasswordExpenses(true)
+            // until a valid 6-digit password is actually committed via SetPP.
+            // If disabling, clear everything.
             if (!newEnabledState) {
+                dispatch(setRequirePasswordExpenses(false));
                 dispatch(setPasswordExpenses(""));
                 setExpenses_password("");
                 dispatch(setExpensesOpened(false));
@@ -61,6 +64,9 @@ const CustomizeExpenses = () => {
     }
 
     const SetPP = (pp: string) => {
+        // Only allow numeric characters
+        const numericOnly = pp.replace(/[^0-9]/g, '');
+
         // If password is not changeable yet, check if we need to verify current password
         if (!passwordChangeable) {
             // If there's an existing password, require verification before allowing change
@@ -72,22 +78,27 @@ const CustomizeExpenses = () => {
             } else {
                 // No existing password, allow setting new password directly
                 setPasswordChangeable(true);
-                setExpenses_password(pp);
-                dispatch(setPasswordExpenses(pp));
-                if (pp.length === 6) {
+                setExpenses_password(numericOnly);
+                // Only persist to Redux when exactly 6 digits are entered
+                if (numericOnly.length === 6) {
+                    dispatch(setPasswordExpenses(numericOnly));
                     dispatch(setRequirePasswordExpenses(true));
-                } else {
-                    dispatch(setRequirePasswordExpenses(false));
                 }
             }
         } else {
-            // Password changeable - allow direct editing
-            setExpenses_password(pp);
-            dispatch(setPasswordExpenses(pp));
-            if (pp.length === 6) {
+            // Password changeable - update local state while typing
+            setExpenses_password(numericOnly);
+            // Only persist to Redux when exactly 6 digits are entered
+            if (numericOnly.length === 6) {
+                dispatch(setPasswordExpenses(numericOnly));
                 dispatch(setRequirePasswordExpenses(true));
             } else {
-                dispatch(setRequirePasswordExpenses(false));
+                // If user backspaces below 6 digits, clear the persisted password
+                // so partial passwords are never stored
+                if (app_description.password_expenses && app_description.password_expenses.length === 6) {
+                    dispatch(setPasswordExpenses(""));
+                    dispatch(setRequirePasswordExpenses(false));
+                }
             }
         }
     }
@@ -144,12 +155,12 @@ const CustomizeExpenses = () => {
         return () => clearTimeout(timeout);
     }, []);
 
-    // Focus password input when modal opens
+    // Focus password input when modal opens (using 400ms delay to let the native Modal transition finish)
     useEffect(() => {
         if (showEnterCurrentPassword) {
             setTimeout(() => {
                 passwordModalInputRef.current?.focus();
-            }, 100);
+            }, 400);
         } else {
             setCp("");
         }
@@ -198,11 +209,14 @@ const CustomizeExpenses = () => {
                             width: '100%',
                             marginBottom: 15,
                         }}>
-                            <View style={{
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                marginBottom: 15,
-                            }}>
+                            <Pressable
+                                onPress={() => passwordModalInputRef.current?.focus()}
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    marginBottom: 15,
+                                }}
+                            >
                                 {[0, 1, 2, 3, 4, 5].map((index) => (
                                     <Animated.View
                                         key={index}
@@ -235,23 +249,23 @@ const CustomizeExpenses = () => {
                                         )}
                                     </Animated.View>
                                 ))}
-                            </View>
+                            </Pressable>
 
-                            {/* Hidden TextInput for actual input */}
+                            {/* Hidden TextInput — positioned off-screen + caretHidden to fix keyboard issues */}
                             <TextInput
                                 ref={passwordModalInputRef}
                                 style={{
                                     position: 'absolute',
-                                    width: '100%',
-                                    height: 55,
-                                    opacity: 0,
+                                    left: -9999,
+                                    width: 100,
+                                    height: 40,
                                 }}
                                 value={cp}
                                 onChangeText={SETCP}
                                 keyboardType="number-pad"
                                 maxLength={6}
                                 secureTextEntry={false}
-                                autoFocus
+                                caretHidden={true}
                             />
                         </View>
 
@@ -321,10 +335,13 @@ const CustomizeExpenses = () => {
                         marginBottom: 20,
                         marginLeft: 40,
                     }}>
-                        <View style={{
-                            flexDirection: 'row',
-                            marginBottom: 15,
-                        }}>
+                        <Pressable
+                            onPress={() => passwordSetupInputRef.current?.focus()}
+                            style={{
+                                flexDirection: 'row',
+                                marginBottom: 15,
+                            }}
+                        >
                             {[0, 1, 2, 3, 4, 5].map((index) => (
                                 <Animated.View
                                     key={index}
@@ -369,21 +386,23 @@ const CustomizeExpenses = () => {
                                     )}
                                 </Animated.View>
                             ))}
-                        </View>
+                        </Pressable>
 
-                        {/* Hidden TextInput for actual input */}
+                        {/* Hidden TextInput — positioned off-screen + caretHidden to fix keyboard issues */}
                         <TextInput
+                            ref={passwordSetupInputRef}
                             style={{
                                 position: 'absolute',
-                                width: '100%',
-                                height: 45,
-                                opacity: 0,
+                                left: -9999,
+                                width: 100,
+                                height: 40,
                             }}
                             value={expenses_password}
                             onChangeText={SetPP}
                             keyboardType="number-pad"
                             maxLength={6}
                             secureTextEntry={false}
+                            caretHidden={true}
                         />
 
                         {/* Action Buttons Row */}

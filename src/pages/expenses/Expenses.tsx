@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable, TextInput, Animated, RefreshControl } from "react-native";
+import { View, ScrollView, Pressable, Animated, RefreshControl } from "react-native";
 import { useState, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -48,8 +48,9 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
     const [show_payment_type_filter, setShow_payment_type_filter] = useState<boolean>(false);
     const [showEnterCurrentPassword, setShowEnterCurrentPassword] = useState<boolean>(false);
     const [showSuccessPasswordEntered, setShowSuccessPasswordEntered] = useState<boolean>(false);
+    const [showWrongPassword, setShowWrongPassword] = useState<boolean>(false);
     const [passwordInput, setPasswordInput] = useState<string>("");
-    const passwordInputRef = useRef<TextInput>(null);
+    const isUnlocking = useRef<boolean>(false);
     const filtersHeight = useRef(new Animated.Value(0)).current;
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const realm = useRealm();
@@ -132,7 +133,7 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
     }, [title]);
 
     const RequestExpensesPassword = () => {
-        if (app_description.require_password_expenses) {
+        if (app_description.require_password_expenses && app_description.password_expenses && app_description.password_expenses.length === 6) {
             if (!expenses_opened) {
                 setShowEnterCurrentPassword(true);
             }
@@ -142,24 +143,48 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
     const SETCP = (cpp: string) => {
         setPasswordInput(cpp);
         setShowSuccessPasswordEntered(false);
+        setShowWrongPassword(false);
 
-        if (cpp.length === 6 && cpp === app_description.password_expenses) {
-            setShowSuccessPasswordEntered(true);
-            setTimeout(() => {
-                setShowEnterCurrentPassword(false);
-                setPasswordInput("");
-                dispatch(setExpensesOpened(true));
-            }, 500);
+        if (cpp.length === 6) {
+            if (cpp === app_description.password_expenses) {
+                // Correct password
+                isUnlocking.current = true;
+                setShowSuccessPasswordEntered(true);
+                setTimeout(() => {
+                    setShowEnterCurrentPassword(false);
+                    setPasswordInput("");
+                    dispatch(setExpensesOpened(true));
+                    isUnlocking.current = false;
+                }, 500);
+            } else {
+                // Wrong password — show error briefly, then auto-clear
+                setShowWrongPassword(true);
+                setTimeout(() => {
+                    setPasswordInput("");
+                    setShowWrongPassword(false);
+                }, 800);
+            }
         }
     }
 
-    // Focus input when password modal opens
-    useEffect(() => {
-        if (showEnterCurrentPassword) {
-            setTimeout(() => {
-                passwordInputRef.current?.focus();
-            }, 100);
+    const handleKeyPress = (key: string) => {
+        // Block input during unlock animation or wrong-password clear
+        if (isUnlocking.current || showWrongPassword) return;
+
+        if (key === 'backspace') {
+            if (passwordInput.length > 0) {
+                SETCP(passwordInput.slice(0, -1));
+            }
         } else {
+            if (passwordInput.length < 6) {
+                SETCP(passwordInput + key);
+            }
+        }
+    }
+
+    // Reset password input when modal closes
+    useEffect(() => {
+        if (!showEnterCurrentPassword) {
             setPasswordInput("");
         }
     }, [showEnterCurrentPassword]);
@@ -490,7 +515,7 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
     };
 
     // Show password modal if required and not opened
-    if (app_description.require_password_expenses && !expenses_opened && showEnterCurrentPassword) {
+    if (app_description.require_password_expenses && app_description.password_expenses && app_description.password_expenses.length === 6 && !expenses_opened && showEnterCurrentPassword) {
         return (
             <View style={{
                 flex: 1,
@@ -552,6 +577,18 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                         </Reanimated.View>
                     )}
 
+                    {/* Wrong Password Indicator */}
+                    {showWrongPassword && (
+                        <Reanimated.View 
+                            entering={BounceIn}
+                            style={{ 
+                                marginBottom: 20,
+                                alignItems: 'center'
+                            }}>
+                            <IconApp name="x-circle" pack='FI' size={32} color={theme.error} />
+                        </Reanimated.View>
+                    )}
+
                     {/* Modern OTP Input */}
                     <View style={{
                         width: '100%',
@@ -571,11 +608,13 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                                         height: 60,
                                         borderRadius: 12,
                                         borderWidth: 2,
-                                        borderColor: passwordInput.length === index 
-                                            ? theme.high_color 
-                                            : passwordInput.length > index 
-                                                ? theme.success 
-                                                : theme.border,
+                                        borderColor: showWrongPassword
+                                            ? theme.error
+                                            : passwordInput.length === index 
+                                                ? theme.high_color 
+                                                : passwordInput.length > index 
+                                                    ? theme.success 
+                                                    : theme.border,
                                         backgroundColor: passwordInput.length > index 
                                             ? theme.success + '10' 
                                             : theme.background,
@@ -595,35 +634,85 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                                 </Reanimated.View>
                             ))}
                         </View>
-
-                        {/* Hidden TextInput for actual input */}
-                        <TextInput
-                            ref={passwordInputRef}
-                            style={{
-                                position: 'absolute',
-                                width: '100%',
-                                height: 60,
-                                opacity: 0,
-                            }}
-                            value={passwordInput}
-                            onChangeText={SETCP}
-                            keyboardType="number-pad"
-                            maxLength={6}
-                            secureTextEntry={false}
-                            autoFocus
-                        />
                     </View>
 
                     {/* Helper Text */}
-                    {passwordInput.length > 0 && (
-                        <TextNormalYambiGray 
-                            text={`${passwordInput.length}/6`} 
-                            styles={{ 
-                                textAlign: 'center',
-                                marginTop: 10
-                            }} 
-                        />
-                    )}
+                    <TextNormalYambiGray 
+                        text={passwordInput.length > 0 ? `${passwordInput.length}/6` : ""} 
+                        styles={{ 
+                            textAlign: 'center',
+                            marginTop: 10,
+                            marginBottom: 20,
+                        }} 
+                    />
+
+                    {/* Custom Numeric Keypad */}
+                    <Reanimated.View 
+                        entering={FadeInUp.delay(500)}
+                        style={{
+                            width: '100%',
+                            maxWidth: 300,
+                            alignSelf: 'center',
+                        }}
+                    >
+                        {[
+                            ['1', '2', '3'],
+                            ['4', '5', '6'],
+                            ['7', '8', '9'],
+                            ['', '0', 'backspace'],
+                        ].map((row, rowIndex) => (
+                            <View 
+                                key={rowIndex}
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    marginBottom: 12,
+                                }}
+                            >
+                                {row.map((key, keyIndex) => (
+                                    <View key={keyIndex} style={{ width: 80, height: 56, alignItems: 'center', justifyContent: 'center' }}>
+                                        {key === '' ? (
+                                            <View style={{ width: 80, height: 56 }} />
+                                        ) : (
+                                            <Pressable
+                                                onPress={() => handleKeyPress(key)}
+                                                style={({ pressed }) => ({
+                                                    width: 72,
+                                                    height: 52,
+                                                    borderRadius: 26,
+                                                    backgroundColor: pressed 
+                                                        ? theme.high_color + '30'
+                                                        : key === 'backspace'
+                                                            ? 'transparent'
+                                                            : theme.border + '80',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    transform: [{ scale: pressed ? 0.92 : 1 }],
+                                                })}
+                                            >
+                                                {key === 'backspace' ? (
+                                                    <IconApp 
+                                                        name="delete" 
+                                                        pack='FI' 
+                                                        size={24} 
+                                                        color={theme.text} 
+                                                    />
+                                                ) : (
+                                                    <TextNormalYambi 
+                                                        text={key} 
+                                                        styles={{
+                                                            fontSize: 24,
+                                                            fontWeight: '500',
+                                                        }} 
+                                                    />
+                                                )}
+                                            </Pressable>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        ))}
+                    </Reanimated.View>
                 </Reanimated.View>
             </View>
         );

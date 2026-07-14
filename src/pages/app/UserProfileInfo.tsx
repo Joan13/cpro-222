@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Linking, RefreshControl } from 'react-native';
+import { View, Text, Pressable, Linking, RefreshControl } from 'react-native';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
@@ -14,7 +14,6 @@ import ModalApp from '../../components/app/ModalApp';
 import Animated from 'react-native-reanimated';
 import SwitchApp from '../../components/app/SwitchApp';
 import { UserChats, UserContacts, UsersMessages } from '../../store/database/Models';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 // import React, { useState } from 'react';
 // import { View, Text, StyleSheet, Image, StatusBar, Pressable, SafeAreaView, Pressable } from 'react-native';
@@ -252,14 +251,14 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
      };
 
      return (
-          <View style={{backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1}}>
+          <View style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
 
                {showInternetError ?
                     <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
                          <YambiText text={strings.connection_failed} size="normal" color="gray" />
                     </ModalApp> : null}
 
-               <View style={{ flex: 1, marginBottom:  50}}>
+               <View style={{ flex: 1 }}>
                     <StatusBarYambi />
 
                     <Animated.ScrollView
@@ -592,7 +591,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                               </View>
                          </View>
 
-                         <View style={{ height: 20 }} />
+                         <View style={{ height: 30 }} />
                     </Animated.ScrollView>
                </View>
           </View>

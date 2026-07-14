@@ -5,8 +5,9 @@ import { setShowModalApp } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
 import { IconApp } from '../../components/app/IconApp';
 import { NavProps, TBusinessUser, TItem, TItemPrices, TSale, TSellsPoint } from '../../types/types';
-import { useObject, useQuery } from '@realm/react';
-import { BusinessItemsSale, BusinessUsers, ItemPrices, UserBusinessArticles, UserBusinesses, UserSellsPoints } from '../../store/database/Models';
+import { useObject, useQuery, useRealm } from '@realm/react';
+import { BusinessItemsSale, BusinessUsers, ItemPrices, UserBusinessArticles, UserBusinesses, UserSellsPoints, Payments } from '../../store/database/Models';
+import { getSalePaymentDetails } from '../../utils/paymentHelpers';
 import { FlashList } from '@shopify/flash-list';
 import SalesList from '../../components/lists/business/SalesList';
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextSmallYambiHighColor, TextSmallYambiSuccess } from '../../components/app/Text';
@@ -27,6 +28,7 @@ const Business = ({ navigation, route }: NavProps) => {
     const [openDeleteSaleModal, setOpenDeleteSaleModal] = useState(false);
     const width = useWindowDimensions().width;
     const dispatch = useAppDispatch();
+    const realm = useRealm();
     const [date_start, setDate_start] = useState<string>("");
     const [date_end, setDate_end] = useState<string>("");
     const [user_filter, setUser_filter] = useState<string>("");
@@ -110,13 +112,16 @@ const Business = ({ navigation, route }: NavProps) => {
 
     const setSS = () => {
         let fs = bs.filter(salee => {
+            const { isPaid } = getSalePaymentDetails(salee, realm);
+            const isCredit = !isPaid;
+            const categoryMatch = category_filter === 0 ? true : isCredit;
 
             if (date_end !== "" && date_start !== "") {
-                return moment(salee.createdAt).format("YYYY-MM-DD") >= date_start && moment(salee.createdAt).format("YYYY-MM-DD") <= date_end && salee.sale_operator.includes(user_filter) && salee.currency.toString().includes(currency_filter.toString()) && salee.sale_active === sale_active_filter && salee.type_sale === category_filter;
+                return moment(salee.createdAt).format("YYYY-MM-DD") >= date_start && moment(salee.createdAt).format("YYYY-MM-DD") <= date_end && salee.sale_operator.includes(user_filter) && salee.currency.toString().includes(currency_filter.toString()) && salee.sale_active === sale_active_filter && categoryMatch;
             }
 
             else {
-                return salee.sale_operator.includes(user_filter) && salee.currency.toString().includes(currency_filter.toString()) && salee.sale_active === sale_active_filter && salee.type_sale === category_filter;
+                return salee.sale_operator.includes(user_filter) && salee.currency.toString().includes(currency_filter.toString()) && salee.sale_active === sale_active_filter && categoryMatch;
             }
         });
 

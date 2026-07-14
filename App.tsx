@@ -54,7 +54,7 @@ import Inbox from './src/pages/chat/Inbox';
 import HeaderChat from './src/components/headers/HeaderInbox';
 import { useQuery, useRealm } from '@realm/react';
 import * as RootNavigation from './src/services/Navigation_ref';
-import { BusinessItemsSale, BusinessUsers, ItemPrices, UserBusinessArticles, UserBusinesses, UserChats, UserContacts, UsersMessages } from './src/store/database/Models';
+import { BusinessItemsSale, BusinessUsers, ItemPrices, UserBusinessArticles, UserBusinesses, UserChats, UserContacts, UsersMessages, Payments, Reservations } from './src/store/database/Models';
 // import SocketActivity from './src/services/socket';
 import { navigationRef } from './src/services/Navigation_ref';
 import RNBootSplash from 'react-native-bootsplash';
@@ -93,6 +93,8 @@ import NewSalesPoint from './src/pages/business/NewSalesPoint';
 import HeaderBusiness from './src/components/headers/HeaderBusiness';
 import NewBusinessUser from './src/pages/business/NewBusinessUser';
 import Sale from './src/pages/business/Sale';
+import EditSalePayments from './src/pages/business/EditSalePayments';
+import SalePayment from './src/pages/business/SalePayment';
 import HeaderSale from './src/components/headers/HeaderSale';
 import EditBusiness from './src/pages/business/EditBusiness';
 import HeaderEditBusiness from './src/components/headers/HeaderEditBusiness';
@@ -112,6 +114,7 @@ import ItemSales from './src/pages/business/ItemSales';
 import Calculator from './src/pages/app/Calculator';
 
 import { updateUser } from './src/store/reducers/userSlice';
+import store from './src/store/app/store';
 import axios from 'axios';
 import "moment/locale/fr";
 import EditProfile from './src/pages/app/EditProfile';
@@ -172,7 +175,12 @@ import CategoryExpenses from './src/pages/expenses/CategoryExpenses';
 import HeaderRightExpense from './src/components/headers/HeaderRightExpense';
 import HeaderRightExpenses from './src/components/headers/HeaderRightExpenses';
 import SelectPaymentType from './src/pages/business/SelectPaymentType';
+import ReservationsPage from './src/pages/business/Reservations';
+import ReservationDetail from './src/pages/business/Reservation';
+import EditReservation from './src/pages/business/EditReservation';
 // import realmReference from './src/services/RealmReference';
+
+
 
 // Configure how notifications are displayed when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -186,6 +194,15 @@ Notifications.setNotificationHandler({
 });
 
 export const displayNotification = async (notification: any) => {
+    const state = store.getState();
+    const userId = state.user_data?.user_id;
+    const phoneNumber = state.user_data?.phone_number;
+
+    // Do not show notifications if user is disconnected/logged out
+    if (!userId || userId === "0" || !phoneNumber) {
+        return;
+    }
+
     const data = notification?.data ?? {};
     const title =
         data.title ??
@@ -440,6 +457,16 @@ const Yambi = ({ navigation }: NavProps) => {
 
     const saless = useQuery(
         BusinessItemsSale, items => {
+            return items.filtered('uploaded == $0', 0)
+        }, []);
+
+    const paymentss = useQuery(
+        Payments, items => {
+            return items.filtered('uploaded == $0', 0)
+        }, []);
+
+    const reservationss = useQuery(
+        Reservations, items => {
             return items.filtered('uploaded == $0', 0)
         }, []);
 
@@ -1300,6 +1327,69 @@ const Yambi = ({ navigation }: NavProps) => {
             });
         })
 
+        SocketApp.on("paymentsChanged" + user_data.phone_number, pmts => {
+            const psi = JSON.parse(pmts);
+            realm.write(() => {
+                for (let i in psi) {
+                    const pmt = {
+                        _id: psi[i]._id,
+                        sale_id: psi[i].sale_id,
+                        reservation_id: psi[i].reservation_id,
+                        item_id: psi[i].item_id,
+                        sales_point_id: psi[i].sales_point_id,
+                        amount: psi[i].amount,
+                        currency: parseInt(psi[i].currency),
+                        payment_method: parseInt(psi[i].payment_method),
+                        payment_status: parseInt(psi[i].payment_status),
+                        payment_details: typeof psi[i].payment_details === 'string' ? psi[i].payment_details : JSON.stringify(psi[i].payment_details),
+                        agent_paid: psi[i].agent_paid,
+                        uploaded: 1,
+                        createdAt: psi[i].createdAt,
+                        updatedAt: psi[i].updatedAt
+                    };
+
+                    try {
+                        realm.create('Payments', pmt, true);
+                    } catch (error) { }
+
+                    SocketApp.emit('paymentsChanged', JSON.stringify({ phone_number: user_data.phone_number, item: pmt._id }));
+                }
+            });
+        })
+
+        SocketApp.on("reservationsChanged" + user_data.phone_number, resv => {
+            const rsi = JSON.parse(resv);
+            realm.write(() => {
+                for (let i in rsi) {
+                    const res = {
+                        _id: rsi[i]._id,
+                        business_id: rsi[i].business_id,
+                        sales_point_id: rsi[i].sales_point_id,
+                        item_id: rsi[i].item_id,
+                        customer_id: rsi[i].customer_id,
+                        customer_name: rsi[i].customer_name,
+                        customer_phone: rsi[i].customer_phone,
+                        quantity: parseInt(rsi[i].quantity),
+                        total_amount: rsi[i].total_amount,
+                        deposit_amount: rsi[i].deposit_amount,
+                        remaining_amount: rsi[i].remaining_amount,
+                        currency: parseInt(rsi[i].currency),
+                        status: parseInt(rsi[i].status),
+                        sale_id: rsi[i].sale_id,
+                        uploaded: 1,
+                        createdAt: rsi[i].createdAt,
+                        updatedAt: rsi[i].updatedAt
+                    };
+
+                    try {
+                        realm.create('Reservations', res, true);
+                    } catch (error) { }
+
+                    SocketApp.emit('reservationsChanged', JSON.stringify({ phone_number: user_data.phone_number, item: res._id }));
+                }
+            });
+        })
+
         SocketApp.on("itemsChanged" + user_data.phone_number, (items) => {
             // console.log(items);
 
@@ -1617,6 +1707,14 @@ const Yambi = ({ navigation }: NavProps) => {
                 SocketApp.emit("newItemPrices", JSON.stringify({ phone_number: user_data.phone_number, items: itemssPrices }));
 
                 // console.log("Sent 3");
+            }
+
+            if (paymentss.length > 0) {
+                SocketApp.emit("newPayments", JSON.stringify({ phone_number: user_data.phone_number, items: paymentss }));
+            }
+
+            if (reservationss.length > 0) {
+                SocketApp.emit("newReservations", JSON.stringify({ phone_number: user_data.phone_number, items: reservationss }));
             }
 
             // check_data();
@@ -3173,6 +3271,40 @@ const Yambi = ({ navigation }: NavProps) => {
                             ),
                         })} />
 
+                        <Stack.Screen name="EditSalePayments" component={EditSalePayments} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true, headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: (strings as any).payments || "Payments",
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                        })} />
+
+                        <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true, headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: (strings as any).payment_details,
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                        })} />
+
+                        {/* <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: false,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                        })} /> */}
+
                         <Stack.Screen name="Customize" component={Customize} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
@@ -3710,6 +3842,51 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerRight: (props) => (
                                 <HeaderRightExpenses {...props} navigation={navigation} route={route} />
                             )
+                        })} />
+
+                        <Stack.Screen name="Reservations" component={ReservationsPage} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: (strings as any).view_reservations || "Reservations",
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            }
+                        })} />
+
+                        <Stack.Screen name="Reservation" component={ReservationDetail} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: (strings as any).reservation_detail || "Reservation detail",
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            }
+                        })} />
+
+                        <Stack.Screen name="EditReservation" component={EditReservation} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: strings.edit || "Edit Reservation",
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            }
                         })} />
 
                         <Stack.Screen name="AddExpense" component={AddExpense} options={{
