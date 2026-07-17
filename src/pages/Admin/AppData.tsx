@@ -11,6 +11,8 @@ import ButtonNormal from "../../components/app/ButtonNormal";
 import ModalApp from "../../components/app/ModalApp";
 import { setShowModalApp } from "../../store/reducers/appSlice";
 import { TAppData } from "../../types/types";
+import SwitchApp from "../../components/app/SwitchApp";
+import VersionHistoryItem from "../../components/lists/admin/VersionHistoryItem";
 
 export default function AppData() {
     const app_theme = useAppSelector(state => state.app_theme);
@@ -28,8 +30,9 @@ export default function AppData() {
     const [showPersonalizedAdsModal, setShowPersonalizedAdsModal] = useState(false);
     const [showAdTypeModal, setShowAdTypeModal] = useState(false);
     const [showUpdateRequiredModal, setShowUpdateRequiredModal] = useState(false);
-    const [showAllVersions, setShowAllVersions] = useState(false);
+
     const [refreshing, setRefreshing] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false);
 
     const adTypes = [
         { id: 0, name: strings.banners },
@@ -251,100 +254,229 @@ export default function AppData() {
                     shadowRadius: 8,
                     elevation: 3,
                 }}>
+                    {/* Header row: title + toggle (+/-) button */}
                     <View style={{ 
                         flexDirection: 'row', 
                         alignItems: 'center', 
-                        justifyContent: 'space-between',
                         marginBottom: 16 
                     }}>
                         <TextBigYambi text={strings.version_history} bold />
                         <Pressable
-                            onPress={() => setShowAllVersions(!showAllVersions)}
+                            onPress={() => setShowAddForm(!showAddForm)}
                             style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                backgroundColor: app_theme.colors.border,
+                                marginLeft: 10,
+                                padding: 6,
+                                backgroundColor: app_theme.colors.high_color + "15",
                                 borderRadius: 8,
+                                borderWidth: 1,
+                                borderColor: app_theme.colors.high_color,
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             }}
                         >
-                            <TextNormalYambi 
-                                text={showAllVersions ? strings.hide : strings.show} 
-                                bold
-                                styles={{ marginRight: 6 }}
-                            />
-                            <IconApp 
-                                pack="FI" 
-                                name={showAllVersions ? "chevron-up" : "chevron-down"} 
-                                color={app_theme.colors.text} 
-                                size={16} 
-                            />
+                            <IconApp pack="FI" name={showAddForm ? "minus" : "plus"} color={app_theme.colors.high_color} size={16} />
                         </Pressable>
                     </View>
-                    
-                    {loadingVersions ? (
-                        <AppActivityIndicator />
-                    ) : (
-                        <ScrollView style={{ maxHeight: showAllVersions ? 300 : 'auto' }}>
-                            {(showAllVersions ? versions : [versions[versions.length - 1]]).map((version, index) => {
-                                const isLatest = version._id === versions[versions.length - 1]._id;
-                                return (
-                                    <View
-                                        key={version._id || index}
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 12,
-                                            backgroundColor: isLatest ? app_theme.colors.high_color + '15' : app_theme.colors.border,
-                                            borderRadius: 8,
-                                            marginBottom: 8,
-                                            borderWidth: isLatest ? 1.5 : 1,
-                                            borderColor: isLatest ? app_theme.colors.high_color : app_theme.colors.border,
-                                        }}
-                                    >
-                                        <View style={{ flex: 1 }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                                <TextNormalYambi 
-                                                    text={`${version.app_version_name || ''}`} 
-                                                    bold={isLatest}
-                                                    styles={{ marginRight: 8 }}
-                                                />
-                                                {isLatest && (
-                                                    <View style={{
-                                                        backgroundColor: app_theme.colors.high_color,
-                                                        paddingHorizontal: 8,
-                                                        paddingVertical: 2,
-                                                        borderRadius: 4,
-                                                    }}>
-                                                        <TextSmallYambiGray 
-                                                            text={strings.latest}
-                                                        />
-                                                    </View>
-                                                )}
-                                            </View>
-                                            <TextSmallYambiGray 
-                                                text={`${strings.version} Code: ${version.app_version_code || ''}`} 
-                                                styles={{ marginBottom: 2 }}
-                                            />
-                                            {version.createdAt && (
-                                                <TextSmallYambiGray 
-                                                    text={renderDateTime(version.createdAt, 3, true)} 
-                                                    styles={{ fontSize: 11 }}
-                                                />
-                                            )}
-                                        </View>
-                                        <IconApp 
-                                            pack="FA" 
-                                            name={isLatest ? "check-circle" : "circle"} 
-                                            color={isLatest ? app_theme.colors.high_color : app_theme.colors.gray} 
-                                            size={20} 
-                                        />
+
+                    {/* Show history list OR add form — never both */}
+                    {showAddForm ? (
+                        <View>
+                            <View style={{ marginBottom: 20 }}>
+                                <TextNormalYambiGray text={`${strings.version} Code`} styles={{ marginBottom: 8 }} />
+                                <TextInput
+                                    value={appData.app_version_code}
+                                    onChangeText={v => setAppData({ ...appData, app_version_code: v })}
+                                    style={{
+                                        color: app_theme.colors.text,
+                                        backgroundColor: app_theme.colors.border + '15',
+                                        borderWidth: 1.5,
+                                        borderColor: app_theme.colors.border,
+                                        paddingHorizontal: 15,
+                                        paddingVertical: 12,
+                                        borderRadius: 10,
+                                        fontSize: 15,
+                                    }}
+                                    placeholderTextColor={app_theme.colors.gray}
+                                />
+                            </View>
+
+                            <View style={{ marginBottom: 20 }}>
+                                <TextNormalYambiGray text={`${strings.version} Name`} styles={{ marginBottom: 8 }} />
+                                <TextInput
+                                    value={appData.app_version_name}
+                                    onChangeText={v => setAppData({ ...appData, app_version_name: v })}
+                                    style={{
+                                        color: app_theme.colors.text,
+                                        backgroundColor: app_theme.colors.border + '15',
+                                        borderWidth: 1.5,
+                                        borderColor: app_theme.colors.border,
+                                        paddingHorizontal: 15,
+                                        paddingVertical: 12,
+                                        borderRadius: 10,
+                                        fontSize: 15,
+                                    }}
+                                    placeholderTextColor={app_theme.colors.gray}
+                                />
+                            </View>
+
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 20,
+                                backgroundColor: app_theme.colors.border + '10',
+                                padding: 16,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: app_theme.colors.border,
+                            }}>
+                                <View style={{ flex: 1, marginRight: 15 }}>
+                                    <TextNormalYambi text={strings.can_show_ads} bold styles={{ marginBottom: 4 }} />
+                                    <TextSmallYambiGray text="Enable banner, native, or interstitial advertisements across the app." />
+                                </View>
+                                <SwitchApp
+                                    value={appData.can_show_ads === 1}
+                                    onPress={() => setAppData({ ...appData, can_show_ads: appData.can_show_ads === 1 ? 0 : 1 })}
+                                />
+                            </View>
+
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 20,
+                                backgroundColor: app_theme.colors.border + '10',
+                                padding: 16,
+                                borderRadius: 12,
+                                borderWidth: 1,
+                                borderColor: app_theme.colors.border,
+                            }}>
+                                <View style={{ flex: 1, marginRight: 15 }}>
+                                    <TextNormalYambi text={strings.can_show_personalized_ads} bold styles={{ marginBottom: 4 }} />
+                                    <TextSmallYambiGray text="Allow personalized ads based on user location and activity." />
+                                </View>
+                                <SwitchApp
+                                    value={appData.can_show_personalized_ads === 1}
+                                    onPress={() => setAppData({ ...appData, can_show_personalized_ads: appData.can_show_personalized_ads === 1 ? 0 : 1 })}
+                                />
+                            </View>
+
+                            <Pressable
+                                onPress={() => { setShowAdTypeModal(true); dispatch(setShowModalApp(true)); }}
+                                style={{ marginBottom: 20 }}
+                            >
+                                <TextNormalYambiGray text={strings.type_main_ads} styles={{ marginBottom: 8 }} />
+                                <View style={{
+                                    backgroundColor: app_theme.colors.border + '15',
+                                    borderWidth: 1.5,
+                                    borderColor: app_theme.colors.border,
+                                    paddingHorizontal: 15,
+                                    paddingVertical: 14,
+                                    borderRadius: 10,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}>
+                                    <TextNormalYambi
+                                        text={adTypes.find(t => t.id === appData.type_main_ads)?.name || strings.select_ad_type}
+                                        bold
+                                    />
+                                    <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
+                                </View>
+                            </Pressable>
+
+                            {/* Update Required Section */}
+                            <View style={{ marginBottom: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: app_theme.colors.border }}>
+                                <TextBigYambi text={strings.update_settings} bold styles={{ marginBottom: 16 }} />
+
+                                <View style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: 20,
+                                    backgroundColor: app_theme.colors.border + '10',
+                                    padding: 16,
+                                    borderRadius: 12,
+                                    borderWidth: 1,
+                                    borderColor: app_theme.colors.border,
+                                }}>
+                                    <View style={{ flex: 1, marginRight: 15 }}>
+                                        <TextNormalYambi text={strings.update_required} bold styles={{ marginBottom: 4 }} />
+                                        <TextSmallYambiGray text="Enforce app update checks to block old client builds." />
                                     </View>
-                                );
-                            })}
-                        </ScrollView>
+                                    <SwitchApp
+                                        value={appData.update_required === 1}
+                                        onPress={() => setAppData({ ...appData, update_required: appData.update_required === 1 ? 0 : 1 })}
+                                    />
+                                </View>
+
+                                <View style={{ marginBottom: 20 }}>
+                                    <TextNormalYambiGray text={`${strings.update_device} (1 = Mobile)`} styles={{ marginBottom: 8 }} />
+                                    <TextInput
+                                        value={appData.update_device?.toString() || "1"}
+                                        onChangeText={v => setAppData({ ...appData, update_device: parseInt(v) || 1 })}
+                                        keyboardType="numeric"
+                                        style={{
+                                            color: app_theme.colors.text,
+                                            backgroundColor: app_theme.colors.border + '15',
+                                            borderWidth: 1.5,
+                                            borderColor: app_theme.colors.border,
+                                            paddingHorizontal: 15,
+                                            paddingVertical: 12,
+                                            borderRadius: 10,
+                                            fontSize: 15,
+                                        }}
+                                        placeholderTextColor={app_theme.colors.gray}
+                                        placeholder="1"
+                                    />
+                                </View>
+
+                                <View style={{ marginBottom: 20 }}>
+                                    <TextNormalYambiGray text={strings.update_link} styles={{ marginBottom: 8 }} />
+                                    <TextInput
+                                        value={appData.update_link || ""}
+                                        onChangeText={v => setAppData({ ...appData, update_link: v })}
+                                        style={{
+                                            color: app_theme.colors.text,
+                                            backgroundColor: app_theme.colors.border + '15',
+                                            borderWidth: 1.5,
+                                            borderColor: app_theme.colors.border,
+                                            paddingHorizontal: 15,
+                                            paddingVertical: 12,
+                                            borderRadius: 10,
+                                            fontSize: 15,
+                                        }}
+                                        placeholderTextColor={app_theme.colors.gray}
+                                        placeholder="https://play.google.com/store/apps/details?id=com.yambi.app"
+                                    />
+                                </View>
+                            </View>
+
+                            <ButtonNormal
+                                title={editing ? strings.loading : strings.continue}
+                                onPress={handleEdit}
+                                loadEnabled={true}
+                                normal={true}
+                                styles={{ marginTop: 10 }}
+                            />
+                        </View>
+                    ) : (
+                        loadingVersions ? (
+                            <AppActivityIndicator />
+                        ) : (
+                            <View>
+                                {[...versions].reverse().map((version, index) => {
+                                    const isLatest = version._id === versions[versions.length - 1]._id;
+                                    return (
+                                        <VersionHistoryItem
+                                            key={version._id || index}
+                                            version={version}
+                                            isLatest={isLatest}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        )
                     )}
                 </View>
             )}
@@ -541,183 +673,6 @@ export default function AppData() {
                 </ModalApp>
             )}
 
-            <View style={{
-                backgroundColor: app_theme.colors.background,
-                borderRadius: 12,
-                padding: 20,
-                marginBottom: 20,
-                borderWidth: 1,
-                borderColor: app_theme.colors.border,
-                shadowColor: app_theme.colors.border,
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                elevation: 3,
-            }}>
-                <TextBigYambi text={strings.app_data} bold styles={{ marginBottom: 20 }} />
-
-                <View style={{ marginBottom: 20 }}>
-                    <TextNormalYambiGray text={`${strings.version} Code`} styles={{ marginBottom: 8 }} />
-                    <TextInput
-                        value={appData.app_version_code}
-                        onChangeText={v => setAppData({ ...appData, app_version_code: v })}
-                        style={{
-                            color: app_theme.colors.text,
-                            backgroundColor: app_theme.colors.border,
-                            paddingHorizontal: 15,
-                            paddingVertical: 12,
-                            borderRadius: 8,
-                            fontSize: 15,
-                        }}
-                        placeholderTextColor={app_theme.colors.gray}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 20 }}>
-                    <TextNormalYambiGray text={`${strings.version} Name`} styles={{ marginBottom: 8 }} />
-                    <TextInput
-                        value={appData.app_version_name}
-                        onChangeText={v => setAppData({ ...appData, app_version_name: v })}
-                        style={{
-                            color: app_theme.colors.text,
-                            backgroundColor: app_theme.colors.border,
-                            paddingHorizontal: 15,
-                            paddingVertical: 12,
-                            borderRadius: 8,
-                            fontSize: 15,
-                        }}
-                        placeholderTextColor={app_theme.colors.gray}
-                    />
-                </View>
-
-                <Pressable 
-                    onPress={() => { setShowAdsModal(true); dispatch(setShowModalApp(true)); }}
-                    style={{ marginBottom: 20 }}
-                >
-                    <TextNormalYambiGray text={strings.can_show_ads} styles={{ marginBottom: 8 }} />
-                    <View style={{
-                        backgroundColor: app_theme.colors.border,
-                        paddingHorizontal: 15,
-                        paddingVertical: 14,
-                        borderRadius: 8,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}>
-                        <TextNormalYambi text={appData.can_show_ads === 1 ? strings.yes : strings.no} bold />
-                        <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
-                    </View>
-                </Pressable>
-
-                <Pressable 
-                    onPress={() => { setShowPersonalizedAdsModal(true); dispatch(setShowModalApp(true)); }}
-                    style={{ marginBottom: 20 }}
-                >
-                    <TextNormalYambiGray text={strings.can_show_personalized_ads} styles={{ marginBottom: 8 }} />
-                    <View style={{
-                        backgroundColor: app_theme.colors.border,
-                        paddingHorizontal: 15,
-                        paddingVertical: 14,
-                        borderRadius: 8,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}>
-                        <TextNormalYambi text={appData.can_show_personalized_ads === 1 ? strings.yes : strings.no} bold />
-                        <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
-                    </View>
-                </Pressable>
-
-                <Pressable 
-                    onPress={() => { setShowAdTypeModal(true); dispatch(setShowModalApp(true)); }}
-                    style={{ marginBottom: 20 }}
-                >
-                    <TextNormalYambiGray text={strings.type_main_ads} styles={{ marginBottom: 8 }} />
-                    <View style={{
-                        backgroundColor: app_theme.colors.border,
-                        paddingHorizontal: 15,
-                        paddingVertical: 14,
-                        borderRadius: 8,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}>
-                        <TextNormalYambi 
-                            text={adTypes.find(t => t.id === appData.type_main_ads)?.name || strings.select_ad_type} 
-                            bold 
-                        />
-                        <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
-                    </View>
-                </Pressable>
-
-                {/* Update Required Section */}
-                <View style={{ marginBottom: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: app_theme.colors.border }}>
-                    <TextBigYambi text={strings.update_settings} bold styles={{ marginBottom: 16 }} />
-                    
-                    <Pressable 
-                        onPress={() => { setShowUpdateRequiredModal(true); dispatch(setShowModalApp(true)); }}
-                        style={{ marginBottom: 20 }}
-                    >
-                        <TextNormalYambiGray text={strings.update_required} styles={{ marginBottom: 8 }} />
-                        <View style={{
-                            backgroundColor: app_theme.colors.border,
-                            paddingHorizontal: 15,
-                            paddingVertical: 14,
-                            borderRadius: 8,
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}>
-                            <TextNormalYambi text={appData.update_required === 1 ? strings.yes : strings.no} bold />
-                            <IconApp pack="FI" name="chevron-down" color={app_theme.colors.text} size={18} />
-                        </View>
-                    </Pressable>
-
-                    <View style={{ marginBottom: 20 }}>
-                        <TextNormalYambiGray text={`${strings.update_device} (1 = Mobile)`} styles={{ marginBottom: 8 }} />
-                        <TextInput
-                            value={appData.update_device?.toString() || "1"}
-                            onChangeText={v => setAppData({ ...appData, update_device: parseInt(v) || 1 })}
-                            keyboardType="numeric"
-                            style={{
-                                color: app_theme.colors.text,
-                                backgroundColor: app_theme.colors.border,
-                                paddingHorizontal: 15,
-                                paddingVertical: 12,
-                                borderRadius: 8,
-                                fontSize: 15,
-                            }}
-                            placeholderTextColor={app_theme.colors.gray}
-                            placeholder="1"
-                        />
-                    </View>
-
-                    <View style={{ marginBottom: 20 }}>
-                        <TextNormalYambiGray text={strings.update_link} styles={{ marginBottom: 8 }} />
-                        <TextInput
-                            value={appData.update_link || ""}
-                            onChangeText={v => setAppData({ ...appData, update_link: v })}
-                            style={{
-                                color: app_theme.colors.text,
-                                backgroundColor: app_theme.colors.border,
-                                paddingHorizontal: 15,
-                                paddingVertical: 12,
-                                borderRadius: 8,
-                                fontSize: 15,
-                            }}
-                            placeholderTextColor={app_theme.colors.gray}
-                            placeholder="https://play.google.com/store/apps/details?id=com.yambi.app"
-                        />
-                    </View>
-                </View>
-
-                <ButtonNormal
-                    title={editing ? strings.loading : strings.continue}
-                    onPress={handleEdit}
-                    loadEnabled={true}
-                    normal={true}
-                    styles={{ marginTop: 10 }}
-                />
-            </View>
         </ScrollView>
     );
 }

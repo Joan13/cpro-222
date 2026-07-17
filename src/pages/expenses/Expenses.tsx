@@ -469,6 +469,16 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
         }
     }, [realm, user_data.phone_number, flag, business_id, sales_point_id]);
 
+    // Fetch expenses automatically on mount/unlock
+    useEffect(() => {
+        const requiresPassword = app_description?.require_password_expenses && 
+                                 app_description?.password_expenses && 
+                                 app_description?.password_expenses?.length === 6;
+        if (!requiresPassword || expenses_opened) {
+            onRefresh();
+        }
+    }, [expenses_opened, app_description, onRefresh]);
+
     const expenses_categories = strings.expenses_categories || [];
 
     const SelectExpense = (expense: any) => {

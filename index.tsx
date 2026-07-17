@@ -6,31 +6,8 @@ import { PersistGate } from 'redux-persist/es/integration/react';
 import store, { persistor } from './src/store/app/store';
 import { TouchableOpacity, Platform } from 'react-native';
 import Realm from 'realm';
-import {
-  BusinessItemsSale,
-  BusinessUsers,
-  ItemPrices,
-  UserBusinesses,
-  UserChats,
-  UserContacts,
-  UserData,
-  UserMessagesDrafts,
-  UserBusinessArticles,
-  InventoryMovementTracking,
-  UserSellsPoints,
-  UsersMessages,
-  YambiUsers,
-  YambiBusinesses,
-  GroupMessages,
-  YambiGroups,
-  Stories,
-  Expenses,
-  CompanyUsers,
-  Payments,
-  Reservations
-} from './src/store/database/Models';
 import { RealmProvider } from '@realm/react';
-import { insertBackgroundMessage, openRealmInstance, safeRealmWrite } from './src/services/RealmInstance';
+import { insertBackgroundMessage, openRealmInstance, safeRealmWrite, realmConfig } from './src/services/RealmInstance';
 import * as Notifications from 'expo-notifications';
 import axios from 'axios';
 import moment from 'moment';
@@ -46,30 +23,8 @@ const RootYambi = () => {
     //   merchantIdentifier="merchant.com.yambi"
     // >
     <RealmProvider
-      schema={[
-        UserData,
-        UsersMessages,
-        UserChats,
-        UserBusinesses,
-        UserSellsPoints,
-        UserContacts,
-        UserMessagesDrafts,
-        UserBusinessArticles,
-        InventoryMovementTracking,
-        BusinessItemsSale,
-        ItemPrices,
-        BusinessUsers,
-        YambiUsers,
-        YambiBusinesses,
-        Stories,
-        GroupMessages,
-        YambiGroups,
-        Expenses,
-        CompanyUsers,
-        Payments,
-        Reservations,
-      ]}
-      schemaVersion={23}
+      schema={realmConfig.schema}
+      schemaVersion={realmConfig.schemaVersion}
     >
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
@@ -118,7 +73,7 @@ const markLocalChatAsRead = async (senderPhone: string) => {
     const realm = await openRealmInstance();
     const time = moment(new Date()).format();
 
-    safeRealmWrite(realm, () => {
+    await safeRealmWrite(realm, () => {
       // Mark the chat as read (removes unread badge in chat list)
       const chat = realm.objectForPrimaryKey('UserChats', senderPhone);
       if (chat) {
@@ -146,7 +101,7 @@ const markLocalChatAsRead = async (senderPhone: string) => {
 const saveLocalReplyMessage = async (inboxUser: string, currentUserPhone: string, replyMsg: any) => {
   try {
     const realm = await openRealmInstance();
-    safeRealmWrite(realm, () => {
+    await safeRealmWrite(realm, () => {
       // Create message locally
       realm.create('UsersMessages', replyMsg, Realm.UpdateMode.Modified);
 

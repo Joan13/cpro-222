@@ -54,9 +54,22 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
             return bss.filtered('user == $0 && business_id == $1 && user_active == $2', user_data.phone_number, item._id, 1)
         }, []);
 
-    const oo = uuser.find(element => element.user === user_data.phone_number);
+    const isAppAdmin = user_data.user_level !== 0;
+
+    const oo = uuser.find(element => element.user === user_data.phone_number) || (isAppAdmin ? {
+        _id: 'mock_admin',
+        business_id: item._id,
+        user_name: user_data.user_names,
+        phone_number: user_data.phone_number,
+        user: user_data.phone_number,
+        level: 1,
+        user_active: 1,
+        createdAt: '',
+        updatedAt: ''
+    } as any : undefined);
 
     const conditionGoUsers = () => {
+        if (isAppAdmin) return true;
         if (oo !== undefined) {
             if ((oo.user_active === 1 && oo.level === 1) || (oo.user_active === 1 && oo.level === 2)) {
                 return true;
@@ -74,6 +87,7 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
     }
 
     const conditionEditBusiness = () => {
+        if (isAppAdmin) return true;
         // if (oo !== null && oo !== undefined) {
         if (oo !== undefined) {
             if ((oo.user_active === 1 && oo.level === 1)) {
@@ -91,6 +105,7 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
     }
 
     const show_global_infos = () => {
+        if (isAppAdmin) return true;
         if (oo !== undefined) {
             if (oo.level === 1 && oo.user_active === 1) {
                 return true;
@@ -123,6 +138,10 @@ const BusinessesList = ({ item, index, business_users, isAdmin }: { item: TBusin
     // }, [sss]);
 
     const GoBusiness = () => {
+        if (isAppAdmin) {
+            RootNavigation.navigate("BusinessSales", { business_id: item._id, sales_point_id: "", item_id: "" });
+            return;
+        }
         if (oo !== null && oo !== undefined) {
             if (oo.user_active === 1 && oo.level < 3) {
                 RootNavigation.navigate("BusinessSales", { business_id: item._id, sales_point_id: "", item_id: "" })

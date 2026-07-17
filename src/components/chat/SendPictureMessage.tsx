@@ -1,5 +1,5 @@
 import { View, Pressable, useWindowDimensions, Platform, Vibration, TextInput } from 'react-native';
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';

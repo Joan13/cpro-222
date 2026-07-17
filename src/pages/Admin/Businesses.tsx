@@ -10,7 +10,8 @@ import { setBusinessOpened, setTextBusinessSearch, setShowModalApp } from "../..
 import { TextNormalYambi, TextNormalYambiGray, TextNormalYambiHighColor } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
 import { LegendList } from '@legendapp/list';
-import BusinessesList from "../../components/lists/business/BusinessesList";
+import BusinessesListItem from "../../components/lists/admin/BusinessesListItem";
+import * as RootNavigation from "../../services/Navigation_ref";
 import { remote_host } from "../../../GlobalVariables";
 import AppActivityIndicator from "../../components/app/AppActivityIndicator";
 
@@ -18,11 +19,9 @@ const YambiBusinesses = () => {
 
     const theme = useAppSelector(state => state.app_theme.colors);
     const text_business_search = useAppSelector(state => state.app.text_business_search);
+    const [localSearch, setLocalSearch] = useState(text_business_search);
     const [showInfo, setShowInfo] = useState<boolean>(false);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
-    const business_opened = useAppSelector(state => state.app.business_opened);
-    const [showEnterCurrentPassword, setShowEnterCurrentPassword] = useState<boolean>(false);
-    const [showSuccessPasswordEntered, setShowSuccessPasswordEntered] = useState<boolean>(false);
     const dispatch = useAppDispatch();
 
     const [businesses, setBusinesses] = useState<TBusiness[]>([]);
@@ -44,7 +43,7 @@ const YambiBusinesses = () => {
 
     // console.log(businesses.length)
 
-    const fetchBusinesses = useCallback(async (loadMore = false, searchText = '') => {
+    const fetchBusinesses = useCallback(async (loadMore = false) => {
         if (fetchingRef.current) return;
         if (!hasMore && loadMore) return;
 
@@ -56,7 +55,7 @@ const YambiBusinesses = () => {
             const res = await axios.post(remote_host + "/yambi/API/get_admin_data", {
                 flag: 2, // flag 2 for businesses
                 last_id: loadMore ? lastId : null,
-                search: searchText || ''
+                search: '' // empty string to search in local fetched data
             });
 
             if (res.data.success === "1") {
@@ -92,73 +91,103 @@ const YambiBusinesses = () => {
         }
     }, [lastId, hasMore, dispatch]);
 
+    // Debounce search query
     useEffect(() => {
-        fetchBusinesses(false, text_business_search);
-    }, [text_business_search]);
+        const timer = setTimeout(() => {
+            dispatch(setTextBusinessSearch(localSearch));
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [localSearch, dispatch]);
+
+    useEffect(() => {
+        fetchBusinesses(false);
+    }, []);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         setLastId(null);
         setHasMore(true);
-        fetchBusinesses(false, text_business_search).finally(() => {
+        fetchBusinesses(false).finally(() => {
             setRefreshing(false);
         });
-    }, [text_business_search]);
+    }, [fetchBusinesses]);
 
-    // Check password requirement when component mounts or when password requirement changes
-    useEffect(() => {
-        if (app_description.require_password_business && !business_opened) {
-            setShowEnterCurrentPassword(true);
-        }
-    }, [app_description.require_password_business, business_opened]);
+
 
     const SearchItem = (search: string) => {
-        dispatch(setTextBusinessSearch(search));
-        // Fetch will be triggered by useEffect
+        setLocalSearch(search);
     }
 
+    const filteredBusinesses = businesses.filter(business => {
+        const searchStr = localSearch.toLowerCase().trim();
+        if (searchStr === '') return true;
+        
+        return (
+            business.business_name?.toLowerCase().includes(searchStr) ||
+            business._id?.toLowerCase().includes(searchStr) ||
+            business.phone_number?.toLowerCase().includes(searchStr) ||
+            business.description_service?.toLowerCase().includes(searchStr) ||
+            business.slogan?.toLowerCase().includes(searchStr)
+        );
+    });
+
     const OverviewHeader = () => (
-        <View style={{
-            marginVertical: 15,
-            backgroundColor: theme.border + '40',
-            borderRadius: 16,
-            padding: 16,
-            borderWidth: 1,
-            borderColor: theme.border,
-        }}>
-            <TextNormalYambi text={strings.businesses_overview} bold styles={{ marginBottom: 12, fontSize: 18 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                <View style={{ alignItems: 'center' }}>
-                    <IconApp pack="FI" name="briefcase" size={24} color={theme.high_color} />
-                    <TextNormalYambiHighColor text={overview.total.toString()} bold styles={{ marginTop: 8, fontSize: 24 }} />
-                    <TextNormalYambiGray text={strings.total} styles={{ marginTop: 4 }} />
+        <View style={{ marginVertical: 15 }}>
+            <TextNormalYambi text={strings.businesses_overview} bold styles={{ marginBottom: 12, fontSize: 16 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <View style={{
+                    flex: 1,
+                    backgroundColor: theme.border + '15',
+                    borderRadius: 14,
+                    padding: 12,
+                    alignItems: 'center',
+                    marginRight: 6,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                }}>
+                    <View style={{ backgroundColor: theme.high_color + '15', padding: 8, borderRadius: 10 }}>
+                        <IconApp pack="FI" name="briefcase" size={18} color={theme.high_color} />
+                    </View>
+                    <TextNormalYambiHighColor text={overview.total.toString()} bold styles={{ marginTop: 8, fontSize: 18 }} />
+                    <TextNormalYambiGray text={strings.total} styles={{ marginTop: 2, fontSize: 11 }} />
                 </View>
-                <View style={{ alignItems: 'center' }}>
-                    <IconApp pack="FI" name="check-circle" size={24} color={theme.success} />
-                    <TextNormalYambiHighColor text={overview.active.toString()} bold styles={{ marginTop: 8, fontSize: 24, color: theme.success }} />
-                    <TextNormalYambiGray text={strings.active} styles={{ marginTop: 4 }} />
+                <View style={{
+                    flex: 1,
+                    backgroundColor: theme.border + '15',
+                    borderRadius: 14,
+                    padding: 12,
+                    alignItems: 'center',
+                    marginHorizontal: 3,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                }}>
+                    <View style={{ backgroundColor: theme.success + '15', padding: 8, borderRadius: 10 }}>
+                        <IconApp pack="FI" name="check-circle" size={18} color={theme.success} />
+                    </View>
+                    <TextNormalYambiHighColor text={overview.active.toString()} bold styles={{ marginTop: 8, fontSize: 18, color: theme.success }} />
+                    <TextNormalYambiGray text={strings.active} styles={{ marginTop: 2, fontSize: 11 }} />
                 </View>
-                <View style={{ alignItems: 'center' }}>
-                    <IconApp pack="FI" name="x-circle" size={24} color={theme.error} />
-                    <TextNormalYambiHighColor text={overview.inactive.toString()} bold styles={{ marginTop: 8, fontSize: 24, color: theme.error }} />
-                    <TextNormalYambiGray text={strings.inactive} styles={{ marginTop: 4 }} />
+                <View style={{
+                    flex: 1,
+                    backgroundColor: theme.border + '15',
+                    borderRadius: 14,
+                    padding: 12,
+                    alignItems: 'center',
+                    marginLeft: 6,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                }}>
+                    <View style={{ backgroundColor: theme.error + '15', padding: 8, borderRadius: 10 }}>
+                        <IconApp pack="FI" name="x-circle" size={18} color={theme.error} />
+                    </View>
+                    <TextNormalYambiHighColor text={overview.inactive.toString()} bold styles={{ marginTop: 8, fontSize: 18, color: theme.error }} />
+                    <TextNormalYambiGray text={strings.inactive} styles={{ marginTop: 2, fontSize: 11 }} />
                 </View>
             </View>
         </View>
     );
 
-    const SETCP = (cpp: string) => {
-        if (cpp.length === 6 && cpp === app_description.password_business) {
-            setShowSuccessPasswordEntered(true);
 
-            setTimeout(() => {
-                setShowEnterCurrentPassword(false);
-                dispatch(setBusinessOpened(true));
-            }, 500);
-        } else {
-            setShowSuccessPasswordEntered(false);
-        }
-    }
 
     return (
         <View style={{
@@ -173,112 +202,82 @@ const YambiBusinesses = () => {
                     <TextNormalYambiGray text={strings.impossible_edit} />
                 </ModalApp> : null}
 
-            {showEnterCurrentPassword ?
-                <>
-                    <TextNormalYambi bold text={strings.enter_password} styles={{ textAlign: 'center' }} />
-
-                    <View style={{ height: 40, justifyContent: 'center', }}>
-                        {showSuccessPasswordEntered ?
-                            <View style={{ alignItems: 'center' }}>
-                                <IconApp name={"check-circle"} pack='FA' size={25} color={theme.success} />
-                            </View> : null}
-                    </View>
-
-                    <View style={{
-                        height: 50,
-                        width: '100%',
-                        justifyContent: 'center',
-                        alignItems: 'center'
+            <View style={{ flex: 1 }}>
+                <View
+                    style={{
+                        marginHorizontal: 15,
+                        marginVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: 12,
+                        borderWidth: 1.5,
+                        borderColor: theme.border,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: theme.border + '20',
+                        height: 48,
                     }}>
-                        <TextInput
-                            placeholderTextColor="gray"
-                            placeholder={strings.code}
-                            textAlign="center"
-                            secureTextEntry
-                            keyboardType="number-pad"
-                            maxLength={6}
+                    <Feather name="search" size={18} style={{ marginRight: 10, color: theme.gray }} />
+                    <TextInput
+                        onChangeText={SearchItem}
+                        value={localSearch}
+                        placeholder={strings.search}
+                        placeholderTextColor={theme.gray}
+                        style={{ flex: 1, paddingVertical: 0, height: '100%', borderWidth: 0, backgroundColor: 'transparent', color: theme.text, fontSize: 15 }}
+                    />
+                    {localSearch !== "" ?
+                        <Pressable
+                            onPress={() => {
+                                setLocalSearch("");
+                                dispatch(setTextBusinessSearch(""));
+                            }}
                             style={{
-                                flex: 1,
-                                color: theme.text,
-                                height: 45,
-                                textAlign: 'center',
-                                letterSpacing: 20,
-                                fontSize: 20,
-                                fontWeight: '900',
-                                width: '100%'
-                            }}
-                            //    secureTextEntry={ste ? true : false}
-                            // value={cp}
-                            onChangeText={SETCP}
-                        />
-                    </View>
-                </>
-                :
-                <View style={{ flex: 1 }}>
-                    <View
-                        style={{ marginBottom: 0, marginHorizontal: 15, borderBottomWidth: 1, paddingVertical: 0, borderColor: theme.border, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.background }}>
-                        <Feather name="search" size={16} style={{ marginRight: 10, color: theme.gray }} />
-                        <TextInput
-                            onChangeText={SearchItem}
-                            value={text_business_search}
-                            placeholder={strings.search}
-                            placeholderTextColor={theme.gray}
-                            style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: theme.background, backgroundColor: theme.background, color: theme.text }}
-                        />
-                        {text_business_search !== "" ?
-                            <Pressable
-                                onPress={() => {
-                                    dispatch(setTextBusinessSearch(""));
-                                }}
-                                style={{
-                                    height: 30,
-                                    width: 30,
-                                    justifyContent: 'center',
-                                    alignItems: 'center'
-                                }}>
-                                <Feather name="x" size={16} style={{ color: theme.text }} />
-                            </Pressable> : null}
-                    </View>
-
-                    {loading && !loadingMore ? (
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <AppActivityIndicator showLabel />
-                        </View>
-                    ) : (
-                        <LegendList
-                            data={businesses}
-                            keyExtractor={(item: TBusiness) => item._id}
-                            keyboardShouldPersistTaps='handled'
-                            ListHeaderComponent={<OverviewHeader />}
-                            refreshControl={
-                                <RefreshControl
-                                    refreshing={refreshing}
-                                    onRefresh={onRefresh}
-                                    tintColor={theme.high_color}
-                                />
-                            }
-                            renderItem={({ item, index }: { item: TBusiness, index: number }) => (
-                                <BusinessesList
-                                    index={index}
-                                    item={item}
-                                    isAdmin={true}
-                                />)}
-                            onEndReached={() => fetchBusinesses(true, text_business_search)}
-                            onEndReachedThreshold={0.5}
-                            contentContainerStyle={{
-                                paddingHorizontal: 15,
-                                paddingBottom: 20
-                            }}
-                        />
-                    )}
-
-                    {loadingMore && (
-                        <View style={{ paddingVertical: 20, borderTopWidth: 1, borderColor: theme.border }}>
-                            <AppActivityIndicator showLabel />
-                        </View>
-                    )}
+                                height: 30,
+                                width: 30,
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}>
+                            <Feather name="x" size={18} style={{ color: theme.text }} />
+                        </Pressable> : null}
                 </View>
-            }
+
+                {loading && !loadingMore ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <AppActivityIndicator showLabel />
+                    </View>
+                ) : (
+                    <LegendList
+                        data={filteredBusinesses}
+                        keyExtractor={(item: TBusiness) => item._id}
+                        keyboardShouldPersistTaps='handled'
+                        ListHeaderComponent={<OverviewHeader />}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                tintColor={theme.high_color}
+                            />
+                        }
+                        renderItem={({ item, index }: { item: TBusiness, index: number }) => (
+                            <BusinessesListItem
+                                item={item}
+                                onPress={() => RootNavigation.navigate("AdminBusiness", { business: item })}
+                                onEditPress={() => RootNavigation.navigate("EditBusiness", { business: item })}
+                            />)}
+                        onEndReached={() => fetchBusinesses(true)}
+                        onEndReachedThreshold={0.5}
+                        contentContainerStyle={{
+                            paddingHorizontal: 15,
+                            paddingBottom: 20
+                        }}
+                    />
+                )}
+
+                {loadingMore && (
+                    <View style={{ paddingVertical: 20, borderTopWidth: 1, borderColor: theme.border }}>
+                        <AppActivityIndicator showLabel />
+                    </View>
+                )}
+            </View>
         </View>
     )
 }

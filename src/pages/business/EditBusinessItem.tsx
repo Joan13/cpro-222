@@ -18,7 +18,7 @@ import { UserBusinessArticles, ItemPrices, BusinessItemsSale } from "../../store
 // import { SocketApp } from "../../../App";
 import SwitchApp from "../../components/app/SwitchApp";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import { Image as ExpoImage } from 'expo-image';
 
 const EditBusinessItem = ({ route, navigation }: NavProps) => {

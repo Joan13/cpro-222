@@ -13,7 +13,7 @@ import { remote_host, remote_host_server, renderCategoryName, media_url } from "
 import axios from "axios";
 import { NavProps, TCompany } from "../../types/types";
 import moment from "moment";
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import { Image as ExpoImage } from 'expo-image';
 
 const EditCompany = ({ navigation, route }: NavProps) => {

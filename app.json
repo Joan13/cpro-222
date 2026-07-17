@@ -136,7 +136,13 @@
           "enableGooglePay": true
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permettre à $(PRODUCT_NAME) d'accéder à vos photos pour sélectionner des images."
+        }
+      ]
     ]
   }
 }

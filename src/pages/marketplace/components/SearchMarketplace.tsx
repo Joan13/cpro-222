@@ -118,6 +118,7 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
                 {/* Text Input */}
                 <TextInput
                     ref={inputRef}
+                    autoFocus
                     placeholderTextColor={app_theme.colors.gray}
                     style={{
                         color: app_theme.colors.text,

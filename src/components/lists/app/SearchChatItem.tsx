@@ -11,7 +11,7 @@ import { strings } from "../../../lang/lang";
 
 interface SearchChatItemProps {
     item: any;
-    type: 'chat' | 'message';
+    type: 'chat' | 'message' | 'contact';
     onPress: () => void;
     searchKeyword?: string;
 }
@@ -22,19 +22,25 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
     const user_data = useAppSelector(state => state.user_data);
 
     // Resolve contact or group details based on the item type
-    const isGroup = type === 'chat' ? item.type_chat === 2 : item.receiver.startsWith("G");
-    const targetId = type === 'chat' ? item._id : (isGroup ? item.receiver : (item.sender === user_data.phone_number ? item.receiver : item.sender));
+    const isGroup = type === 'chat' ? item.type_chat === 2 : (type === 'contact' ? false : item.receiver.startsWith("G"));
+    const targetId = type === 'chat' 
+        ? item._id 
+        : (type === 'contact' 
+            ? item.user_id 
+            : (isGroup ? item.receiver : (item.sender === user_data.phone_number ? item.receiver : item.sender)));
 
-    const contactInfo = useObject(UserContacts, targetId);
-    const groupInfo = useObject(YambiGroups, targetId);
+    const localContactInfo = useObject(UserContacts, targetId);
+    const contactInfo = type === 'contact' ? item : localContactInfo;
+    const groupInfo = type === 'chat' || type === 'message' ? useObject(YambiGroups, targetId) : null;
 
     const displayName = isGroup
         ? (groupInfo?.user_names || strings.group_chat)
         : (() => {
-            const systemContact = contacts?.find(c => c.phoneNumber === targetId);
+            const phoneVal = type === 'contact' ? item.phone_number : targetId;
+            const systemContact = contacts?.find(c => c.phoneNumber === phoneVal);
             if (systemContact) return systemContact.displayName;
-            if (contactInfo?.user_names && contactInfo.user_names !== targetId) return contactInfo.user_names;
-            return formatPhoneInternational({ phone_number: targetId, country: contactInfo?.country || "" } as any);
+            if (contactInfo?.user_names && contactInfo.user_names !== phoneVal) return contactInfo.user_names;
+            return formatPhoneInternational({ phone_number: phoneVal, country: contactInfo?.country || "" } as any);
         })();
 
     const profilePic = isGroup ? groupInfo?.group_profile : contactInfo?.user_profile;
@@ -62,10 +68,12 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
     };
 
     const subtitleText = type === 'chat'
-        ? item.last_message_text || strings.no_messages
-        : item.main_text_message;
+        ? (item.last_message_text || strings.no_messages)
+        : (type === 'contact'
+            ? (item.status_information || formatPhoneInternational({ phone_number: item.phone_number, country: item.country || "" } as any))
+            : item.main_text_message);
 
-    const timeStamp = type === 'chat' ? item.updatedAt : item.createdAt;
+    const timeStamp = type === 'chat' ? item.updatedAt : (type === 'contact' ? null : item.createdAt);
 
     return (
         <Pressable

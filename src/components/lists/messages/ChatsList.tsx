@@ -352,74 +352,74 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                         borderRadius: 12,
                         width: '100%',
                     }}>
-            {/* <Text></Text> */}
-            <Pressable onPress={ViewPhoto}>
-                {userr.user_profile === "" ? <Image
-                    source={require('./../../../assets/profile_black.jpg')}
-                    style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
-                />
-                    :
-                    <ExpoImage
-                        style={{
-                            height: 45,
-                            width: 45,
-                            borderRadius: 50
-                        }}
-                        contentFit="cover"
-                        source={media_url + "/profile_pictures/" + userr.user_profile} />}
-            </Pressable>
-            <View style={{
-                flex: 1,
-                marginLeft: 15
-            }}>
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginBottom: -2
-                }}>
-                    <View style={{ marginBottom: 2, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                        <YambiText bold text={ShowUser(userr)} size="normal" color="default" numberLines={1} />
-                        {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                    {/* <Text></Text> */}
+                    <Pressable onPress={ViewPhoto}>
+                        {userr.user_profile === "" ? <Image
+                            source={require('./../../../assets/profile_black.jpg')}
+                            style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
+                        />
+                            :
+                            <ExpoImage
+                                style={{
+                                    height: 45,
+                                    width: 45,
+                                    borderRadius: 50
+                                }}
+                                contentFit="cover"
+                                source={media_url + "/profile_pictures/" + userr.user_profile} />}
+                    </Pressable>
+                    <View style={{
+                        flex: 1,
+                        marginLeft: 15
+                    }}>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginBottom: -2
+                        }}>
+                            <View style={{ marginBottom: 2, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                <YambiText bold text={ShowUser(userr)} size="normal" color="default" numberLines={1} />
+                                {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                            </View>
+                            {message !== null ?
+                                chat && chat.chat_read !== 0 ?
+                                    <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="gray" style={{ marginBottom: 3 }} /> :
+                                    <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="high" style={{ marginBottom: 3 }} /> : null}
+                        </View>
+
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center'
+                        }}>
+
+                            {render_last_message()}
+
+                            {item.flag !== 0 ?
+                                <IconApp pack="MC" name={item.flag === 2 ? "pin" : "star"} size={15} color={app_theme.colors.gray} /> : null}
+
+                            {chat && chat.chat_read === 0 ?
+                                unread.length !== 0 ?
+                                    <View style={{
+                                        backgroundColor: app_theme.colors.badge_background_color,
+                                        height: 20,
+                                        minWidth: 20,
+                                        paddingHorizontal: 3,
+                                        borderRadius: 15,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        marginLeft: 5
+                                    }}>
+                                        <Text style={{
+                                            fontSize: 12,
+                                            color: app_theme.colors.badge_color
+                                        }}>{unread.length}</Text>
+                                    </View> : <View style={{
+                                        height: 23,
+                                        width: 0
+                                    }}></View> : null}
+                        </View>
                     </View>
-                    {message !== null ?
-                        chat && chat.chat_read !== 0 ?
-                        <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="gray" style={{ marginBottom: 3 }} /> :
-                        <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="high" style={{ marginBottom: 3 }} />: null}
-                </View>
-
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }}>
-
-                    {render_last_message()}
-
-                    {item.flag !== 0 ?
-                        <IconApp pack="MC" name={item.flag === 2 ? "pin" : "star"} size={15} color={app_theme.colors.gray} /> : null}
-
-                    {chat && chat.chat_read === 0 ?
-                        unread.length !== 0 ?
-                            <View style={{
-                                backgroundColor: app_theme.colors.badge_background_color,
-                                height: 20,
-                                minWidth: 20,
-                                paddingHorizontal: 3,
-                                borderRadius: 15,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginLeft: 5
-                            }}>
-                                <Text style={{
-                                    fontSize: 16,
-                                    color: app_theme.colors.badge_color
-                                }}>{unread.length}</Text>
-                            </View> : <View style={{
-                                height: 23,
-                                width: 0
-                            }}></View> : null}
-                </View>
-            </View>
-            </Pressable>
+                </Pressable>
             </ContextMenu.Trigger>
             <ContextMenu.Content>
                 {/* Pin/Unpin Chat */}

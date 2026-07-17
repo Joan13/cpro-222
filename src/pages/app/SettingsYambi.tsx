@@ -4,7 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import StatusBarYambi from '../../components/app/StatusBar';
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import { updateUserProfile, updateUser } from '../../store/reducers/userSlice';
 import axios from 'axios';
 import { YambiText } from '../../components/app/Text';

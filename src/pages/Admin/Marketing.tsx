@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { View, TextInput, ScrollView, Text, Pressable, RefreshControl } from "react-native";
 import axios from "axios";
 import { remote_host, remote_host_server, media_url } from "../../../GlobalVariables";
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import MarketingItemAdmin from "../../components/lists/marketing/MarketingItemAdmin";
 import { useAppSelector, useAppDispatch } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";

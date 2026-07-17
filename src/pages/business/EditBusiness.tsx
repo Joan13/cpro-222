@@ -1,5 +1,5 @@
 import { View, ActivityIndicator, ScrollView, TextInput, Pressable, Platform } from "react-native";
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";

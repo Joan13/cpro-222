@@ -14,7 +14,6 @@ import { IconApp } from '../../components/app/IconApp';
 import { remote_host } from '../../../GlobalVariables';
 import * as RootNavigation from './../../services/Navigation_ref';
 import AppActivityIndicator from '../../components/app/AppActivityIndicator';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 // const navigation = NativeStackScreenProps<RootStackParamList>();
 
@@ -24,6 +23,7 @@ const Users = () => {
     const dispatch = useAppDispatch();
     const text_contact_search = useAppSelector(state => state.app.text_contact_search);
 
+    const [localSearch, setLocalSearch] = useState(text_contact_search);
     const [users, setUsers] = useState<TUser[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -33,7 +33,7 @@ const Users = () => {
     const fetchingRef = useRef(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchUsers = useCallback(async (loadMore = false, searchText = '') => {
+    const fetchUsers = useCallback(async (loadMore = false) => {
         if (fetchingRef.current) return;
         if (!hasMore && loadMore) return;
 
@@ -45,7 +45,7 @@ const Users = () => {
             const res = await axios.post(remote_host + "/yambi/API/get_admin_data", {
                 flag: 1, // flag 1 for users
                 last_id: loadMore ? lastId : null,
-                search: searchText || ''
+                search: '' // empty string for local search
             });
 
             if (res.data.success === "1") {
@@ -86,60 +86,101 @@ const Users = () => {
         }
     }, [lastId, hasMore, dispatch]);
 
+    // Debounce search query
     useEffect(() => {
-        fetchUsers(false, text_contact_search);
-    }, [text_contact_search]);
+        const timer = setTimeout(() => {
+            dispatch(setTextContactSearch(localSearch));
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [localSearch, dispatch]);
+
+    useEffect(() => {
+        fetchUsers(false);
+    }, []);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         setLastId(null);
         setHasMore(true);
-        fetchUsers(false, text_contact_search).finally(() => {
+        fetchUsers(false).finally(() => {
             setRefreshing(false);
         });
-    }, [text_contact_search]);
+    }, [fetchUsers]);
 
     const selectCon = useCallback((item: TUser) => {
         RootNavigation.navigate("UserProfileInfo", { user: item });
     }, []);
 
     const SearchItem = (search: string) => {
-        dispatch(setTextContactSearch(search));
-        // Fetch will be triggered by useEffect
+        setLocalSearch(search);
     }
 
+    const filteredUsers = users.filter(user => {
+        const searchStr = localSearch.toLowerCase().trim();
+        if (searchStr === '') return true;
+        const nameMatch = user.user_names?.toLowerCase().includes(searchStr);
+        const phoneMatch = user.phone_number?.toLowerCase().includes(searchStr);
+        return nameMatch || phoneMatch;
+    });
+
     const OverviewHeader = () => (
-        <View style={{
-            marginVertical: 15,
-            backgroundColor: app_theme.colors.border + '40',
-            borderRadius: 16,
-            padding: 16,
-            borderWidth: 1,
-            borderColor: app_theme.colors.border,
-        }}>
-            <TextNormalYambi text={strings.users_overview} bold styles={{ marginBottom: 12, fontSize: 18 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                <View style={{ alignItems: 'center' }}>
-                    <IconApp pack="FI" name="users" size={24} color={app_theme.colors.high_color} />
-                    <TextNormalYambiHighColor text={overview.total.toString()} bold styles={{ marginTop: 8, fontSize: 24 }} />
-                    <TextSmallYambiGray text={strings.total} styles={{ marginTop: 4 }} />
+        <View style={{ marginVertical: 15 }}>
+            <TextNormalYambi text={strings.users_overview} bold styles={{ marginBottom: 12, fontSize: 16 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <View style={{
+                    flex: 1,
+                    backgroundColor: app_theme.colors.border + '15',
+                    borderRadius: 14,
+                    padding: 12,
+                    alignItems: 'center',
+                    marginRight: 6,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
+                }}>
+                    <View style={{ backgroundColor: app_theme.colors.high_color + '15', padding: 8, borderRadius: 10 }}>
+                        <IconApp pack="FI" name="users" size={18} color={app_theme.colors.high_color} />
+                    </View>
+                    <TextNormalYambiHighColor text={overview.total.toString()} bold styles={{ marginTop: 8, fontSize: 18 }} />
+                    <TextSmallYambiGray text={strings.total} styles={{ marginTop: 2, fontSize: 11 }} />
                 </View>
-                <View style={{ alignItems: 'center' }}>
-                    <IconApp pack="FI" name="check-circle" size={24} color={app_theme.colors.success} />
-                    <TextNormalYambiHighColor text={overview.active.toString()} bold styles={{ marginTop: 8, fontSize: 24, color: app_theme.colors.success }} />
-                    <TextSmallYambiGray text={strings.active} styles={{ marginTop: 4 }} />
+                <View style={{
+                    flex: 1,
+                    backgroundColor: app_theme.colors.border + '15',
+                    borderRadius: 14,
+                    padding: 12,
+                    alignItems: 'center',
+                    marginHorizontal: 3,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
+                }}>
+                    <View style={{ backgroundColor: app_theme.colors.success + '15', padding: 8, borderRadius: 10 }}>
+                        <IconApp pack="FI" name="check-circle" size={18} color={app_theme.colors.success} />
+                    </View>
+                    <TextNormalYambiHighColor text={overview.active.toString()} bold styles={{ marginTop: 8, fontSize: 18, color: app_theme.colors.success }} />
+                    <TextSmallYambiGray text={strings.active} styles={{ marginTop: 2, fontSize: 11 }} />
                 </View>
-                <View style={{ alignItems: 'center' }}>
-                    <IconApp pack="FI" name="x-circle" size={24} color={app_theme.colors.error} />
-                    <TextNormalYambiHighColor text={overview.inactive.toString()} bold styles={{ marginTop: 8, fontSize: 24, color: app_theme.colors.error }} />
-                    <TextSmallYambiGray text={strings.inactive} styles={{ marginTop: 4 }} />
+                <View style={{
+                    flex: 1,
+                    backgroundColor: app_theme.colors.border + '15',
+                    borderRadius: 14,
+                    padding: 12,
+                    alignItems: 'center',
+                    marginLeft: 6,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
+                }}>
+                    <View style={{ backgroundColor: app_theme.colors.error + '15', padding: 8, borderRadius: 10 }}>
+                        <IconApp pack="FI" name="x-circle" size={18} color={app_theme.colors.error} />
+                    </View>
+                    <TextNormalYambiHighColor text={overview.inactive.toString()} bold styles={{ marginTop: 8, fontSize: 18, color: app_theme.colors.error }} />
+                    <TextSmallYambiGray text={strings.inactive} styles={{ marginTop: 2, fontSize: 11 }} />
                 </View>
             </View>
         </View>
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 0 }}>
+        <View style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 0 }}>
 
             <StatusBarYambi />
 
@@ -148,18 +189,30 @@ const Users = () => {
                 flex: 1
             }}>
                 <View
-                    style={{ marginBottom: 0, marginHorizontal: 15, borderBottomWidth: 1, paddingVertical: 0, borderColor: app_theme.colors.border, flexDirection: 'row', alignItems: 'center', backgroundColor: app_theme.colors.background }}>
-                    <Feather name="search" size={16} style={{ marginRight: 10, color: app_theme.colors.gray }} />
+                    style={{
+                        marginHorizontal: 15,
+                        marginVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: 12,
+                        borderWidth: 1.5,
+                        borderColor: app_theme.colors.border,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: app_theme.colors.border + '20',
+                        height: 48,
+                    }}>
+                    <Feather name="search" size={18} style={{ marginRight: 10, color: app_theme.colors.gray }} />
                     <TextInput
                         onChangeText={SearchItem}
-                        value={text_contact_search}
+                        value={localSearch}
                         placeholder={strings.search}
                         placeholderTextColor={app_theme.colors.gray}
-                        style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: app_theme.colors.background, backgroundColor: app_theme.colors.background, color: app_theme.colors.text }}
+                        style={{ flex: 1, paddingVertical: 0, height: '100%', borderWidth: 0, backgroundColor: 'transparent', color: app_theme.colors.text, fontSize: 15 }}
                     />
-                    {text_contact_search !== "" ?
+                    {localSearch !== "" ?
                         <Pressable
                             onPress={() => {
+                                setLocalSearch("");
                                 dispatch(setTextContactSearch(""));
                             }}
                             style={{
@@ -168,7 +221,7 @@ const Users = () => {
                                 justifyContent: 'center',
                                 alignItems: 'center'
                             }}>
-                            <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
+                            <Feather name="x" size={18} style={{ color: app_theme.colors.text }} />
                         </Pressable> : null}
                 </View>
 
@@ -179,7 +232,7 @@ const Users = () => {
                 ) : (
                     <FlashList
                         estimatedItemSize={200}
-                        data={users}
+                        data={filteredUsers}
                         keyboardShouldPersistTaps="handled"
                         ListHeaderComponent={<OverviewHeader />}
                         refreshControl={
@@ -197,7 +250,7 @@ const Users = () => {
                                 selectContact={selectCon}
                                 isAdmin={true}
                             />)}
-                        onEndReached={() => fetchUsers(true, text_contact_search)}
+                        onEndReached={() => fetchUsers(true)}
                         onEndReachedThreshold={0.5}
                         contentContainerStyle={{
                             backgroundColor: app_theme.colors.background,
@@ -213,7 +266,7 @@ const Users = () => {
                     </View>
                 )}
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 

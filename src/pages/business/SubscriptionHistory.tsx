@@ -89,12 +89,26 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
             } as SubscriptionItem;
         });
 
+        // Filter out duplicate subscriptions by _id.
+        const uniqueBaseSubscriptions: SubscriptionItem[] = [];
+        const seenIds = new Set<string>();
+        for (const s of baseSubscriptions) {
+            if (s._id) {
+                if (!seenIds.has(s._id)) {
+                    seenIds.add(s._id);
+                    uniqueBaseSubscriptions.push(s);
+                }
+            } else {
+                uniqueBaseSubscriptions.push(s);
+            }
+        }
+
         // Only the most recent successful and non-expired subscription is flagged active.
-        const activeCandidate = [...baseSubscriptions]
+        const activeCandidate = [...uniqueBaseSubscriptions]
             .filter((s) => Number(s.payment_status) === 1 && !s.is_expired)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
-        return baseSubscriptions.map((s) => ({
+        return uniqueBaseSubscriptions.map((s) => ({
             ...s,
             is_active: !!activeCandidate && s._id === activeCandidate._id
         }));
@@ -241,7 +255,7 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
                 <LegendList
                     style={{ flex: 1, backgroundColor: 'transparent' }}
                     data={subscriptions as never}
-                    keyExtractor={(item: SubscriptionItem) => item._id}
+                    keyExtractor={(item: SubscriptionItem, index: number) => item._id || String(index)}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}

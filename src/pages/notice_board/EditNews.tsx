@@ -11,7 +11,7 @@ import axios from "axios";
 import { NavProps, TNews, TCompany } from "../../types/types";
 import { IconApp } from "../../components/app/IconApp";
 import moment from "moment";
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import { Image as ExpoImage } from 'expo-image';
 
 const EditNews = ({ navigation, route }: NavProps) => {

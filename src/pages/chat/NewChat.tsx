@@ -119,9 +119,12 @@ const NewChat = ({ route, navigation }: NavProps) => {
 
     const SearchItem = (search: string) => {
         dispatch(setTextContactSearch(search));
+        const cleanQuery = search.toLowerCase().trim();
         let filtered_items = contacts.filter(item => {
-            return item.user_active !== 0 && item.user_names.toLowerCase().includes(search.toLowerCase().toString())
-                || item.user_active !== 0 && item.phone_number.toLowerCase().includes(search.toLowerCase().toString());
+            if (item.user_active === 0) return false;
+            const nameMatch = item.user_names && item.user_names.toLowerCase().includes(cleanQuery);
+            const phoneMatch = item.phone_number && item.phone_number.toLowerCase().includes(cleanQuery);
+            return nameMatch || phoneMatch;
         });
 
         setIIItems(filtered_items as never);
@@ -239,14 +242,26 @@ const NewChat = ({ route, navigation }: NavProps) => {
                     <Animated.View
                         entering={SlideInUp}
                         exiting={SlideOutUp}
-                        style={{ marginBottom: 0, marginHorizontal: 15, borderBottomWidth: 1, paddingVertical: 0, borderColor: app_theme.colors.border, flexDirection: 'row', alignItems: 'center', backgroundColor: app_theme.colors.background }}>
-                        <Feather name="search" size={16} style={{ marginRight: 10, color: app_theme.colors.gray }} />
+                        style={{
+                            marginHorizontal: 15,
+                            marginVertical: 10,
+                            paddingHorizontal: 12,
+                            borderRadius: 12,
+                            borderWidth: 1.5,
+                            borderColor: app_theme.colors.border,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: app_theme.colors.border + '20',
+                            height: 48,
+                        }}>
+                        <Feather name="search" size={18} style={{ marginRight: 10, color: app_theme.colors.gray }} />
                         <TextInput
+                            autoFocus={true}
                             onChangeText={SearchItem}
                             value={text_contact_search}
                             placeholder={strings.search}
                             placeholderTextColor={app_theme.colors.gray}
-                            style={{ flex: 1, paddingVertical: 0, height: 40, borderWidth: 0, borderColor: app_theme.colors.background, backgroundColor: app_theme.colors.background, color: app_theme.colors.text }}
+                            style={{ flex: 1, paddingVertical: 0, height: '100%', borderWidth: 0, backgroundColor: 'transparent', color: app_theme.colors.text, fontSize: 15 }}
                         />
                         {text_contact_search !== "" ?
                             <Pressable
@@ -260,7 +275,7 @@ const NewChat = ({ route, navigation }: NavProps) => {
                                     justifyContent: 'center',
                                     alignItems: 'center'
                                 }}>
-                                <Feather name="x" size={16} style={{ color: app_theme.colors.text }} />
+                                <Feather name="x" size={18} style={{ color: app_theme.colors.text }} />
                             </Pressable> : null}
                     </Animated.View> : null}
                 {/* renderItem={({ item, index }: { item: TMessage, index: number }) => ( */}

@@ -4,7 +4,7 @@ import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { useNavigation } from '@react-navigation/native';
 import StatusBarYambi from '../../components/app/StatusBar';
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import axios from 'axios';
 import ButtonNormal from '../../components/app/ButtonNormal';
 import { setContactsSelected, setLoadingButton } from '../../store/reducers/appSlice';

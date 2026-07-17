@@ -38,20 +38,35 @@ const Search = ({ navigation }: any) => {
             const targetId = chat._id;
 
             let displayName = "";
+            let phoneNumber = "";
             if (isGroup) {
                 const group = allGroups.find(g => g._id === targetId);
                 displayName = group?.user_names || "";
             } else {
                 const contact = allContacts.find(c => c.user_id === targetId);
                 displayName = contact?.user_names || "";
+                phoneNumber = contact?.phone_number || "";
             }
 
             const nameMatches = displayName.toLowerCase().includes(cleanKeyword);
+            const phoneMatches = phoneNumber.toLowerCase().includes(cleanKeyword);
             const lastMessageMatches = chat.last_message && chat.last_message.toLowerCase().includes(cleanKeyword);
 
-            return nameMatches || lastMessageMatches;
+            return nameMatches || phoneMatches || lastMessageMatches;
         });
     }, [keyword, allChats, allContacts, allGroups]);
+
+    // Filter contacts where name or phone number matches
+    const filteredContacts = useMemo(() => {
+        if (!keyword.trim()) return [];
+
+        const cleanKeyword = keyword.toLowerCase().trim();
+        return allContacts.filter(contact => {
+            const nameMatches = contact.user_names && contact.user_names.toLowerCase().includes(cleanKeyword);
+            const phoneMatches = contact.phone_number && contact.phone_number.toLowerCase().includes(cleanKeyword);
+            return nameMatches || phoneMatches;
+        });
+    }, [keyword, allContacts]);
 
     // Filter individual messages containing keyword
     const filteredMessages = useMemo(() => {
@@ -146,7 +161,7 @@ const Search = ({ navigation }: any) => {
                         style={{ marginTop: 12 }}
                     />
                 </View>
-            ) : filteredChats.length === 0 && filteredMessages.length === 0 ? (
+            ) : filteredChats.length === 0 && filteredContacts.length === 0 && filteredMessages.length === 0 ? (
                 <View style={styles.stateContainer}>
                     <IconApp
                         pack="MC"
@@ -183,6 +198,25 @@ const Search = ({ navigation }: any) => {
                                             type="chat"
                                             searchKeyword={keyword}
                                             onPress={() => navigateToChat(chat._id)}
+                                        />
+                                    ))}
+                                </View>
+                            ) : null}
+
+                            {/* Contacts Card (Matching Contacts) */}
+                            {filteredContacts.length > 0 ? (
+                                <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+                                    <View style={styles.cardHeader}>
+                                        <YambiText bold text={strings.contacts} size="normal" color="high" />
+                                        <YambiText text={`${filteredContacts.length} ${strings.found}`} size="small" color="gray" />
+                                    </View>
+                                    {filteredContacts.map((contact) => (
+                                        <SearchChatItem
+                                            key={contact.user_id}
+                                            item={contact}
+                                            type="contact"
+                                            searchKeyword={keyword}
+                                            onPress={() => navigateToChat(contact.phone_number)}
                                         />
                                     ))}
                                 </View>

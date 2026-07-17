@@ -292,6 +292,8 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     // Business-level image access is always allowed from this screen.
     const canUploadImages = true;
 
+    const isAppAdmin = user_data.user_level !== 0;
+
     const uuser = useQuery(
         BusinessUsers, bss => {
             return bss.filtered('user == $0 && business_id == $1 && user_active == $2', user_data.phone_number, item._id, 1)
@@ -301,7 +303,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
 
     const conditionGoUsers = () => {
         // Admin has full access
-        if (isAdmin) return true;
+        if (isAdmin || isAppAdmin) return true;
         
         if (oo !== undefined) {
             if ((oo.user_active === 1 && oo.level === 1) || (oo.user_active === 1 && oo.level === 2)) {
@@ -320,7 +322,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
 
     const GoSalesPoint = (pos: TSellsPoint) => {
         // Admin has full access
-        if (isAdmin) {
+        if (isAdmin || isAppAdmin) {
             RootNavigation.navigate("BusinessSales", { business_id: "", sales_point_id: pos._id, item_id: "" });
             return;
         }
@@ -337,7 +339,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
 
     const conditionEditBusiness = () => {
         // Admin has full access
-        if (isAdmin) return true;
+        if (isAdmin || isAppAdmin) return true;
         
         if (oo !== undefined) {
             if ((oo.user_active === 1 && oo.level === 1)) {
@@ -422,7 +424,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     );
 
     // Skip user relationship check for admin users
-    if (!isAdmin && !oo) return null;
+    if (!isAdmin && !isAppAdmin && !oo) return null;
 
     return (
         <ScrollView 
@@ -507,7 +509,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             </View>
                             :
                             sells_points.map((pos) => {
-                                const isLocked = !accessibleSalesPointIds.includes(pos._id);
+                                const isLocked = (isAdmin || isAppAdmin) ? false : !accessibleSalesPointIds.includes(pos._id);
                                 return (
                                 <Pressable
                                     key={pos._id}
@@ -557,14 +559,14 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             </View>
                             :
                             sells_points.map((pos) => {
-                                const canAccessPOS = isAdmin || (oo !== null && oo !== undefined && (
+                                const canAccessPOS = isAdmin || isAppAdmin || (oo !== null && oo !== undefined && (
                                     oo.user_active === 1 && oo.level === 1 ||
                                     (oo.user_active === 1 && oo.sales_point_id === pos._id && oo.level === 2) ||
                                     (oo.user_active === 1 && oo.sales_point_id === pos._id && oo.level === 3)
                                 ));
 
                                 if (!canAccessPOS) return null;
-                                const isLocked = !accessibleSalesPointIds.includes(pos._id);
+                                const isLocked = (isAdmin || isAppAdmin) ? false : !accessibleSalesPointIds.includes(pos._id);
                                 return (
                                     <Pressable
                                         key={pos._id}

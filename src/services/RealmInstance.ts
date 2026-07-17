@@ -22,6 +22,8 @@ import {
   YambiGroups,
   Expenses,
   CompanyUsers,
+  Payments,
+  Reservations,
 } from '../store/database/Models';
 import { remote_host, randomString, renderDateUpToMilliseconds } from '../../GlobalVariables';
 import { TChat, TMessage } from '../types/types';
@@ -31,7 +33,7 @@ import { TChat, TMessage } from '../types/types';
 // main app's RealmProvider and causes crashes.
 let _realmInstance: Realm | null = null;
 
-const realmConfig = {
+export const realmConfig = {
   schema: [
     UserData,
     UsersMessages,
@@ -52,8 +54,10 @@ const realmConfig = {
     YambiGroups,
     Expenses,
     CompanyUsers,
+    Payments,
+    Reservations,
   ],
-  schemaVersion: 19,
+  schemaVersion: 23,
 };
 
 export const openRealmInstance = async () => {
@@ -64,20 +68,60 @@ export const openRealmInstance = async () => {
   return _realmInstance;
 };
 
-// Safe write helper: avoids "already in a write transaction" errors
-// when the main app's RealmProvider is also performing a write
-export const safeRealmWrite = (realm: Realm, callback: () => void) => {
-  if (realm.isInTransaction) {
-    callback();
-  } else {
-    realm.write(callback);
-  }
+// Global sequential write queue to serialize all safeRealmWrite calls.
+// This prevents write transaction collisions when multiple asynchronous events
+// attempt writes in quick succession.
+let writeQueue: Promise<void> = Promise.resolve();
+
+// Safe write helper: avoids "already in a write transaction" errors.
+// Uses a sequential queue and retry backoff if the database is locked.
+export const safeRealmWrite = (realm: Realm, callback: () => void): Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    writeQueue = writeQueue.then(() => {
+      return new Promise<void>((resolveWrite) => {
+        const execute = () => {
+          if (realm.isClosed) {
+            resolveWrite();
+            resolve();
+            return;
+          }
+          if (realm.isInTransaction) {
+            try {
+              callback();
+              resolveWrite();
+              resolve();
+            } catch (err) {
+              console.error("Error in safeRealmWrite callback (nested):", err);
+              resolveWrite();
+              reject(err);
+            }
+          } else {
+            try {
+              realm.write(callback);
+              resolveWrite();
+              resolve();
+            } catch (err: any) {
+              if (err?.message?.includes("already in a write transaction")) {
+                console.warn("Realm already in a write transaction. Retrying callback in 50ms...");
+                setTimeout(execute, 50);
+              } else {
+                console.error("Error in safeRealmWrite realm.write:", err);
+                resolveWrite();
+                reject(err);
+              }
+            }
+          }
+        };
+        execute();
+      });
+    });
+  });
 };
 
 export const insertBackgroundMessage = async (msg: any) => {
   try {
     const realm = await openRealmInstance();
-    safeRealmWrite(realm, () => {
+    await safeRealmWrite(realm, () => {
       let chat: TChat = {
         _id: msg.sender,
         phone_number: msg.sender,
@@ -150,7 +194,7 @@ export const handleQuickReply = async (inboxUser: string, replyText: string, rec
     const token = randomString(30) + renderDateUpToMilliseconds();
 
     // 1. Mark the received message as read locally
-    safeRealmWrite(realm, () => {
+    await safeRealmWrite(realm, () => {
       const receivedMsg = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', receivedMessageToken);
       if (receivedMsg && receivedMsg.message_read < 3) {
         receivedMsg.message_read = 3;
@@ -183,7 +227,7 @@ export const handleQuickReply = async (inboxUser: string, replyText: string, rec
     };
 
     // 3. Create reply chat locally
-    safeRealmWrite(realm, () => {
+    await safeRealmWrite(realm, () => {
       let chat: TChat = {
         _id: inboxUser,
         phone_number: inboxUser,
@@ -230,7 +274,7 @@ export const handleQuickReply = async (inboxUser: string, replyText: string, rec
         console.log("Quick reply sent to backend successfully:", res.data);
         try {
           const realm = await openRealmInstance();
-          safeRealmWrite(realm, () => {
+          await safeRealmWrite(realm, () => {
             const localMsg = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', token);
             if (localMsg && localMsg.message_read === 0) {
               localMsg.message_read = 1;
@@ -264,7 +308,7 @@ export const handleMarkAsReadAction = async (receivedMessageToken: string) => {
     const time = moment(new Date()).format();
 
     // Update local message status
-    safeRealmWrite(realm, () => {
+    await safeRealmWrite(realm, () => {
       const receivedMsg = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', receivedMessageToken);
       if (receivedMsg && receivedMsg.message_read < 3) {
         receivedMsg.message_read = 3;

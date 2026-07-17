@@ -9,7 +9,7 @@ import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice
 import { remote_host, randomString } from "../../../GlobalVariables";
 import axios from "axios";
 import { NavProps, TCompany } from "../../types/types";
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import { Image as ExpoImage } from 'expo-image';
 import { IconApp } from "../../components/app/IconApp";
 import DateTimePicker from '@react-native-community/datetimepicker';

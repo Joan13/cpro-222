@@ -15,7 +15,7 @@ import { IconApp } from "../../components/app/IconApp";
 import moment from "moment";
 import { FlashList } from "@shopify/flash-list";
 import ContactsList from "../../components/lists/contacts/ContactsList";
-import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from '../../utils/imagePicker';
 import * as NavigationBar from 'expo-navigation-bar';
 import NewStoryImagesList from "../../components/lists/stories/NewStoryImagesList";
 // import { Camera, useCameraDevice, useCameraDevices, useCameraPermission } from 'react-native-vision-camera';

@@ -80,6 +80,7 @@ import { remote_host, removeDuplicateNumbers, removeWhiteSpaces, SocketApp, isRe
 import HeaderHome from './src/components/headers/HeaderHome';
 import HeaderSettings from './src/components/headers/HeaderSettings';
 import Business from './src/pages/business/Business';
+import AdminBusiness from './src/pages/Admin/Business';
 import BusinessViewModern from './src/pages/business/BusinessViewModern';
 import BusinessModern from './src/pages/business/BusinessModern';
 import Sales from './src/pages/business/Sales';
@@ -2781,6 +2782,20 @@ const Yambi = ({ navigation }: NavProps) => {
                         })} />
 
                         <Stack.Screen name="BusinessViewModern" component={BusinessViewModern} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true, headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1,
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: route.params?.business?.business_name || strings.business,
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                        })} />
+
+                        <Stack.Screen name="AdminBusiness" component={AdminBusiness} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
                                 backgroundColor: app_theme.colors.design_tip1,
