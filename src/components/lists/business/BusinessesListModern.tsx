@@ -77,17 +77,17 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     // "Mwanga Business" always remains active
     const isBusinessExpired = (business: TBusiness) => {
         if (!business) return false;
-        
+
         // "Mwanga Business" always remains active
         if (business.business_name === "Mwanga Business") {
             return false;
         }
-        
+
         // Check if valid_until date has passed
         if (!business.valid_until || business.valid_until === "") {
             return false;
         }
-        
+
         try {
             const validUntilDate = new Date(business.valid_until);
             const now = new Date();
@@ -103,17 +103,17 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     // Helper function to calculate remaining days until expiration
     const getRemainingDays = (business: TBusiness): number | null => {
         if (!business) return null;
-        
+
         // "Mwanga Business" always remains active
         if (business.business_name === "Mwanga Business") {
             return null;
         }
-        
+
         // Check if valid_until date exists
         if (!business.valid_until || business.valid_until === "") {
             return null;
         }
-        
+
         try {
             const validUntilDate = new Date(business.valid_until);
             const now = new Date();
@@ -304,7 +304,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     const conditionGoUsers = () => {
         // Admin has full access
         if (isAdmin || isAppAdmin) return true;
-        
+
         if (oo !== undefined) {
             if ((oo.user_active === 1 && oo.level === 1) || (oo.user_active === 1 && oo.level === 2)) {
                 return true;
@@ -326,7 +326,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
             RootNavigation.navigate("BusinessSales", { business_id: "", sales_point_id: pos._id, item_id: "" });
             return;
         }
-        
+
         if (oo !== null && oo !== undefined) {
             if (oo.user_active === 1 && oo.level === 1 || (oo.user_active === 1 && oo.sales_point_id === pos._id && oo.level === 2) || (oo.user_active === 1 && oo.sales_point_id === pos._id && oo.level === 3)) {
                 RootNavigation.navigate("BusinessSales", { business_id: "", sales_point_id: pos._id, item_id: "" });
@@ -340,7 +340,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     const conditionEditBusiness = () => {
         // Admin has full access
         if (isAdmin || isAppAdmin) return true;
-        
+
         if (oo !== undefined) {
             if ((oo.user_active === 1 && oo.level === 1)) {
                 return true;
@@ -427,7 +427,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     if (!isAdmin && !isAppAdmin && !oo) return null;
 
     return (
-        <ScrollView 
+        <ScrollView
             style={{ flex: 1 }}
             refreshControl={
                 onRefresh ? (
@@ -511,37 +511,37 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             sells_points.map((pos) => {
                                 const isLocked = (isAdmin || isAppAdmin) ? false : !accessibleSalesPointIds.includes(pos._id);
                                 return (
-                                <Pressable
-                                    key={pos._id}
-                                    disabled={isLocked}
-                                    onPress={() => {
-                                        if (isLocked) {
-                                            RootNavigation.navigate("AddBusinessSubscription", { business_id: item._id });
-                                            return;
-                                        }
-                                        dispatch(setShowModalApp(false));
-                                        setShowPOSSelector(false);
-                                        RootNavigation.navigate("BusinessItems", { business_id: pos.business_id, sales_point_id: pos._id, flag: 0 });
-                                    }}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingVertical: 15,
-                                        paddingHorizontal: 10,
-                                        borderRadius: 8,
-                                        marginVertical: 5,
-                                        backgroundColor: app_theme.colors.border,
-                                        opacity: isLocked ? 0.65 : 1,
-                                    }}>
-                                    <IconApp pack="MT" name="store" size={24} color={app_theme.colors.high_color} styles={{ marginRight: 15 }} />
-                                    <View style={{ flex: 1 }}>
-                                        <YambiText text={pos.sells_point_name} bold />
-                                        <YambiText size="small" color="gray" text={isLocked ? strings.pos_limit_requires_subscription : pos.sells_point_address} />
-                                    </View>
-                                    {isLocked
-                                        ? <IconApp pack="FI" name="lock" size={18} color={app_theme.colors.error} />
-                                        : <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />}
-                                </Pressable>
+                                    <Pressable
+                                        key={pos._id}
+                                        disabled={isLocked}
+                                        onPress={() => {
+                                            if (isLocked) {
+                                                RootNavigation.navigate("AddBusinessSubscription", { business_id: item._id });
+                                                return;
+                                            }
+                                            dispatch(setShowModalApp(false));
+                                            setShowPOSSelector(false);
+                                            RootNavigation.navigate("BusinessItems", { business_id: pos.business_id, sales_point_id: pos._id, flag: 0 });
+                                        }}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingVertical: 15,
+                                            paddingHorizontal: 10,
+                                            borderRadius: 8,
+                                            marginVertical: 5,
+                                            backgroundColor: app_theme.colors.border,
+                                            opacity: isLocked ? 0.65 : 1,
+                                        }}>
+                                        <IconApp pack="MT" name="store" size={24} color={app_theme.colors.high_color} styles={{ marginRight: 15 }} />
+                                        <View style={{ flex: 1 }}>
+                                            <YambiText text={pos.sells_point_name} bold />
+                                            <YambiText size="small" color="gray" text={isLocked ? strings.pos_limit_requires_subscription : pos.sells_point_address} />
+                                        </View>
+                                        {isLocked
+                                            ? <IconApp pack="FI" name="lock" size={18} color={app_theme.colors.error} />
+                                            : <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />}
+                                    </Pressable>
                                 );
                             })}
                     </ScrollView>
@@ -660,7 +660,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 <Pressable onLongPress={() => copyToClipboard(item._id)}>
                                     <YambiText size="small" color="gray" text={strings.id + ": " + item._id} />
                                 </Pressable>
-                                
+
                                 {/* Subscription Warning Message */}
                                 {shouldShowWarning() && (
                                     <View style={{
@@ -708,7 +708,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                         </Pressable>
                                     </View>
                                 )}
-                                
+
                                 {/* Subscriber Count */}
                                 {subscriberCount > 0 && (
                                     <Pressable
@@ -729,14 +729,16 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                         <YambiText
                                             color="high"
                                             text={subscriberCount.toString()}
-                                             size="small"
+                                            // text={26.9 + "K"}
+                                            bold
+                                            size="small"
                                             style={{ marginRight: 4 }}
                                         />
                                         <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
                                         <IconApp pack="FI" name="chevron-right" size={12} color={app_theme.colors.gray} styles={{ marginLeft: 4 }} />
                                     </Pressable>
                                 )}
-                                
+
                                 {!businessExpired ?
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
                                         <IconApp pack="FA" name="check-circle" size={14} color={app_theme.colors.success} />
@@ -774,21 +776,21 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                         </View>
 
                         {/* 3-Dot Menu */}
-                        <View style={{  marginTop: 5 }}>
+                        <View style={{ marginTop: 5 }}>
                             <DropdownMenu.Root>
                                 <DropdownMenu.Trigger>
-                                        <Pressable
-                                            style={{
-                                                width: 30,
-                                                height: 30,
-                                                borderRadius: 12,
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                backgroundColor: app_theme.colors.border + "80",
-                                                borderWidth: 1,
-                                                borderColor: app_theme.colors.border,
-                                            }}
-                                        ><IconApp pack="FI" name="more-vertical" size={20} color={app_theme.colors.text} /></Pressable>
+                                    <Pressable
+                                        style={{
+                                            width: 30,
+                                            height: 30,
+                                            borderRadius: 12,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            backgroundColor: app_theme.colors.border + "80",
+                                            borderWidth: 1,
+                                            borderColor: app_theme.colors.border,
+                                        }}
+                                    ><IconApp pack="FI" name="more-vertical" size={20} color={app_theme.colors.text} /></Pressable>
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Content>
                                     <DropdownMenu.Item
