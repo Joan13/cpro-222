@@ -2,7 +2,7 @@
   "expo": {
     "name": "yambi",
     "slug": "yambi",
-    "version": "2.47.1",
+    "version": "2.47.2",
     "scheme": "yambi",
     "orientation": "portrait",
     "icon": "./src/assets/logo_icon.png",

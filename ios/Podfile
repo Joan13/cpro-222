@@ -60,5 +60,12 @@ target 'yambi' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # Fix: SwiftUICore cannot link on x86_64 simulator (Apple Silicon Mac)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'x86_64'
+      end
+    end
   end
 end
