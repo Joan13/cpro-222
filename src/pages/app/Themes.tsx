@@ -756,8 +756,8 @@ const blackTheme3: TTheme = {
 // ============================================================================
 
 export const lightThemes: Array<TTheme> = [
-    defaultTheme,
     whiteTheme,
+    defaultTheme,
     whiteTheme2,
     whiteTheme3,
     blueLightTheme,

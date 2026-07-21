@@ -2115,5 +2115,20 @@
   "reservation_status_5": "Expired",
   "client_details": "Client details",
   "invalid_amount": "Invalid amount",
-  "reservation_not_found": "Reservation not found"
+  "reservation_not_found": "Reservation not found",
+  "empty_profile_tip": "Add a profile picture so your contacts can easily recognize you and start conversations!",
+  "empty_profile_improve": "Improve your profile to stand out and help others recognize you!",
+  "business_grow_title": "Grow with Yambi Business",
+  "business_benefit_inventory_title": "Inventory Management",
+  "business_benefit_inventory_desc": "Track items, stock quantities, warehouse locations, and get alerts.",
+  "business_benefit_sales_title": "Real-time Sales Monitoring",
+  "business_benefit_sales_desc": "See transactions and operations instantly as they are registered.",
+  "business_benefit_daily_title": "Daily Sales Performance",
+  "business_benefit_daily_desc": "Know exactly how much revenue and items were sold each day.",
+  "business_benefit_cash_credit_title": "Cash & Credit Tracking",
+  "business_benefit_cash_credit_desc": "Distinguish precisely between items paid cash and those sold on credit.",
+  "business_benefit_reservations_title": "Item Reservations",
+  "business_benefit_reservations_desc": "Manage customer bookings and reservations for your inventory.",
+  "business_benefit_expenses_title": "Expense Management",
+  "business_benefit_expenses_desc": "Log and track all business expenses to keep accurate net profit figures."
 }

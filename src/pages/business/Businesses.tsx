@@ -1,4 +1,4 @@
-import {  View, Image, RefreshControl, ScrollView, Pressable } from "react-native";
+import {  View, Image, RefreshControl, ScrollView, Pressable, Text } from "react-native";
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { NavProps, TBusiness, TBusinessSubscription, TBusinessUser, TItem, TItemPrices, TSale, TSellsPoint } from "../../types/types";
 import { strings } from "../../lang/lang";
@@ -20,7 +20,8 @@ import BusinessesListModern from "../../components/lists/business/BusinessesList
 
 const Businesses = ({}: NavProps) => {
 
-    const theme = useAppSelector(state => state.app_theme.colors);
+    const app_theme = useAppSelector(state => state.app_theme);
+    const theme = app_theme.colors;
     const user_data = useAppSelector(state => state.user_data);
     const [showInfo, setShowInfo] = useState<boolean>(false);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
@@ -808,8 +809,11 @@ const Businesses = ({}: NavProps) => {
                             flexGrow: 1,
                             justifyContent: 'center',
                             alignItems: 'center',
-                            paddingVertical: 40
+                            paddingHorizontal: 24,
+                            paddingVertical: 40,
+                            backgroundColor: theme.background
                         }}
+                        showsVerticalScrollIndicator={false}
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}
@@ -819,26 +823,273 @@ const Businesses = ({}: NavProps) => {
                                 progressBackgroundColor={theme.background}
                             />
                         }>
+                        {/* Layered Visual Illustration */}
                         <View style={{
                             justifyContent: 'center',
                             alignItems: 'center',
+                            marginBottom: 28,
+                            position: 'relative',
+                            width: 200,
+                            height: 200,
                         }}>
-                            <Image
-                                source={require("./../../assets/budget.png")}
-                                style={{
-                                    width: 100,
-                                    height: 100
-                                }} />
-
-                            <TextSmallYambiGray text={strings.no_workspace} styles={{
-                                margin: 40,
-                                marginTop: 20,
-                                marginBottom: 20,
-                                color: theme.gray,
-                                textAlign: 'center'
+                            {/* Outermost Dashed Ring */}
+                            <View style={{
+                                position: 'absolute',
+                                width: 190,
+                                height: 190,
+                                borderRadius: 95,
+                                borderWidth: 1.5,
+                                borderColor: theme.border,
+                                borderStyle: 'dashed',
+                                opacity: 0.5,
+                            }} />
+                            
+                            {/* Middle Soft Glow Circle */}
+                            <View style={{
+                                position: 'absolute',
+                                width: 146,
+                                height: 146,
+                                borderRadius: 73,
+                                backgroundColor: theme.high_color,
+                                opacity: 0.05,
                             }} />
 
-                            <ButtonNormal title={strings.new_business} loadEnabled={false} onPress={NewBusiness} styles={{ paddingHorizontal: 20 }} normal={true} />
+                            {/* Central Card Circle Badge */}
+                            <View style={{
+                                width: 106,
+                                height: 106,
+                                borderRadius: 53,
+                                backgroundColor: theme.card,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                borderWidth: 1,
+                                borderColor: theme.border,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.06,
+                                shadowRadius: 8,
+                                elevation: 3,
+                            }}>
+                                <Image
+                                    source={require("./../../assets/budget.png")}
+                                    style={{
+                                        width: 56,
+                                        height: 56,
+                                        resizeMode: 'contain'
+                                    }}
+                                />
+                            </View>
+
+                            {/* Floating Decorative Briefcase Badge */}
+                            <View style={{
+                                position: 'absolute',
+                                bottom: 40,
+                                right: 40,
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
+                                backgroundColor: theme.high_color,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                borderWidth: 2,
+                                borderColor: theme.card,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 3,
+                                elevation: 2,
+                            }}>
+                                <IconApp pack="FI" name="briefcase" size={14} color="#FFF" />
+                            </View>
+                        </View>
+
+                        <TextNormalYambi
+                            text={strings.business || "Business"}
+                            bold
+                            styles={{
+                                textAlign: 'center',
+                                marginBottom: 12,
+                                fontSize: 24,
+                                fontWeight: '800',
+                                color: theme.text
+                            }}
+                        />
+
+                        <TextSmallYambiGray
+                            text={strings.no_workspace}
+                            styles={{
+                                paddingHorizontal: 20,
+                                textAlign: 'center',
+                                lineHeight: 22,
+                                marginBottom: 32,
+                                color: theme.gray,
+                                fontSize: 14,
+                            }}
+                        />
+
+                        <ButtonNormal
+                            title={strings.new_business}
+                            loadEnabled={false}
+                            onPress={NewBusiness}
+                            iconPack="FI"
+                            iconName="plus"
+                            iconSize={16}
+                            styles={{
+                                paddingHorizontal: 30,
+                                height: 48,
+                                borderRadius: 24,
+                                width: '80%',
+                                maxWidth: 280,
+                                shadowColor: theme.high_color,
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.15,
+                                shadowRadius: 8,
+                                elevation: 4
+                            }}
+                            normal={true}
+                        />
+
+                        {/* Business Benefits Card */}
+                        <View style={{
+                            width: '100%',
+                            backgroundColor: theme.card,
+                            borderRadius: 20,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                            padding: 20,
+                            marginTop: 24,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 10,
+                        }}>
+                            {/* Title Row */}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: 16
+                            }}>
+                                <View style={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: 15,
+                                    backgroundColor: (theme.high_color || '#1E68FF') + '15',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 10
+                                }}>
+                                    <IconApp pack="FI" name="trending-up" size={15} color={theme.high_color || '#1E68FF'} />
+                                </View>
+                                <Text style={{
+                                    fontSize: 16,
+                                    fontWeight: '700',
+                                    color: theme.text,
+                                }}>
+                                    {strings.business_grow_title}
+                                </Text>
+                            </View>
+
+                            {/* List of Benefits */}
+                            {(() => {
+                                const hexToRGBA = (hex: string, alpha: number) => {
+                                    if (!hex || !hex.startsWith('#')) return `rgba(0,0,0,${alpha})`;
+                                    try {
+                                        const r = parseInt(hex.slice(1, 3), 16);
+                                        const g = parseInt(hex.slice(3, 5), 16);
+                                        const b = parseInt(hex.slice(5, 7), 16);
+                                        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                                    } catch (e) {
+                                        return `rgba(0,0,0,${alpha})`;
+                                    }
+                                };
+
+                                const benefits = [
+                                    {
+                                        title: strings.business_benefit_inventory_title,
+                                        description: strings.business_benefit_inventory_desc,
+                                        icon: "package",
+                                        color: theme.high_color || '#1E68FF'
+                                    },
+                                    {
+                                        title: strings.business_benefit_sales_title,
+                                        description: strings.business_benefit_sales_desc,
+                                        icon: "activity",
+                                        color: theme.success || '#10B981'
+                                    },
+                                    {
+                                        title: strings.business_benefit_daily_title,
+                                        description: strings.business_benefit_daily_desc,
+                                        icon: "calendar",
+                                        color: '#F59E0B'
+                                    },
+                                    {
+                                        title: strings.business_benefit_cash_credit_title,
+                                        description: strings.business_benefit_cash_credit_desc,
+                                        icon: "credit-card",
+                                        color: '#8B5CF6'
+                                    },
+                                    {
+                                        title: strings.business_benefit_reservations_title,
+                                        description: strings.business_benefit_reservations_desc,
+                                        icon: "clock",
+                                        color: '#EC4899'
+                                    },
+                                    {
+                                        title: strings.business_benefit_expenses_title,
+                                        description: strings.business_benefit_expenses_desc,
+                                        icon: "trending-down",
+                                        color: '#EF4444'
+                                    }
+                                ];
+
+                                return benefits.map((item, index) => {
+                                    const isLast = index === benefits.length - 1;
+                                    return (
+                                        <View 
+                                            key={index}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingVertical: 14,
+                                                borderBottomWidth: isLast ? 0 : 1,
+                                                borderBottomColor: theme.border,
+                                            }}
+                                        >
+                                            {/* Icon badge */}
+                                            <View style={{
+                                                width: 42,
+                                                height: 42,
+                                                borderRadius: 21,
+                                                backgroundColor: hexToRGBA(item.color, app_theme.dark ? 0.15 : 0.08),
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                marginRight: 14
+                                            }}>
+                                                <IconApp pack="FI" name={item.icon} size={18} color={item.color} />
+                                            </View>
+
+                                            {/* Texts */}
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '600',
+                                                    color: theme.text,
+                                                    marginBottom: 4
+                                                }}>
+                                                    {item.title}
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 14,
+                                                    color: theme.gray,
+                                                    lineHeight: 18
+                                                }}>
+                                                    {item.description}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    );
+                                });
+                            })()}
                         </View>
                     </ScrollView>
                     :

@@ -2112,5 +2112,20 @@
   "reservation_status_5": "Expirée",
   "client_details": "Détails du client",
   "invalid_amount": "Montant invalide",
-  "reservation_not_found": "Réservation non trouvée"
+  "reservation_not_found": "Réservation non trouvée",
+  "empty_profile_tip": "Ajoutez une photo de profil pour que vos contacts puissent facilement vous reconnaître et démarrer des conversations !",
+  "empty_profile_improve": "Améliorez votre profil pour vous démarquer et aider les autres à vous reconnaître !",
+  "business_grow_title": "Développez votre activité avec Yambi Business",
+  "business_benefit_inventory_title": "Gestion des stocks",
+  "business_benefit_inventory_desc": "Suivez les articles, les quantités en stock, les emplacements d'entrepôt et recevez des alertes.",
+  "business_benefit_sales_title": "Suivi des ventes en temps réel",
+  "business_benefit_sales_desc": "Visualisez les transactions et les opérations instantanément dès qu'elles sont enregistrées.",
+  "business_benefit_daily_title": "Performance quotidienne des ventes",
+  "business_benefit_daily_desc": "Sachez exactement combien de revenus et d'articles ont été vendus chaque jour.",
+  "business_benefit_cash_credit_title": "Suivi des paiements comptant et crédit",
+  "business_benefit_cash_credit_desc": "Distinguez précisément les articles payés comptant de ceux vendus à crédit.",
+  "business_benefit_reservations_title": "Réservations d'articles",
+  "business_benefit_reservations_desc": "Gérez les réservations et les commandes des clients pour votre inventaire.",
+  "business_benefit_expenses_title": "Gestion des dépenses",
+  "business_benefit_expenses_desc": "Enregistrez et suivez toutes les dépenses de l'entreprise pour conserver des chiffres de bénéfice net précis."
 }

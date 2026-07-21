@@ -17,6 +17,62 @@ import * as RootNavigation from './../../services/Navigation_ref';
 import moment from "moment";
 import SwitchApp from "../../components/app/SwitchApp";
 
+const FormInput = ({
+    label,
+    value,
+    onChangeText,
+    placeholder,
+    maxLength,
+    multiline = false,
+    keyboardType = "default",
+    theme
+}: {
+    label: string;
+    value: string;
+    onChangeText: (text: string) => void;
+    placeholder?: string;
+    maxLength?: number;
+    multiline?: boolean;
+    keyboardType?: any;
+    theme: any;
+}) => {
+    return (
+        <View style={{ marginBottom: 16 }}>
+            <Text style={{
+                fontSize: 13,
+                fontWeight: '600',
+                color: theme.gray,
+                marginBottom: 6,
+                marginLeft: 2
+            }}>
+                {label}
+            </Text>
+            <TextInput
+                placeholder={placeholder}
+                placeholderTextColor={theme.gray}
+                maxLength={maxLength}
+                multiline={multiline}
+                keyboardType={keyboardType}
+                style={{
+                    color: theme.text,
+                    backgroundColor: theme.background,
+                    borderColor: theme.border,
+                    borderWidth: 1,
+                    paddingHorizontal: 16,
+                    paddingVertical: multiline ? 12 : 10,
+                    height: multiline ? undefined : 46,
+                    minHeight: multiline ? 80 : undefined,
+                    borderRadius: 12,
+                    fontSize: 15,
+                    textAlignVertical: multiline ? 'top' : 'center'
+                }}
+                value={value}
+                onChangeText={onChangeText}
+            />
+        </View>
+    );
+};
+
 const NewBusinesses = () => {
 
     const theme = useAppSelector(state => state.app_theme.colors);
@@ -310,176 +366,300 @@ const NewBusinesses = () => {
     }
 
     return (
-        <ScrollView style={{
-            backgroundColor: theme.background,
-            borderColor: theme.border, borderTopWidth: 1,
-            paddingHorizontal: 15
-        }}>
-            <View>
-                <TextBigYambi text={"Hey " + user_data.user_names + "!"} bold styles={{ marginHorizontal: 0, marginTop: 10 }} />
-                <TextNormalYambiGray text={strings.information_create_business} styles={{ marginTop: 15 }} />
-
-                {/* <Pressable style={{
-                    marginTop: 15
+        <ScrollView
+            style={{
+                backgroundColor: theme.background,
+                borderColor: theme.border,
+                borderTopWidth: 1,
+            }}
+            contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: 40
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+        >
+            {/* Modern visual header */}
+            <View style={{
+                alignItems: 'center',
+                marginVertical: 24,
+            }}>
+                <View style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    backgroundColor: (theme.high_color || '#1E68FF') + '15',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: 12
                 }}>
-                    <Text style={{
-                        fontSize: app_description.general_font_size,
-                        color: theme.high_color
-                    }}>{strings.videos_create_business}</Text>
-                </Pressable> */}
+                    <IconApp pack="FI" name="briefcase" size={28} color={theme.high_color || '#1E68FF'} />
+                </View>
+                <Text style={{
+                    fontSize: 22,
+                    fontWeight: '800',
+                    color: theme.text,
+                    textAlign: 'center',
+                }}>
+                    {strings.new_business}
+                </Text>
             </View>
 
-            {/* <View style={{
-                justifyContent: 'center',
-                alignItems: 'center',
+            {showError ?
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
+                    <TextNormalYambiGray text={strings.fields_error_validation} />
+                </ModalApp> : null}
+
+            {showInternetError ?
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
+                    <TextNormalYambiGray text={strings.connection_failed} />
+                </ModalApp> : null}
+
+            {/* CARD 1: Basic Information */}
+            <View style={{
+                backgroundColor: theme.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+                padding: 16,
+                marginBottom: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.03,
+                shadowRadius: 6,
+                // elevation: 1
             }}>
-                <IconApp pack="IO" color={theme.text} size={70} name="business" />
-
                 <Text style={{
-                    margin: 40,
-                    marginBottom: 20,
+                    fontSize: 15,
+                    fontWeight: '700',
+                    color: theme.text,
+                    marginBottom: 16
+                }}>
+                    {strings.business_information}
+                </Text>
+
+                {/* Category Selector Pressable */}
+                <Text style={{
+                    fontSize: 13,
+                    fontWeight: '600',
                     color: theme.gray,
-                    textAlign: 'center'
-                }}>{strings.no_workspace}</Text>
-
-                <ButtonNormal title={strings.new_business} loadEnabled={false} onPress={NewBusiness} styles={{ paddingHorizontal: 20 }} normal={true} />
-            </View> */}
-
-            <View style={{ marginTop: 20, borderTopWidth: 1, borderColor: theme.gray }}>
-
-                <TextNormalYambi bold text={strings.business_information} styles={{ marginVertical: 20 }} />
-
-                {showError ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
-                        <TextNormalYambiGray text={strings.fields_error_validation} />
-                    </ModalApp> : null}
-
-                {showInternetError ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
-                        <TextNormalYambiGray text={strings.connection_failed} />
-                    </ModalApp> : null}
-
-                <View style={{ backgroundColor: theme.background, marginBottom: 30, marginTop: 10 }}>
-                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
-                        <TextSmallYambiGray text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                        <TextNormalYambiHighColor text={category === null ? strings.select_category : renderCategoryName(category)} styles={{ marginLeft: 2, marginTop: 5 }} />
-                    </Pressable>
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.business_name} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={100}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={name}
-                        onChangeText={text => setName(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.description} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={700}
-                        multiline={true}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
-                        value={description}
-                        onChangeText={text => setDescription(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.address} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={70}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={address}
-                        onChangeText={text => setAddress(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.national_id} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={25}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={national_id}
-                        onChangeText={text => setNational_id(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.identification_number} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={25}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={identification_number}
-                        onChangeText={text => setIdentification_number(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.tax_number} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={25}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={tax_number}
-                        onChangeText={text => setTax_number(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.phones} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={45}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={phones}
-                        onChangeText={text => setPhones(text)}
-                    />
-                </View>
-
-                <View style={{ marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.emails} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={70}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={emails}
-                        keyboardType="email-address"
-                        onChangeText={text => setEmails(text)}
-                    />
-                </View>
-
-                {showCategories ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowCategories(false) }} singleButton title={strings.select_category}>
-                        <Categories />
-                    </ModalApp> : null}
-
+                    marginBottom: 6,
+                    marginLeft: 2
+                }}>
+                    {strings.category}
+                </Text>
                 <Pressable
-                    onPress={() => setDefine_as_main_site(!define_as_main_site)}
-                    style={{
+                    onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}
+                    style={({ pressed }) => ({
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                        borderWidth: 1,
+                        borderRadius: 12,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        marginTop: 10,
-                        marginLeft: 2
-                    }}>
-                    {/* // <IconApp pack="FI" name="check-circle" size={15} color={theme.high_color} /> :
-                        // <IconApp pack="FI" name="circle" size={15} color={theme.gray} />}
-                    {define_as_main_site ? */}
-
-                    <SwitchApp value={define_as_main_site} onPress={() => setDefine_as_main_site(!define_as_main_site)} small />
-                    <TextNormalYambi text={strings.define_as_main_site} styles={{ marginLeft: 8 }} />
+                        justifyContent: 'space-between',
+                        marginBottom: 16,
+                        opacity: pressed ? 0.8 : 1,
+                        height: 46
+                    })}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
+                        <IconApp pack="FI" name="grid" size={16} color={theme.high_color || '#1E68FF'} styles={{ marginRight: 8 }} />
+                        <Text style={{
+                            fontSize: 15,
+                            fontWeight: '600',
+                            color: category === null ? theme.gray : theme.text,
+                            flex: 1
+                        }} numberOfLines={1}>
+                            {category === null ? strings.select_category : renderCategoryName(category)}
+                        </Text>
+                    </View>
+                    <IconApp pack="FI" name="chevron-down" size={18} color={theme.gray} />
                 </Pressable>
 
-                <ButtonNormal title={strings.new_business} loading={loading} onPress={NewBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom:50 }} normal={true} />
+                {/* Business Name Input */}
+                <FormInput
+                    label={strings.business_name}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Enter business name"
+                    maxLength={100}
+                    theme={theme}
+                />
 
+                {/* Description Input */}
+                <FormInput
+                    label={strings.description}
+                    value={description}
+                    onChangeText={setDescription}
+                    placeholder="Describe your business services..."
+                    maxLength={700}
+                    multiline
+                    theme={theme}
+                />
+
+                {/* Address Input */}
+                <FormInput
+                    label={strings.address}
+                    value={address}
+                    onChangeText={setAddress}
+                    placeholder="Physical address"
+                    maxLength={70}
+                    theme={theme}
+                />
             </View>
+
+            {/* CARD 2: Tax & Identification Numbers */}
+            <View style={{
+                backgroundColor: theme.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+                padding: 16,
+                marginBottom: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.03,
+                shadowRadius: 6,
+                // elevation: 1
+            }}>
+                <Text style={{
+                    fontSize: 15,
+                    fontWeight: '700',
+                    color: theme.text,
+                    marginBottom: 16
+                }}>
+                    Legal & Registration (Optional)
+                </Text>
+
+                <FormInput
+                    label={strings.national_id}
+                    value={national_id}
+                    onChangeText={setNational_id}
+                    placeholder="National ID"
+                    maxLength={25}
+                    theme={theme}
+                />
+
+                <FormInput
+                    label={strings.identification_number}
+                    value={identification_number}
+                    onChangeText={setIdentification_number}
+                    placeholder="Identification number"
+                    maxLength={25}
+                    theme={theme}
+                />
+
+                <FormInput
+                    label={strings.tax_number}
+                    value={tax_number}
+                    onChangeText={setTax_number}
+                    placeholder="Tax registration number"
+                    maxLength={25}
+                    theme={theme}
+                />
+            </View>
+
+            {/* CARD 3: Contact Channels */}
+            <View style={{
+                backgroundColor: theme.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+                padding: 16,
+                marginBottom: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.03,
+                shadowRadius: 6,
+                // elevation: 1
+            }}>
+                <Text style={{
+                    fontSize: 15,
+                    fontWeight: '700',
+                    color: theme.text,
+                    marginBottom: 16
+                }}>
+                    Contact Information (Optional)
+                </Text>
+
+                <FormInput
+                    label={strings.phones}
+                    value={phones}
+                    onChangeText={setPhones}
+                    placeholder="e.g. +1234567890"
+                    maxLength={45}
+                    theme={theme}
+                />
+
+                <FormInput
+                    label={strings.emails}
+                    value={emails}
+                    onChangeText={setEmails}
+                    placeholder="e.g. contact@business.com"
+                    maxLength={70}
+                    keyboardType="email-address"
+                    theme={theme}
+                />
+            </View>
+
+            {/* Define as main site Switch Card */}
+            <View style={{
+                backgroundColor: theme.card,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+                padding: 16,
+                marginBottom: 24,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.03,
+                shadowRadius: 6,
+                // elevation: 1
+            }}>
+                <View style={{ flex: 1, marginRight: 16 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: theme.text, marginBottom: 2 }}>
+                        {strings.define_as_main_site}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: theme.gray, lineHeight: 16 }}>
+                        Automatically sets up this business as your primary sales location.
+                    </Text>
+                </View>
+                <SwitchApp value={define_as_main_site} onPress={() => setDefine_as_main_site(!define_as_main_site)} small />
+            </View>
+
+            {/* Categories Selection Modal */}
+            {showCategories ?
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowCategories(false) }} singleButton title={strings.select_category}>
+                    <Categories />
+                </ModalApp> : null}
+
+            {/* Create Business Button */}
+            <ButtonNormal
+                title={strings.new_business}
+                loading={loading}
+                onPress={NewBusiness}
+                iconPack="FI"
+                iconName="check"
+                iconSize={16}
+                styles={{
+                    paddingHorizontal: 20,
+                    height: 48,
+                    borderRadius: 24,
+                    shadowColor: theme.high_color,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                    elevation: 4,
+                    marginBottom: 30
+                }}
+                normal={true}
+            />
         </ScrollView>
     )
 }

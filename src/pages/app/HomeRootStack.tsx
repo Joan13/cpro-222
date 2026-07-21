@@ -37,6 +37,11 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
             return chts.filtered('chat_read == $0', 0);
         }, []);
 
+    const activeChatsCount = useQuery(
+        UserChats, chts => {
+            return chts.filtered('deleted == $0', 0);
+        }, []).length;
+
     const companyUsers = useQuery(
         CompanyUsers, cu => {
             return cu.filtered('phone_number == $0 && user_active == $1', user_data.phone_number, 1);
@@ -80,7 +85,11 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
     // }, [language, business_badge]);
 
     const showFloatingAction = () => {
-        if (title === strings.chats || title === strings.status) {
+        if (title === strings.chats) {
+            return activeChatsCount > 0;
+        }
+
+        if (title === strings.status) {
             return true;
         }
         

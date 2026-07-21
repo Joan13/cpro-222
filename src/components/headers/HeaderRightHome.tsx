@@ -24,7 +24,7 @@ const HeaderRightHome = () => {
     const title = useAppSelector(state => state.app.title);
     const show_favorite_chats = useAppSelector(state => state.app.show_favorite_chats);
     const cart = useAppSelector(state => state.persisted_app.cart);
-    const loading_header = useAppSelector(state=>state.app.loading_header);
+    const loading_header = useAppSelector(state => state.app.loading_header);
     const [loading, setLoading] = useState(false);
     const [showInternetError, setShowInternetError] = useState(false);
     const dispatch = useDispatch();
@@ -513,8 +513,8 @@ const HeaderRightHome = () => {
                 alignItems: 'center'
             }}>
 
-{loading_header&&(
-                        <Animated.View entering={FadeIn}>
+                {loading_header && (
+                    <Animated.View entering={FadeIn}>
                         <Pressable onPress={RefreshData} style={{
                             height: 30,
                             width: 30,
@@ -524,10 +524,10 @@ const HeaderRightHome = () => {
                             // marginRight: 20,
                             marginLeft: 15,
                         }}>
-                                <AppActivityIndicator size={20} showLabel={false} />
+                            <AppActivityIndicator size={20} showLabel={false} />
                         </Pressable>
                     </Animated.View>
-                    )}
+                )}
 
                 {title === strings.chats ?
                     <Animated.View entering={FadeIn}>
@@ -538,7 +538,7 @@ const HeaderRightHome = () => {
                                 width: 30,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                marginHorizontal: 15,
+                                marginHorizontal: 20
                             }}>
                             <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
                         </Pressable>
@@ -554,7 +554,7 @@ const HeaderRightHome = () => {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginHorizontal: 15,
-                                marginRight: title === strings.expenses ?20:0
+                                marginRight: title === strings.expenses ? 20 : 0
                             }}>
                             <IconApp pack="IO" name="calculator" size={20} color={theme.colors.text_design1} />
                         </Pressable>
@@ -649,9 +649,9 @@ const HeaderRightHome = () => {
 
             {app_description.home_user_image_position === 'right' ?
                 <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}
-                style={{
-                    // backgroundColor: theme.colors.design_tip1
-                }}
+                    style={{
+                        // backgroundColor: theme.colors.design_tip1
+                    }}
                 >
                     {/* {user_data.user_profile !== "" ?
                         <Animated.View
@@ -677,12 +677,12 @@ const HeaderRightHome = () => {
                         </Animated.View>
                         : */}
 
-                    <Animated.View style={{  
+                    <Animated.View style={{
                         // borderWidth: 1, 
                         // borderColor: theme.colors.border, 
                         overflow: 'hidden',
-                        borderRadius: 50 
-                        }} sharedTransitionTag="homeViewAnimated">
+                        borderRadius: 50
+                    }} sharedTransitionTag="homeViewAnimated">
                         {user_data.user_profile === "" ?
                             <Animated.Image
                                 sharedTransitionTag='homeImageAnimated'

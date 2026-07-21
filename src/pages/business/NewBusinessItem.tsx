@@ -557,513 +557,310 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
     };
 
     return (
-        <View
-            style={{
-                borderColor: theme.border,
-                borderTopWidth: 1,
-                backgroundColor: theme.background,
-                flex: 1,
-            }}>
-            <ScrollView style={{ paddingHorizontal: 15 }} keyboardShouldPersistTaps="handled">
-                <View style={{ marginTop: 0 }}>
-                    {showError ? (
-                        <ModalApp
-                            onClose={() => {
-                                dispatch(setShowModalApp(false));
-                                setShowError(false);
-                            }}
-                            singleButton
-                            title={strings.error}>
-                            <YambiText color="gray" text={validationErrorMsg || strings.fields_error_validation} />
-                        </ModalApp>
-                    ) : null}
+        <View style={{ borderColor: theme.border, borderTopWidth: 1, backgroundColor: theme.background, flex: 1 }}>
+            <ScrollView style={{ paddingHorizontal: 5 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-                    {showInternetError ? (
-                        <ModalApp
-                            onClose={() => {
-                                dispatch(setShowModalApp(false));
-                                setShowInternetError(false);
-                            }}
-                            singleButton
-                            title={strings.error}>
-                            <YambiText color="gray" text={strings.connection_failed} />
-                        </ModalApp>
-                    ) : null}
+                {/* ── Modals ── */}
+                {showError && (
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false); }} singleButton title={strings.error}>
+                        <YambiText color="gray" text={validationErrorMsg || strings.fields_error_validation} />
+                    </ModalApp>
+                )}
+                {showInternetError && (
+                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
+                        <YambiText color="gray" text={strings.connection_failed} />
+                    </ModalApp>
+                )}
+                {showPlanLimitModal && (
+                    <ModalApp
+                        onClose={() => { dispatch(setShowModalApp(false)); setShowPlanLimitModal(false); }}
+                        singleButton={false}
+                        textAction={(strings as any).add_subscription || "Add Subscription"}
+                        textCancel={strings.close || "Close"}
+                        onAction={() => {
+                            dispatch(setShowModalApp(false));
+                            setShowPlanLimitModal(false);
+                            navigation.navigate("AddBusinessSubscription", { business_id });
+                        }}
+                        title={strings.error}
+                    >
+                        <YambiText color="gray" text={(strings as any).max_items_reached || "You have used all available item tokens for your current plan. Upgrade your subscription to add more items."} />
+                    </ModalApp>
+                )}
+                {showCurrencies && (
+                    <ModalApp paddings={false} onClose={() => { dispatch(setShowModalApp(false)); setShowCurrencies(false); }} singleButton title={strings.currency}>
+                        <Currencies />
+                    </ModalApp>
+                )}
 
-                    {showPlanLimitModal ? (
-                        <ModalApp
-                            onClose={() => {
-                                dispatch(setShowModalApp(false));
-                                setShowPlanLimitModal(false);
-                            }}
-                            singleButton={false}
-                            textAction={(strings as any).add_subscription || "Add Subscription"}
-                            textCancel={strings.close || "Close"}
-                            onAction={() => {
-                                dispatch(setShowModalApp(false));
-                                setShowPlanLimitModal(false);
-                                navigation.navigate("AddBusinessSubscription", { business_id });
-                            }}
-                            title={strings.error}
-                        >
-                            <YambiText
-                                color="gray"
-                                text={
-                                    (strings as any).max_items_reached ||
-                                    "You have used all available item tokens for your current plan. Upgrade your subscription to add more items."
-                                }
-                            />
-                        </ModalApp>
-                    ) : null}
+                <View style={{ marginTop: 16, paddingBottom: 50 }}>
 
-                    {showCurrencies ? (
-                        <ModalApp
-                            paddings={false}
-                            onClose={() => {
-                                dispatch(setShowModalApp(false));
-                                setShowCurrencies(false);
-                            }}
-                            singleButton
-                            title={strings.currency}>
-                            <Currencies />
-                        </ModalApp>
-                    ) : null}
+                    {/* ── Settings Card ── */}
+                    <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                            <IconApp pack="FI" name="settings" size={16} color={theme.high_color} />
+                            <YambiText bold text={strings.settings} style={{ marginLeft: 8 }} />
+                        </View>
 
-                    <View style={{ flexDirection: "row", marginTop: 15 }}>
-                        <View style={{ flex: 1 }}>
-                            <YambiText size="small" color="gray" text={strings.include} style={{ marginLeft: 2, marginBottom: 5 }} />
+                        {/* Gros/Detail toggle */}
+                        <View style={{ marginBottom: 14 }}>
+                            <YambiText size="small" color="gray" text={strings.include} style={{ marginBottom: 8 }} />
                             <Pressable
                                 onPress={GrosDetail}
                                 style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    marginLeft: 2,
+                                    flexDirection: "row", alignItems: "center",
+                                    backgroundColor: theme.background, borderRadius: 12, padding: 12,
+                                    borderWidth: 1, borderColor: theme.border,
                                 }}>
-                                {/* <SwitchApp value={wholesale_and_retail} small onPress={GrosDetail} /> */}
-                                <IconApp color={theme.high_color} name={!wholesale_and_retail ? "circle" : "check-circle"} size={18} pack={!wholesale_and_retail ? "FI" : "FA"} />
-                                <YambiText
-                                    text={strings.gros + " " + strings.and + " " + strings.detail}
-                                    color="high"
-                                    numberLines={1}
-                                    style={{ marginLeft: 8 }}
-                                />
+                                <IconApp color={theme.high_color} name={!wholesale_and_retail ? "circle" : "check-circle"} size={20} pack={!wholesale_and_retail ? "FI" : "FA"} />
+                                <YambiText text={strings.gros + " " + strings.and + " " + strings.detail} color="high" numberLines={1} style={{ marginLeft: 10, flex: 1 }} />
                             </Pressable>
                         </View>
 
-                        <View style={{ width: 20 }} />
-
-                        <View style={{ backgroundColor: theme.background, marginBottom: 5, flex: 1 }}>
+                        {/* Currency selector */}
+                        <View>
+                            <YambiText size="small" color="gray" text={strings.currency} style={{ marginBottom: 8 }} />
                             <Pressable
-                                onPress={() => {
-                                    dispatch(setShowModalApp(true));
-                                    setShowCurrencies(true);
-                                }}>
-                                <YambiText size="small" color="gray" text={strings.currency} style={{ marginLeft: 2, marginBottom: 5 }} />
-                                <YambiText color="high" text={renderCurrency(currency, true)} style={{ marginLeft: 2, marginTop: 0 }} numberLines={1} />
-                            </Pressable>
-                        </View>
-                    </View>
-
-                    <View style={{ backgroundColor: theme.background, marginBottom: 15, marginTop: 15 }}>
-                        <YambiText size="small" color="gray" text={strings.item_name} style={{ marginLeft: 2, marginBottom: 5 }} />
-                        <TextInput
-                            placeholderTextColor="gray"
-                            maxLength={30}
-                            style={{
-                                color: theme.text,
-                                backgroundColor: theme.border,
-                                paddingLeft: 15,
-                                paddingRight: 15,
-                                height: 45,
-                                borderRadius: 8,
-                                borderWidth: 1,
-                                borderColor: "transparent",
-                                fontSize: app_description.general_font_size,
-                            }}
-                            value={name}
-                            onChangeText={(text) => setName(text)}
-                        />
-                    </View>
-
-                    <View style={{ marginBottom: 15 }}>
-                        <YambiText size="small" color="gray" text={strings.item_description} style={{ marginLeft: 2, marginBottom: 8 }} />
-                        <TextInput
-                            placeholderTextColor="gray"
-                            maxLength={500}
-                            multiline
-                            numberOfLines={4}
-                            textAlignVertical="top"
-                            style={{
-                                color: theme.text,
-                                backgroundColor: theme.border,
-                                paddingLeft: 15,
-                                paddingRight: 15,
-                                paddingTop: 12,
-                                paddingBottom: 12,
-                                minHeight: 100,
-                                borderRadius: 8,
-                                borderWidth: 1,
-                                borderColor: "transparent",
-                                fontSize: app_description.general_font_size,
-                            }}
-                            value={itemDescription}
-                            onChangeText={(text) => setItemDescription(text)}
-                        />
-                    </View>
-
-                    <View style={{ flexDirection: "row", marginBottom: 15 }}>
-                        <View style={{ flex: 1, marginRight: 10 }}>
-                            <YambiText size="small" color="gray" text={strings.manufacture_date} style={{ marginLeft: 2, marginBottom: 5 }} />
-                            <Pressable
-                                onPress={() => setShowManufactureDatePicker(true)}
+                                onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true); }}
                                 style={{
-                                    backgroundColor: theme.border,
-                                    borderRadius: 8,
-                                    height: 45,
-                                    justifyContent: "center",
-                                    paddingLeft: 15,
-                                    borderWidth: 1,
-                                    borderColor: showManufactureDatePicker ? theme.high_color : "transparent",
+                                    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+                                    backgroundColor: theme.background, borderRadius: 12, padding: 12,
+                                    borderWidth: 1, borderColor: theme.border,
                                 }}>
-                                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 15 }}>
-                                    <YambiText text={manufactureDate ? formatMonthYear(manufactureDateObj) : strings.select} />
-                                    <IconApp pack="FI" name="calendar" size={18} color={manufactureDate ? theme.high_color : theme.gray} />
-                                </View>
+                                <YambiText color="high" text={renderCurrency(currency, true)} numberLines={1} />
+                                <IconApp pack="FI" name="chevron-down" size={16} color={theme.gray} />
                             </Pressable>
-                            {showManufactureDatePicker && (
-                                <DateTimePicker
-                                    value={manufactureDateObj}
-                                    mode="date"
-                                    display="default"
-                                    onChange={(_event, selectedDate) => {
-                                        setShowManufactureDatePicker(false);
-                                        if (selectedDate) {
-                                            const normalizedDate = normalizeToFirstOfMonth(selectedDate);
-                                            setManufactureDateObj(normalizedDate);
-                                            setManufactureDate(formatMonthYear(normalizedDate));
-                                        }
-                                    }}
-                                />
-                            )}
-                        </View>
-
-                        <View style={{ flex: 1, marginLeft: 10 }}>
-                            <YambiText size="small" color="gray" text={strings.expiry_date} style={{ marginLeft: 2, marginBottom: 5 }} />
-                            <Pressable
-                                onPress={() => setShowExpiryDatePicker(true)}
-                                style={{
-                                    backgroundColor: theme.border,
-                                    borderRadius: 8,
-                                    height: 45,
-                                    justifyContent: "center",
-                                    paddingLeft: 15,
-                                    borderWidth: 1,
-                                    borderColor: showExpiryDatePicker ? theme.high_color : "transparent",
-                                }}>
-                                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 15 }}>
-                                    <YambiText text={expiryDate ? formatMonthYear(expiryDateObj) : strings.select} />
-                                    <IconApp pack="FI" name="calendar" size={18} color={expiryDate ? theme.high_color : theme.gray} />
-                                </View>
-                            </Pressable>
-                            {showExpiryDatePicker && (
-                                <DateTimePicker
-                                    value={expiryDateObj}
-                                    mode="date"
-                                    display="default"
-                                    onChange={(_event, selectedDate) => {
-                                        setShowExpiryDatePicker(false);
-                                        if (selectedDate) {
-                                            const normalizedDate = normalizeToFirstOfMonth(selectedDate);
-                                            setExpiryDateObj(normalizedDate);
-                                            setExpiryDate(formatMonthYear(normalizedDate));
-                                        }
-                                    }}
-                                />
-                            )}
                         </View>
                     </View>
 
-                    <Pressable
-                        onPress={() => {
-                            setShowCategoryModal(true);
-                            dispatch(setShowModalApp(true));
-                        }}
-                        style={{ marginBottom: 15, borderTopWidth: 1, borderColor: theme.border, paddingTop: 15 }}>
-                        <YambiText color="high" text={strings.item_category} />
-                        {show_category(selectedCategory)}
-                        {show_subcategory(selectedCategory, selectedSubCategory)}
-                    </Pressable>
+                    {/* ── Item Info Card ── */}
+                    <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                            <IconApp pack="FI" name="tag" size={16} color={theme.high_color} />
+                            <YambiText bold text={strings.item_name} style={{ marginLeft: 8 }} />
+                        </View>
 
-                    <View style={{ flexDirection: "row", flex: 1, width: "100%" }}>
-                        <Pressable
-                            onPress={() => {
-                                setShowColorsModal(true);
-                                dispatch(setShowModalApp(true));
-                            }}
-                            style={{ marginTop: 10, flex: 1, borderTopWidth: 1, borderColor: theme.border, paddingVertical: 10 }}>
-                            <YambiText color="high" text={strings.colors} />
-                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5, flexWrap: "wrap" }}>
-                                {selectedColors &&
-                                    selectedColors !== "[]" &&
-                                    safeJsonStringArray(selectedColors).map((color: string, index: number) => (
-                                        <View
-                                            key={index}
-                                            style={{
-                                                marginRight: 6,
-                                                borderRadius: 5,
-                                                backgroundColor: color,
-                                                height: 25,
-                                                width: 25,
-                                                borderWidth: 1,
-                                                borderColor: theme.border,
-                                                marginVertical: 2,
-                                            }}
-                                        />
-                                    ))}
-                            </View>
-                        </Pressable>
-
-                        <Pressable
-                            onPress={() => {
-                                setShowSizesModal(true);
-                                dispatch(setShowModalApp(true));
-                            }}
-                            style={{ marginTop: 10, flex: 1, borderTopWidth: 1, borderColor: theme.border, paddingVertical: 10 }}>
-                            <YambiText color="high" text={strings.sizes} />
-                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5, flexWrap: "wrap" }}>
-                                {selectedSizes &&
-                                    selectedSizes !== "[]" &&
-                                    safeJsonStringArray(selectedSizes).map((size: string, index: number) => (
-                                        <View
-                                            key={index}
-                                            style={{
-                                                marginRight: 6,
-                                                borderRadius: 5,
-                                                backgroundColor: theme.background,
-                                                height: 25,
-                                                borderColor: theme.border,
-                                                borderWidth: 1,
-                                                alignItems: "center",
-                                                paddingHorizontal: 10,
-                                                justifyContent: "center",
-                                                marginVertical: 2,
-                                            }}>
-                                            <YambiText size="small" text={size} />
-                                        </View>
-                                    ))}
-                            </View>
-                        </Pressable>
-                    </View>
-
-                    <YambiText text={strings.gros} bold style={{ marginBottom: 5, marginTop: 10 }} />
-
-                    <View style={{ flexDirection: "row" }}>
-                        <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                            {wholesale_and_retail ? (
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.cost_price + " (" + strings.gros + ")"}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                            ) : (
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.cost_price}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                            )}
+                        {/* Name */}
+                        <View style={{ marginBottom: 14 }}>
+                            <YambiText size="small" color="gray" text={strings.item_name} style={{ marginBottom: 8 }} />
                             <TextInput
-                                placeholderTextColor="gray"
-                                maxLength={20}
+                                placeholderTextColor={theme.gray}
+                                maxLength={30}
+                                style={{
+                                    color: theme.text, backgroundColor: theme.background,
+                                    borderColor: theme.border, borderWidth: 1,
+                                    paddingHorizontal: 16, height: 46, borderRadius: 12, fontSize: 15,
+                                }}
+                                value={name}
+                                onChangeText={(text) => setName(text)}
+                            />
+                        </View>
+
+                        {/* Description */}
+                        <View>
+                            <YambiText size="small" color="gray" text={strings.item_description} style={{ marginBottom: 8 }} />
+                            <TextInput
+                                placeholderTextColor={theme.gray}
+                                maxLength={500}
                                 multiline
-                                keyboardType="numeric"
-                                style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
-                                value={wholesale_cost_price}
-                                onChangeText={(text) => setWholesale_cost_price(text)}
-                            />
-                        </View>
-                        <View style={{ width: 20 }} />
-
-                        <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                            {wholesale_and_retail ? (
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.selling_price + " (" + strings.gros + ")"}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                            ) : (
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.selling_price}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                            )}
-                            <TextInput
-                                placeholderTextColor="gray"
-                                maxLength={20}
-                                keyboardType="numeric"
-                                style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
-                                value={wholesale_selling_price}
-                                onChangeText={(text) => setWholesale_selling_price(text)}
+                                numberOfLines={4}
+                                textAlignVertical="top"
+                                style={{
+                                    color: theme.text, backgroundColor: theme.background,
+                                    borderColor: theme.border, borderWidth: 1,
+                                    paddingHorizontal: 16, paddingVertical: 12,
+                                    minHeight: 100, borderRadius: 12, fontSize: 15,
+                                }}
+                                value={itemDescription}
+                                onChangeText={(text) => setItemDescription(text)}
                             />
                         </View>
                     </View>
 
-                    <View
-                        style={{
-                            marginTop: 5,
-                            paddingTop: 10,
-                            borderTopWidth: 1,
-                            borderColor: theme.border,
-                        }}>
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                marginRight: 5,
-                                alignItems: "center",
-                            }}>
-                            <YambiText bold text={strings.quantity} />
-
-                            {wholesale_and_retail ? (
+                    {/* ── Dates Card ── */}
+                    <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                            <IconApp pack="FI" name="calendar" size={16} color={theme.high_color} />
+                            <YambiText bold text={strings.manufacture_date} style={{ marginLeft: 8 }} />
+                        </View>
+                        <View style={{ flexDirection: "row" }}>
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                                <YambiText size="small" color="gray" text={strings.manufacture_date} style={{ marginBottom: 8 }} />
                                 <Pressable
-                                    onPress={() => setWholesale_quantity(!wholesale_quantity)}
+                                    onPress={() => setShowManufactureDatePicker(true)}
                                     style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        marginLeft: 2,
+                                        backgroundColor: theme.background, borderRadius: 12, height: 46,
+                                        justifyContent: "center", paddingHorizontal: 12,
+                                        borderWidth: 1, borderColor: showManufactureDatePicker ? theme.high_color : theme.border,
                                     }}>
-                                    <IconApp pack="FA" name="check-circle" size={15} color={theme.high_color} />
-                                    <YambiText
-                                        color="high"
-                                        text={wholesale_quantity ? strings.wholesale_quantity : strings.retail_quantity}
-                                        style={{ marginLeft: 8 }}
-                                    />
+                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                        <YambiText text={manufactureDate ? formatMonthYear(manufactureDateObj) : strings.select} />
+                                        <IconApp pack="FI" name="calendar" size={16} color={manufactureDate ? theme.high_color : theme.gray} />
+                                    </View>
                                 </Pressable>
-                            ) : null}
-                        </View>
-
-                        <View style={{ flexDirection: "row", marginTop: 5 }}>
-                            <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.wholesale_content_number}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                                <TextInput
-                                    placeholderTextColor="gray"
-                                    maxLength={20}
-                                    editable={wholesale_and_retail}
-                                    keyboardType="numeric"
-                                    style={{ color: theme.text, backgroundColor: theme.border, minHeight: 45, borderRadius: 5, paddingLeft: 15 }}
-                                    value={wholesale_content_number}
-                                    onChangeText={(text) => setWholesale_content_number(text)}
-                                />
+                                {showManufactureDatePicker && (
+                                    <DateTimePicker
+                                        value={manufactureDateObj}
+                                        mode="date"
+                                        display="default"
+                                        onChange={(_event, selectedDate) => {
+                                            setShowManufactureDatePicker(false);
+                                            if (selectedDate) {
+                                                const normalizedDate = normalizeToFirstOfMonth(selectedDate);
+                                                setManufactureDateObj(normalizedDate);
+                                                setManufactureDate(formatMonthYear(normalizedDate));
+                                            }
+                                        }}
+                                    />
+                                )}
                             </View>
-
-                            <View style={{ width: 10 }} />
-
-                            <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.items_number + " " + strings.in_store}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                                <TextInput
-                                    placeholderTextColor="gray"
-                                    maxLength={20}
-                                    keyboardType="numeric"
-                                    style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
-                                    value={wholesale_number_stock}
-                                    onChangeText={(text) => setWholesale_number_stock(text)}
-                                />
-                            </View>
-
-                            <View style={{ width: 10 }} />
-
-                            <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                                <YambiText
-                                    size="small"
-                                    color="gray"
-                                    text={strings.items_number + " " + strings.in_warehouse}
-                                    style={{ marginLeft: 2, marginBottom: 5 }}
-                                    numberLines={2}
-                                />
-                                <TextInput
-                                    placeholderTextColor="gray"
-                                    maxLength={20}
-                                    keyboardType="numeric"
-                                    style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
-                                    value={wholesale_number_warehouse}
-                                    onChangeText={(text) => setWholesale_number_warehouse(text)}
-                                />
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                <YambiText size="small" color="gray" text={strings.expiry_date} style={{ marginBottom: 8 }} />
+                                <Pressable
+                                    onPress={() => setShowExpiryDatePicker(true)}
+                                    style={{
+                                        backgroundColor: theme.background, borderRadius: 12, height: 46,
+                                        justifyContent: "center", paddingHorizontal: 12,
+                                        borderWidth: 1, borderColor: showExpiryDatePicker ? theme.high_color : theme.border,
+                                    }}>
+                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                        <YambiText text={expiryDate ? formatMonthYear(expiryDateObj) : strings.select} />
+                                        <IconApp pack="FI" name="calendar" size={16} color={expiryDate ? theme.high_color : theme.gray} />
+                                    </View>
+                                </Pressable>
+                                {showExpiryDatePicker && (
+                                    <DateTimePicker
+                                        value={expiryDateObj}
+                                        mode="date"
+                                        display="default"
+                                        onChange={(_event, selectedDate) => {
+                                            setShowExpiryDatePicker(false);
+                                            if (selectedDate) {
+                                                const normalizedDate = normalizeToFirstOfMonth(selectedDate);
+                                                setExpiryDateObj(normalizedDate);
+                                                setExpiryDate(formatMonthYear(normalizedDate));
+                                            }
+                                        }}
+                                    />
+                                )}
                             </View>
                         </View>
                     </View>
 
-                    {wholesale_and_retail ? (
-                        <View
+                    {/* ── Classification Card (Category / Colors / Sizes) ── */}
+                    <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                            <IconApp pack="FI" name="grid" size={16} color={theme.high_color} />
+                            <YambiText bold text={strings.item_category} style={{ marginLeft: 8 }} />
+                        </View>
+
+                        {/* Category picker */}
+                        <Pressable
+                            onPress={() => { setShowCategoryModal(true); dispatch(setShowModalApp(true)); }}
                             style={{
-                                marginTop: 5,
-                                paddingTop: 10,
-                                borderTopWidth: 1,
-                                borderColor: theme.border,
+                                flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+                                backgroundColor: theme.background, borderRadius: 12, padding: 14,
+                                borderWidth: 1, borderColor: theme.border, marginBottom: 12,
                             }}>
-                            <YambiText text={strings.detail} bold style={{ marginBottom: 5 }} />
+                            <View style={{ flex: 1 }}>
+                                <YambiText size="small" color="gray" text={strings.item_category} style={{ marginBottom: 2 }} />
+                                {show_category(selectedCategory) || <YambiText text={strings.select} color="gray" />}
+                                {show_subcategory(selectedCategory, selectedSubCategory)}
+                            </View>
+                            <IconApp pack="FI" name="chevron-right" size={16} color={theme.gray} />
+                        </Pressable>
 
-                            <View style={{ flexDirection: "row" }}>
-                                <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                                    <YambiText
-                                        size="small"
-                                        color="gray"
-                                        text={strings.selling_price + " (" + strings.detail + ")"}
-                                        style={{ marginLeft: 2, marginBottom: 5 }}
-                                    />
-                                    <TextInput
-                                        maxLength={20}
-                                        keyboardType="numeric"
-                                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
-                                        value={retail_selling_price}
-                                        onChangeText={(text) => setRetail_selling_price(text)}
-                                    />
+                        {/* Colors + Sizes in a row */}
+                        <View style={{ flexDirection: "row" }}>
+                            <Pressable
+                                onPress={() => { setShowColorsModal(true); dispatch(setShowModalApp(true)); }}
+                                style={{ flex: 1, marginRight: 6, backgroundColor: theme.background, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.border }}>
+                                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                                    <YambiText size="small" color="high" text={strings.colors} bold />
+                                    <IconApp pack="FI" name="chevron-right" size={14} color={theme.gray} />
                                 </View>
+                                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                    {selectedColors && selectedColors !== "[]" ?
+                                        safeJsonStringArray(selectedColors).map((color: string, index: number) => (
+                                            <View key={index} style={{ marginRight: 4, borderRadius: 5, backgroundColor: color, height: 22, width: 22, borderWidth: 1, borderColor: theme.border, marginVertical: 2 }} />
+                                        )) : <YambiText size="small" color="gray" text={strings.select} />}
+                                </View>
+                            </Pressable>
 
-                                {retail_selling_price !== "" && wholesale_content_number !== "" && wholesale_cost_price !== "" ? (
-                                    <>
-                                        <View style={{ width: 20 }} />
+                            <Pressable
+                                onPress={() => { setShowSizesModal(true); dispatch(setShowModalApp(true)); }}
+                                style={{ flex: 1, marginLeft: 6, backgroundColor: theme.background, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.border }}>
+                                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                                    <YambiText size="small" color="high" text={strings.sizes} bold />
+                                    <IconApp pack="FI" name="chevron-right" size={14} color={theme.gray} />
+                                </View>
+                                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                    {selectedSizes && selectedSizes !== "[]" ?
+                                        safeJsonStringArray(selectedSizes).map((size: string, index: number) => (
+                                            <View key={index} style={{ marginRight: 4, borderRadius: 5, backgroundColor: theme.background, height: 22, borderColor: theme.border, borderWidth: 1, alignItems: "center", paddingHorizontal: 8, justifyContent: "center", marginVertical: 2 }}>
+                                                <YambiText size="small" text={size} />
+                                            </View>
+                                        )) : <YambiText size="small" color="gray" text={strings.select} />}
+                                </View>
+                            </Pressable>
+                        </View>
+                    </View>
 
-                                        <View style={{ backgroundColor: theme.background, marginBottom: 15, flex: 1 }}>
-                                            <YambiText
-                                                size="small"
-                                                color="gray"
-                                                text={strings.cost_price + " (" + strings.detail + ")"}
-                                                style={{ marginLeft: 2, marginBottom: 5 }}
-                                            />
+                    {/* ── Prices Card ── */}
+                    <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+                            <IconApp pack="FI" name="dollar-sign" size={16} color={theme.high_color} />
+                            <YambiText bold text={strings.gros} style={{ marginLeft: 8 }} />
+                        </View>
+
+                        <View style={{ flexDirection: "row" }}>
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                                <YambiText size="small" color="gray" text={wholesale_and_retail ? strings.cost_price + " (" + strings.gros + ")" : strings.cost_price} style={{ marginBottom: 8 }} numberLines={2} />
+                                <TextInput
+                                    placeholderTextColor={theme.gray}
+                                    maxLength={20}
+                                    multiline
+                                    keyboardType="numeric"
+                                    style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
+                                    value={wholesale_cost_price}
+                                    onChangeText={(text) => setWholesale_cost_price(text)}
+                                />
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                <YambiText size="small" color="gray" text={wholesale_and_retail ? strings.selling_price + " (" + strings.gros + ")" : strings.selling_price} style={{ marginBottom: 8 }} numberLines={2} />
+                                <TextInput
+                                    placeholderTextColor={theme.gray}
+                                    maxLength={20}
+                                    keyboardType="numeric"
+                                    style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
+                                    value={wholesale_selling_price}
+                                    onChangeText={(text) => setWholesale_selling_price(text)}
+                                />
+                            </View>
+                        </View>
+
+                        {wholesale_and_retail && (
+                            <View style={{ marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderColor: theme.border }}>
+                                <YambiText bold text={strings.detail} style={{ marginBottom: 12 }} />
+                                <View style={{ flexDirection: "row" }}>
+                                    <View style={{ flex: 1, marginRight: 8 }}>
+                                        <YambiText size="small" color="gray" text={strings.selling_price + " (" + strings.detail + ")"} style={{ marginBottom: 8 }} />
+                                        <TextInput
+                                            maxLength={20}
+                                            keyboardType="numeric"
+                                            style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
+                                            value={retail_selling_price}
+                                            onChangeText={(text) => setRetail_selling_price(text)}
+                                        />
+                                    </View>
+                                    {retail_selling_price !== "" && wholesale_content_number !== "" && wholesale_cost_price !== "" && (
+                                        <View style={{ flex: 1, marginLeft: 8 }}>
+                                            <YambiText size="small" color="gray" text={strings.cost_price + " (" + strings.detail + ")"} style={{ marginBottom: 8 }} />
                                             <TextInput
                                                 maxLength={20}
                                                 editable={false}
                                                 keyboardType="numeric"
-                                                style={{
-                                                    color: theme.text,
-                                                    backgroundColor: theme.background,
-                                                    borderWidth: 1,
-                                                    borderColor: theme.border,
-                                                    paddingLeft: 15,
-                                                    minHeight: 45,
-                                                    borderRadius: 5,
-                                                }}
+                                                style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
                                                 value={
                                                     parseInt(wholesale_content_number, 10) > 0 && parseInt(wholesale_cost_price, 10) > 0
                                                         ? (parseInt(wholesale_cost_price, 10) / parseInt(wholesale_content_number, 10)).toString()
@@ -1071,24 +868,79 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                                                 }
                                             />
                                         </View>
-                                    </>
-                                ) : null}
+                                    )}
+                                </View>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* ── Quantity Card ── */}
+                    <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                <IconApp pack="FI" name="package" size={16} color={theme.high_color} />
+                                <YambiText bold text={strings.quantity} style={{ marginLeft: 8 }} />
+                            </View>
+                            {wholesale_and_retail && (
+                                <Pressable
+                                    onPress={() => setWholesale_quantity(!wholesale_quantity)}
+                                    style={{ flexDirection: "row", alignItems: "center" }}>
+                                    <IconApp pack="FA" name="check-circle" size={15} color={theme.high_color} />
+                                    <YambiText color="high" text={wholesale_quantity ? strings.wholesale_quantity : strings.retail_quantity} style={{ marginLeft: 6 }} />
+                                </Pressable>
+                            )}
+                        </View>
+
+                        <View style={{ flexDirection: "row" }}>
+                            <View style={{ flex: 1, marginRight: 6 }}>
+                                <YambiText size="small" color="gray" text={strings.wholesale_content_number} style={{ marginBottom: 8 }} numberLines={2} />
+                                <TextInput
+                                    placeholderTextColor={theme.gray}
+                                    maxLength={20}
+                                    editable={wholesale_and_retail}
+                                    keyboardType="numeric"
+                                    style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
+                                    value={wholesale_content_number}
+                                    onChangeText={(text) => setWholesale_content_number(text)}
+                                />
+                            </View>
+                            <View style={{ flex: 1, marginHorizontal: 6 }}>
+                                <YambiText size="small" color="gray" text={strings.items_number + " " + strings.in_store} style={{ marginBottom: 8 }} numberLines={2} />
+                                <TextInput
+                                    placeholderTextColor={theme.gray}
+                                    maxLength={20}
+                                    keyboardType="numeric"
+                                    style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
+                                    value={wholesale_number_stock}
+                                    onChangeText={(text) => setWholesale_number_stock(text)}
+                                />
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 6 }}>
+                                <YambiText size="small" color="gray" text={strings.items_number + " " + strings.in_warehouse} style={{ marginBottom: 8 }} numberLines={2} />
+                                <TextInput
+                                    placeholderTextColor={theme.gray}
+                                    maxLength={20}
+                                    keyboardType="numeric"
+                                    style={{ color: theme.text, backgroundColor: theme.background, borderColor: theme.border, borderWidth: 1, paddingHorizontal: 16, minHeight: 46, borderRadius: 12, fontSize: 15 }}
+                                    value={wholesale_number_warehouse}
+                                    onChangeText={(text) => setWholesale_number_warehouse(text)}
+                                />
                             </View>
                         </View>
-                    ) : null}
+                    </View>
 
                     <ButtonNormal
                         title={strings.save}
                         loadEnabled={true}
                         onPress={AddItem}
-                        styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }}
+                        styles={{ paddingHorizontal: 20, marginTop: 8 }}
                         normal={true}
                     />
-
-                    {showCategoryModal && <CategoryModal />}
-                    {showColorsModal && <ColorsModal />}
-                    {showSizesModal && <SizesModal />}
                 </View>
+
+                {showCategoryModal && <CategoryModal />}
+                {showColorsModal && <ColorsModal />}
+                {showSizesModal && <SizesModal />}
             </ScrollView>
         </View>
     );
