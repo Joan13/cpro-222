@@ -27,8 +27,8 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
   const recordingAudio = useAppSelector(state => state.app.recordingAudio);
   const playingRecorded = useAppSelector(state => state.app.playingRecorded);
   const user_data = useAppSelector(state => state.user_data);
-  const message = useObject(UsersMessages, message_selected);
-  const userrr = useObject(UserContacts, "");
+  const message = useObject(UsersMessages, message_selected || "");
+  const userrr = useObject(UserContacts, user || "");
   const [last_activity_status, setLast_activity_status] = useState<string>("");
 
   // console.log(user, 'user')

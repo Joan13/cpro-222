@@ -34,11 +34,11 @@ import { IconApp } from '../app/IconApp';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../layout/KeyboardRootView';
 // const KeyboardRegistry = Keyboard.KeyboardRegistry;
- 
+
 const audioRecorderPlayer = AudioRecorderPlayer;
- 
+
 const emojiis = ['😊', '👍', '❤️', '🫴🏽', '😢', '😍', '😎', '🫠', '😶‍🌫️', '☹', '🇿🇦', '👩🏿‍❤️‍👩🏿', '😎', '😎', '😎', '😎'];
- 
+
 const RecordingWaveform = ({ amplitudes, app_theme }: { amplitudes: number[], app_theme: any }) => {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', height: 25 }}>
@@ -84,7 +84,7 @@ const FooterChat = ({ user }: { user: string }) => {
   const width = useWindowDimensions().width;
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
-  const message = useObject(UsersMessages, response_to);
+  const message = useObject(UsersMessages, response_to || "");
   const [enterCaption, setEnterCaption] = useState(false);
 
   const [recordSecs, setRecordSecs] = useState(0);
@@ -114,7 +114,7 @@ const FooterChat = ({ user }: { user: string }) => {
   // const [sound, setSound] = useState();
   // const sound = useRef(new Audio.Sound());
 
-  const chats = useQuery(UserChats);
+  const chatt = useObject(UserChats, user || "");
 
   const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
   const recorder = useAudioRecorder({
@@ -129,7 +129,7 @@ const FooterChat = ({ user }: { user: string }) => {
   }, [playerStatus]);
 
   const renderResponseTo = () => {
-    if(message===null) return;
+    if (message === null) return;
     if (message.message_type === 0) {
       // return(<Text>{message.main_text_message}</Text>)
       return (
@@ -371,7 +371,7 @@ const FooterChat = ({ user }: { user: string }) => {
       // console.error('Failed to start recording', err);
     }
   };
-  
+
   const [recordingAmplitudes, setRecordingAmplitudes] = useState<number[]>(new Array(12).fill(0.05));
 
   useEffect(() => {
@@ -413,7 +413,7 @@ const FooterChat = ({ user }: { user: string }) => {
     if (recorderState?.isRecording || isRecordingPaused) {
       try {
         await recorder.stop();
-      } catch (e) {}
+      } catch (e) { }
       await setAudioModeAsync({ allowsRecording: false });
     }
 
@@ -653,9 +653,7 @@ const FooterChat = ({ user }: { user: string }) => {
         updatedAt: time,
       }
 
-      const chatt = chats.find(itemm => itemm._id === user);
-
-      if (chatt !== undefined) {
+      if (chatt !== null && chatt !== undefined) {
         chat = {
           _id: chatt._id,
           phone_number: chatt.phone_number,
@@ -689,6 +687,8 @@ const FooterChat = ({ user }: { user: string }) => {
 
 
       dispatch(setMessageInbox(""));
+      setCaption("");
+      setEnterCaption(false);
       // dispatch(setMessageInbox(""));
 
       // dispatch(addDraft({ message_inbox: "", user: current_user }));
@@ -747,7 +747,7 @@ const FooterChat = ({ user }: { user: string }) => {
     if (recorderState?.isRecording || isRecordingPaused) {
       try {
         await recorder.stop();
-      } catch (e) {}
+      } catch (e) { }
       await setAudioModeAsync({ allowsRecording: false });
     }
 
@@ -838,7 +838,7 @@ const FooterChat = ({ user }: { user: string }) => {
     } else {
       // Dismiss the system keyboard first
       Keyboard.dismiss();
-      
+
       // Small delay to ensure keyboard is dismissed
       setTimeout(() => {
         // Open emoji keyboard

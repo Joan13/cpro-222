@@ -17,6 +17,8 @@ import * as RootNavigation from '../../../services/Navigation_ref';
 import * as DropdownMenu from 'zeego/dropdown-menu';
 import * as ContextMenu from 'zeego/context-menu';
 import moment from 'moment';
+import { setShowModalApp } from "../../../store/reducers/appSlice";
+import ModalApp from "../../app/ModalApp";
 
 const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
@@ -32,6 +34,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
     const chat = useObject(UserChats, item._id);
     const realm = useRealm();
     const [isLongPressed, setIsLongPressed] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const menuCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     let userr: TUser = {
@@ -297,13 +300,13 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
         }
     };
 
-    const handleDeleteChat = () => {
+    const confirmDeleteChat = () => {
         if (chat) {
             const updatedChat: TChat = {
                 _id: chat._id,
                 phone_number: chat.phone_number,
                 type_chat: chat.type_chat,
-                last_message: chat.last_message,
+                last_message: "", // Reset last message to fresh
                 user: chat.user,
                 flag: chat.flag,
                 chat_read: chat.chat_read,
@@ -316,9 +319,31 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
             realm.write(() => {
                 try {
                     realm.create('UserChats', updatedChat, true);
+
+                    // Fetch all messages belonging to this chat
+                    const chatMessages = realm.objects('UsersMessages').filtered(
+                        '(receiver == $0 && sender == $1) || (sender == $2 && receiver == $3)',
+                        chat._id,
+                        user_data.phone_number,
+                        chat._id,
+                        user_data.phone_number
+                    );
+
+                    // Flag the messages as deleted locally (deleted: 2) instead of deleting them permanently
+                    chatMessages.forEach(msg => {
+                        // Cast as any because msg might be typed as read-only by TS/Realm, but modifiable inside write transactions
+                        (msg as any).deleted = 2;
+                    });
                 } catch (error) { }
             });
         }
+        setShowDeleteConfirm(false);
+        dispatch(setShowModalApp(false));
+    };
+
+    const handleDeleteChat = () => {
+        dispatch(setShowModalApp(true));
+        setShowDeleteConfirm(true);
     };
 
     const handleLongPress = () => {
@@ -328,129 +353,146 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
     // if(show_favorite_chats)
     return (
-        <ContextMenu.Root onOpenChange={(open) => {
-            if (!open) {
-                // Menu closed, clear highlight after a small delay
-                if (menuCloseTimeoutRef.current) clearTimeout(menuCloseTimeoutRef.current);
-                menuCloseTimeoutRef.current = setTimeout(clearHighlight, 100);
-            }
-        }}>
-            <ContextMenu.Trigger>
-                <Pressable
-                    onPress={() => {
-                        if (!isLongPressed) {
-                            GoInbox(item.phone_number);
-                        }
-                    }}
-                    onLongPress={handleLongPress}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingHorizontal: 15,
-                        paddingVertical: 15,
-                        backgroundColor: isLongPressed ? app_theme.colors.high_color + "30" : 'transparent',
-                        borderRadius: 12,
-                        width: '100%',
-                    }}>
-                    {/* <Text></Text> */}
-                    <Pressable onPress={ViewPhoto}>
-                        {userr.user_profile === "" ? <Image
-                            source={require('./../../../assets/profile_black.jpg')}
-                            style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
-                        />
-                            :
-                            <ExpoImage
-                                style={{
-                                    height: 45,
-                                    width: 45,
-                                    borderRadius: 50
-                                }}
-                                contentFit="cover"
-                                source={media_url + "/profile_pictures/" + userr.user_profile} />}
-                    </Pressable>
-                    <View style={{
-                        flex: 1,
-                        marginLeft: 15
-                    }}>
-                        <View style={{
+        <>
+            <ContextMenu.Root onOpenChange={(open) => {
+                if (!open) {
+                    // Menu closed, clear highlight after a small delay
+                    if (menuCloseTimeoutRef.current) clearTimeout(menuCloseTimeoutRef.current);
+                    menuCloseTimeoutRef.current = setTimeout(clearHighlight, 100);
+                }
+            }}>
+                <ContextMenu.Trigger>
+                    <Pressable
+                        onPress={() => {
+                            if (!isLongPressed) {
+                                GoInbox(item.phone_number);
+                            }
+                        }}
+                        onLongPress={handleLongPress}
+                        style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            marginBottom: -2
+                            paddingHorizontal: 15,
+                            paddingVertical: 15,
+                            backgroundColor: isLongPressed ? app_theme.colors.high_color + "30" : 'transparent',
+                            borderRadius: 12,
+                            width: '100%',
                         }}>
-                            <View style={{ marginBottom: 2, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                <YambiText bold text={ShowUser(userr)} size="normal" color="default" numberLines={1} />
-                                {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
-                            </View>
-                            {message !== null ?
-                                chat && chat.chat_read !== 0 ?
-                                    <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="gray" style={{ marginBottom: 3 }} /> :
-                                    <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="high" style={{ marginBottom: 3 }} /> : null}
-                        </View>
-
+                        {/* <Text></Text> */}
+                        <Pressable onPress={ViewPhoto}>
+                            {userr.user_profile === "" ? <Image
+                                source={require('./../../../assets/profile_black.jpg')}
+                                style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
+                            />
+                                :
+                                <ExpoImage
+                                    style={{
+                                        height: 45,
+                                        width: 45,
+                                        borderRadius: 50
+                                    }}
+                                    contentFit="cover"
+                                    source={media_url + "/profile_pictures/" + userr.user_profile} />}
+                        </Pressable>
                         <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center'
+                            flex: 1,
+                            marginLeft: 15
                         }}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: -2
+                            }}>
+                                <View style={{ marginBottom: 2, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                    <YambiText bold text={ShowUser(userr)} size="normal" color="default" numberLines={1} />
+                                    {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                                </View>
+                                {message !== null ?
+                                    chat && chat.chat_read !== 0 ?
+                                        <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="gray" style={{ marginBottom: 3 }} /> :
+                                        <YambiText text={renderDateTime(message.createdAt, 0, true, true)} size="small" color="high" style={{ marginBottom: 3 }} /> : null}
+                            </View>
 
-                            {render_last_message()}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }}>
 
-                            {item.flag !== 0 ?
-                                <IconApp pack="MC" name={item.flag === 2 ? "pin" : "star"} size={15} color={app_theme.colors.gray} /> : null}
+                                {render_last_message()}
 
-                            {chat && chat.chat_read === 0 ?
-                                unread.length !== 0 ?
-                                    <View style={{
-                                        backgroundColor: app_theme.colors.badge_background_color,
-                                        height: 20,
-                                        minWidth: 20,
-                                        paddingHorizontal: 3,
-                                        borderRadius: 15,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginLeft: 5
-                                    }}>
-                                        <Text style={{
-                                            fontSize: 12,
-                                            color: app_theme.colors.badge_color
-                                        }}>{unread.length}</Text>
-                                    </View> : <View style={{
-                                        height: 23,
-                                        width: 0
-                                    }}></View> : null}
+                                {item.flag !== 0 ?
+                                    <IconApp pack="MC" name={item.flag === 2 ? "pin" : "star"} size={15} color={app_theme.colors.gray} /> : null}
+
+                                {chat && chat.chat_read === 0 ?
+                                    unread.length !== 0 ?
+                                        <View style={{
+                                            backgroundColor: app_theme.colors.badge_background_color,
+                                            height: 20,
+                                            minWidth: 20,
+                                            paddingHorizontal: 3,
+                                            borderRadius: 15,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginLeft: 5
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: app_theme.colors.badge_color
+                                            }}>{unread.length}</Text>
+                                        </View> : <View style={{
+                                            height: 23,
+                                            width: 0
+                                        }}></View> : null}
+                            </View>
                         </View>
-                    </View>
-                </Pressable>
-            </ContextMenu.Trigger>
-            <ContextMenu.Content>
-                {/* Pin/Unpin Chat */}
-                <ContextMenu.Item
-                    key="pin"
-                    onSelect={handlePinChat}>
-                    <ContextMenu.ItemTitle>
-                        {chat && chat.flag === 2 ? strings.unpin_chat : strings.pin_chat}
-                    </ContextMenu.ItemTitle>
-                    <ContextMenu.ItemIcon ios={{ name: chat && chat.flag === 2 ? 'pin.slash' : 'pin' }} />
-                </ContextMenu.Item>
+                    </Pressable>
+                </ContextMenu.Trigger>
+                <ContextMenu.Content>
+                    {/* Pin/Unpin Chat */}
+                    <ContextMenu.Item
+                        key="pin"
+                        onSelect={handlePinChat}>
+                        <ContextMenu.ItemTitle>
+                            {chat && chat.flag === 2 ? strings.unpin_chat : strings.pin_chat}
+                        </ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: chat && chat.flag === 2 ? 'pin.slash' : 'pin' }} />
+                    </ContextMenu.Item>
 
-                {/* Add to Favorites/Remove from Favorites */}
-                <ContextMenu.Item
-                    key="favorite"
-                    onSelect={handleAddToFavorites}>
-                    <ContextMenu.ItemTitle>
-                        {chat && chat.flag === 1 ? strings.remove_from_favorites : strings.add_to_favorites}
-                    </ContextMenu.ItemTitle>
-                    <ContextMenu.ItemIcon ios={{ name: chat && chat.flag === 1 ? 'star.fill' : 'star' }} />
-                </ContextMenu.Item>
+                    {/* Add to Favorites/Remove from Favorites */}
+                    <ContextMenu.Item
+                        key="favorite"
+                        onSelect={handleAddToFavorites}>
+                        <ContextMenu.ItemTitle>
+                            {chat && chat.flag === 1 ? strings.remove_from_favorites : strings.add_to_favorites}
+                        </ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: chat && chat.flag === 1 ? 'star.fill' : 'star' }} />
+                    </ContextMenu.Item>
 
-                {/* Delete Chat */}
-                <ContextMenu.Item
-                    key="delete"
-                    onSelect={handleDeleteChat}>
-                    <ContextMenu.ItemTitle>{strings.delete}</ContextMenu.ItemTitle>
-                    <ContextMenu.ItemIcon ios={{ name: 'trash' }} />
-                </ContextMenu.Item>
-            </ContextMenu.Content>
-        </ContextMenu.Root>
+                    {/* Delete Chat */}
+                    <ContextMenu.Item
+                        key="delete"
+                        onSelect={handleDeleteChat}>
+                        <ContextMenu.ItemTitle>{strings.delete}</ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: 'trash' }} />
+                    </ContextMenu.Item>
+                </ContextMenu.Content>
+            </ContextMenu.Root>
+            {showDeleteConfirm ? (
+                <ModalApp
+                    onClose={() => {
+                        dispatch(setShowModalApp(false));
+                        setShowDeleteConfirm(false);
+                    }}
+                    singleButton={false}
+                    title={strings.delete_chat}
+                    textAction={strings.delete}
+                    textCancel={strings.cancel}
+                    onAction={confirmDeleteChat}
+                >
+                    <YambiText text={strings.delete_chat_confirm} size="normal" color="default" />
+                </ModalApp>
+            ) : null}
+        </>
     )
 };
 

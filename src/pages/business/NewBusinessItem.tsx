@@ -17,8 +17,47 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { UserBusinessArticles } from "../../store/database/Models";
 
 const COLORS_LIST = [
-    "red", "blue", "green", "maroon", "yellow", "black", "white", "purple", "pink", "orange", "gray", "chocolate",
+    "#F08080", "#CD5C5C", "#DC143C", "#8B0000",
+    "#E0F7FA", "#87CEEB", "#4682B4", "#1E88E5", "#0D47A1",
+    "#90EE90", "#32CD32", "#2E7D32", "#004D40", "#556B2F",
+    "#FFF59D", "#FFD700", "#DAA520", "#B8860B",
+    "#FFA07A", "#FF7F50", "#D2B48C", "#8B4513",
+    "#FFB6C1", "#E1BEE7", "#9370DB", "#4A148C",
+    "#FFFFFF", "#E0E0E0", "#757575", "#212121"
 ];
+
+const COLOR_NAMES: Record<string, string> = {
+    "#F08080": "Light Coral",
+    "#CD5C5C": "Indian Red",
+    "#DC143C": "Crimson",
+    "#8B0000": "Dark Red",
+    "#E0F7FA": "Ice Blue",
+    "#87CEEB": "Sky Blue",
+    "#4682B4": "Steel Blue",
+    "#1E88E5": "Royal Blue",
+    "#0D47A1": "Navy Blue",
+    "#90EE90": "Light Green",
+    "#32CD32": "Lime Green",
+    "#2E7D32": "Forest Green",
+    "#004D40": "Dark Teal",
+    "#556B2F": "Olive Green",
+    "#FFF59D": "Soft Yellow",
+    "#FFD700": "Gold",
+    "#DAA520": "Goldenrod",
+    "#B8860B": "Dark Goldenrod",
+    "#FFA07A": "Light Salmon",
+    "#FF7F50": "Coral Orange",
+    "#D2B48C": "Tan / Beige",
+    "#8B4513": "Saddle Brown",
+    "#FFB6C1": "Soft Pink",
+    "#E1BEE7": "Soft Lavender",
+    "#9370DB": "Medium Purple",
+    "#4A148C": "Deep Violet",
+    "#FFFFFF": "White",
+    "#E0E0E0": "Light Gray / Silver",
+    "#757575": "Medium Gray",
+    "#212121": "Dark Gray / Charcoal",
+};
 
 const GENERAL_SIZES = {
     clothing: ["2T", "3T", "4T", "5T", "XS", "S", "M", "L", "XL", "XXL", "XXXL"],
@@ -61,6 +100,8 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
     const [showSizesModal, setShowSizesModal] = useState(false);
     const [selectedColors, setSelectedColors] = useState("[]");
     const [selectedSizes, setSelectedSizes] = useState("[]");
+    const [tempColors, setTempColors] = useState<string[]>([]);
+    const [tempSizes, setTempSizes] = useState<string[]>([]);
 
     const [manufactureDate, setManufactureDate] = useState<string>("");
     const [expiryDate, setExpiryDate] = useState<string>("");
@@ -219,144 +260,7 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
         </ModalApp>
     );
 
-    const ColorsModal = () => {
-        const [cc, setCc] = useState<string[]>([]);
 
-        const setColor = (color: string) => {
-            const ff = cc.find((e) => e === color);
-            if (ff === undefined) {
-                setCc((prev) => [...prev, color]);
-            } else {
-                setCc(cc.filter((e) => e !== color));
-            }
-        };
-
-        useEffect(() => {
-            if (selectedColors !== "" && selectedColors !== "[]") {
-                try {
-                    setCc(JSON.parse(selectedColors));
-                } catch {
-                    setCc([]);
-                }
-            }
-        }, []);
-
-        const find_color_inList = (color: string) => cc.find((e) => e === color) !== undefined;
-
-        return (
-            <ModalApp
-                paddings={false}
-                onClose={() => {
-                    setShowColorsModal(false);
-                    dispatch(setShowModalApp(false));
-                }}
-                singleButton={false}
-                textAction={strings.add_colors}
-                onAction={() => {
-                    setSelectedColors(JSON.stringify(cc));
-                    setShowColorsModal(false);
-                    dispatch(setShowModalApp(false));
-                }}
-                title={strings.choose_colors}>
-                <ScrollView style={{ width: "100%" }}>
-                    {COLORS_LIST.map((color) => (
-                        <Pressable
-                            key={color}
-                            onPress={() => setColor(color)}
-                            style={{ flexDirection: "row", alignItems: "center", padding: 5, paddingHorizontal: 20 }}>
-                            <View
-                                style={{
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: 10,
-                                    backgroundColor: find_color_inList(color) ? theme.high_color + "70" : theme.background,
-                                    marginRight: 10,
-                                    borderWidth: 1,
-                                    borderColor: "gray",
-                                }}
-                            />
-                            <View style={{ marginHorizontal: 6, borderRadius: 5, backgroundColor: color, height: 15, width: 25 }} />
-                            <YambiText text={String((strings as unknown as Record<string, string>)[color] ?? color)} />
-                        </Pressable>
-                    ))}
-                </ScrollView>
-            </ModalApp>
-        );
-    };
-
-    const SizesModal = () => {
-        const [cc, setCc] = useState<string[]>([]);
-
-        const setSizes = (size: string) => {
-            const ff = cc.find((e) => e === size);
-            if (ff === undefined) {
-                setCc((prev) => [...prev, size]);
-            } else {
-                setCc(cc.filter((e) => e !== size));
-            }
-        };
-
-        useEffect(() => {
-            if (selectedSizes !== "" && selectedSizes !== "[]") {
-                try {
-                    setCc(JSON.parse(selectedSizes));
-                } catch {
-                    setCc([]);
-                }
-            }
-        }, []);
-
-        const find_size_inList = (size: string) => cc.find((e) => e === size) !== undefined;
-
-        return (
-            <ModalApp
-                paddings={false}
-                onClose={() => {
-                    setShowSizesModal(false);
-                    dispatch(setShowModalApp(false));
-                }}
-                singleButton={false}
-                textAction={strings.sizes}
-                onAction={() => {
-                    setSelectedSizes(JSON.stringify(cc));
-                    setShowSizesModal(false);
-                    dispatch(setShowModalApp(false));
-                }}
-                title={strings.choose_sizes}>
-                <ScrollView>
-                    {Object.entries(GENERAL_SIZES).map(([category, sizes]) => (
-                        <Pressable key={category} style={{ marginBottom: 15, paddingHorizontal: 20 }}>
-                            <YambiText
-                                text={(strings[category as keyof typeof strings] as string) || category}
-                                bold
-                                style={{ fontSize: 16, marginBottom: 8 }}
-                            />
-                            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                                {sizes.map((size: string) => (
-                                    <Pressable
-                                        key={size}
-                                        onPress={() => setSizes(size)}
-                                        style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            paddingVertical: 6,
-                                            paddingHorizontal: 10,
-                                            margin: 4,
-                                            borderRadius: 6,
-                                            borderWidth: 1,
-                                            borderColor: find_size_inList(size) ? theme.high_color : "gray",
-                                            backgroundColor: find_size_inList(size) ? theme.high_color + "30" : theme.background,
-                                        }}>
-                                        <YambiText text={size} />
-                                    </Pressable>
-                                ))}
-                            </View>
-                        </Pressable>
-                    ))}
-                </ScrollView>
-            </ModalApp>
-        );
-    };
 
     const AddItem = () => {
         if (usedItems >= maxArticles) {
@@ -575,8 +479,8 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                     <ModalApp
                         onClose={() => { dispatch(setShowModalApp(false)); setShowPlanLimitModal(false); }}
                         singleButton={false}
-                        textAction={(strings as any).add_subscription || "Add Subscription"}
-                        textCancel={strings.close || "Close"}
+                        textAction={strings.add_subscription}
+                        textCancel={strings.close}
                         onAction={() => {
                             dispatch(setShowModalApp(false));
                             setShowPlanLimitModal(false);
@@ -584,7 +488,7 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                         }}
                         title={strings.error}
                     >
-                        <YambiText color="gray" text={(strings as any).max_items_reached || "You have used all available item tokens for your current plan. Upgrade your subscription to add more items."} />
+                        <YambiText color="gray" text={strings.max_items_reached} />
                     </ModalApp>
                 )}
                 {showCurrencies && (
@@ -773,7 +677,15 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                         {/* Colors + Sizes in a row */}
                         <View style={{ flexDirection: "row" }}>
                             <Pressable
-                                onPress={() => { setShowColorsModal(true); dispatch(setShowModalApp(true)); }}
+                                onPress={() => {
+                                    try {
+                                        setTempColors(JSON.parse(selectedColors));
+                                    } catch {
+                                        setTempColors([]);
+                                    }
+                                    setShowColorsModal(true);
+                                    dispatch(setShowModalApp(true));
+                                }}
                                 style={{ flex: 1, marginRight: 6, backgroundColor: theme.background, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.border }}>
                                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                                     <YambiText size="small" color="high" text={strings.colors} bold />
@@ -788,7 +700,15 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                             </Pressable>
 
                             <Pressable
-                                onPress={() => { setShowSizesModal(true); dispatch(setShowModalApp(true)); }}
+                                onPress={() => {
+                                    try {
+                                        setTempSizes(JSON.parse(selectedSizes));
+                                    } catch {
+                                        setTempSizes([]);
+                                    }
+                                    setShowSizesModal(true);
+                                    dispatch(setShowModalApp(true));
+                                }}
                                 style={{ flex: 1, marginLeft: 6, backgroundColor: theme.background, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.border }}>
                                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                                     <YambiText size="small" color="high" text={strings.sizes} bold />
@@ -939,8 +859,111 @@ const NewBusinessItem = ({ route, navigation }: NavProps) => {
                 </View>
 
                 {showCategoryModal && <CategoryModal />}
-                {showColorsModal && <ColorsModal />}
-                {showSizesModal && <SizesModal />}
+                {showColorsModal && (
+                    <ModalApp
+                        paddings={false}
+                        onClose={() => {
+                            setShowColorsModal(false);
+                            dispatch(setShowModalApp(false));
+                        }}
+                        singleButton={false}
+                        textAction={strings.add_colors}
+                        onAction={() => {
+                            setSelectedColors(JSON.stringify(tempColors));
+                            setShowColorsModal(false);
+                            dispatch(setShowModalApp(false));
+                        }}
+                        title={strings.choose_colors}>
+                        <ScrollView style={{ width: "100%" }}>
+                            {COLORS_LIST.map((color) => {
+                                const isSelected = tempColors.includes(color);
+                                return (
+                                    <Pressable
+                                        key={color}
+                                        onPress={() => {
+                                            if (isSelected) {
+                                                setTempColors(tempColors.filter((c) => c !== color));
+                                            } else {
+                                                setTempColors([...tempColors, color]);
+                                            }
+                                        }}
+                                        style={{ flexDirection: "row", alignItems: "center", padding: 5, paddingHorizontal: 20 }}>
+                                        <View
+                                            style={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 10,
+                                                backgroundColor: isSelected ? theme.high_color + "70" : theme.background,
+                                                marginRight: 10,
+                                                borderWidth: 1,
+                                                borderColor: "gray",
+                                            }}
+                                        />
+                                        <View style={{ marginHorizontal: 6, borderRadius: 5, backgroundColor: color, height: 15, width: 25 }} />
+                                        <YambiText text={COLOR_NAMES[color] ?? String((strings as unknown as Record<string, string>)[color] ?? color)} />
+                                    </Pressable>
+                                );
+                            })}
+                        </ScrollView>
+                    </ModalApp>
+                )}
+                {showSizesModal && (
+                    <ModalApp
+                        paddings={false}
+                        onClose={() => {
+                            setShowSizesModal(false);
+                            dispatch(setShowModalApp(false));
+                        }}
+                        singleButton={false}
+                        textAction={strings.sizes}
+                        onAction={() => {
+                            setSelectedSizes(JSON.stringify(tempSizes));
+                            setShowSizesModal(false);
+                            dispatch(setShowModalApp(false));
+                        }}
+                        title={strings.choose_sizes}>
+                        <ScrollView>
+                            {Object.entries(GENERAL_SIZES).map(([category, sizes]) => (
+                                <Pressable key={category} style={{ marginBottom: 15, paddingHorizontal: 20 }}>
+                                    <YambiText
+                                        text={(strings[category as keyof typeof strings] as string) || category}
+                                        bold
+                                        style={{ fontSize: 16, marginBottom: 8 }}
+                                    />
+                                    <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                        {sizes.map((size: string) => {
+                                            const isSelected = tempSizes.includes(size);
+                                            return (
+                                                <Pressable
+                                                    key={size}
+                                                    onPress={() => {
+                                                        if (isSelected) {
+                                                            setTempSizes(tempSizes.filter((s) => s !== size));
+                                                        } else {
+                                                            setTempSizes([...tempSizes, size]);
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        alignItems: "center",
+                                                        paddingVertical: 6,
+                                                        paddingHorizontal: 10,
+                                                        margin: 4,
+                                                        borderRadius: 6,
+                                                        borderWidth: 1,
+                                                        borderColor: isSelected ? theme.high_color : "gray",
+                                                        backgroundColor: isSelected ? theme.high_color + "30" : theme.background,
+                                                    }}>
+                                                    <YambiText text={size} />
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </View>
+                                </Pressable>
+                            ))}
+                        </ScrollView>
+                    </ModalApp>
+                )}
             </ScrollView>
         </View>
     );

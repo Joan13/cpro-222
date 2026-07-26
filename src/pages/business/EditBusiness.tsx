@@ -577,7 +577,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                             borderColor: theme.high_color + '40'
                         }}>
                             <TextNormalYambi
-                                text={(strings as any).admin_subscription_settings || "Admin: Subscription Settings"}
+                                text={strings.admin_subscription_settings}
                                 bold
                                 styles={{ marginBottom: 15, color: theme.high_color }}
                             />
@@ -585,7 +585,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                             {/* Subscription Active Toggle */}
                             <View style={{ marginBottom: 20 }}>
                                 <TextSmallYambiGray
-                                    text={(strings as any).subscription_status || "Subscription Status"}
+                                    text={strings.subscription_status}
                                     styles={{ marginBottom: 8 }}
                                 />
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -609,7 +609,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                             color={subscription_active === 0 ? theme.high_color : theme.gray}
                                         />
                                         <TextNormalYambi
-                                            text={(strings as any).inactive || "Inactive"}
+                                            text={strings.inactive}
                                             styles={{ marginLeft: 8, color: subscription_active === 0 ? theme.high_color : theme.text }}
                                         />
                                     </Pressable>
@@ -633,7 +633,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                             color={subscription_active === 1 ? theme.high_color : theme.gray}
                                         />
                                         <TextNormalYambi
-                                            text={(strings as any).active || "Active"}
+                                            text={strings.active}
                                             styles={{ marginLeft: 8, color: subscription_active === 1 ? theme.high_color : theme.text }}
                                         />
                                     </Pressable>
@@ -643,7 +643,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                             {/* Valid Until Date Picker */}
                             <View style={{ marginBottom: 15 }}>
                                 <TextSmallYambiGray
-                                    text={(strings as any).valid_until || "Valid Until"}
+                                    text={strings.valid_until}
                                     styles={{ marginBottom: 8 }}
                                 />
                                 <Pressable

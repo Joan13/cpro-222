@@ -763,6 +763,10 @@ export type RootStackParamList = {
     AboutYambi: undefined;
     Business: { business_id: string };
     AdminBusiness: { business: TBusiness };
+    AdminInventory: { business_id: string };
+    AdminBusinessUsers: { business_id: string };
+    AdminSales: { business_id: string };
+    AdminEditSubscription: { subscription: any };
     /** Deep link: https://app.yambi.net/business/:business_id */
     BusinessModern: { business_id: string };
     BusinessViewModern: { business: TBusiness };

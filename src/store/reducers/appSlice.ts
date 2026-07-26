@@ -73,7 +73,7 @@ const initialState: TStore = {
     chats_selected: [],
     users_connected: [],
     show_favorite_chats: false,
-    category:""
+    category: ""
 }
 
 export const appSlice = createSlice({

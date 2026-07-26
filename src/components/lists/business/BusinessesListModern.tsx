@@ -734,14 +734,14 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             size="small"
                                             style={{ marginRight: 4 }}
                                         />
-                                        <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
+                                            <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
                                         <IconApp pack="FI" name="chevron-right" size={12} color={app_theme.colors.gray} styles={{ marginLeft: 4 }} />
                                     </Pressable>
                                 )}
 
                                 {!businessExpired ?
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-                                        <IconApp pack="FA" name="check-circle" size={14} color={app_theme.colors.success} />
+                                        <IconApp pack="IO" name="checkmark-circle" size={14} color={app_theme.colors.success} />
                                         <YambiText size="small" color="high" text={strings.active_subscription} style={{ marginLeft: 5 }} />
                                     </View>
                                     :

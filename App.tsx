@@ -81,6 +81,10 @@ import HeaderHome from './src/components/headers/HeaderHome';
 import HeaderSettings from './src/components/headers/HeaderSettings';
 import Business from './src/pages/business/Business';
 import AdminBusiness from './src/pages/Admin/Business';
+import AdminInventory from './src/pages/Admin/components/business/Inventory';
+import AdminBusinessUsers from './src/pages/Admin/components/business/BusinessUsers';
+import AdminSales from './src/pages/Admin/components/business/Sales';
+import AdminEditSubscription from './src/pages/Admin/components/business/EditSubscription';
 import BusinessViewModern from './src/pages/business/BusinessViewModern';
 import BusinessModern from './src/pages/business/BusinessModern';
 import Sales from './src/pages/business/Sales';
@@ -836,15 +840,19 @@ const Yambi = ({ navigation }: NavProps) => {
                     updatedAt: msg.updatedAt,
                 }
 
+                let lastMessageToken = msg.token;
                 const chatt = chattt.find(itemm => itemm._id === msg.sender);
 
                 if (chatt !== undefined) {
+                    if (msg.deleted > 0) {
+                        lastMessageToken = (chatt.last_message === msg.token || !chatt.last_message) ? msg.token : chatt.last_message;
+                    }
                     chat = {
                         _id: chatt._id,
                         phone_number: chatt.phone_number,
                         user: chatt.user,
                         type_chat: chatt.type_chat,
-                        last_message: msg.token,
+                        last_message: lastMessageToken,
                         flag: chatt.flag,
                         chat_read: 0,
                         deleted: 0,
@@ -859,7 +867,7 @@ const Yambi = ({ navigation }: NavProps) => {
 
                 try {
                     // console.log(moment().format())
-                    realm.create('UsersMessages', msg);
+                    realm.create('UsersMessages', msg, true);
                     // } catch (error) { }
 
                     // try {
@@ -2808,6 +2816,46 @@ const Yambi = ({ navigation }: NavProps) => {
                                 fontWeight: app_description.title_font_weight as any,
                             },
                         })} />
+
+                        <Stack.Screen name="AdminInventory" component={AdminInventory} options={{
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1,
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            title: strings.inventory || "Inventory",
+                        }} />
+
+                        <Stack.Screen name="AdminBusinessUsers" component={AdminBusinessUsers} options={{
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1,
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            title: strings.users || "Users",
+                        }} />
+
+                        <Stack.Screen name="AdminSales" component={AdminSales} options={{
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1,
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            title: strings.sales || "Sales",
+                        }} />
+
+                        <Stack.Screen name="AdminEditSubscription" component={AdminEditSubscription} options={{
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.design_tip1,
+                            },
+                            headerTintColor: app_theme.colors.text_design1,
+                            title: (strings as any).edit_subscription || "Edit Subscription",
+                        }} />
 
                         <Stack.Screen name="BusinessModern" component={BusinessModern} options={{
                             headerShadowVisible: false,

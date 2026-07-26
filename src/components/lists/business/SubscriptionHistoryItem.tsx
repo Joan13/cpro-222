@@ -1,9 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { useAppSelector } from '../../../store/app/hooks';
 import { strings } from '../../../lang/lang';
 import { YambiText } from '../../app/Text';
 import moment from 'moment';
+import { IconApp } from '../../app/IconApp';
+import * as RootNavigation from '../../../services/Navigation_ref';
 
 interface SubscriptionItem {
     _id: string;
@@ -30,6 +32,8 @@ interface SubscriptionHistoryItemProps {
 
 const SubscriptionHistoryItem = ({ item }: SubscriptionHistoryItemProps) => {
     const theme = useAppSelector(state => state.app_theme.colors);
+    const user_data = useAppSelector(state => state.user_data);
+    const isAdmin = user_data && user_data.user_level !== 0;
     const paymentStatus = parseInt(String(item.payment_status ?? 1), 10);
     const isPaymentSuccess = paymentStatus === 1;
     const isPaymentPending = paymentStatus === 0;
@@ -77,6 +81,14 @@ const SubscriptionHistoryItem = ({ item }: SubscriptionHistoryItemProps) => {
                             color="default"
                             bold
                         />
+                        {isAdmin && (
+                            <Pressable 
+                                onPress={() => RootNavigation.navigate('AdminEditSubscription', { subscription: item })}
+                                style={{ marginLeft: 10, padding: 4 }}
+                            >
+                                <IconApp pack="FI" name="edit" size={16} color={theme.high_color} />
+                            </Pressable>
+                        )}
                         {isActiveSubscription && (
                             <View style={{
                                 backgroundColor: theme.success,

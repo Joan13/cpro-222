@@ -298,7 +298,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
                         <YambiText
                             size="small"
                             color="gray"
-                            text={`${'Created'}: ${getDateFormat(businessInfo.createdAt, lang)}`}
+                            text={`${strings.created_at || 'Created'}: ${getDateFormat(businessInfo.createdAt, lang)}`}
                             style={{ marginLeft: 6 }}
                         />
                     </View>
@@ -309,7 +309,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
             {loading ? (
                 <View style={{ padding: 20, alignItems: 'center' }}>
                     <ActivityIndicator color={theme.colors.high_color} size="large" />
-                    <YambiText size="small" color="gray" text="Loading business data..." style={{ marginTop: 8 }} />
+                    <YambiText size="small" color="gray" text={strings.loading} style={{ marginTop: 8 }} />
                 </View>
             ) : (
                 <>
@@ -321,12 +321,12 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     </View>
 
                     {/* Admin Actions */}
-                    <SectionTitle title={`🛠 ${strings.edit} & ${strings.information || 'Information'}`} />
+                    <SectionTitle title={`🛠 ${strings.edit} & ${(strings as any).information || 'Information'}`} />
 
                     <ActionCard
                         icon="edit"
                         title={strings.edit_business}
-                        subtitle="Edit name, description, contact, logo"
+                        subtitle={(strings as any).edit_business_desc || "Edit name, description, contact, logo"}
                         color={theme.colors.high_color}
                         onPress={() => RootNavigation.navigate('EditBusiness', { business: businessInfo })}
                     />
@@ -334,15 +334,15 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     <ActionCard
                         icon="credit-card"
                         title={strings.subscription_history}
-                        subtitle="View all subscription payments"
+                        subtitle={(strings as any).view_all_payments || "View all subscription payments"}
                         color="#8B5CF6"
                         onPress={() => RootNavigation.navigate('SubscriptionHistory', { business_id: business._id })}
                     />
 
                     <ActionCard
-                        icon="refresh-cw"
-                        title={strings.add_subscription}
-                        subtitle="Renew or upgrade business subscription"
+                        icon="credit-card"
+                        title={strings.renew_subscription || "Renew/Upgrade Subscription"}
+                        subtitle={strings.renew_subscription_description || "Renew or upgrade business subscription"}
                         color="#EC4899"
                         onPress={() => RootNavigation.navigate('AddBusinessSubscription', { business_id: business._id })}
                     />
@@ -357,11 +357,8 @@ const AdminBusinessScreen = ({ route }: Props) => {
                         badge={stats.items_count}
                         color="#F59E0B"
                         onPress={() =>
-                            RootNavigation.navigate('BusinessItems', {
+                            RootNavigation.navigate('AdminInventory', {
                                 business_id: business._id,
-                                sales_point_id: '',
-                                flag: 2,
-                                can_upload_images: true,
                             })
                         }
                     />
@@ -369,7 +366,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     <ActionCard
                         icon="plus"
                         title={strings.add_item}
-                        subtitle="Add a new product to this business"
+                        subtitle={(strings as any).add_item_desc || "Add a new product to this business"}
                         color="#8B5CF6"
                         onPress={() =>
                             RootNavigation.navigate('NewBusinessItem', {
@@ -382,7 +379,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     <ActionCard
                         icon="list"
                         title={strings.view_inventory_movement_history}
-                        subtitle="Stock in/out movement log"
+                        subtitle={(strings as any).inventory_history_desc || "Stock in/out movement log"}
                         color={theme.colors.high_color}
                         onPress={() =>
                             RootNavigation.navigate('BusinessInventoryMovementHistory', { business_id: business._id })
@@ -398,10 +395,8 @@ const AdminBusinessScreen = ({ route }: Props) => {
                         badge={stats.sales_count}
                         color="#10B981"
                         onPress={() =>
-                            RootNavigation.navigate('BusinessSales', {
+                            RootNavigation.navigate('AdminSales', {
                                 business_id: business._id,
-                                sales_point_id: '',
-                                item_id: '',
                             })
                         }
                     />
@@ -409,7 +404,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     <ActionCard
                         icon="dollar-sign"
                         title={strings.view_expenses}
-                        subtitle="Business-level expenses"
+                        subtitle={(strings as any).expenses_desc || "Business-level expenses"}
                         color={theme.colors.high_color}
                         onPress={() =>
                             RootNavigation.navigate('GetExpenses', { flag: 1, business_id: business._id })
@@ -419,7 +414,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     <ActionCard
                         icon="bookmark"
                         title={(strings as any).view_reservations || 'Reservations'}
-                        subtitle="View and manage reservations"
+                        subtitle={(strings as any).reservations_desc || "View and manage reservations"}
                         color="#EC4899"
                         onPress={() =>
                             RootNavigation.navigate('Reservations', { business_id: business._id })
@@ -435,14 +430,14 @@ const AdminBusinessScreen = ({ route }: Props) => {
                         badge={stats.users_count}
                         color={theme.colors.high_color3 || '#3B82F6'}
                         onPress={() =>
-                            RootNavigation.navigate('UserBusinessUsers', { business_id: business._id })
+                            RootNavigation.navigate('AdminBusinessUsers', { business_id: business._id })
                         }
                     />
 
                     <ActionCard
                         icon="user-plus"
                         title={strings.add_user || 'Add New User'}
-                        subtitle="Add a staff member to this business"
+                        subtitle={(strings as any).add_user_desc || "Add a staff member to this business"}
                         color="#3B82F6"
                         onPress={() =>
                             RootNavigation.navigate('NewBusinessUser', { business_id: business._id, sales_point_id: '' })
@@ -521,12 +516,12 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     />
 
                     {/* Danger Zone */}
-                    <SectionTitle title="⚠️ Admin Actions" />
+                    <SectionTitle title={`⚠️ ${strings.admin || 'Admin'} ${(strings as any).actions || 'Actions'}`} />
                     <Pressable
                         onPress={() => {
                             Alert.alert(
-                                'Admin: View as Owner',
-                                `Navigate as the business owner (${businessInfo.phone_number}) to see all sections from their perspective.`,
+                                (strings as any).admin_view_owner || 'Admin: View as Owner',
+                                (strings as any).admin_view_owner_desc || `Navigate as the business owner (${businessInfo.phone_number}) to see all sections from their perspective.`,
                                 [{ text: strings.cancel, style: 'cancel' }]
                             );
                         }}
@@ -543,7 +538,7 @@ const AdminBusinessScreen = ({ route }: Props) => {
                     >
                         <IconApp pack="FI" name="eye" size={20} color={theme.colors.error} styles={{ marginRight: 12 }} />
                         <View style={{ flex: 1 }}>
-                            <YambiText bold text="Business Owner" style={{ color: theme.colors.error }} />
+                            <YambiText bold text={(strings as any).business_owner || "Business Owner"} style={{ color: theme.colors.error }} />
                             <YambiText size="small" color="gray" text={businessInfo.phone_number || 'N/A'} />
                         </View>
                     </Pressable>

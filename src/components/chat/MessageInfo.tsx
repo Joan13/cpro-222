@@ -1,110 +1,62 @@
-import { useState, useEffect } from 'react';
-import { View, Pressable, Text, ScrollView, TextInput } from 'react-native';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import FontAwesome from 'react-native-vector-icons/FontAwesome';
-// import Feather from 'react-native-vector-icons/Feather';
-// import * as Animatable from 'react-native-animatable';
-// import * as Localization from 'react-native-localization';
-import { strings } from '../../lang/lang';
-// import changeNavigationBarColor from 'react-native-navigation-bar-color';
-// import { PermissionsAndroid } from 'react-native';
-// import { connect, useDispatch, useSelector } from 'react-redux';
-// import Realm, { BSON } from 'realm';
-// import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Pressable, Text, ScrollView, TextInput, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useObject, useRealm } from '@realm/react';
+import moment from 'moment';
+
+import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
-// import ButtonNormal from '../../components/app/ButtonNormal';
 import StatusBarYambi from '../app/StatusBar';
 import { NavProps, TMessage } from '../../types/types';
-// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
-// import Entypo from 'react-native-vector-icons/Entypo'/;
-// import countries from '../../assets/countries_en';
-// import ContactsList from '../../components/lists/ContactsList';
-import { setMessageInbox, setMessageSelected, setPhoneNumbersList, setResponseTo } from '../../store/reducers/appSlice';
-// import { FlashList } from '@shopify/flash-list';
-import { TextNormalYambi, TextNormalYambiGray } from '../app/Text';
-// import { IconApp } from '../../components/app/IconApp';
-import { useObject, useQuery, useRealm } from '@realm/react';
-import { UserChats, UsersMessages } from '../../store/database/Models';
-// import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { PlayActionSound, SocketApp } from '../../../GlobalVariables';
-import moment from 'moment';
+import { setMessageSelected } from '../../store/reducers/appSlice';
+import { TextNormalYambi, TextNormalYambiGray, TextSmallYambi, TextSmallYambiGray, YambiText } from '../app/Text';
+import { UsersMessages } from '../../store/database/Models';
+import { SocketApp } from '../../../GlobalVariables';
 import AppActivityIndicator from '../app/AppActivityIndicator';
-import { SafeAreaView } from 'react-native-safe-area-context';
-// import { SocketApp } from '../../../App';
-
-// const navigation = NativeStackScreenProps<RootStackParamList>();
 
 const MessageInfo = ({ route, navigation }: NavProps) => {
-
-    const { message_id } = route.params;
-    const { flag } = route.params;
+    const { message_id, flag } = route.params;
 
     const app_theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
     const contacts = useAppSelector(state => state.app.raw_contacts);
     const dispatch = useAppDispatch();
-    const phone_numbers_list = useAppSelector(state => state.app.phone_numbers_list);
-    // const message_selected = useAppSelector(state => state.app.message_selected);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
+
     const [loading, setLoading] = useState<boolean>(false);
     const [edited_message, setEdited_message] = useState<string>("");
+
     const realm = useRealm();
     const message = useObject(UsersMessages, message_id);
 
-    const chats = useQuery(UserChats);
-
-    const FirstAction = () => {
-        // console.log(message)
-        setEdited_message(message.main_text_message);
-    }
-
     const ShowUserName = (user_names: string, phone_number: string) => {
-
         const contact = contacts.find((cc) => cc.phoneNumber === phone_number);
-        // console.log(contact)
         if (contact !== undefined) {
-            // console.log(contact)
             return contact.displayName;
         } else {
             return user_names;
         }
-
-        // return "OK"
-    }
+    };
 
     useEffect(() => {
-
         if (flag === 1) {
             navigation.setOptions({ title: strings.edit_message });
         } else {
             navigation.setOptions({ title: strings.message_info });
         }
 
-        FirstAction();
-
-    }, []);
+        if (message) {
+            setEdited_message(message.main_text_message || "");
+        }
+    }, [flag, message]);
 
     const EditTheMessage = () => {
         if (message) {
             if (message.main_text_message.trim() !== edited_message.trim()) {
-                // setLoading(true);
-                // for (let i in phone_numbers_list) {
-                // PlayActionSound(2);
-                // const time = moment(new Date()).format();
-                // const token = randomString(30) + renderDateUpToMilliseconds();
-
-                // let message_read = 0;
-
-                // if (!tokenn) {
-                //   tokenn = token;
-                // }
-
-                // if (message.message_type === 1) {
-                //   message_read = 5;
-                // }
-
+                setLoading(true);
                 const msg: TMessage = {
                     sender: message.sender,
                     receiver: message.receiver,
@@ -124,165 +76,239 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                     receivedAt: message.receivedAt,
                     readAt: message.readAt,
                     playedAt: message.playedAt,
-                    cc: message.cc,//moment(time).format('DD/MM/YYYY'),
-                    alignment: message.alignment//moment().format()
-                }
-
-                // const this_chat = chats.find(cc => cc._id === message.receiver);
-                // const chat = {
-                //     _id: this_chat !== undefined ? this_chat._id : message.receiver,
-                //     phone_number: this_chat !== undefined ? this_chat.phone_number : message.receiver,
-                //     type_chat: this_chat !== undefined ? this_chat.type_chat : 0,
-                //     last_message: this_chat !== undefined ? this_chat.flag : token,
-                //     user: user_data.phone_number,
-                //     flag: this_chat !== undefined ? this_chat.flag : 0,
-                //     chat_read: this_chat !== undefined ? this_chat.chat_read : 1,
-                //     deleted: this_chat !== undefined ? this_chat.deleted : 0,
-                //     chat_effect: this_chat !== undefined ? this_chat.chat_effect : 0,
-                //     createdAt: this_chat !== undefined ? this_chat.chat_effect : time,
-                //     updatedAt: this_chat !== undefined ? this_chat.chat_effect : time
-                // }
+                    cc: message.cc,
+                    alignment: message.alignment
+                };
 
                 realm.write(() => {
                     try {
                         realm.create('UsersMessages', msg, true);
-                        // } catch (error) { }
-
-                        // try {
-                        // realm.create('UserChats', chat, true);
-                    } catch (error) { }
+                    } catch (error) {
+                        console.error('Error updating message in Realm', error);
+                    }
                 });
 
-                // realm.write(() => {
-                //   try {
-                //     realm.create('UserChats', chat, true);
-                //   } catch (error) { }
-                // });
-
-
-                // dispatch(setMessageInbox(""));
-                // // dispatch(setMessageInbox(""));
-
-                // // dispatch(addDraft({ message_inbox: "", user: current_user }));
-                // dispatch(setResponseTo(""));
-
-                // dispatch(setPhoneNumbersList(""));
-
-                // dispatch(setMessageSelected(""));
-
-                // console.log("Message sent")
-
-                // if (message.message_type === 0) {
                 SocketApp.emit('newMessage', msg);
-                // }
-
-                // console.log(message)
-                // }
-                // }
-
-                // setTimeout(() => {
-                //     dispatch(setMessageInbox(""));
-                //     // dispatch(setMessageInbox(""));
-                //     // dispatch(addDraft({ message_inbox: "", user: current_user }));
-                //     dispatch(setResponseTo(""));
-
-                //     dispatch(setPhoneNumbersList(""));
-
-                    dispatch(setMessageSelected(""));
-
-                //     navigation.navigate("Home");
-
-                // }, phone_numbers_list.length <= 5 ? 800 : 1300);
+                dispatch(setMessageSelected(""));
+                setLoading(false);
+                navigation.goBack();
             }
         }
+    };
+
+    if (!message) {
+        return (
+            <SafeAreaView style={[styles.container, { backgroundColor: app_theme.colors.background }]}>
+                <StatusBarYambi />
+                <View style={styles.centerContainer}>
+                    <TextNormalYambiGray text={strings.no_sales_available || 'Message not found'} />
+                </View>
+            </SafeAreaView>
+        );
     }
 
+    const isSender = message.sender === user_data.phone_number;
+    const youSuffix = ` (${strings.you || 'You'})`;
+
+    const senderText = isSender
+        ? message.sender + youSuffix
+        : message.sender;
+
+    const isReceiverMe = message.receiver === user_data.phone_number;
+    const receiverText = isReceiverMe
+        ? message.receiver + youSuffix
+        : ShowUserName(message.receiver, message.receiver);
+
+    const getMessageTypeString = () => {
+        if (message.message_type === 1) return strings.voice_note;
+        if (message.message_type === 2) return strings.picture;
+        return strings.plain_text_message;
+    };
+
+    const getMessageTypeIcon = () => {
+        if (message.message_type === 1) return 'microphone';
+        if (message.message_type === 2) return 'image';
+        return 'message';
+    };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 1 }}>
-
+        <SafeAreaView style={[styles.container, { backgroundColor: app_theme.colors.background, borderTopWidth: 1, borderColor: app_theme.colors.border }]}>
             <StatusBarYambi />
 
-            <View style={{ margin: 15, flex: 1 }}>
-                <ScrollView keyboardShouldPersistTaps='handled'>
-                    <TextNormalYambi text={message.message_type === 1 ? strings.voice_note : message.message_type === 2 ? strings.picture : message?.main_text_message} />
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Modern Message Preview Bubble Card */}
+                <View style={[
+                    styles.previewCard,
+                    {
+                        backgroundColor: isSender ? app_theme.colors.chat_sent || (app_theme.colors.design_tip2 + '18') : app_theme.colors.chat_received || app_theme.colors.card,
+                        borderColor: app_theme.colors.border,
+                    }
+                ]}>
+                    <View style={styles.previewHeader}>
+                        <View style={styles.typeBadge}>
+                            <FontAwesome6
+                                name={getMessageTypeIcon()}
+                                size={14}
+                                color={app_theme.colors.high_color}
+                                style={{ marginRight: 6 }}
+                            />
+                            <TextSmallYambi bold text={getMessageTypeString()} />
+                        </View>
+                        <TextSmallYambiGray text={moment(message.createdAt).format('LT')} />
+                    </View>
 
-                    {flag === 0 ?
-                        <View style={{
-                            borderColor: app_theme.colors.border,
-                            borderTopWidth: 1,
-                            marginTop: 15,
-                            paddingTop: 10
-                        }}>
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.from} />
-                                <TextNormalYambi text={message.sender === user_data.phone_number ? message.sender + " (You)" : message.sender} />
+                    <View style={styles.previewBody}>
+                        <YambiText
+                            text={message.message_type === 1 ? strings.voice_note : message.message_type === 2 ? strings.picture : message.main_text_message}
+                            bold={message.message_type !== 0}
+                            size="normal"
+                        />
+
+                        {message.caption ? (
+                            <View style={[styles.captionBox, { backgroundColor: app_theme.colors.border + '40' }]}>
+                                <TextSmallYambiGray text={strings.caption} bold />
+                                <TextNormalYambi text={message.caption} />
+                            </View>
+                        ) : null}
+                    </View>
+                </View>
+
+                {flag === 0 ? (
+                    <Animated.View entering={FadeIn}>
+                        {/* Participants Card */}
+                        <View style={[styles.card, { backgroundColor: app_theme.colors.card || app_theme.colors.background, borderColor: app_theme.colors.border }]}>
+                            <YambiText text="Participants" bold size="normal" style={styles.cardTitle} />
+
+                            <View style={styles.participantRow}>
+                                <View style={[styles.avatarIcon, { backgroundColor: app_theme.colors.high_color + '20' }]}>
+                                    <FontAwesome6 name="paper-plane" size={14} color={app_theme.colors.high_color} />
+                                </View>
+                                <View style={styles.participantInfo}>
+                                    <TextSmallYambiGray text={strings.from} />
+                                    <TextNormalYambi bold text={senderText} />
+                                </View>
                             </View>
 
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.to} />
-                                <TextNormalYambi text={message.receiver === user_data.phone_number ? message.receiver + " (You)" : ShowUserName(message.receiver, message.receiver)} />
+                            <View style={[styles.divider, { backgroundColor: app_theme.colors.border }]} />
+
+                            <View style={styles.participantRow}>
+                                <View style={[styles.avatarIcon, { backgroundColor: app_theme.colors.high_color2 + '20' }]}>
+                                    <FontAwesome6 name="user-check" size={14} color={app_theme.colors.high_color2} />
+                                </View>
+                                <View style={styles.participantInfo}>
+                                    <TextSmallYambiGray text={strings.to} />
+                                    <TextNormalYambi bold text={receiverText} />
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Status & Delivery Timeline Card */}
+                        <View style={[styles.card, { backgroundColor: app_theme.colors.card || app_theme.colors.background, borderColor: app_theme.colors.border }]}>
+                            <YambiText text="Delivery Timeline" bold size="normal" style={styles.cardTitle} />
+
+                            <View style={styles.timelineItem}>
+                                <View style={[styles.statusIcon, { backgroundColor: app_theme.colors.success + '20' }]}>
+                                    <FontAwesome6 name="check" size={13} color={app_theme.colors.success} />
+                                </View>
+                                <View style={styles.timelineContent}>
+                                    <TextNormalYambi text={strings.sent} bold />
+                                    <TextSmallYambiGray text={moment(message.createdAt).format('LLL')} />
+                                </View>
                             </View>
 
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.message_type} />
-                                <TextNormalYambi text={message.message_type === 0 ? strings.plain_text_message : message.message_type === 1 ? strings.voice_note : strings.picture} />
+                            <View style={styles.timelineItem}>
+                                <View style={[
+                                    styles.statusIcon,
+                                    { backgroundColor: message.receivedAt ? app_theme.colors.success + '20' : app_theme.colors.gray + '20' }
+                                ]}>
+                                    <FontAwesome6
+                                        name="check-double"
+                                        size={13}
+                                        color={message.receivedAt ? app_theme.colors.success : app_theme.colors.gray}
+                                    />
+                                </View>
+                                <View style={styles.timelineContent}>
+                                    <TextNormalYambi text={strings.received} bold />
+                                    <TextSmallYambiGray text={message.receivedAt ? moment(message.receivedAt).format('LLL') : '-'} />
+                                </View>
                             </View>
 
-                            {message.caption !== "" ?
-                                <View style={{ marginVertical: 5 }}>
-                                    <TextNormalYambiGray text={strings.caption} />
-                                    <TextNormalYambi text={message.caption} />
-                                </View> : null}
-
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.platform} />
-                                <TextNormalYambi text={message.platform} />
+                            <View style={styles.timelineItem}>
+                                <View style={[
+                                    styles.statusIcon,
+                                    { backgroundColor: message.readAt ? app_theme.colors.high_color + '20' : app_theme.colors.gray + '20' }
+                                ]}>
+                                    <FontAwesome6
+                                        name="eye"
+                                        size={13}
+                                        color={message.readAt ? app_theme.colors.high_color : app_theme.colors.gray}
+                                    />
+                                </View>
+                                <View style={styles.timelineContent}>
+                                    <TextNormalYambi text={strings.seen} bold />
+                                    <TextSmallYambiGray text={message.readAt ? moment(message.readAt).format('LLL') : '-'} />
+                                </View>
                             </View>
 
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.sent} />
-                                <TextNormalYambi text={moment(message.createdAt).format('LT')} />
+                            {message.message_type === 1 ? (
+                                <View style={styles.timelineItem}>
+                                    <View style={[
+                                        styles.statusIcon,
+                                        { backgroundColor: message.playedAt ? app_theme.colors.high_color2 + '20' : app_theme.colors.gray + '20' }
+                                    ]}>
+                                        <FontAwesome6
+                                            name="circle-play"
+                                            size={13}
+                                            color={message.playedAt ? app_theme.colors.high_color2 : app_theme.colors.gray}
+                                        />
+                                    </View>
+                                    <View style={styles.timelineContent}>
+                                        <TextNormalYambi text={strings.played} bold />
+                                        <TextSmallYambiGray text={message.playedAt ? moment(message.playedAt).format('LLL') : '-'} />
+                                    </View>
+                                </View>
+                            ) : null}
+                        </View>
+
+                        {/* Technical Metadata Card */}
+                        <View style={[styles.card, { backgroundColor: app_theme.colors.card || app_theme.colors.background, borderColor: app_theme.colors.border }]}>
+                            <View style={styles.metaRow}>
+                                <TextSmallYambiGray text={strings.platform} />
+                                <View style={[styles.chip, { backgroundColor: app_theme.colors.border + '60' }]}>
+                                    <MaterialIcons name="devices" size={14} color={app_theme.colors.text} style={{ marginRight: 4 }} />
+                                    <TextSmallYambi bold text={message.platform || 'Mobile'} />
+                                </View>
                             </View>
+                        </View>
+                    </Animated.View>
+                ) : null}
+            </ScrollView>
 
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.received} />
-                                <TextNormalYambi text={message.receivedAt === "" ? "-" : moment(message.receivedAt).format('LT')} />
-                            </View>
-
-                            <View style={{ marginVertical: 5 }}>
-                                <TextNormalYambiGray text={strings.seen} />
-                                <TextNormalYambi text={message.readAt === "" ? "-" : moment(message.readAt).format('LT')} />
-                            </View>
-
-                            {message.message_type === 1 ?
-                                <View style={{ marginVertical: 5 }}>
-                                    <TextNormalYambiGray text={strings.played} />
-                                    <TextNormalYambi text={message.playedAt === "" ? "-" : moment(message.playedAt).format('LT')} />
-                                </View> : null}
-                        </View> : null}
-
-                </ScrollView>
-            </View>
-
-
-            {flag === 1 ?
-                <View style={{
-                    borderColor: app_theme.colors.border,
-                    borderTopWidth: 1,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    // backgroundColor: 'green',
-                    // paddingVertical: 10,
-                    marginHorizontal: 15
-                }}>
+            {/* Edit Message Footer Bar when flag === 1 */}
+            {flag === 1 ? (
+                <View style={[
+                    styles.editFooter,
+                    {
+                        borderColor: app_theme.colors.border,
+                        backgroundColor: app_theme.colors.background
+                    }
+                ]}>
                     <TextInput
-                        multiline={true}
-
-                        style={{ flex: 1, minHeight: 50, fontSize: app_description.general_font_size, maxHeight: 250, color: app_theme.colors.text, backgroundColor: app_theme.colors.background }}
+                        multiline
+                        style={[
+                            styles.textInput,
+                            {
+                                fontSize: app_description.general_font_size,
+                                color: app_theme.colors.text,
+                                backgroundColor: app_theme.colors.border + '20',
+                                borderColor: app_theme.colors.border
+                            }
+                        ]}
                         placeholder={strings.message}
-                        // value={draft !== null ? draft.draft : null}
                         value={edited_message}
                         onChangeText={(text) => setEdited_message(text)}
                         placeholderTextColor={app_theme.colors.gray}
@@ -291,20 +317,156 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                     <Animated.View entering={FadeIn} exiting={FadeOut}>
                         <Pressable
                             onPress={EditTheMessage}
-                            style={{
-                                height: 35, paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center',
-                                backgroundColor: message.main_text_message.trim() !== edited_message.trim() ? app_theme.colors.design_tip2 : app_theme.colors.gray,
-                                borderRadius: 5, borderColor: app_theme.colors.border, borderWidth: 1
-                            }}>
-                            {!loading ?
-                                <Text style={{ color: app_theme.colors.text_design2 }}>{strings.send}</Text> :
-                                <AppActivityIndicator color={app_theme.colors.text_design2} />}
+                            disabled={loading || message.main_text_message.trim() === edited_message.trim()}
+                            style={({ pressed }) => [
+                                styles.sendButton,
+                                {
+                                    backgroundColor: message.main_text_message.trim() !== edited_message.trim()
+                                        ? app_theme.colors.design_tip2
+                                        : app_theme.colors.gray,
+                                    opacity: pressed ? 0.8 : 1.0
+                                }
+                            ]}>
+                            {!loading ? (
+                                <View style={styles.sendButtonContent}>
+                                    <FontAwesome6 name="paper-plane" size={14} color={app_theme.colors.text_design2} style={{ marginRight: 6 }} />
+                                    <Text style={{ color: app_theme.colors.text_design2, fontWeight: '600' }}>{strings.send}</Text>
+                                </View>
+                            ) : (
+                                <AppActivityIndicator color={app_theme.colors.text_design2} />
+                            )}
                         </Pressable>
                     </Animated.View>
-                </View> : null}
+                </View>
+            ) : null}
         </SafeAreaView>
     );
+};
 
-}
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    scrollContent: {
+        padding: 16,
+        paddingBottom: 32,
+    },
+    previewCard: {
+        borderRadius: 16,
+        borderWidth: 1,
+        padding: 16,
+        marginBottom: 16,
+    },
+    previewHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    typeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    previewBody: {
+        marginTop: 4,
+    },
+    captionBox: {
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 8,
+    },
+    card: {
+        borderRadius: 14,
+        borderWidth: 1,
+        padding: 16,
+        marginBottom: 16,
+    },
+    cardTitle: {
+        marginBottom: 14,
+    },
+    participantRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+    },
+    avatarIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    participantInfo: {
+        flex: 1,
+    },
+    divider: {
+        height: 1,
+        marginVertical: 10,
+        opacity: 0.5,
+    },
+    timelineItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 14,
+    },
+    statusIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    timelineContent: {
+        flex: 1,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    chip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    editFooter: {
+        borderTopWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    textInput: {
+        flex: 1,
+        minHeight: 44,
+        maxHeight: 120,
+        borderRadius: 22,
+        borderWidth: 1,
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: 10,
+        marginRight: 10,
+    },
+    sendButton: {
+        height: 44,
+        paddingHorizontal: 18,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sendButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+});
 
 export default MessageInfo;

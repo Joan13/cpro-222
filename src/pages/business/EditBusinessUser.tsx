@@ -372,7 +372,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                                 marginBottom: 16,
                                 paddingVertical: 8,
                             }}>
-                                <IconApp pack="FI" name={level === 1 ? "check-circle" : "circle"} color={level === 1 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
+                                <IconApp pack="IO" name={level === 1 ? "checkmark-circle" : "ellipse-outline"} color={level === 1 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
                                 <View style={{ flex: 1, marginLeft: 12 }}>
                                     <TextNormalYambiHighColor text={strings.owner} bold={level === 1} />
                                     <TextSmallYambiGray text={strings.admin_text} styles={{ marginTop: 4 }} />
@@ -390,7 +390,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                             marginBottom: 16,
                             paddingVertical: 8,
                         }}>
-                            <IconApp pack="FI" name={level === 2 ? "check-circle" : "circle"} color={level === 2 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
+                            <IconApp pack="IO" name={level === 2 ? "checkmark-circle" : "ellipse-outline"} color={level === 2 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
                             <View style={{ flex: 1, marginLeft: 12 }}>
                                 <TextNormalYambiHighColor text={strings.salesforce_manager} bold={level === 2} />
                                 <TextSmallYambiGray text={strings.salesforce_manager_text} styles={{ marginTop: 4 }} />
@@ -407,7 +407,7 @@ const EditBusinessUser = ({ navigation, route }: NavProps) => {
                             marginBottom: 8,
                             paddingVertical: 8,
                         }}>
-                            <IconApp pack="FI" name={level === 3 ? "check-circle" : "circle"} color={level === 3 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
+                            <IconApp pack="IO" name={level === 3 ? "checkmark-circle" : "ellipse-outline"} color={level === 3 ? theme.high_color : theme.gray} size={18} styles={{ marginTop: 2 }} />
                             <View style={{ flex: 1, marginLeft: 12 }}>
                                 <TextNormalYambiHighColor text={strings.sale_operator} bold={level === 3} />
                                 <TextSmallYambiGray text={strings.sale_operator_text} styles={{ marginTop: 4 }} />

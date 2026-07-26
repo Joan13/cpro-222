@@ -47,40 +47,40 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
         [user, user_data.phone_number]
     );
 
-    const setChatRead = () => {
+    const setChatRead = useCallback(() => {
 
-        const rawMessages = messages.filter(m => m.receiver === user_data.phone_number && m.message_read < 3);
+        const rawMessages = messages.filter(m => m.receiver === user_data.phone_number && m.message_read < 3 && m.deleted === 0);
 
         if (rawMessages.length === 0) {
             return;
         }
 
+        const plainMessages: TMessage[] = rawMessages.map(msg => ({
+            sender: msg.sender,
+            receiver: msg.receiver,
+            main_text_message: msg.main_text_message,
+            caption: msg.caption,
+            message_type: msg.message_type,
+            response_to: msg.response_to,
+            message_read: 3,
+            flag: msg.flag,
+            message_effect: msg.message_effect,
+            reactions: msg.reactions,
+            token: msg.token,
+            platform: msg.platform,
+            deleted: msg.deleted,
+            read_once: msg.read_once,
+            alignment: msg.createdAt,
+            createdAt: msg.createdAt,
+            receivedAt: msg.receivedAt,
+            playedAt: msg.playedAt,
+            readAt: moment().format(),
+            cc: msg.cc
+        }));
+
         try {
             realm.write(() => {
-                rawMessages.forEach(msg => {
-                    const msgg: TMessage = {
-                        sender: msg.sender,
-                        receiver: msg.receiver,
-                        main_text_message: msg.main_text_message,
-                        caption: msg.caption,
-                        message_type: msg.message_type,
-                        response_to: msg.response_to,
-                        message_read: 3,
-                        flag: msg.flag,
-                        message_effect: msg.message_effect,
-                        reactions: msg.reactions,
-                        token: msg.token,
-                        platform: msg.platform,
-                        deleted: msg.deleted,
-                        read_once: msg.read_once,
-                        alignment: msg.createdAt,
-                        createdAt: msg.createdAt,
-                        receivedAt: msg.receivedAt,
-                        playedAt: msg.playedAt,
-                        readAt: moment().format(),
-                        cc: msg.cc
-                    }
-
+                plainMessages.forEach(msgg => {
                     realm.create("UsersMessages", msgg, true);
                 });
             })
@@ -89,12 +89,11 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
         }
 
         setTimeout(() => {
-            if (rawMessages.length > 0) {
-                // console.log(rawMessages.length + " "+user_data.phone_number)
-                SocketApp.emit("messagesRead", rawMessages);
+            if (plainMessages.length > 0) {
+                SocketApp.emit("messagesRead", plainMessages);
             }
         }, 500);
-    }
+    }, [messages, user_data.phone_number, realm]);
 
     /**
      * ARRAY
@@ -147,8 +146,11 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
     );
 
     useEffect(() => {
-        setChatRead();
-    }, [messages, user_data.phone_number]);
+        const timer = setTimeout(() => {
+            setChatRead();
+        }, 350);
+        return () => clearTimeout(timer);
+    }, [setChatRead]);
 
     useEffect(() => {
         if (highlightMessageToken) {
@@ -350,7 +352,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                     ListHeaderComponent={
                         HeaderMessages
                     }
-                    renderItem={({
+                    renderItem={useCallback(({
                         item,
                         index,
                     }: {
@@ -368,7 +370,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                                 scrollToMessage
                             }
                         />
-                    )}
+                    ), [messages, setMS, user, scrollToMessage])}
                 />
                 {
                     stickyDate !== '' && (

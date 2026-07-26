@@ -1,6 +1,6 @@
 import { View, Text, Image, Vibration, Pressable } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { useObject } from '@realm/react';
 import { UsersMessages } from '../../../store/database/Models';
 import { TMessage } from '../../../types/types';
@@ -41,18 +41,19 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
     //             .sorted('alignment', true);
     //     }, []);
 
-    const ShowUserName = (user_names: string, phone_number: string) => {
+    const ShowUserName = useCallback((user_names: string, phone_number: string) => {
         const contact = contacts.find((cc) => cc.phoneNumber === phone_number);
         if (contact !== undefined) {
             return contact.displayName;
         } else {
             return user_names;
         }
-    }
+    }, [contacts]);
 
     // console.log("Message rendered" + item.main_text_message)
 
-    const message = useObject(UsersMessages, item.response_to);
+    const responseToken = item.response_to || "";
+    const message = useObject(UsersMessages, responseToken);
 
     let can_show_image_left: boolean = true;
     let can_show_image_right: boolean = true;

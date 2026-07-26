@@ -1,4 +1,4 @@
-import { View, useWindowDimensions } from 'react-native'
+import { View, useWindowDimensions, Image as RNImage } from 'react-native'
 import { useEffect } from 'react'
 import HeaderChat from '../../components/headers/HeaderInbox';
 import Messages from '../../components/chat/Messages';
@@ -153,26 +153,20 @@ const Inbox = ({ navigation, route }: NavProps) => {
         }}>
       </ImageBackground> */}
 
-        <Canvas
+        <RNImage
+          source={require('./../../assets/bitmap11.png')}
           style={{
-            flex: 1,
-            backgroundColor: theme.dark ? 'black' : '#e3e3e3',
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-          }}>
-          <Image
-            x={0}
-            y={0}
-            width={width}
-            height={height}
-            image={image}
-            fit="cover">
-            <Blur blur={0} />
-          </Image>
-        </Canvas>
+            width: '100%',
+            height: '100%',
+            backgroundColor: theme.dark ? 'black' : '#e3e3e3',
+          }}
+          resizeMode="cover"
+        />
 
         <View style={{
           flex: 1,

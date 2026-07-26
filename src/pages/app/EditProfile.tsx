@@ -282,8 +282,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 0 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 0 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 0 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />
@@ -308,8 +308,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 1 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 1 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 1 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />
@@ -334,8 +334,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 6 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 6 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 6 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />
@@ -360,8 +360,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 7 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 7 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 7 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />
@@ -386,8 +386,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 3 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 3 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 3 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />
@@ -412,8 +412,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 4 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 4 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 4 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />
@@ -438,8 +438,8 @@ const EditProfile = ({ route }: NavProps) => {
                                              marginBottom: 8
                                         }}>
                                         <IconApp 
-                                             pack='FA' 
-                                             name={user_level === 5 ? "check-circle" : "circle"} 
+                                             pack='IO' 
+                                             name={user_level === 5 ? "checkmark-circle" : "ellipse-outline"} 
                                              color={user_level === 5 ? theme.colors.high_color : theme.colors.gray} 
                                              size={18} 
                                         />

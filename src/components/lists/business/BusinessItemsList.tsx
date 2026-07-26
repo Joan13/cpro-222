@@ -250,8 +250,8 @@ const BusinessItemsList = ({ item, index, business_id, onSelectItem, flag, can_u
                             marginBottom: 4,
                         }}>
                             <IconApp 
-                                pack="FI" 
-                                name={item.items_number_stock > 0 ? "check-circle" : "alert-circle"} 
+                                pack={item.items_number_stock > 0 ? "IO" : "FI"} 
+                                name={item.items_number_stock > 0 ? "checkmark-circle" : "alert-circle"} 
                                 size={12} 
                                 color={item.items_number_stock > 0 ? app_theme.colors.success : app_theme.colors.error} 
                             />

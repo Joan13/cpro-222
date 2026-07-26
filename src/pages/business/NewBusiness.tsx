@@ -330,7 +330,7 @@ const NewBusinesses = () => {
     }
 
     const EditWorkspace = () => {
-        Alert.alert("Information", "Impossible d'éditer les informations sur votre entreprise pour le moment");
+        Alert.alert(strings.information, strings.impossible_edit);
     }
 
     const Category = ({ item, index, selectCategory }: { item: string, index: number, selectCategory: (category: string) => void }) => {
@@ -484,7 +484,7 @@ const NewBusinesses = () => {
                     label={strings.business_name}
                     value={name}
                     onChangeText={setName}
-                    placeholder="Enter business name"
+                    placeholder={strings.enter_business_name}
                     maxLength={100}
                     theme={theme}
                 />
@@ -494,7 +494,7 @@ const NewBusinesses = () => {
                     label={strings.description}
                     value={description}
                     onChangeText={setDescription}
-                    placeholder="Describe your business services..."
+                    placeholder={strings.describe_business_services}
                     maxLength={700}
                     multiline
                     theme={theme}
@@ -505,7 +505,7 @@ const NewBusinesses = () => {
                     label={strings.address}
                     value={address}
                     onChangeText={setAddress}
-                    placeholder="Physical address"
+                    placeholder={strings.physical_address}
                     maxLength={70}
                     theme={theme}
                 />
@@ -531,14 +531,14 @@ const NewBusinesses = () => {
                     color: theme.text,
                     marginBottom: 16
                 }}>
-                    Legal & Registration (Optional)
+                    {strings.legal_registration_optional}
                 </Text>
 
                 <FormInput
                     label={strings.national_id}
                     value={national_id}
                     onChangeText={setNational_id}
-                    placeholder="National ID"
+                    placeholder={strings.national_id}
                     maxLength={25}
                     theme={theme}
                 />
@@ -547,7 +547,7 @@ const NewBusinesses = () => {
                     label={strings.identification_number}
                     value={identification_number}
                     onChangeText={setIdentification_number}
-                    placeholder="Identification number"
+                    placeholder={strings.identification_number}
                     maxLength={25}
                     theme={theme}
                 />
@@ -556,7 +556,7 @@ const NewBusinesses = () => {
                     label={strings.tax_number}
                     value={tax_number}
                     onChangeText={setTax_number}
-                    placeholder="Tax registration number"
+                    placeholder={strings.tax_number}
                     maxLength={25}
                     theme={theme}
                 />
@@ -582,14 +582,14 @@ const NewBusinesses = () => {
                     color: theme.text,
                     marginBottom: 16
                 }}>
-                    Contact Information (Optional)
+                    {strings.contact_information_optional}
                 </Text>
 
                 <FormInput
                     label={strings.phones}
                     value={phones}
                     onChangeText={setPhones}
-                    placeholder="e.g. +1234567890"
+                    placeholder={strings.placeholder_phone}
                     maxLength={45}
                     theme={theme}
                 />
@@ -598,7 +598,7 @@ const NewBusinesses = () => {
                     label={strings.emails}
                     value={emails}
                     onChangeText={setEmails}
-                    placeholder="e.g. contact@business.com"
+                    placeholder={strings.placeholder_email}
                     maxLength={70}
                     keyboardType="email-address"
                     theme={theme}
@@ -627,7 +627,7 @@ const NewBusinesses = () => {
                         {strings.define_as_main_site}
                     </Text>
                     <Text style={{ fontSize: 12, color: theme.gray, lineHeight: 16 }}>
-                        Automatically sets up this business as your primary sales location.
+                        {strings.define_as_main_site_description}
                     </Text>
                 </View>
                 <SwitchApp value={define_as_main_site} onPress={() => setDefine_as_main_site(!define_as_main_site)} small />

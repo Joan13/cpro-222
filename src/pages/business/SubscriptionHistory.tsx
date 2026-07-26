@@ -125,12 +125,11 @@ const SubscriptionHistory = ({ navigation, route }: NavProps) => {
     };
 
     useEffect(() => {
-        if (subscriptions.length === 0) {
+        const unsubscribe = navigation.addListener('focus', () => {
             fetchSubscriptionHistory();
-        } else {
-            setLoading(false);
-        }
-    }, [business_id, subscriptions.length]);
+        });
+        return unsubscribe;
+    }, [navigation, business_id]);
 
     const fetchSubscriptionHistory = async (attempt: number = 1) => {
         try {

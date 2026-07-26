@@ -31,9 +31,9 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   const recordingAudio = useAppSelector(state => state.app.recordingAudio);
   const playingRecorded = useAppSelector(state => state.app.playingRecorded);
   const [showDeleteMessage, setShowDeleteMessage] = useState<boolean>(false);
-  const message = useObject(UsersMessages, message_selected);
-  const userrr = user ? useObject(UserContacts, user) : null;
-  const chats = useQuery(UserChats);
+  const message = useObject(UsersMessages, message_selected || "");
+  const userrr = useObject(UserContacts, user || "");
+  const this_chat = useObject(UserChats, user || "");
   const realm = useRealm();
 
   const copyToClipboard = () => {
@@ -82,7 +82,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
         message_type: message.message_type,
         reactions: message.reactions,
         response_to: message.response_to,
-        message_read: 0,
+        message_read: flag === 0 ? 0 : message.message_read,
         message_effect: message.message_effect,
         read_once: message.read_once,
         flag: message.flag,
@@ -105,11 +105,14 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
         } catch (error) { }
       });
 
-      SocketApp.emit('newMessage', msg);
+      // Only notify the server when deleting for everyone (flag === 0, deleted === 1).
+      // "Delete for me" (flag === 1, deleted === 2) is purely local.
+      if (flag === 0) {
+        SocketApp.emit('newMessage', msg);
+      }
 
       if (flag === 1) {
         // console.log(messages_undeleted)
-        const this_chat = chats.find(cc => cc._id === message.receiver);
         if (messages_undeleted.length !== 0) {
           const last_message = messages_undeleted[messages_undeleted.length - 1];
           if (last_message !== undefined) {
@@ -349,7 +352,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
             }}>
               <Entypo name="forward" size={20} color={app_theme.colors.text_design1} />
             </Pressable> */}
-            {message !== null ?
+            {message !== null && message.deleted === 0 ?
               message.message_type === 0 ?
                 <Pressable
                   onPress={copyToClipboard}
@@ -364,18 +367,19 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                   <IconApp pack='MC' name="content-copy" size={18} color={app_theme.colors.text_design1} />
                 </Pressable> : null : null}
 
-            <Pressable
-              onPress={seeMessageInfo}
-              style={{
-                height: 36,
-                width: 36,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 18,
-                backgroundColor: app_theme.colors.border + "50",
-              }}>
-              <IconApp pack='FI' name="info" size={18} color={app_theme.colors.text_design1} />
-            </Pressable>
+            {message !== null && message.deleted === 0 ?
+              <Pressable
+                onPress={seeMessageInfo}
+                style={{
+                  height: 36,
+                  width: 36,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 18,
+                  backgroundColor: app_theme.colors.border + "50",
+                }}>
+                <IconApp pack='FI' name="info" size={18} color={app_theme.colors.text_design1} />
+              </Pressable> : null}
 
             <Pressable
               onPress={forwardMessage}
