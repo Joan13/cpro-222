@@ -7,7 +7,7 @@ export interface IYambiText {
     numberLines?: number;
     style?: TextStyle;
     size?: "xsmall" | "small" | "normal" | "big";
-    color?: "default" | "gray" | "high" | "high2" | "high3" | "design" | "error" | "success" | "badge" | "white"; // <<< AJOUT
+    color?: "default" | "gray" | "high" | "high2" | "high3" | "design" | "error" | "success" | "badge" | "white";
     lineThrough?: boolean;
 }
 
@@ -41,7 +41,7 @@ export const YambiText: React.FC<IYambiText> = ({
         error: theme.colors.error,
         success: theme.colors.success,
         badge: theme.colors.badge_color,
-        white: "white" // <<< AJOUT
+        white: "white"
     }[color];
 
     return (

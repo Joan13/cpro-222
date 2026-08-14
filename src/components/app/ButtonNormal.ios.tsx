@@ -17,11 +17,16 @@ export interface IButton {
     iconName?: string;
     iconPack?: string;
     iconSize?: number;
+    lowercase?: boolean;
+    textColor?: string;
 }
 
-const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, normal, outline, ghost, styles, disabled = false, loading, iconName, iconPack, iconSize = 16 }) => {
+const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, normal, outline, ghost, styles, disabled = false, loading, iconName, iconPack, iconSize = 16, lowercase = false, textColor }) => {
     const theme = useAppSelector(state => state.app_theme.colors);
     const loading_button = useAppSelector(state => state.app.loading_button);
+
+    const effectiveTextColor = textColor || (ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color);
+    const displayTitle = lowercase ? (title ? title.charAt(0).toUpperCase() + title.slice(1) : title) : title.toUpperCase();
 
     const show_load = () => {
         if (loading !== undefined) {
@@ -120,7 +125,7 @@ const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, 
                     }, animatedIndicatorStyle]}
                     onLayout={handleIndicatorLayout}>
                     <ActivityIndicator
-                        color={ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color}
+                        color={effectiveTextColor}
                         size="small"
                     />
                 </Animated.View>
@@ -139,13 +144,13 @@ const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, 
                             name={iconName}
                             pack={iconPack}
                             size={iconSize}
-                            color={ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color}
+                            color={effectiveTextColor}
                             styles={{ marginRight: title ? 8 : 0 }}
                         />
                     )}
                     <Text numberOfLines={1} style={{
-                        color: ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color,
-                    }}>{title.toUpperCase()}</Text>
+                        color: effectiveTextColor,
+                    }}>{displayTitle}</Text>
                 </Animated.View>
             </View>
         </Pressable>

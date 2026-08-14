@@ -1,4 +1,4 @@
-import { Text, Pressable, View, Image } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import { useEffect, useState } from 'react';
 import { NavProps } from "../../types/types";
 import { strings } from "../../lang/lang";
@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { useQuery, useRealm } from "@realm/react";
 import { Stories, UserBusinesses, UserContacts } from "../../store/database/Models";
 import { setShowModalApp } from "../../store/reducers/appSlice";
-import { TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray } from "../../components/app/Text";
+import { YambiText, TextNormalYambi, TextNormalYambiGray, TextSmallYambiGray } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
 import { FlashList } from "@shopify/flash-list";
 import StoriesList from "../../components/lists/stories/StoriesList";
@@ -168,7 +168,7 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                                 top: -2,
                                 right: -2
                             }}>
-                                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>{my_stories.length}</Text>
+                                <YambiText text={String(my_stories.length)} style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }} />
                             </View>
                         )}
                     </View>
@@ -269,14 +269,15 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                                             marginRight: 8
                                         }}>
                                         <IconApp pack="FI" name="edit-3" size={16} color={theme.button_foreground_color || "#FFFFFF"} />
-                                        <Text style={{
-                                            color: theme.button_foreground_color || '#FFFFFF',
-                                            fontWeight: 'bold',
-                                            fontSize: 13,
-                                            marginLeft: 6
-                                        }}>
-                                            {strings.create_status || "Text Story"}
-                                        </Text>
+                                        <YambiText
+                                            text={strings.create_status || "Text Story"}
+                                            style={{
+                                                color: theme.button_foreground_color || '#FFFFFF',
+                                                fontWeight: 'bold',
+                                                fontSize: 13,
+                                                marginLeft: 6
+                                            }}
+                                        />
                                     </Pressable>
 
                                     <Pressable
@@ -292,14 +293,15 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                                             marginLeft: 8
                                         }}>
                                         <IconApp pack="FI" name="camera" size={16} color={theme.button_foreground_color || "#FFFFFF"} />
-                                        <Text style={{
-                                            color: theme.button_foreground_color || '#FFFFFF',
-                                            fontWeight: 'bold',
-                                            fontSize: 13,
-                                            marginLeft: 6
-                                        }}>
-                                            {strings.send_photo || "Photo Story"}
-                                        </Text>
+                                        <YambiText
+                                            text={strings.send_photo || "Photo Story"}
+                                            style={{
+                                                color: theme.button_foreground_color || '#FFFFFF',
+                                                fontWeight: 'bold',
+                                                fontSize: 13,
+                                                marginLeft: 6
+                                            }}
+                                        />
                                     </Pressable>
                                 </View>
                             </View>

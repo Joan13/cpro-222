@@ -1,8 +1,8 @@
-import { View, ScrollView, TextInput, Image, Text, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator } from "react-native";
+import { View, ScrollView, TextInput, Image, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator, Text } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
-import { TextNormalYambiGray } from "../../components/app/Text";
+import { YambiText, TextNormalYambiGray } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
 import { setShowModalApp } from "../../store/reducers/appSlice";
 import { remote_host } from "../../../GlobalVariables";
@@ -14,8 +14,10 @@ import { IconApp } from "../../components/app/IconApp";
 import { FlashList } from "@shopify/flash-list";
 import ImagePicker from '../../utils/imagePicker';
 import NewStoryImagesList from "../../components/lists/stories/NewStoryImagesList";
+import BottomSheet from "../../components/app/BottomSheet";
+import ButtonNormal from "../../components/app/ButtonNormal";
 
-const COLOR_PALETTE = [
+const BACKGROUND_COLORS = [
     '#1D2A44', // Navy
     '#000000', // Black
     '#FFFFFF', // White
@@ -33,11 +35,39 @@ const COLOR_PALETTE = [
     '#2B6CB0'  // Royal Blue
 ];
 
+const FOREGROUND_COLORS = [
+    '#FFFFFF', // White
+    '#000000', // Black
+    '#E2E8F0', // Light Gray
+    '#CBD5E0', // Soft Silver Gray
+    '#A0AEC0', // Medium Light Gray
+    '#4A5568', // Slate Gray
+    '#FEB2B2', // Light Red / Soft Coral
+    '#FBD38D', // Light Warm Gold
+    '#FAF089', // Bright Light Yellow
+    '#9AE6B4', // Light Mint / Pastel Green
+    '#48BB78', // Soft Green
+    '#81E6D9', // Light Aqua / Teal
+    '#63B3ED', // Light Sky Blue
+    '#90CDF4', // Soft Pastel Blue
+    '#D6BCFA', // Light Lavender / Purple
+    '#FBB6CE', // Light Soft Pink
+];
+
+const isLightHex = (hex: string) => {
+    const lightList = [
+        '#FFFFFF', '#E2E8F0', '#CBD5E0', '#FEB2B2', '#FBD38D', 
+        '#FAF089', '#9AE6B4', '#81E6D9', '#63B3ED', '#90CDF4', 
+        '#D6BCFA', '#FBB6CE', '#D69E2E'
+    ];
+    return lightList.includes(hex.toUpperCase());
+};
+
 const NewStory = ({ navigation, route }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
     const [showInternetError, setShowInternetError] = useState<boolean>(false);
-    
+
     const initialFlag = route.params?.flag ?? 0;
     const [storyType, setStoryType] = useState<number>(initialFlag); // 0 = text, 1 = photo
 
@@ -48,6 +78,8 @@ const NewStory = ({ navigation, route }: NavProps) => {
     // Styling properties for text stories
     const [bgColor, setBgColor] = useState<string>('#1D2A44');
     const [fgColor, setFgColor] = useState<string>('#FFFFFF');
+    const [showBgColorSheet, setShowBgColorSheet] = useState<boolean>(false);
+    const [showTextColorSheet, setShowTextColorSheet] = useState<boolean>(false);
     const [fontWeight, setFontWeight] = useState<'normal' | 'bold' | '900'>('bold');
     const [fontStyle, setFontStyle] = useState<'normal' | 'italic'>('normal');
     const [textAlign, setTextAlign] = useState<'center' | 'left' | 'right'>('center');
@@ -179,52 +211,31 @@ const NewStory = ({ navigation, route }: NavProps) => {
                         borderWidth: 1,
                         borderColor: theme.colors.border
                     }}>
-                        <Pressable
+                        <ButtonNormal
+                            normal={storyType === 0}
+                            ghost={storyType !== 0}
+                            title={strings.text || "Text"}
                             onPress={() => setStoryType(0)}
-                            style={{
-                                flex: 1,
-                                paddingVertical: 10,
-                                borderRadius: 10,
-                                backgroundColor: storyType === 0 ? (theme.colors.button_background_color || theme.colors.high_color) : 'transparent',
-                                alignItems: 'center',
-                                flexDirection: 'row',
-                                justifyContent: 'center'
-                            }}>
-                            <IconApp pack="FI" name="edit-3" size={16} color={storyType === 0 ? theme.colors.button_foreground_color : theme.colors.gray} />
-                            <Text style={{
-                                color: storyType === 0 ? theme.colors.button_foreground_color : theme.colors.gray,
-                                fontWeight: 'bold',
-                                fontSize: 14,
-                                marginLeft: 8
-                            }}>
-                                {strings.create_status || "Text Story"}
-                            </Text>
-                        </Pressable>
-
-                        <Pressable
+                            iconName="edit-3"
+                            iconPack="FI"
+                            lowercase
+                            textColor={storyType === 0 ? theme.colors.button_foreground_color : theme.colors.gray}
+                            styles={{ flex: 1, borderRadius: 10 }}
+                        />
+                        <ButtonNormal
+                            normal={storyType === 1}
+                            ghost={storyType !== 1}
+                            title={strings.gallery || "Gallery"}
                             onPress={() => {
                                 setStoryType(1);
                                 pick_profile();
                             }}
-                            style={{
-                                flex: 1,
-                                paddingVertical: 10,
-                                borderRadius: 10,
-                                backgroundColor: storyType === 1 ? (theme.colors.button_background_color || theme.colors.high_color) : 'transparent',
-                                alignItems: 'center',
-                                flexDirection: 'row',
-                                justifyContent: 'center'
-                            }}>
-                            <IconApp pack="FI" name="camera" size={16} color={storyType === 1 ? theme.colors.button_foreground_color : theme.colors.gray} />
-                            <Text style={{
-                                color: storyType === 1 ? theme.colors.button_foreground_color : theme.colors.gray,
-                                fontWeight: 'bold',
-                                fontSize: 14,
-                                marginLeft: 8
-                            }}>
-                                {strings.send_photo || "Photo Story"}
-                            </Text>
-                        </Pressable>
+                            iconName="camera"
+                            iconPack="FI"
+                            lowercase
+                            textColor={storyType === 1 ? theme.colors.button_foreground_color : theme.colors.gray}
+                            styles={{ flex: 1, borderRadius: 10 }}
+                        />
                     </View>
 
                     {storyType === 0 ? (
@@ -262,66 +273,155 @@ const NewStory = ({ navigation, route }: NavProps) => {
                                 />
                             </View>
 
-                            {/* Background Colors Section */}
-                            <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: 'bold', marginBottom: 10 }}>
-                                Background Color
-                            </Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-                                {COLOR_PALETTE.map((c, i) => (
-                                    <Pressable
-                                        key={i}
-                                        onPress={() => setBgColor(c)}
-                                        style={{
-                                            width: 38,
-                                            height: 38,
-                                            borderRadius: 19,
-                                            backgroundColor: c,
-                                            marginRight: 10,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            borderWidth: c === '#FFFFFF' ? 1 : 0,
-                                            borderColor: '#CBD5E0',
-                                            transform: [{ scale: bgColor === c ? 1.15 : 1 }]
-                                        }}>
-                                        {bgColor === c && (
-                                            <IconApp pack="FI" name="check" size={18} color={c === '#FFFFFF' || c === '#D69E2E' ? '#000000' : '#FFFFFF'} />
-                                        )}
-                                    </Pressable>
-                                ))}
-                            </ScrollView>
+                            {/* Color Selection Buttons */}
+                            <YambiText
+                                text={strings.colors || "Colors"}
+                                style={{ color: theme.colors.text, fontSize: 14, fontWeight: 'bold', marginBottom: 10 }}
+                            />
+                            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 18 }}>
+                                {/* Background Color Trigger Button */}
+                                <Pressable
+                                    onPress={() => setShowBgColorSheet(true)}
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: theme.colors.card,
+                                        padding: 12,
+                                        borderRadius: 14,
+                                        borderWidth: 1,
+                                        borderColor: theme.colors.border,
+                                    }}>
+                                    <View style={{
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 14,
+                                        backgroundColor: bgColor,
+                                        marginRight: 10,
+                                        borderWidth: bgColor === '#FFFFFF' ? 1 : 0,
+                                        borderColor: '#CBD5E0',
+                                    }} />
+                                    <View style={{ flex: 1 }}>
+                                        <YambiText
+                                            text={strings.background_color || "Background Color"}
+                                            bold
+                                            size="small"
+                                            style={{ color: theme.colors.text }}
+                                        />
+                                    </View>
+                                    <IconApp pack="FI" name="chevron-down" size={16} color={theme.colors.gray} />
+                                </Pressable>
 
-                            {/* Foreground / Text Colors Section */}
-                            <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: 'bold', marginBottom: 10 }}>
-                                Text Color
-                            </Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-                                {COLOR_PALETTE.map((c, i) => (
-                                    <Pressable
-                                        key={i}
-                                        onPress={() => setFgColor(c)}
-                                        style={{
-                                            width: 38,
-                                            height: 38,
-                                            borderRadius: 19,
-                                            backgroundColor: c,
-                                            marginRight: 10,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            borderWidth: c === '#FFFFFF' ? 1 : 0,
-                                            borderColor: '#CBD5E0',
-                                            transform: [{ scale: fgColor === c ? 1.15 : 1 }]
-                                        }}>
-                                        {fgColor === c && (
-                                            <IconApp pack="FI" name="check" size={18} color={c === '#FFFFFF' || c === '#D69E2E' ? '#000000' : '#FFFFFF'} />
-                                        )}
-                                    </Pressable>
-                                ))}
-                            </ScrollView>
+                                {/* Text Color Trigger Button */}
+                                <Pressable
+                                    onPress={() => setShowTextColorSheet(true)}
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: theme.colors.card,
+                                        padding: 12,
+                                        borderRadius: 14,
+                                        borderWidth: 1,
+                                        borderColor: theme.colors.border,
+                                    }}>
+                                    <View style={{
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 14,
+                                        backgroundColor: fgColor,
+                                        marginRight: 10,
+                                        borderWidth: fgColor === '#FFFFFF' ? 1 : 0,
+                                        borderColor: '#CBD5E0',
+                                    }} />
+                                    <View style={{ flex: 1 }}>
+                                        <YambiText
+                                            text={strings.text_color || "Text Color"}
+                                            bold
+                                            size="small"
+                                            style={{ color: theme.colors.text }}
+                                        />
+                                    </View>
+                                    <IconApp pack="FI" name="chevron-down" size={16} color={theme.colors.gray} />
+                                </Pressable>
+                            </View>
+
+                            {/* Background Color Bottom Sheet */}
+                            <BottomSheet
+                                visible={showBgColorSheet}
+                                onClose={() => setShowBgColorSheet(false)}
+                                title={strings.select_background_color || "Select Background Color"}
+                            >
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center', paddingVertical: 12 }}>
+                                    {BACKGROUND_COLORS.map((c, i) => (
+                                        <Pressable
+                                            key={i}
+                                            onPress={() => {
+                                                setBgColor(c);
+                                            }}
+                                            onTouchEnd={() => {
+                                                setBgColor(c);
+                                            }}
+                                            style={{
+                                                width: 44,
+                                                height: 44,
+                                                borderRadius: 22,
+                                                backgroundColor: c,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                borderWidth: isLightHex(c) ? 1 : 0,
+                                                borderColor: '#CBD5E0',
+                                                transform: [{ scale: bgColor === c ? 1.15 : 1 }]
+                                            }}>
+                                            {bgColor === c && (
+                                                <IconApp pack="FI" name="check" size={20} color={isLightHex(c) ? '#000000' : '#FFFFFF'} />
+                                            )}
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            </BottomSheet>
+
+                            {/* Text Color Bottom Sheet */}
+                            <BottomSheet
+                                visible={showTextColorSheet}
+                                onClose={() => setShowTextColorSheet(false)}
+                                title={strings.select_text_color || "Select Text Color"}
+                            >
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center', paddingVertical: 12 }}>
+                                    {FOREGROUND_COLORS.map((c, i) => (
+                                        <Pressable
+                                            key={i}
+                                            onPress={() => {
+                                                setFgColor(c);
+                                            }}
+                                            onTouchEnd={() => {
+                                                setFgColor(c);
+                                            }}
+                                            style={{
+                                                width: 44,
+                                                height: 44,
+                                                borderRadius: 22,
+                                                backgroundColor: c,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                borderWidth: isLightHex(c) ? 1 : 0,
+                                                borderColor: '#CBD5E0',
+                                                transform: [{ scale: fgColor === c ? 1.15 : 1 }]
+                                            }}>
+                                            {fgColor === c && (
+                                                <IconApp pack="FI" name="check" size={20} color={isLightHex(c) ? '#000000' : '#FFFFFF'} />
+                                            )}
+                                        </Pressable>
+                                    ))}
+                                </View>
+                            </BottomSheet>
 
                             {/* Font Weight & Style Controls */}
-                            <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: 'bold', marginBottom: 10 }}>
-                                Text Style & Alignment
-                            </Text>
+                            <YambiText
+                                text={strings.text_style_alignment || "Text Style & Alignment"}
+
+                                style={{ color: theme.colors.text, marginBottom: 10 }}
+                            />
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
                                 {/* Weight option */}
                                 <View style={{ flexDirection: 'row', backgroundColor: theme.colors.card, borderRadius: 12, padding: 3, borderWidth: 1, borderColor: theme.colors.border }}>
@@ -340,7 +440,7 @@ const NewStory = ({ navigation, route }: NavProps) => {
                                                 fontWeight: w as any,
                                                 fontSize: 13
                                             }}>
-                                                {w === 'normal' ? 'Regular' : w === 'bold' ? 'Bold' : 'Heavy'}
+                                                {w === 'normal' ? (strings.regular || 'Regular') : w === 'bold' ? (strings.bold || 'Bold') : (strings.heavy || 'Heavy')}
                                             </Text>
                                         </Pressable>
                                     ))}
@@ -371,29 +471,15 @@ const NewStory = ({ navigation, route }: NavProps) => {
 
                             {/* Submit Button */}
                             {textStatus.trim().length > 0 && (
-                                <Pressable
+                                <ButtonNormal
+                                    normal
+                                    title={strings.publish_status || "Publish Status"}
                                     onPress={publishTextStatus}
-                                    disabled={loadingTextStatus}
-                                    style={{
-                                        height: 48,
-                                        borderRadius: 24,
-                                        backgroundColor: theme.colors.button_background_color,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        marginBottom: 30
-                                    }}>
-                                    {loadingTextStatus ? (
-                                        <ActivityIndicator color={theme.colors.button_foreground_color} size="small" />
-                                    ) : (
-                                        <>
-                                            <Text style={{ color: theme.colors.button_foreground_color, fontSize: 15, fontWeight: 'bold', marginRight: 8 }}>
-                                                {strings.publish_status || "Publish Status"}
-                                            </Text>
-                                            <IconApp pack="FI" name="send" size={16} color={theme.colors.button_foreground_color} />
-                                        </>
-                                    )}
-                                </Pressable>
+                                    loading={loadingTextStatus}
+                                    iconName="send"
+                                    iconPack="FI"
+                                    styles={{ marginBottom: 30 }}
+                                />
                             )}
                         </View>
                     ) : (
@@ -421,11 +507,12 @@ const NewStory = ({ navigation, route }: NavProps) => {
                                 <IconApp name="camera-plus" pack="MC" size={42} color={theme.colors.high_color} />
                             </Pressable>
 
-                            <Text style={{ color: theme.colors.high_color, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 12 }}>
-                                {strings.pick_photo_for_status || "Pick Photo for Status"}
-                            </Text>
+                            <YambiText
+                                text={strings.pick_photo_for_status || "Pick Photo for Status"}
+                                style={{ color: theme.colors.high_color, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 12 }}
+                            />
 
-                            <Pressable
+                            {/* <Pressable
                                 onPress={pick_profile}
                                 style={{
                                     marginTop: 10,
@@ -437,7 +524,7 @@ const NewStory = ({ navigation, route }: NavProps) => {
                                 <Text style={{ color: theme.colors.button_foreground_color, fontWeight: 'bold', fontSize: 14 }}>
                                     Open Gallery
                                 </Text>
-                            </Pressable>
+                            </Pressable> */}
                         </View>
                     )}
                 </ScrollView>

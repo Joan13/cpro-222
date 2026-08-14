@@ -2184,5 +2184,20 @@
   "reservations_desc": "View and manage reservations",
   "add_user_desc": "Add a staff member to this business",
   "admin_view_owner": "Admin: View as Owner",
-  "admin_view_owner_desc": "Navigate as the business owner to see all sections from their perspective."
+  "admin_view_owner_desc": "Navigate as the business owner to see all sections from their perspective.",
+  "background_color": "Background Color",
+  "text_color": "Text Color",
+  "colors": "Colors",
+  "tap_to_select": "Tap to select",
+  "select_background_color": "Select Background Color",
+  "select_text_color": "Select Text Color",
+  "text_story": "Text Story",
+  "photo_story": "Photo Story",
+  "publish_status": "Publish Status",
+  "regular": "Regular",
+  "bold": "Bold",
+  "heavy": "Heavy",
+  "text_style_alignment": "Text Style & Alignment",
+  "text": "Text",
+  "gallery": "Gallery"
 }

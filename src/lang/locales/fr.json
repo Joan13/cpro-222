@@ -2181,5 +2181,20 @@
   "reservations_desc": "Voir et gérer les réservations",
   "add_user_desc": "Ajouter un membre du personnel",
   "admin_view_owner": "Admin : Voir en tant que propriétaire",
-  "admin_view_owner_desc": "Naviguer en tant que propriétaire de l'entreprise pour voir toutes les sections de son point de vue."
+  "admin_view_owner_desc": "Naviguer en tant que propriétaire de l'entreprise pour voir toutes les sections de son point de vue.",
+  "background_color": "Couleur de fond",
+  "text_color": "Couleur du texte",
+  "colors": "Couleurs",
+  "tap_to_select": "Appuyez pour sélectionner",
+  "select_background_color": "Sélectionner la couleur de fond",
+  "select_text_color": "Sélectionner la couleur du texte",
+  "text_story": "Statut texte",
+  "photo_story": "Statut photo",
+  "publish_status": "Publier le statut",
+  "regular": "Normal",
+  "bold": "Gras",
+  "heavy": "Très gras",
+  "text_style_alignment": "Style & Alignement du texte",
+  "text": "Texte",
+  "gallery": "Galerie"
 }

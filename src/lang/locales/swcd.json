@@ -2180,5 +2180,20 @@
   "reservations_desc": "Angalia na udhibiti kutoridhishwa",
   "add_user_desc": "Ongeza mfanyakazi kwenye biashara hii",
   "admin_view_owner": "Admin: Angalia kama Mmiliki",
-  "admin_view_owner_desc": "Nenda kama mmiliki wa biashara ili kuona sehemu zote kwa mtazamo wao."
+  "admin_view_owner_desc": "Nenda kama mmiliki wa biashara ili kuona sehemu zote kwa mtazamo wao.",
+  "background_color": "Rangi ya Nyuma",
+  "text_color": "Rangi ya Maandishi",
+  "colors": "Rangi",
+  "tap_to_select": "Gusa ili kuchagua",
+  "select_background_color": "Chagua Rangi ya Nyuma",
+  "select_text_color": "Chagua Rangi ya Maandishi",
+  "text_story": "Hadithi ya Maandishi",
+  "photo_story": "Hadithi ya Picha",
+  "publish_status": "Chapisha Hali",
+  "regular": "Kawaida",
+  "bold": "Nono",
+  "heavy": "Nono Sana",
+  "text_style_alignment": "Mtindo na Mpangilio wa Maandishi",
+  "text": "Maandishi",
+  "gallery": "Picha"
 }
