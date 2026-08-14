@@ -466,27 +466,27 @@ export const PlayActionSound = async (index: number) => {
     };
 
     if (index === 1) {
-        // Vibration.vibrate(25);
+        // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         // playShortActionSound(require('./src/assets/sounds/Double_Pop.mp3'));
     }
 
     if (index === 2) {
-        // Vibration.vibrate(10);
+        // Haptics.selectionAsync();
         playShortActionSound(require('./src/assets/sounds/Single_Pop.mp3'));
     }
 
     if (index === 3) {
-        // Vibration.vibrate(25);
+        // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         playShortActionSound(require('./src/assets/sounds/Triple_Pop.mp3'));
     }
 
     if (index === 4) {
-        // Vibration.vibrate(10);
+        // Haptics.selectionAsync();
         playShortActionSound(require('./src/assets/sounds/Double_Pop.mp3'));
     }
 
     if (index === 5) {
-        // Vibration.vibrate(25);
+        // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         // playShortActionSound(require('./src/assets/sounds/Double_Pop.mp3'));
     }
 };

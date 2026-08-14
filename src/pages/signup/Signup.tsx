@@ -658,8 +658,6 @@ const Signup = ({ navigation, route }: NavProps) => {
     //         name: 'white',
     //         dark: false,
     //         statusbar: 'dark-content',
-    //         statusbar_tip1: 'dark-content',
-    //         statusbar_tip2: 'dark-content',
     //         colors: {
     //             primary: '#780006',
     //             background: '#FFFFFF',
@@ -674,10 +672,10 @@ const Signup = ({ navigation, route }: NavProps) => {
     //             high_color: 'rgb(0,80,180)',
     //             chat_sent: 'rgb(255, 235, 235)',
     //             chat_received: 'rgb(255, 255, 255)',
-    //             design_tip1: '#FFFFFF',
-    //             design_tip2: '#FFFFFF',
-    //             text_design1: '#780006',
-    //             text_design2: '#000000',
+    //             header_background_color: '#FFFFFF',
+    //             button_background_color: '#FFFFFF',
+    //             header_foreground_color: '#780006',
+    //             button_foreground_color: '#000000',
     //         },
     //     };
 
@@ -693,8 +691,6 @@ const Signup = ({ navigation, route }: NavProps) => {
     //         name: 'black',
     //         dark: true,
     //         statusbar: 'light-content',
-    //         statusbar_tip1: 'light-content',
-    //         statusbar_tip2: 'light-content',
     //         colors: {
     //             primary: 'rgb(255, 255, 255)',
     //             background: '#000000',
@@ -709,10 +705,10 @@ const Signup = ({ navigation, route }: NavProps) => {
     //             high_color: 'rgb(0,180,200)',
     //             chat_sent: 'rgb(50, 30, 30)',
     //             chat_received: '#000000',
-    //             design_tip1: '#000000',
-    //             design_tip2: '#000000',
-    //             text_design1: '#FFFFFF',
-    //             text_design2: '#FFFFFF',
+    //             header_background_color: '#000000',
+    //             button_background_color: '#000000',
+    //             header_foreground_color: '#FFFFFF',
+    //             button_foreground_color: '#FFFFFF',
     //         },
     //     };
 
@@ -727,8 +723,6 @@ const Signup = ({ navigation, route }: NavProps) => {
     //         name: 'white',
     //         dark: false,
     //         statusbar: 'dark-content',
-    //         statusbar_tip1: 'dark-content',
-    //         statusbar_tip2: 'dark-content',
     //         colors: {
     //             primary: '#780006',
     //             background: '#FFFFFF',
@@ -743,10 +737,10 @@ const Signup = ({ navigation, route }: NavProps) => {
     //             high_color: 'rgb(0,80,180)',
     //             chat_sent: 'rgb(255, 235, 235)',
     //             chat_received: 'rgb(255, 255, 255)',
-    //             design_tip1: '#FFFFFF',
-    //             design_tip2: '#FFFFFF',
-    //             text_design1: '#780006',
-    //             text_design2: '#000000',
+    //             header_background_color: '#FFFFFF',
+    //             button_background_color: '#FFFFFF',
+    //             header_foreground_color: '#780006',
+    //             button_foreground_color: '#000000',
     //         },
     //     };
 
@@ -939,7 +933,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                 style={[
                     styles.progressStep,
                     {
-                        backgroundColor: isActive ? app_theme.colors.design_tip2 : app_theme.colors.gray,
+                        backgroundColor: isActive ? app_theme.colors.button_background_color : app_theme.colors.gray,
                         width: `${100 / 3}%`,
                     },
                     animatedStyle
@@ -1152,7 +1146,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                                         onPress={handleContinueWithPhone}
                                         style={[styles.googleButton, { backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border }]}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                                            <MaterialIcons name="phone" size={20} color={app_theme.colors.design_tip2} style={{ marginRight: 10 }} />
+                                            <MaterialIcons name="phone" size={20} color={app_theme.colors.button_background_color} style={{ marginRight: 10 }} />
                                             <YambiText text={strings.continue_with_phone || "Continue with phone"} size="normal" color="default" style={{ color: app_theme.colors.text }} />
                                         </View>
                                     </Pressable>
@@ -1172,11 +1166,11 @@ const Signup = ({ navigation, route }: NavProps) => {
                                             styles.inputContainerCard,
                                             {
                                                 backgroundColor: app_theme.colors.border,
-                                                borderColor: isNameFocused ? app_theme.colors.design_tip2 : 'transparent',
+                                                borderColor: isNameFocused ? app_theme.colors.button_background_color : 'transparent',
                                                 borderWidth: 1.5,
                                             }
                                         ]}>
-                                        <FontAwesome name="user" color={isNameFocused ? app_theme.colors.design_tip2 : app_theme.colors.text} size={18} />
+                                        <FontAwesome name="user" color={isNameFocused ? app_theme.colors.button_background_color : app_theme.colors.text} size={18} />
                                         <View style={[styles.verticalDivider, { backgroundColor: app_theme.colors.gray + '40' }]} />
                                         <TextInput
                                             placeholder={strings.names}
@@ -1214,7 +1208,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                     <View style={{ width, paddingHorizontal: 30, alignItems: 'center' }}>
                         {is_loading && isGoogleSignIn ? (
                             <Animatable.View animation="bounceIn" style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 20 }}>
-                                <AppActivityIndicator color={app_theme.colors.design_tip2} size={40} />
+                                <AppActivityIndicator color={app_theme.colors.button_background_color} size={40} />
                                 <YambiText text={strings.creating_user || "Creating account..."} size="normal" color="default" style={{ marginTop: 20, textAlign: 'center', color: app_theme.colors.text }} />
                             </Animatable.View>
                         ) : (
@@ -1235,7 +1229,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                                         styles.inputContainerCard,
                                         {
                                             backgroundColor: app_theme.colors.border,
-                                            borderColor: isPhoneFocused ? app_theme.colors.design_tip2 : 'transparent',
+                                            borderColor: isPhoneFocused ? app_theme.colors.button_background_color : 'transparent',
                                             borderWidth: 1.5,
                                         }
                                     ]}>
@@ -1273,7 +1267,7 @@ const Signup = ({ navigation, route }: NavProps) => {
                     <View style={{ width, paddingHorizontal: 30, alignItems: 'center' }}>
                         {is_loading ? (
                             <Animatable.View animation="bounceIn" style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 20 }}>
-                                <AppActivityIndicator color={app_theme.colors.design_tip2} size={40} />
+                                <AppActivityIndicator color={app_theme.colors.button_background_color} size={40} />
                                 <Text style={{ color: app_theme.colors.text, textAlign: 'center', marginTop: 20 }}>
                                     {strings.creating_user}
                                 </Text>
@@ -1381,7 +1375,7 @@ const OtpInput = ({ value, onChangeText, length = 6, onFocus, app_theme }: { val
                                 {
                                     backgroundColor: app_theme.colors.border,
                                     borderColor: isFocused && isCurrent 
-                                        ? app_theme.colors.design_tip2 
+                                        ? app_theme.colors.button_background_color 
                                         : (hasValue ? app_theme.colors.text : app_theme.colors.border),
                                     borderWidth: isFocused && isCurrent ? 2 : 1,
                                 }
@@ -1396,7 +1390,7 @@ const OtpInput = ({ value, onChangeText, length = 6, onFocus, app_theme }: { val
                                 {char}
                             </Text>
                             {isFocused && isCurrent && (
-                                <View style={[styles.cursor, { backgroundColor: app_theme.colors.design_tip2 }]} />
+                                <View style={[styles.cursor, { backgroundColor: app_theme.colors.button_background_color }]} />
                             )}
                         </View>
                     );

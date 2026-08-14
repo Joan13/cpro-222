@@ -48,12 +48,12 @@ const SellsPointsList = ({ item,  }: { item: TSellsPoint, index: number }) => {
                         height: 50,
                         justifyContent: 'center',
                         alignItems: 'center',
-                        backgroundColor: app_theme.colors.design_tip2,
+                        backgroundColor: app_theme.colors.button_background_color,
                         paddingHorizontal: 8,
                         borderRadius: 5
                     }}>
                     <Text style={{
-                        color: app_theme.colors.text_design2
+                        color: app_theme.colors.button_foreground_color
                     }}>{strings.sell}</Text>
                 </Pressable>
             </View>

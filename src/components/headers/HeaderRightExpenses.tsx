@@ -25,7 +25,7 @@ const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
                     marginRight: 10
                 }}
             >
-                <IconApp pack="MC" name="calculator" size={20} color={theme.text_design1} />
+                <IconApp pack="MC" name="calculator" size={20} color={theme.header_foreground_color} />
             </Pressable>
             <Pressable
                 onPress={() => {
@@ -39,7 +39,7 @@ const HeaderRightExpenses = ({ navigation, route }: NavProps) => {
                     marginRight: 10
                 }}
             >
-                <IconApp pack="FI" name="plus" size={20} color={theme.text_design1} />
+                <IconApp pack="FI" name="plus" size={20} color={theme.header_foreground_color} />
             </Pressable>
         </View>
     );

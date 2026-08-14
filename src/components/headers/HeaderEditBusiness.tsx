@@ -154,7 +154,7 @@ const HeaderEditBusiness = ({ navigation, route }: NavProps) => {
                     marginLeft: 5,
                     // backgroundColor:'green'
                 }}>
-                <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />
+                <IconApp pack="MT" name="delete" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
         </View>
     )

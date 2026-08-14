@@ -16,6 +16,7 @@ import Animated, { FadeIn, FadeOut, useAnimatedStyle, withTiming, useSharedValue
 import * as FileSystem from 'expo-file-system/legacy';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { TextSmallYambi, TextSmallYambiGray, TextSmallYambiHighColor2 } from '../../app/Text';
+import moment from 'moment';
 
 const getWaveformHeights = (token: string, count: number) => {
     let hash = 0;
@@ -181,50 +182,50 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
         };
     }, [isNear, isPlaying, voice_note_being_played, message.main_text_message, sound]);
 
-    // const audioPath = RNFS.DocumentDirectoryPath + "YambiVoiceNotes/" + message.main_text_message;
+    const ensureDirExists = async () => {
+        try {
+            const dir = FileSystem.documentDirectory + "YambiVoiceNotes/";
+            const dirInfo = await FileSystem.getInfoAsync(dir);
+            if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+            }
+        } catch (e) { }
+    };
 
-    const audioPath = FileSystem.documentDirectory + "YambiVoiceNotes/" + message.main_text_message;
+    const getAudioFileUri = (): string => {
+        const raw = message.main_text_message || '';
+        if (raw.startsWith('file://') || raw.startsWith('/')) {
+            return raw;
+        }
+        const fileName = raw.split('/').pop() || '';
+        return FileSystem.documentDirectory + "YambiVoiceNotes/" + fileName;
+    };
 
-    // console.log(audioPath)
-    // FileSystem.documentDirectory + "/YambiDownloadedVoiceNotes/" + message.main_text_message;
-    // RNFS.DocumentDirectoryPath + "/YambiDownloadedVoiceNotes/" + message.main_text_message;
-
-    // console.log(message)
-
-    // const updateProgress = (status: AVPlaybackStatus) => {
-    //     if (status.isLoaded) {
-    //         // setPlaybackStatus(status);
-    //         if (status.isPlaying) {
-    //             const pro = status.positionMillis / status.playableDurationMillis;
-    //             setProgress(pro);
-
-    //             setVolume(status.volume);
-    //         }
-
-    //         dispatch(setPlayingVoiceNote(status.isPlaying));
-    //         if (status.isPlaying) {
-    //             setPlayTime(status.positionMillis);
-    //         }
-
-    //         setPlaying(status.isPlaying);
-    //     }
-    // };
-
-    // sound.current.setOnPlaybackStatusUpdate(updateProgress);
+    const loadSoundFile = async (targetPath: string) => {
+        try {
+            sound.replace({ uri: targetPath });
+            const info = await FileSystem.getInfoAsync(targetPath);
+            if (info.exists && info.size && info.size > 100) {
+                const sizeInBytes = info.size;
+                const sizeInKB = sizeInBytes / 1024;
+                const sizeInMB = sizeInKB / 1024;
+                setFileSize(sizeInKB > 1023 ? sizeInMB.toFixed(1) + "MB" : sizeInKB.toFixed(1) + "KB");
+            }
+        } catch (error) {
+            console.warn('loadSoundFile error:', error);
+        }
+    };
 
     const UploadVoiceNote = async () => {
+        if (!message.main_text_message) return;
+        setDownloadingAudio(true);
+        await ensureDirExists();
 
         let base_url = remote_host + "/yambi/API/upload_voice_note";
-
-        setDownloadingAudio(true);
-
-        // const fileInfo = await FileSystem.getInfoAsync(message.main_text_message);
-        const fileName = message.main_text_message.split('/').pop();
+        const fileName = message.main_text_message.split('/').pop() || '';
 
         const formData = new FormData();
         formData.append('voice_note', { uri: message.main_text_message, name: fileName, type: 'audio/m4a' } as never);
-
-        // console.log(message.main_text_message)
 
         try {
             const response = await axios.post(base_url, formData, {
@@ -233,22 +234,22 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                 },
             });
 
-            // console.error('✅ Upload réussi:', response.data.message);
-            // const json = JSON.parse(response.data);
-            if (parseInt(response.data.success) === 1) {
+            if (parseInt(response.data.success) === 1 && response.data.message) {
+                const serverFileName = response.data.message;
+                const newPath = FileSystem.documentDirectory + "YambiVoiceNotes/" + serverFileName;
 
-                const newPath = FileSystem.documentDirectory + "YambiVoiceNotes/" + response.data.message;
-
-                await FileSystem.moveAsync({
-                    from: message.main_text_message,
-                    to: newPath,
-                });
+                const localExists = await FileSystem.getInfoAsync(message.main_text_message);
+                if (localExists.exists && localExists.size && localExists.size > 100) {
+                    await FileSystem.copyAsync({
+                        from: message.main_text_message,
+                        to: newPath,
+                    }).catch(() => { });
+                }
 
                 const msg: TMessage = {
                     sender: message.sender,
                     receiver: message.receiver,
-                    // main_text_message: message.main_text_message,
-                    main_text_message: response.data.message,//message.main_text_message,
+                    main_text_message: serverFileName,
                     caption: message.caption,
                     message_type: 1,
                     reactions: message.reactions,
@@ -266,7 +267,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                     playedAt: message.playedAt,
                     cc: message.cc,
                     alignment: message.alignment
-                }
+                };
 
                 realm.write(() => {
                     try {
@@ -274,308 +275,131 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                     } catch (error) { }
                 });
 
-                //   dispatch(setMessageInbox(""));
-                //   dispatch(setResponseTo(""));
-
-                //   if (type === 0) {
                 SocketApp.emit('newMessage', msg);
-
-                // DownloadAudio(json.message);
+                await loadSoundFile(newPath);
             }
-
-            setDownloadingAudio(false);
-
-
         } catch (error) {
-            // console.error('❌ Upload échoué:', error.message || error);
+            console.warn('Upload voice note failed:', error);
+        } finally {
+            setDownloadingAudio(false);
         }
-
-        // try {
-        //     const response = await fetch(base_url, {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'multipart/form-data',
-        //         },
-        //         body: formData,
-        //     });
-
-        //     const result = await response.json();
-        //     console.log('Upload result:', result);
-
-        //     console.log(message.main_text_message);
-        // } catch (error) {
-        //     console.log(error)
-        // }
-
-        // try {
-        //     // console.log("Upload start")
-        //     const filePath = message.main_text_message;//FileSystem.documentDirectory + "YambiVoiceNotes/" + message.main_text_message + ".mp3";
-        //     const fileData = await FileSystem.readAsStringAsync(filePath, { encoding: FileSystem.EncodingType.Base64 });
-
-        //     const formData = new FormData();
-        //     // formData.append('voice_note', ... from fileData / file URI per platform)
-
-        //     axios.post(base_url, formData, {
-        //         headers: { Accept: 'application/json', 'Content-Type': 'multipart/form-data' },
-        //     }).then(async (response) => {
-        //         // console.log(response.data);
-        //         const json = JSON.parse(response.data);
-        //         if (parseInt(json.success) === 1) {
-
-        //             const newPath = FileSystem.documentDirectory + "YambiVoiceNotes/" + json.message;
-
-        //             await FileSystem.moveAsync({
-        //                 from: message.main_text_message,
-        //                 to: newPath,
-        //             });
-
-        //             const msg: TMessage = {
-        //                 sender: message.sender,
-        //                 receiver: message.receiver,
-        //                 // main_text_message: message.main_text_message,
-        //                 main_text_message: json.message,//message.main_text_message,
-        //                 caption: message.caption,
-        //                 message_type: 1,
-        //                 reactions: message.reactions,
-        //                 response_to: message.response_to,
-        //                 message_read: 0,
-        //                 read_once: message.read_once,
-        //                 flag: message.flag,
-        //                 message_effect: message.message_effect,
-        //                 token: message.token,
-        //                 deleted: message.deleted,
-        //                 platform: message.platform,
-        //                 createdAt: message.createdAt,
-        //                 receivedAt: message.receivedAt,
-        //                 readAt: message.readAt,
-        //                 playedAt: message.playedAt,
-        //                 cc: message.cc,
-        //                 alignment: message.alignment
-        //             }
-
-        //             realm.write(() => {
-        //                 try {
-        //                     realm.create('UsersMessages', msg, true);
-        //                 } catch (error) { }
-        //             });
-
-        //             //   dispatch(setMessageInbox(""));
-        //             //   dispatch(setResponseTo(""));
-
-        //             //   if (type === 0) {
-        //             SocketApp.emit('newMessage', msg);
-
-        //             // DownloadAudio(json.message);
-        //         }
-
-        //         setDownloadingAudio(false);
-        //     })
-        //         .catch(e => {
-        //             console.log(e);
-        //         })
-
-        // } catch (error) {
-        //     setDownloadingAudio(false);
-        //     console.log(error)
-        // }
     };
 
-    // const DownloadAudio = () => {
-    //     // const filePath = RNFS.DocumentDirectoryPath + "/YambiDownloadedVoiceNotes/" + +".pdf";
-
-    //     // console.log("Download start" + " " + message.main_text_message);
-
-    //     setDownloadingAudio(true);
-
-    //     // RNFS.downloadFile({
-    //     //     fromUrl: media_url + "/voice_notes/" + audioFile,
-    //     //     toFile: RNFS.DocumentDirectoryPath + "/YambiDownloadedVoiceNotes/" + audioFile,
-    //     //     // toFile: audioPath,
-    //     //     //   background: true, // Enable downloading in the background (iOS only)
-    //     //     //   discretionary: true, // Allow the OS to control the timing and speed (iOS only)
-    //     //     progress: (res) => {
-    //     //         // Handle download progress updates if needed
-    //     //         const progress = (res.bytesWritten / res.contentLength) * 100;
-    //     //         // console.log(`Progress: ${progress.toFixed(2)}%`);
-    //     //     },
-    //     // })
-    //     RNFS.downloadFile({
-    //         fromUrl: media_url + "/voice_notes/" + message.main_text_message,
-    //         toFile: FileSystem.documentDirectory + "YambiVoiceNotes/" + message.main_text_message,
-    //         // RNFS.DocumentDirectoryPath + "YambiVoiceNotes/" + audioFile,
-    //         // FileSystem.documentDirectory + "/YambiDownloadedVoiceNotes/" + audioFile,
-    //         // toFile: audioPath,
-    //         //   background: true, // Enable downloading in the background (iOS only)
-    //         //   discretionary: true, // Allow the OS to control the timing and speed (iOS only)
-    //         progress: (res) => {
-    //             // Handle download progress updates if needed
-    //             const progress = (res.bytesWritten / res.contentLength) * 100;
-    //             setDownloadProgress(progress);
-    //         },
-    //     })
-    //         .promise.then((response) => {
-    //             if (response.statusCode === 200) {
-
-    //                 loadSound();
-    //             console.log('File downloaded!', response);
-    //             setDownloadingAudio(false);
-    //             }
-
-    //             if (response.statusCode === 404) {
-    //                 console.log(message.main_text_message);
-    //                 UploadVoiceNote();
-    //             }
-    //         })
-    //         .catch((err) => {
-    //             setDownloadingAudio(false);
-    //             // console.log('Download error:', err);
-    //         });
-    // };
-
-
     const DownloadAudio = async () => {
-
-        // console.log(media_url + "/voice_notes/" + message.main_text_message.split('/').pop())
-
         setDownloadingAudio(true);
-        const uri = media_url + "/voice_notes/" + message.main_text_message
-        const fileUri = FileSystem.documentDirectory + "YambiVoiceNotes/" + message.main_text_message
+        setDownloadProgress(0);
+        await ensureDirExists();
 
-        const downloadResumable = FileSystem.createDownloadResumable(
-            uri, fileUri, {},
-            progress => {
-                // console.log('Download progress:', progress.totalBytesWritten / progress.totalBytesExpectedToWrite);
-                setDownloadProgress(progress.totalBytesWritten / progress.totalBytesExpectedToWrite);
-            }
-        );
+        const fileName = message.main_text_message ? message.main_text_message.split('/').pop() || '' : '';
+        if (!fileName) {
+            setDownloadingAudio(false);
+            return;
+        }
+
+        const downloadUrl = media_url + "/voice_notes/" + fileName;
+        const targetPath = FileSystem.documentDirectory + "YambiVoiceNotes/" + fileName;
 
         try {
-            const { uri } = await downloadResumable.downloadAsync();
-            // console.log('Finished downloading to:', uri);
-
-            loadSound();
-
-            setDownloadingAudio(false);
-            // return uri;
+            const res = await FileSystem.downloadAsync(downloadUrl, targetPath);
+            if (res.status === 200) {
+                const info = await FileSystem.getInfoAsync(targetPath);
+                if (info.exists && info.size && info.size > 100) {
+                    await loadSoundFile(targetPath);
+                } else {
+                    await FileSystem.deleteAsync(targetPath, { idempotent: true }).catch(() => { });
+                }
+            } else {
+                await FileSystem.deleteAsync(targetPath, { idempotent: true }).catch(() => { });
+            }
         } catch (e) {
-            // console.error('Download failed:', e);
+            console.warn('Download audio failed:', e);
+        } finally {
             setDownloadingAudio(false);
         }
     };
 
     const loadSound = async () => {
-        // console.log(audioPath);
-        try {
-            sound.replace({ uri: audioPath });
-        } catch (error) {
-            // console.log(error)
-        }
-    }
+        const targetPath = getAudioFileUri();
+        await loadSoundFile(targetPath);
+    };
 
     const FirstActions = async () => {
         try {
-            // Check if the file exists
-            // const exists = await RNFS.exists(RNFS.DocumentDirectoryPath + "YambiVoiceNotes/" + message.main_text_message);
+            await ensureDirExists();
+            const targetPath = getAudioFileUri();
+            const fileInfo = await FileSystem.getInfoAsync(targetPath);
 
-            // console.log("okok")
-            // if (exists) {
-            const fileInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "YambiVoiceNotes/" + message.main_text_message.split('/').pop());
-
-            // console.log(fileInfo)
-
-            // const fileInfo = message.main_text_message.split('/').pop();
-            if (fileInfo.exists) {
-
-                // console.log("okok")
-
-                // if (message.receiver === user_data.phone_number) {
-                //     console.log(fileInfo);
-                // }
-
-                loadSound();
-
-                const sizeInBytes = fileInfo.size || 0;
-                const sizeInKB = sizeInBytes / 1024;
-                const sizeInMB = sizeInKB / 1024;
-
-                setFileSize(sizeInKB > 1023 ? sizeInMB.toFixed(1) + "MB" : sizeInKB.toFixed(1) + "KB");
-            }
-            // console.log("File exists, can be loadeddd");
-
-            //   console.log(`File Size: ${sizeInKB.toFixed(2)} KB (${sizeInMB.toFixed(2)} MB)`);
-            // console.log('File exists:', message.main_text_message);
-            // }
-            // 
-            else {
-                // console.log("No file", message.main_text_message);
-
+            if (fileInfo.exists && fileInfo.size && fileInfo.size > 100) {
+                await loadSoundFile(targetPath);
+            } else {
                 if (message.sender === user_data.phone_number) {
-                    // console.log("Im the sender I upload it");
                     UploadVoiceNote();
                 } else {
-                    // console.log("I'm the receiver, I Download it");
                     DownloadAudio();
                 }
             }
         } catch (e) {
-
-            console.log(e)
-
+            console.warn('FirstActions error:', e);
         }
+    };
 
-        // loadSound();
-    }
+    const markAsPlayed = () => {
+        if (message.receiver === user_data.phone_number && (message.message_read < 4 || !message.playedAt)) {
+            const playedTime = moment().format();
+            const updatedMsg: TMessage = {
+                sender: message.sender,
+                receiver: message.receiver,
+                main_text_message: message.main_text_message,
+                caption: message.caption,
+                message_type: message.message_type,
+                reactions: message.reactions,
+                response_to: message.response_to,
+                message_read: 4,
+                read_once: message.read_once,
+                flag: message.flag,
+                message_effect: message.message_effect,
+                token: message.token,
+                deleted: message.deleted,
+                platform: message.platform,
+                createdAt: message.createdAt,
+                receivedAt: message.receivedAt,
+                readAt: message.readAt || playedTime,
+                playedAt: playedTime,
+                cc: message.cc,
+                alignment: message.alignment
+            };
+
+            realm.write(() => {
+                try {
+                    realm.create('UsersMessages', updatedMsg, true);
+                } catch (error) { }
+            });
+
+            SocketApp.emit('messagePlayed', updatedMsg);
+            axios.post(remote_host + '/yambi/API/set_message_played', { token: message.token }).catch(() => { });
+        }
+    };
 
     const PlayVoice = async () => {
-        if (!sound) {
-            // console.log("No sound")
+        if (!sound) return;
+
+        const targetPath = getAudioFileUri();
+        const fileInfo = await FileSystem.getInfoAsync(targetPath);
+
+        if (!status?.isLoaded || !fileInfo.exists || (fileInfo.size || 0) <= 100) {
+            if (message.sender === user_data.phone_number) {
+                UploadVoiceNote();
+            } else {
+                DownloadAudio();
+            }
             return;
         }
 
-        if (voice_note_being_played === message.main_text_message) { } else {
+        markAsPlayed();
+
+        if (voice_note_being_played !== message.main_text_message) {
             dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
-            // console.log("Set sound")
         }
-
-        // console.log(status)
-
-        // try {
-
-        //     // Check if the file exists
-        //     const exists = await RNFS.exists(RNFS.DocumentDirectoryPath + "/YambiDownloadedVoiceNotes/" + message.main_text_message);
-        //     console.log('File exists:', message.main_text_message);
-
-        //     if (exists) {
-        //         // console.log("File exists, can be played");
-
-        //         if (playing) {
-        //             onVoice(1);
-        //         } else {
-        //             onVoice(0);
-        //         }
-
-        //     } else {
-        //         // console.log("No file");
-
-        //         if (message.sender === user_data.phone_number) {
-        //             // console.log("Im the sender I upload it")
-        //             UploadVoiceNote();
-        //         } else {
-        //             // console.log("I'm the receiver, I Download it");
-        //             DownloadAudio();
-        //         }
-        //     }
-        // } catch (e) {
-
-        //     // console.log("Nooo")
-
-        // }
-
-        // console.log(sound)
-
-        // console.log(status)
-
-        // console.log(voice_note_being_played);
 
         if (status?.isLoaded && status?.playing === false && status?.didJustFinish === true) {
             setIsPaused(false);
@@ -583,43 +407,18 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             sound.play();
         }
         else if (status?.isLoaded && status?.playing && isPaused === false) {
-            // console.log("Pause sound");
-            // console.log("Is paused")
             setIsPaused(true);
             sound.pause();
-            // if (voice_note_being_played == message.main_text_message) {
-            // dispatch(setVoiceNoteBeingPlayed(""));
-            // }
-            // setPlayingVoiceNote(false);
         } else if (status?.isLoaded && (status?.playing === false && status?.didJustFinish === false && isPaused === false)) {
-
             setIsPaused(false);
-            // setPlayingVoiceNote(true);
-            // if (voice_note_being_played != message.main_text_message) {
-            // console.log(status);
-            // dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
-            // console.log(voice_note_being_played);
-            // }
             await sound.seekTo(0);
             sound.play();
         }
-        // else if (status?.isLoaded && !status?.isPlaying && !status?.didJustFinish) {
-        //     console.log(!status.isPlaying)
-        //     await sound.replayAsync();
-        // }
         else {
             setIsPaused(false);
-            // console.log("Playing sound: ");
-            // setPlayingVoiceNote(true);
-            // if (voice_note_being_played != message.main_text_message) {
-            // dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
-            // console.log("ok")
-            // }
             sound.play();
         }
-
-        // console.log(voice_note_being_played);
-    }
+    };
 
     const stopVoice = async () => {
         if (!sound) {

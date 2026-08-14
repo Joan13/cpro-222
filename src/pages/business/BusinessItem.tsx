@@ -104,7 +104,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                     alignItems: 'flex-end',
                                     justifyContent: 'center'
                                 }}>
-                                <IconApp pack="FI" name="more-vertical" size={20} color={theme.text_design1} />
+                                <IconApp pack="FI" name="more-vertical" size={20} color={theme.header_foreground_color} />
                             </Pressable>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
@@ -216,37 +216,39 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
         return () => { cancelled = true; };
     }, [sales_points]);
 
-    const imageView = useMemo(() => {
+    const imagesArray = useMemo(() => {
         try {
-            if (item.images && item.images !== "" && item.images !== "[]") {
-                const imgs = JSON.parse(item.images);
-                if (Array.isArray(imgs) && imgs.length > 0) {
-                    return (
-                        <ExpoImage
-                            style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }}
-                            source={media_url + "/items_images/" + imgs[0]}
-                            contentFit="cover"
-                        />
-                    );
-                }
-            }
-        } catch { }
-        return null;
+            if (!item.images || item.images === "" || item.images === "[]") return [];
+            const parsed = JSON.parse(item.images);
+            if (Array.isArray(parsed)) return parsed.filter(Boolean);
+            if (typeof parsed === 'string' && parsed) return [parsed];
+        } catch {
+            if (typeof item.images === 'string' && item.images.trim()) return [item.images.trim()];
+        }
+        return [];
     }, [item.images]);
 
-    const openItemPhotos = useCallback(() => {
-        try {
-            if (!item.images || item.images === "" || item.images === "[]") return;
-            const imgs: string[] = JSON.parse(item.images);
-            if (!Array.isArray(imgs) || imgs.length === 0) return;
-            const urls = imgs.map((filename) => media_url + "/items_images/" + filename);
-            if (urls.length === 1) {
-                navigation.navigate("ViewPhoto", { source: urls[0] });
-            } else {
-                navigation.navigate("ViewPhoto", { images: urls, initialIndex: 0 });
-            }
-        } catch { /* ignore */ }
-    }, [item.images, navigation]);
+    const imageUrls = useMemo(() => {
+        return imagesArray.map((filename) => media_url + "/items_images/" + filename);
+    }, [imagesArray]);
+
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+    useEffect(() => {
+        if (activeImageIndex >= imageUrls.length) {
+            setActiveImageIndex(Math.max(0, imageUrls.length - 1));
+        }
+    }, [imageUrls.length]);
+
+    const openItemPhotos = useCallback((indexToOpen?: number) => {
+        if (imageUrls.length === 0) return;
+        const targetIndex = indexToOpen !== undefined ? indexToOpen : activeImageIndex;
+        if (imageUrls.length === 1) {
+            navigation.navigate("ViewPhoto", { source: imageUrls[0] });
+        } else {
+            navigation.navigate("ViewPhoto", { images: imageUrls, initialIndex: targetIndex });
+        }
+    }, [imageUrls, activeImageIndex, navigation]);
 
     const show_category = (category: string) => {
         if (!category) return null;
@@ -363,32 +365,124 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
             style={{ backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }}>
             <View style={{ marginBottom: 50 }}>
                 {/* Image Section — only when the item has at least one image */}
-                {imageView ? (
-                    <View style={{ marginBottom: 20, position: 'relative' }}>
-                        <Pressable
-                            onPress={openItemPhotos}
-                            style={{ borderRadius: 16, overflow: 'hidden' }}
-                            accessibilityRole="imagebutton"
-                            accessibilityLabel="View photo">
-                            {imageView}
-                        </Pressable>
-                        {hasDiscount && (
-                            <View style={{
-                                position: 'absolute',
-                                top: 16,
-                                left: 16,
-                                backgroundColor: theme.error,
-                                borderRadius: 12,
-                                paddingHorizontal: 12,
-                                paddingVertical: 8,
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.25,
-                                shadowRadius: 4,
-                                elevation: 5,
-                            }}>
-                                <YambiText size="small" color="white" bold text={`-${item.discount_percentage}%`} />
-                            </View>
+                {imageUrls.length > 0 ? (
+                    <View style={{ marginBottom: 20 }}>
+                        <View style={{ position: 'relative', borderRadius: 16, overflow: 'hidden' }}>
+                            <Pressable
+                                onPress={() => openItemPhotos(activeImageIndex)}
+                                accessibilityRole="imagebutton"
+                                accessibilityLabel="View photo">
+                                <ExpoImage
+                                    style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }}
+                                    source={imageUrls[activeImageIndex] || imageUrls[0]}
+                                    contentFit="cover"
+                                />
+                            </Pressable>
+
+                            {/* Discount badge */}
+                            {hasDiscount && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 14,
+                                    left: 14,
+                                    backgroundColor: theme.error,
+                                    borderRadius: 12,
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 6,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 2 },
+                                    shadowOpacity: 0.25,
+                                    shadowRadius: 4,
+                                    elevation: 5,
+                                }}>
+                                    <YambiText size="small" color="white" bold text={`-${item.discount_percentage}%`} />
+                                </View>
+                            )}
+
+                            {/* Counter badge if multiple images */}
+                            {imageUrls.length > 1 && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 14,
+                                    right: 14,
+                                    backgroundColor: 'rgba(0,0,0,0.6)',
+                                    borderRadius: 12,
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 5,
+                                }}>
+                                    <YambiText size="xsmall" color="white" bold text={`${activeImageIndex + 1} / ${imageUrls.length}`} />
+                                </View>
+                            )}
+
+                            {/* Left/Right navigation arrows if multiple images */}
+                            {imageUrls.length > 1 && (
+                                <>
+                                    {activeImageIndex > 0 && (
+                                        <Pressable
+                                            onPress={() => setActiveImageIndex(prev => Math.max(0, prev - 1))}
+                                            hitSlop={8}
+                                            style={{
+                                                position: 'absolute',
+                                                left: 10,
+                                                top: '50%',
+                                                transform: [{ translateY: -18 }],
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 18,
+                                                backgroundColor: 'rgba(0,0,0,0.45)',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                            }}>
+                                            <IconApp pack="FI" name="chevron-left" size={20} color="#FFFFFF" />
+                                        </Pressable>
+                                    )}
+                                    {activeImageIndex < imageUrls.length - 1 && (
+                                        <Pressable
+                                            onPress={() => setActiveImageIndex(prev => Math.min(imageUrls.length - 1, prev + 1))}
+                                            hitSlop={8}
+                                            style={{
+                                                position: 'absolute',
+                                                right: 10,
+                                                top: '50%',
+                                                transform: [{ translateY: -18 }],
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 18,
+                                                backgroundColor: 'rgba(0,0,0,0.45)',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                            }}>
+                                            <IconApp pack="FI" name="chevron-right" size={20} color="#FFFFFF" />
+                                        </Pressable>
+                                    )}
+                                </>
+                            )}
+                        </View>
+
+                        {/* Thumbnail selector bar for multiple images */}
+                        {imageUrls.length > 1 && (
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingHorizontal: 2 }}>
+                                {imageUrls.map((url, idx) => (
+                                    <Pressable
+                                        key={idx}
+                                        onPress={() => setActiveImageIndex(idx)}
+                                        style={{
+                                            width: 60,
+                                            height: 60,
+                                            borderRadius: 12,
+                                            marginRight: 10,
+                                            overflow: 'hidden',
+                                            borderWidth: activeImageIndex === idx ? 2.5 : 1,
+                                            borderColor: activeImageIndex === idx ? theme.high_color : theme.border,
+                                            opacity: activeImageIndex === idx ? 1 : 0.65,
+                                        }}>
+                                        <ExpoImage style={{ width: '100%', height: '100%' }} source={url} contentFit="cover" />
+                                    </Pressable>
+                                ))}
+                            </ScrollView>
                         )}
                     </View>
                 ) : null}
@@ -703,7 +797,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
                     pack="FI"
                     name={Platform.OS === 'android' ? 'arrow-left' : 'chevron-left'}
                     size={22}
-                    color={theme.text_design1}
+                    color={theme.header_foreground_color}
                 />
             </Pressable>
         );
@@ -725,7 +819,7 @@ const BusinessItem = ({ navigation, route }: NavProps) => {
     }, [
         fromDeepLink,
         navigation,
-        theme.text_design1,
+        theme.header_foreground_color,
         loadingItem,
         cart,
         loadFailed,

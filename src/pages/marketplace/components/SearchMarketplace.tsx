@@ -13,6 +13,15 @@ import { setShowModalApp } from "../../../store/reducers/appSlice";
 import AppActivityIndicator from "../../../components/app/AppActivityIndicator";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+export const normalizeText = (text: string): string => {
+    if (!text) return "";
+    return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\p{L}\p{N}]/gu, "");
+};
+
 const SearchMarketplace = ({ navigation, route }: NavProps) => {
     const app_theme = useAppSelector(state => state.app_theme);
     const dispatch = useAppDispatch();
@@ -22,7 +31,8 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
     const inputRef = useRef<TextInput>(null);
 
     const searchItems = useCallback(async (query: string) => {
-        if (!query || query.trim() === "") {
+        const cleanQuery = normalizeText(query);
+        if (!cleanQuery) {
             setItems([]);
             return;
         }
@@ -35,8 +45,15 @@ const SearchMarketplace = ({ navigation, route }: NavProps) => {
             });
 
             if (res.data.success === "1") {
-                const newItems: TCartItem[] = res.data.data || [];
-                setItems(newItems);
+                const rawItems: TCartItem[] = res.data.data || [];
+                const filtered = rawItems.filter(cartItem => {
+                    const name = normalizeText(cartItem.item?.item_name || "");
+                    const desc = normalizeText(cartItem.item?.description_item || cartItem.item?.slogan || cartItem.item?.keywords || "");
+                    const cat = normalizeText(cartItem.item?.category || "");
+                    const biz = normalizeText(cartItem.business?.business_name || "");
+                    return name.includes(cleanQuery) || desc.includes(cleanQuery) || cat.includes(cleanQuery) || biz.includes(cleanQuery);
+                });
+                setItems(filtered.length > 0 ? filtered : rawItems);
             } else {
                 dispatch(setShowModalApp(true));
             }

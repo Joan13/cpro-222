@@ -181,11 +181,34 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
     // Ref to track if images were manually updated (to prevent useEffect from resetting)
     const imagesManuallyUpdatedRef = useRef<boolean>(false);
 
+    // --- Modal for Delete Photo ---
+    const [showDeletePhotoModal, setShowDeletePhotoModal] = useState<boolean>(false);
+    const [photoIndexToDelete, setPhotoIndexToDelete] = useState<number | null>(null);
+
+    const parseImagesArray = (rawImages: any): string[] => {
+        if (!rawImages) return [];
+        if (Array.isArray(rawImages)) return rawImages;
+        if (typeof rawImages === 'string') {
+            const trimmed = rawImages.trim();
+            if (trimmed === '' || trimmed === '[]') return [];
+            if (trimmed.startsWith('[')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+            return [trimmed];
+        }
+        return [];
+    };
+
     // --- Extract categories/subcategories from locale ---
     const items_categories = strings.items_categories;
     const [marketplace_visibility, setMarketplace_visibility] = useState<number>(0);
 
-    const planAllowsImages = useMemo(() => {
+    const maxImagesForPlan = useMemo(() => {
         const now = new Date();
         const activeSubscription = (persistedSubscriptions as TBusinessSubscription[])
             .filter((sub) => {
@@ -198,11 +221,15 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             })
             .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0];
 
-        if (!activeSubscription) return false;
+        if (!activeSubscription) return 0;
         const plan = Number(activeSubscription.subscription_plan ?? 0);
-        // Free: no images. Basic + Premium X + Ultimate: images allowed.
-        return plan >= 1;
+        if (plan === 1) return 1;
+        if (plan === 2) return 3;
+        if (plan === 3) return 5;
+        return 0;
     }, [persistedSubscriptions, business_id]);
+
+    const planAllowsImages = maxImagesForPlan > 0;
 
     const effectiveCanUploadImages = canUploadImages && planAllowsImages;
 
@@ -441,33 +468,54 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             return;
         }
 
-        if (itemImage === "") {
-            ImagePicker.openPicker({
-                width: 800,
-                height: 800,
-                cropping: true,
-                quality: 0.7,
-                noData: true,
-                mediaType: "photo",
-            }).then(image => {
-                setItemImage(image.path);
-            })
-                .catch((e) => { });
-        } else {
-            upload_item_image();
+        const imagesToUse = currentImages || itemm?.images || "";
+        const existingImages = parseImagesArray(imagesToUse);
+
+        if (existingImages.length >= maxImagesForPlan) {
+            Alert.alert(
+                strings.error || "Limit Reached",
+                `Your subscription plan allows up to ${maxImagesForPlan} image${maxImagesForPlan > 1 ? "s" : ""} per article.`,
+                [
+                    { text: strings.close || "Close", style: "cancel" },
+                    {
+                        text: (strings as any).upgrade_subscription || "Upgrade Plan",
+                        onPress: () => navigation.navigate("BusinessSubscriptionPlans", { business_id }),
+                    },
+                ]
+            );
+            return;
         }
+
+        ImagePicker.openPicker({
+            width: 800,
+            height: 800,
+            cropping: true,
+            quality: 0.7,
+            noData: true,
+            mediaType: "photo",
+        }).then(image => {
+            if (image && image.path) {
+                upload_item_image(image.path, image.mime);
+            }
+        })
+            .catch((e) => { });
     };
 
-    const upload_item_image = () => {
+    const upload_item_image = (fileUri?: string, fileMime?: string) => {
+        const uriToUpload = fileUri || itemImage;
+        if (itemm === null || !uriToUpload) return;
         setLoading_image(true);
+        setItemImage(uriToUpload);
 
         const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const mimeType = fileMime || 'image/jpeg';
+        const extension = mimeType.includes('png') ? 'png' : 'jpg';
 
         let base_url = remote_host + "/yambi/API/upload_item_image";
         let formData = new FormData();
         formData.append('assemble', itemm._id);
-        formData.append('item_images', itemm.images);
-        formData.append('image', { type: 'image/jpg', uri: itemImage, name: filename + 'item.jpg' } as any);
+        formData.append('item_images', currentImages || itemm.images || "");
+        formData.append('image', { type: mimeType, uri: uriToUpload, name: `${filename}item.${extension}` } as any);
 
         axios.post(base_url, formData, {
             headers: {
@@ -478,14 +526,11 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             .then(response => {
                 setLoading_image(false);
 
-                if (response.data.message === "1" && response.data.assemble === itemm._id) {
+                if (response.data.message === "1" && (response.data.assemble === itemm._id || !response.data.assemble)) {
+                    const updated_images = response.data.item_images;
 
-                    // const updated_images = response.data.item_images;
-                    // // Mark that images were manually updated
-                    // imagesManuallyUpdatedRef.current = true;
-                    // // Update local state immediately so UI reflects the change
-                    // setCurrentImages(updated_images);
-                    // updateItemImmediately({ images: updated_images });
+                    imagesManuallyUpdatedRef.current = true;
+                    setCurrentImages(updated_images);
 
                     const updatedItem: TItem = {
                         _id: itemm._id,
@@ -503,7 +548,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                         items_number_warehouse: itemm.items_number_warehouse,
                         description_item: itemm.description_item,
                         keywords: itemm.keywords,
-                        images: response.data.item_images,
+                        images: updated_images,
                         background: itemm.background,
                         item_active: itemm.item_active,
                         supplier: itemm.supplier,
@@ -530,14 +575,25 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             realm.create('UserBusinessArticles', updatedItem, true);
                         } catch (error) { }
                     });
+
+                    SocketApp.emit("newItems", JSON.stringify({ phone_number: user_data.phone_number, items: [updatedItem] }));
                 }
 
                 setItemImage("");
             })
             .catch((error) => {
-                setShowInternetError(true);
-                dispatch(setShowModalApp(true));
+                console.log("[UPLOAD ITEM IMAGE ERROR]", error?.response?.data || error);
+                const errCode = error?.response?.data?.error;
+                if (errCode === 'images_not_allowed') {
+                    Alert.alert(strings.error, strings.add_subscription_to_activate_locked_items);
+                } else if (errCode === 'image_limit') {
+                    Alert.alert(strings.error, strings.max_items_reached || "Limit reached.");
+                } else {
+                    setShowInternetError(true);
+                    dispatch(setShowModalApp(true));
+                }
                 setLoading_image(false);
+                setItemImage("");
             });
     };
 
@@ -599,14 +655,31 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
         SocketApp.emit("newItems", JSON.stringify({ phone_number: user_data.phone_number, items: [updatedItem] }));
     }, [itemm, realm, user_data, manufactureDate, expiryDate, suppliers]);
 
-    const ViewItemPhoto = () => {
-        if (itemm.images !== "") {
-            const imagesArray = JSON.parse(itemm.images);
-            if (imagesArray.length > 0) {
-                navigation.navigate("ViewPhoto", { source: media_url + "/items_images/" + imagesArray[0] });
-            } else {
-                navigation.navigate("ViewPhoto", { source: "" });
-            }
+    const confirmDeletePhoto = (index: number) => {
+        setPhotoIndexToDelete(index);
+        setShowDeletePhotoModal(true);
+        dispatch(setShowModalApp(true));
+    };
+
+    const handleDeletePhotoAction = () => {
+        if (photoIndexToDelete !== null) {
+            const imagesToUse = currentImages || itemm?.images || "";
+            const currentArray = parseImagesArray(imagesToUse);
+            const updatedArray = currentArray.filter((_, i) => i !== photoIndexToDelete);
+            const updatedImagesString = JSON.stringify(updatedArray);
+            updateItemImmediately({ images: updatedImagesString });
+        }
+        setShowDeletePhotoModal(false);
+        dispatch(setShowModalApp(false));
+        setPhotoIndexToDelete(null);
+    };
+
+    const ViewItemPhoto = (initialIndex: number = 0) => {
+        const imagesToUse = currentImages || itemm?.images || "";
+        const imagesArray = parseImagesArray(imagesToUse);
+        const urls = imagesArray.map(img => media_url + "/items_images/" + img);
+        if (urls.length > 0) {
+            navigation.navigate("ViewPhoto", { images: urls, initialIndex });
         } else {
             navigation.navigate("ViewPhoto", { source: "" });
         }
@@ -848,62 +921,99 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                 {showError && <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false); }} singleButton title={strings.error}><YambiText color="gray" text={validationErrorMsg || strings.fields_error_validation} /></ModalApp>}
                 {showInternetError && <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}><YambiText color="gray" text={strings.connection_failed} /></ModalApp>}
                 {showCurrencies && <ModalApp paddings={false} onClose={() => { dispatch(setShowModalApp(false)); setShowCurrencies(false); }} singleButton title={strings.currency}><Currencies /></ModalApp>}
+                {showDeletePhotoModal && (
+                    <ModalApp
+                        onClose={() => {
+                            setShowDeletePhotoModal(false);
+                            dispatch(setShowModalApp(false));
+                            setPhotoIndexToDelete(null);
+                        }}
+                        singleButton={false}
+                        textCancel={strings.cancel || "Cancel"}
+                        textAction={strings.delete || "Delete"}
+                        onAction={handleDeletePhotoAction}
+                        title={strings.delete || "Delete Photo"}
+                    >
+                        <YambiText color="gray" text="Are you sure you want to remove this photo?" />
+                    </ModalApp>
+                )}
 
                 <View style={{ marginTop: 16, paddingBottom: 50 }}>
 
                     {/* ── Image Upload Card ── */}
-                    {effectiveCanUploadImages && (
-                        <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12, alignItems: "center" }}>
-                            <View style={{
-                                width: 140, height: 140, borderRadius: 20, justifyContent: "center",
-                                alignItems: "center", overflow: "hidden", backgroundColor: theme.border,
-                            }}>
-                                {(() => {
-                                    if (itemImage !== "") {
-                                        return <ExpoImage style={{ width: 140, height: 140 }} contentFit="cover" source={itemImage} />;
-                                    }
-                                    const imagesToUse = currentImages || itemm.images || "";
-                                    if (imagesToUse === "" || imagesToUse === "[]") {
-                                        return (
-                                            <View style={{ alignItems: "center" }}>
-                                                <IconApp pack="FI" name="image" size={40} color={theme.gray} />
-                                                <YambiText size="small" color="gray" text={strings.add_item_picture} style={{ marginTop: 8, opacity: 0.6 }} />
-                                            </View>
-                                        );
-                                    }
-                                    try {
-                                        const imagesArray = JSON.parse(itemm.images);
-                                        if (imagesArray.length > 0) {
-                                            return <ExpoImage style={{ width: 140, height: 140 }} contentFit="cover" source={media_url + "/items_images/" + imagesArray[0]} />;
-                                        }
-                                    } catch (e) { }
-                                    return (
-                                        <View style={{ alignItems: "center" }}>
-                                            <IconApp pack="FI" name="image" size={40} color={theme.gray} />
-                                            <YambiText size="small" color="gray" text={strings.add_item_picture} style={{ marginTop: 8, opacity: 0.6 }} />
+                    {effectiveCanUploadImages && (() => {
+                        const imagesToUse = currentImages || itemm?.images || "";
+                        const imagesArray = parseImagesArray(imagesToUse);
+                        const count = imagesArray.length;
+
+                        return (
+                            <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                                        <IconApp pack="FI" name="image" size={16} color={theme.high_color} />
+                                        <YambiText bold text={strings.item_picture || "Item Photos"} style={{ marginLeft: 8 }} />
+                                    </View>
+                                    <View style={{ backgroundColor: theme.border, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                                        <YambiText size="small" bold color={count >= maxImagesForPlan ? "error" : "high"} text={`${count}/${maxImagesForPlan}`} />
+                                    </View>
+                                </View>
+
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    {imagesArray.map((imgFileName, idx) => (
+                                        <View key={idx} style={{ position: 'relative', marginRight: 12, marginVertical: 4 }}>
+                                            <Pressable onPress={() => ViewItemPhoto(idx)} style={{ width: 110, height: 110, borderRadius: 16, overflow: 'hidden', backgroundColor: theme.border }}>
+                                                <ExpoImage style={{ width: 110, height: 110 }} contentFit="cover" source={media_url + "/items_images/" + imgFileName} />
+                                            </Pressable>
+                                            <Pressable
+                                                onPress={() => confirmDeletePhoto(idx)}
+                                                hitSlop={6}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: -6,
+                                                    right: -6,
+                                                    backgroundColor: theme.error || '#FF3B30',
+                                                    width: 26,
+                                                    height: 26,
+                                                    borderRadius: 13,
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    borderWidth: 2,
+                                                    borderColor: theme.card,
+                                                    elevation: 3,
+                                                }}>
+                                                <IconApp pack="FI" name="trash-2" size={12} color="#FFFFFF" />
+                                            </Pressable>
                                         </View>
-                                    );
-                                })()}
-                            </View>
-                            <Pressable onPress={pick_item_image} style={{
-                                marginTop: 14, flexDirection: "row", alignItems: "center", justifyContent: "center",
-                                height: 42, paddingHorizontal: 20, borderRadius: 21, backgroundColor: theme.design_tip2,
-                            }}>
-                                {loading_image ? <ActivityIndicator color={theme.text_design2} size={18} /> :
-                                    itemImage === "" ? (
-                                        <>
-                                            <IconApp pack='FI' name="camera" size={18} color={theme.text_design2} />
-                                            <YambiText text={strings.change_item_picture} color="design" bold style={{ marginLeft: 8 }} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <IconApp pack='FI' name="upload-cloud" size={18} color={theme.text_design2} />
-                                            <YambiText text={strings.send} color="design" bold style={{ marginLeft: 8 }} />
-                                        </>
+                                    ))}
+
+                                    {loading_image && (
+                                        <View style={{ width: 110, height: 110, borderRadius: 16, backgroundColor: theme.border, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                                            <ActivityIndicator color={theme.high_color} size={24} />
+                                        </View>
                                     )}
-                            </Pressable>
-                        </View>
-                    )}
+
+                                    {count < maxImagesForPlan && !loading_image && (
+                                        <Pressable
+                                            onPress={pick_item_image}
+                                            style={{
+                                                width: 110,
+                                                height: 110,
+                                                borderRadius: 16,
+                                                borderWidth: 2,
+                                                borderColor: theme.high_color + "50",
+                                                borderStyle: 'dashed',
+                                                backgroundColor: theme.background,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                            }}>
+                                            <IconApp pack="FI" name="camera" size={24} color={theme.high_color} />
+                                            <YambiText size="xsmall" bold color="high" text={strings.add || "Add Photo"} style={{ marginTop: 6 }} />
+                                        </Pressable>
+                                    )}
+                                </ScrollView>
+                            </View>
+                        );
+                    })()}
 
                     {/* ── Settings Card ── */}
                     <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 16, marginBottom: 12 }}>
@@ -1290,13 +1400,9 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                             <YambiText bold text={strings.publish_to_marketplace} style={{ marginLeft: 8 }} />
                         </View>
                         {(() => {
-                            let hasImage = false;
-                            try {
-                                if (itemm.images && itemm.images !== "" && itemm.images !== "[]") {
-                                    const imagesArray = JSON.parse(itemm.images);
-                                    hasImage = Array.isArray(imagesArray) && imagesArray.length > 0;
-                                }
-                            } catch (e) { hasImage = false; }
+                            const imagesToUse = currentImages || itemm?.images || "";
+                            const imagesArray = parseImagesArray(imagesToUse);
+                            const hasImage = imagesArray.length > 0;
                             const hasSellingPrice = (retail_selling_price !== "" && parseFloat(retail_selling_price) > 0) || (wholesale_selling_price !== "" && parseFloat(wholesale_selling_price) > 0);
                             const stockCount = itemm ? itemm.items_number_stock : 0;
                             const hasItemsInStore = stockCount > 0;

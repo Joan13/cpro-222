@@ -29,20 +29,6 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
 
     // console.log(item)
 
-    const RemoveContact = () => {
-        const contact = contacts.find(element => element.phoneNumber === item.phone_number);
-
-        if (contact === undefined) {
-            realm.write(() => {
-                try {
-                    realm.delete(item);
-                } catch (error) {
-
-                }
-            });
-        }
-    }
-
     const contact_selected = () => {
         const contact = phone_numbers_list.find(cc => cc === item.phone_number);
 
@@ -94,9 +80,9 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
         }
     }
 
-    useEffect(() => {
-        RemoveContact();
-    }, [contacts]);
+    const displayName = ShowUserName(item.user_names || "", item.phone_number || "");
+    const isUnsaved = !displayName || displayName === item.phone_number || displayName.replace(/\D/g, '') === (item.phone_number || '').replace(/\D/g, '');
+    const titleText = isUnsaved ? formatPhoneInternational(item) : displayName;
 
     // console.log('item displayed');
     if (show_type() === 2) {
@@ -121,14 +107,13 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         source={require("./../../../assets/profile_black.jpg")} />
 
                     <YambiText
-                        text={item.user_names}
+                        text={titleText}
                         size="small"
                         color="default"
                         numberLines={2}
                         style={{
                             textAlign: 'center'
                         }}
-                    // text={ShowUserName(item.user_names, item.phone_number)} 
                     />
                 </View>
                 <Pressable
@@ -198,25 +183,17 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                                 width: 25,
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                backgroundColor: app_theme.colors.success,
+                                backgroundColor: app_theme.colors.background,
                                 position: "absolute"
                             }}>
-                            <View style={{
-                                backgroundColor: 'white',
-                                borderRadius: 50,
-                                height: 16,
-                                justifyContent: 'center',
-                                alignItems: 'center'
-                            }}>
-                                <IconApp name="check-circle" pack="FA" size={20} color={app_theme.colors.success} styles={{ marginTop: -2 }} />
-                            </View>
+                            <IconApp name="checkmark-circle" pack="IO" size={22} color={app_theme.colors.success} />
                         </Animated.View> : null}
                 </Pressable>
 
                 <View style={{ flex: 1, marginLeft: 15 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <YambiText 
-                            text={item.user_names}
+                            text={titleText}
                             size="normal"
                             color="default"
                             numberLines={1}
@@ -225,7 +202,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         {item.user_verified === 1 ?
                             <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                     </View>
-                    <YambiText text={formatPhoneInternational(item)} size="small" color="gray" numberLines={1} />
+                    {!isUnsaved ? <YambiText text={formatPhoneInternational(item)} size="small" color="gray" numberLines={1} /> : null}
                     {show_information() ?
                         <YambiText text={item.status_information} size="small" color="default" numberLines={3} /> : null}
                     {isAdmin ?
@@ -286,7 +263,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         alignItems: 'center'
                     }}>
                         <YambiText 
-                            text={item.user_names}
+                            text={titleText}
                             size="normal"
                             color="default"
                             numberLines={1}
@@ -295,7 +272,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                         {item.user_verified === 1 ?
                             <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                     </View>
-                    <YambiText text={formatPhoneInternational(item)} size="small" color="gray" numberLines={1} />
+                    {!isUnsaved ? <YambiText text={formatPhoneInternational(item)} size="small" color="gray" numberLines={1} /> : null}
                     {show_information() ?
                         <YambiText text={item.status_information} size="small" color="default" numberLines={3} /> : null}
                     {isAdmin ?

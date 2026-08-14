@@ -86,14 +86,14 @@ const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, 
         <Pressable
             style={[styles, {
                 height: 40,
-                backgroundColor: ghost ? "transparent" : outline ? "transparent" : normal ? theme.design_tip2 : theme.background,
+                backgroundColor: ghost ? "transparent" : outline ? "transparent" : normal ? theme.button_background_color : theme.background,
                 justifyContent: "center",
                 alignItems: 'center',
                 borderRadius: 7,
                 elevation: ghost ? 0 : outline ? 0 : 3,
                 borderWidth: ghost ? 0 : outline ? 1 : 0,
-                /* high_color: text_design1/2 are often white for solid buttons and match background on light themes */
-                borderColor: outline ? theme.high_color : theme.text_design2,
+                /* high_color: header_foreground_color & button_foreground_color are often white for solid buttons and match background on light themes */
+                borderColor: outline ? theme.high_color : theme.button_foreground_color,
                 opacity: disabled ? 0.5 : 1,
                 overflow: 'hidden'
             }]}
@@ -120,7 +120,7 @@ const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, 
                     }, animatedIndicatorStyle]}
                     onLayout={handleIndicatorLayout}>
                     <ActivityIndicator
-                        color={ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.text_design2 : theme.design_tip2}
+                        color={ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color}
                         size="small"
                     />
                 </Animated.View>
@@ -139,12 +139,12 @@ const ButtonNormal: React.FC<IButton> = ({ title, onPress, loadEnabled = false, 
                             name={iconName}
                             pack={iconPack}
                             size={iconSize}
-                            color={ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.text_design2 : theme.design_tip2}
+                            color={ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color}
                             styles={{ marginRight: title ? 8 : 0 }}
                         />
                     )}
                     <Text numberOfLines={1} style={{
-                        color: ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.text_design2 : theme.design_tip2,
+                        color: ghost ? theme.high_color : outline ? theme.high_color : normal ? theme.button_foreground_color : theme.button_background_color,
                     }}>{title.toUpperCase()}</Text>
                 </Animated.View>
             </View>

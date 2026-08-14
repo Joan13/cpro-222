@@ -110,7 +110,7 @@ const HeaderRightNewChat = () => {
                 justifyContent: 'center',
                 marginHorizontal: 5
             }}>
-                <ActivityIndicator size={20} color={theme.colors.text_design1} />
+                <ActivityIndicator size={20} color={theme.colors.header_foreground_color} />
             </View> */}
 
             <Pressable
@@ -122,7 +122,7 @@ const HeaderRightNewChat = () => {
                     justifyContent: 'center',
                     marginHorizontal: 5
                 }}>
-                <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
+                <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
 
             <Pressable
@@ -135,8 +135,8 @@ const HeaderRightNewChat = () => {
                     marginLeft: 5
                 }}>
                 {refreshing_contacts ?
-                    <AppActivityIndicator color={theme.colors.text_design1} /> :
-                    <IconApp pack="FI" name="refresh-ccw" size={20} color={theme.colors.text_design1} />}
+                    <AppActivityIndicator color={theme.colors.header_foreground_color} /> :
+                    <IconApp pack="FI" name="refresh-ccw" size={20} color={theme.colors.header_foreground_color} />}
             </Pressable>
         </View>
     )

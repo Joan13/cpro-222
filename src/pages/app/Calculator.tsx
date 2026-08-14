@@ -1,5 +1,6 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useState } from 'react';
+import * as Haptics from 'expo-haptics';
 import { useAppSelector } from '../../store/app/hooks';
 import { TextBigYambi, TextNormalYambiHighColor, TextSmallYambiGray, YambiText } from '../../components/app/Text';
 import { IconApp } from '../../components/app/IconApp';
@@ -132,7 +133,10 @@ const Calculator = ({}: NavProps) => {
         useBadgeColor?: boolean;
     }) => (
         <Pressable
-            onPress={onPress}
+            onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onPress();
+            }}
             style={[
                 {
                     flex: 1,

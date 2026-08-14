@@ -1,4 +1,5 @@
-import { View, Pressable, useWindowDimensions, Platform, Vibration, TextInput } from 'react-native';
+import { View, Pressable, useWindowDimensions, Platform, TextInput } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import ImagePicker from '../../utils/imagePicker';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -38,7 +39,7 @@ const SendPictureMessage = ({ navigation, route }: NavProps) => {
     const sendMessage = () => {
         if (profile !== "") {
             //   playActionSound(2);
-            Vibration.vibrate(10);
+            Haptics.selectionAsync();
             const time = moment(new Date()).format();
             const token = randomString(30) + renderDateUpToMilliseconds();
 
@@ -185,8 +186,8 @@ const SendPictureMessage = ({ navigation, route }: NavProps) => {
                     {profile !== "" ?
                         <Pressable
                             onPress={sendMessage}
-                            style={{ height: 50, width: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.design_tip2, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1, marginRight: 6 }}>
-                            <Ionicons name="send" size={18} color={app_theme.colors.text_design2} />
+                            style={{ height: 50, width: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.button_background_color, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1, marginRight: 6 }}>
+                            <Ionicons name="send" size={18} color={app_theme.colors.button_foreground_color} />
                         </Pressable> : null}
                 </View>
             </View>

@@ -322,7 +322,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     pack="FI"
                     name={Platform.OS === "android" ? "arrow-left" : "chevron-left"}
                     size={22}
-                    color={theme.text_design1}
+                    color={theme.header_foreground_color}
                 />
             </Pressable>
         );
@@ -334,7 +334,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
             return;
         }
         navigation.setOptions({ headerLeft });
-    }, [from_deep_link_catalog, catalogError, navigation, theme.text_design1]);
+    }, [from_deep_link_catalog, catalogError, navigation, theme.header_foreground_color]);
 
     const PLAN_MAX_ARTICLES: Record<number, number> = {
         0: 15,    // Free

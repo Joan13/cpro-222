@@ -2,6 +2,7 @@
 /* eslint-disable prettier/prettier */
 import { useEffect, useMemo, useRef } from 'react';
 import { useColorScheme, PermissionsAndroid, Platform, AppState } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import KeyboardRootView from './src/components/layout/KeyboardRootView';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -35,10 +36,10 @@ import { NavProps, RootStackParamList, TBusinessBadge, TChat, TContact, TItem, T
 // import changeNavigationBarColor from 'react-native-navigation-bar-color';
 import SplashYambiStart from './src/pages/splash/MainSplash';
 import Signup from './src/pages/signup/Signup';
-import Themes, { themes } from './src/pages/app/Themes';
+import Themes, { themes, isThemeAligned } from './src/pages/app/Themes';
 import * as Contacts from 'expo-contacts';
 import { contactNameByPhoneRegistry, getDefaultCallingCode, processPhoneContacts } from './src/services/ContactsService';
-import { setRawContacts, setTitle } from './src/store/reducers/appSlice';
+import { setRawContacts, setTitle, setUserTypingStatus } from './src/store/reducers/appSlice';
 import HomeRootStack from './src/pages/app/HomeRootStack';
 // import HeaderLeftHome from './src/components/headers/HeaderHome';
 // import HeaderRightHome from './src/components/headers/HeaderRightHome';
@@ -132,7 +133,7 @@ import {
 } from 'expo-notifications';
 // handleQuickReply and handleMarkAsReadAction are now handled in index.tsx at the top level
 import ViewPhoto from './src/pages/app/ViewPhoto';
-import { setAddBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace } from './src/store/reducers/persistedAppSlice';
+import { setAddBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace, setThemeSet } from './src/store/reducers/persistedAppSlice';
 import ContactUs from './src/pages/app/ContactUs';
 import HeaderRightInbox from './src/components/headers/HeaderRightInbox';
 import HeaderInbox from './src/components/headers/HeaderInbox';
@@ -389,13 +390,25 @@ const Yambi = ({ navigation }: NavProps) => {
 
     const dispatch = useAppDispatch();
     const user_data = useAppSelector(state => state.user_data);
-    // const current_user = useAppSelector(state => state.current_user);
-    //   const current_user = useAppSelector(state => state.current_user);
+    const current_user = useAppSelector(state => state.app.current_user);
     //   const messages_chat = useAppSelector(state => state.messages_chat);
     //   const messages_users = useAppSelector(state => state.messages_users);
     //   const presaved_messages_users = useAppSelector(state => state.presaved_messages_users);
     const app_theme = useAppSelector(state => state.app_theme);
-    // const chats_badge = useAppSelector(state => state.app.chats_badge);
+    const business_badge = useAppSelector(state => state.persisted_app.business_badge);
+    const unreadChats = useQuery(
+        UserChats, chts => {
+            return chts.filtered('chat_read == $0', 0);
+        }, []);
+
+    // Keep app launcher icon badge in sync (unread chats + business badges)
+    useEffect(() => {
+        const chatsBadgeCount = unreadChats ? unreadChats.length : 0;
+        const businessBadgeCount = business_badge ? business_badge.length : 0;
+        const totalBadgeCount = chatsBadgeCount + businessBadgeCount;
+
+        Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => {});
+    }, [unreadChats?.length, business_badge]);
     //   const socket_chat = useAppSelector(state => state.socket_chat);
     const language_yambi = useAppSelector(state => state.persisted_app.langApp);
     const title = useAppSelector(state => state.app.title);
@@ -409,6 +422,8 @@ const Yambi = ({ navigation }: NavProps) => {
     const lastLowStockReminderDateRef = useRef<string>("");
     const lastNoSalesReminderDateRef = useRef<string>("");
     const lastWeekendExpensesReminderDateRef = useRef<string>("");
+    // Tracks previous network state to detect offline→online transitions only
+    const prevConnectedRef = useRef<boolean | null>(null);
 
     useEffect(() => {
         const askPermission = async () => {
@@ -646,13 +661,9 @@ const Yambi = ({ navigation }: NavProps) => {
             }
         }
 
-        if (!theme_set) {
-            if (colorScheme === 'light') {
-                dispatch(setTheme(themes[0]));
-            } else {
-                dispatch(setTheme(themes[0]));
-                // dispatch(setTheme(themes[3]));
-            }
+        if (!theme_set || !isThemeAligned(app_theme)) {
+            dispatch(setTheme(themes[0]));
+            dispatch(setThemeSet(true));
         }
 
         if (language_yambi === "fr" || language_yambi === "sw_drc") {
@@ -826,6 +837,9 @@ const Yambi = ({ navigation }: NavProps) => {
     const NewMessagesInsert = (msgs) => {
         realm.write(() => {
             msgs.forEach((msg) => {
+                const existingLocalMsg = realm.objectForPrimaryKey('UsersMessages', msg.token) as any;
+                const isNewMessage = !existingLocalMsg;
+
                 let chat: TChat = {
                     _id: msg.sender,
                     phone_number: msg.sender,
@@ -862,8 +876,11 @@ const Yambi = ({ navigation }: NavProps) => {
                     }
                 }
 
-                // msg.cc = moment(msg.createdAt).format('DD/MM/YYYY');
-                msg.alignment = moment().utc().toISOString();//moment().format();
+                if (existingLocalMsg && existingLocalMsg.alignment) {
+                    msg.alignment = existingLocalMsg.alignment;
+                } else if (msg.sender !== user_data.phone_number || !msg.alignment) {
+                    msg.alignment = moment().utc().toISOString();
+                }
 
                 try {
                     // console.log(moment().format())
@@ -874,7 +891,23 @@ const Yambi = ({ navigation }: NavProps) => {
                     realm.create('UserChats', chat, true);
                 } catch (error) { }
 
-                // dispatch(setAddChatBadge(msg.sender));
+                // Trigger local notification if the message is new, from another user, and recipient isn't viewing their chat
+                if (isNewMessage && msg.sender !== user_data.phone_number) {
+                    const isAppActive = AppState.currentState === 'active';
+                    const isChatOpenWithSender = current_user === msg.sender;
+
+                    if (!isAppActive || !isChatOpenWithSender) {
+                        displayNotification({
+                            data: {
+                                title: msg.sender,
+                                body: msg.message_type === 0 ? msg.main_text_message : (msg.message_type === 1 ? strings.voice_note : strings.picture),
+                                user: msg.sender,
+                                screen: 'Inbox',
+                                message: JSON.stringify({ data: msg, tag: 0 })
+                            }
+                        });
+                    }
+                }
             });
 
             // if (msgs[i].message_read === 2) {
@@ -976,6 +1009,24 @@ const Yambi = ({ navigation }: NavProps) => {
 
         SocketApp.on('tellMeIfYouAreConnected' + user_data.phone_number, phone_number => {
             SocketApp.emit('yesImConnected', { phone2: user_data.phone_number, phone1: phone_number });
+        });
+
+        SocketApp.on('user_typing_status' + user_data.phone_number, data => {
+            try {
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+                if (parsed && parsed.sender) {
+                    dispatch(setUserTypingStatus({ sender: parsed.sender, status: parsed.status || '' }));
+                }
+            } catch (error) { }
+        });
+
+        SocketApp.on('user_typing_status', data => {
+            try {
+                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+                if (parsed && parsed.sender && parsed.recipient === user_data.phone_number) {
+                    dispatch(setUserTypingStatus({ sender: parsed.sender, status: parsed.status || '' }));
+                }
+            } catch (error) { }
         });
 
         SocketApp.emit("assemble", user_data.phone_number);
@@ -1695,7 +1746,10 @@ const Yambi = ({ navigation }: NavProps) => {
                 SocketApp.emit("newMessage", messagesQueue[i]);
             }
 
-            SocketApp.emit("assemble", user_data.phone_number);
+            // Socket is live so the app is running; always use 'assemble'.
+            // assemble_background is only for when the app is truly closed/backgrounded
+            // and is emitted via the AppState listener — not here.
+            SocketApp.emit('assemble', user_data.phone_number);
 
             SocketApp.emit("OnCheckStoriesUpdates", JSON.stringify({ phone_number: user_data.phone_number, contacts: all_contacts }));
 
@@ -1951,6 +2005,10 @@ const Yambi = ({ navigation }: NavProps) => {
         // console.log(realm.cre)
         // DatabaseYambi();
         // setRootViewBackgroundColor("red");
+        if (!theme_set || !isThemeAligned(app_theme)) {
+            dispatch(setTheme(themes[0]));
+            dispatch(setThemeSet(true));
+        }
         assemble();
 
         GetUserToken();
@@ -2286,48 +2344,43 @@ const Yambi = ({ navigation }: NavProps) => {
         };
     }, []);
 
-    // Reschedule expense reminder when setting changes
+    // Schedule expense reminder as a native OS daily alarm.
+    // Only re-schedules when the setting or user name changes; guards against
+    // unnecessary cancel+recreate when content hasn't changed.
     useEffect(() => {
         const scheduleDailyExpenseReminder = async () => {
             try {
-                // Only schedule if notifications are enabled
+                const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
+                const alreadyScheduled = allScheduled.some(n => n.identifier === 'daily-expense-reminder');
+
                 if (!app_description.enable_expense_reminder_notifications) {
-                    // Cancel any existing notifications if disabled
-                    const allNotifications = await Notifications.getAllScheduledNotificationsAsync();
-                    for (const notification of allNotifications) {
-                        if (notification.identifier === 'daily-expense-reminder') {
-                            await Notifications.cancelScheduledNotificationAsync('daily-expense-reminder');
-                        }
+                    // Cancel if it exists and the setting is now disabled
+                    if (alreadyScheduled) {
+                        await Notifications.cancelScheduledNotificationAsync('daily-expense-reminder');
                     }
                     return;
                 }
 
-                // Cancel any existing expense reminder notifications
-                const allNotifications = await Notifications.getAllScheduledNotificationsAsync();
-                for (const notification of allNotifications) {
-                    if (notification.identifier === 'daily-expense-reminder') {
-                        await Notifications.cancelScheduledNotificationAsync('daily-expense-reminder');
-                    }
-                }
-
-                // Get user name for personalized message
+                // Build the notification body
                 const userName = user_data.user_names || "";
-
-                // Create personalized body message
                 let bodyMessage = strings.expense_reminder_body || "Remember to enter your daily expenses to keep track of your spending.";
                 if (userName && strings.expense_reminder_body_with_name) {
                     bodyMessage = strings.expense_reminder_body_with_name.replace("{name}", userName);
                 }
 
-                // Schedule daily notification at 10 AM
+                // Cancel the old one only if it exists (content may have changed)
+                if (alreadyScheduled) {
+                    await Notifications.cancelScheduledNotificationAsync('daily-expense-reminder');
+                }
+
+                // Register a native daily alarm — fires at 10:00 AM every day,
+                // independently of whether the app is open or not.
                 await Notifications.scheduleNotificationAsync({
                     identifier: 'daily-expense-reminder',
                     content: {
                         title: strings.expense_reminder_title || "Don't forget your expenses!",
                         body: bodyMessage,
-                        data: {
-                            screen: 'AddExpense'
-                        },
+                        data: { screen: 'AddExpense' },
                         sound: true,
                     },
                     trigger: {
@@ -2344,24 +2397,26 @@ const Yambi = ({ navigation }: NavProps) => {
         scheduleDailyExpenseReminder();
     }, [app_description.enable_expense_reminder_notifications, user_data.user_names]);
 
-    // Daily low-stock reminder at 10:00 AM (sent once per day when low-stock items exist).
+    // Low-stock reminder: registered as a native OS daily alarm at 10:00 AM.
+    // The notification body is updated whenever the low-stock item list changes.
+    // Because it uses a DAILY trigger with a stable identifier, it fires even
+    // when the app is closed — no setInterval or AppState listener needed.
     useEffect(() => {
-        const maybeSendLowStockReminder = async () => {
+        const scheduleDailyLowStockReminder = async () => {
             try {
-                const now = new Date();
-                const todayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-
-                // We only send at/after 10:00 and never more than once per day.
-                if (now.getHours() < 10 || lastLowStockReminderDateRef.current === todayKey) {
-                    return;
-                }
-
                 const lowStockItems = Array.from(businessArticles as any).filter((item: any) => {
                     const quantity = Number(item.items_number_stock ?? 0);
                     const threshold = Number(item.alert_low_stock ?? 0);
                     return threshold > 0 && quantity > 0 && quantity <= threshold;
                 });
 
+                // Cancel any existing low-stock alarm — we always refresh the content
+                const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
+                if (allScheduled.some(n => n.identifier === 'low-stock-reminder')) {
+                    await Notifications.cancelScheduledNotificationAsync('low-stock-reminder');
+                }
+
+                // Nothing to notify about — leave cancelled
                 if (lowStockItems.length === 0) return;
 
                 const businessNameById = new Map<string, string>();
@@ -2388,79 +2443,72 @@ const Yambi = ({ navigation }: NavProps) => {
 
                 const body = `${strings.low_stock_reminder_intro} ${businessLines.join(" | ")}`.slice(0, 500);
 
+                // Register a native daily alarm — fires at 10:00 AM every day,
+                // independently of whether the app is open or not.
                 await Notifications.scheduleNotificationAsync({
+                    identifier: 'low-stock-reminder',
                     content: {
                         title: strings.low_stock_reminder_title,
                         body,
                         data: {},
                         sound: true,
                     },
-                    trigger: null,
+                    trigger: {
+                        type: SchedulableTriggerInputTypes.DAILY,
+                        hour: 10,
+                        minute: 0,
+                    },
                 });
-
-                lastLowStockReminderDateRef.current = todayKey;
             } catch (error) {
-                console.log("Error sending low stock reminder:", error);
+                console.log("Error scheduling low stock reminder:", error);
             }
         };
 
-        const interval = setInterval(() => {
-            maybeSendLowStockReminder();
-        }, 60 * 1000);
-
-        const appStateSubscription = AppState.addEventListener("change", (state) => {
-            if (state === "active") {
-                maybeSendLowStockReminder();
-            }
-        });
-
-        maybeSendLowStockReminder();
-
-        return () => {
-            clearInterval(interval);
-            appStateSubscription.remove();
-        };
+        scheduleDailyLowStockReminder();
     }, [businessArticles, businessesLocal, language_yambi]);
 
-    // Daily midday reminders:
-    // - Weekdays: if user has active businesses and no sales recorded yet, remind to record sales.
-    // - Weekends: remind to record expenses.
+    // Midday reminders: registered as native OS daily alarms at 12:00 PM.
+    // - weekday-no-sales-reminder: cancelled when a sale exists today; re-registered otherwise.
+    // - weekend-expenses-reminder: always scheduled; the user sees it on weekends.
+    // Both use a stable identifier + DAILY trigger so they fire even when the app is closed.
     useEffect(() => {
-        const maybeSendMiddayReminders = async () => {
+        const scheduleDailyMiddayReminders = async () => {
             try {
-                const now = new Date();
-                const todayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+                const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
+                const hasNoSales = allScheduled.some(n => n.identifier === 'midday-no-sales-reminder');
+                const hasWeekend = allScheduled.some(n => n.identifier === 'weekend-expenses-reminder');
 
-                // Trigger at/after 12:00 PM only.
-                if (now.getHours() < 12) return;
-
-                const day = now.getDay(); // 0 = Sunday, 6 = Saturday
-                const isWeekend = day === 0 || day === 6;
-
-                if (isWeekend) {
-                    if (lastWeekendExpensesReminderDateRef.current === todayKey) return;
-
+                // --- Weekend expenses reminder ---
+                // Schedule once; it fires at 12:00 every day — users will see it on weekends.
+                if (!hasWeekend) {
                     await Notifications.scheduleNotificationAsync({
+                        identifier: 'weekend-expenses-reminder',
                         content: {
                             title: strings.weekend_expenses_reminder_title,
                             body: strings.weekend_expenses_reminder_body,
                             data: {},
                             sound: true,
                         },
-                        trigger: null,
+                        trigger: {
+                            type: SchedulableTriggerInputTypes.DAILY,
+                            hour: 12,
+                            minute: 0,
+                        },
                     });
-
-                    lastWeekendExpensesReminderDateRef.current = todayKey;
-                    return;
                 }
 
-                if (lastNoSalesReminderDateRef.current === todayKey) return;
-
+                // --- Weekday no-sales reminder ---
                 const activeBusinessIds = Array.from(activeBusinessUsers as any)
                     .map((u: any) => u.business_id)
                     .filter((id: string) => !!id);
 
-                if (activeBusinessIds.length === 0) return;
+                if (activeBusinessIds.length === 0) {
+                    // No active businesses — cancel if scheduled
+                    if (hasNoSales) {
+                        await Notifications.cancelScheduledNotificationAsync('midday-no-sales-reminder');
+                    }
+                    return;
+                }
 
                 const startOfToday = new Date();
                 startOfToday.setHours(0, 0, 0, 0);
@@ -2475,41 +2523,98 @@ const Yambi = ({ navigation }: NavProps) => {
                     return createdAt >= startOfToday && createdAt <= endOfToday;
                 });
 
-                if (hasSaleToday) return;
-
-                await Notifications.scheduleNotificationAsync({
-                    content: {
-                        title: strings.no_sales_midday_reminder_title,
-                        body: strings.no_sales_midday_reminder_body,
-                        data: {},
-                        sound: true,
-                    },
-                    trigger: null,
-                });
-
-                lastNoSalesReminderDateRef.current = todayKey;
+                if (hasSaleToday) {
+                    // Sale already recorded today — cancel the reminder so it doesn't annoy the user
+                    if (hasNoSales) {
+                        await Notifications.cancelScheduledNotificationAsync('midday-no-sales-reminder');
+                    }
+                } else {
+                    // No sale yet — ensure the reminder is scheduled
+                    if (!hasNoSales) {
+                        await Notifications.scheduleNotificationAsync({
+                            identifier: 'midday-no-sales-reminder',
+                            content: {
+                                title: strings.no_sales_midday_reminder_title,
+                                body: strings.no_sales_midday_reminder_body,
+                                data: {},
+                                sound: true,
+                            },
+                            trigger: {
+                                type: SchedulableTriggerInputTypes.DAILY,
+                                hour: 12,
+                                minute: 0,
+                            },
+                        });
+                    }
+                }
             } catch (error) {
-                console.log("Error sending midday reminders:", error);
+                console.log("Error scheduling midday reminders:", error);
             }
         };
 
-        const interval = setInterval(() => {
-            maybeSendMiddayReminders();
-        }, 60 * 1000);
+        scheduleDailyMiddayReminders();
+    }, [activeBusinessUsers, saless, language_yambi]);
+
+    // AppState listener for socket lifecycle (assemble / assemble_background).
+    // Kept separate from the reminder scheduling to avoid coupling.
+    useEffect(() => {
+        const updateBadge = () => {
+            const chatsBadgeCount = unreadChats ? unreadChats.length : 0;
+            const businessBadgeCount = business_badge ? business_badge.length : 0;
+            const totalBadgeCount = chatsBadgeCount + businessBadgeCount;
+
+            Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => {});
+        };
 
         const appStateSubscription = AppState.addEventListener("change", (state) => {
+            updateBadge();
             if (state === "active") {
-                maybeSendMiddayReminders();
+                if (user_data.phone_number) {
+                    if (SocketApp.disconnected) {
+                        SocketApp.connect();
+                    }
+                    SocketApp.emit("assemble", user_data.phone_number);
+                }
+            } else if (state === "background" || state === "inactive") {
+                if (user_data.phone_number && SocketApp.connected) {
+                    SocketApp.emit("assemble_background", user_data.phone_number);
+                }
             }
         });
 
-        maybeSendMiddayReminders();
-
         return () => {
-            clearInterval(interval);
             appStateSubscription.remove();
         };
-    }, [activeBusinessUsers, saless, language_yambi]);
+    }, [user_data.phone_number, unreadChats?.length, business_badge]);
+
+    // Network connectivity listener — only reacts to a real offline→online transition.
+    // It reconnects the socket if needed; the socket's 'youConnected' event then
+    // naturally emits 'assemble', avoiding duplicate notifications.
+    useEffect(() => {
+        const unsubscribeNet = NetInfo.addEventListener((netState) => {
+            const isNowConnected = !!netState.isConnected;
+
+            // Only act when transitioning from disconnected to connected
+            if (isNowConnected && prevConnectedRef.current === false && user_data.phone_number) {
+                if (SocketApp.disconnected) {
+                    // Reconnecting the socket will trigger 'youConnected',
+                    // which handles the 'assemble' emit — no need to emit here.
+                    SocketApp.connect();
+                }
+                // If socket was already connected, emit assemble directly
+                // (youConnected won't fire again in that case)
+                else {
+                    SocketApp.emit('assemble', user_data.phone_number);
+                }
+            }
+
+            prevConnectedRef.current = isNowConnected;
+        });
+
+        return () => {
+            unsubscribeNet();
+        };
+    }, [user_data.phone_number]);
 
     // const animationApp =()=> {
     //     let value:string = '';
@@ -2664,13 +2769,13 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Themes" options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
                                 fontWeight: app_description.title_font_weight as any,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.select_theme
                         }} component={Themes} />
@@ -2678,13 +2783,13 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewGroup" options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
                                 fontWeight: app_description.title_font_weight as any,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_group
                         }} component={NewGroup} />
@@ -2699,13 +2804,13 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerBackButtonDisplayMode: 'minimal',
                             headerBackButtonMenuEnabled: false,
                             headerShown: false, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
                             headerTitleStyle: {
                                 fontSize: app_description.home_title_font_size,
                                 fontWeight: app_description.home_title_font_weight as any,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             // animation: 'fade',
                             // headerRight: () => (
                             //     <HeaderRightHome />
@@ -2724,9 +2829,9 @@ const Yambi = ({ navigation }: NavProps) => {
                                 headerTransparent: false,
                                 headerTitle: '',
                                 headerStyle: {
-                                    backgroundColor: app_theme.colors.design_tip1,
+                                    backgroundColor: app_theme.colors.header_background_color,
                                 },
-                                headerTintColor: app_theme.colors.text_design1,
+                                headerTintColor: app_theme.colors.header_foreground_color,
                                 headerTitleStyle: {
                                     fontSize: app_description.inbox_title_size,
                                     fontWeight: app_description.inbox_title_font_weight as any,
@@ -2754,9 +2859,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewChat" component={NewChat} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.contacts + "  (" + all_contacts.length + ")",
                             headerTitleStyle: {
@@ -2775,9 +2880,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Business" component={Business} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.business,
                             headerTitleStyle: {
@@ -2792,9 +2897,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="BusinessViewModern" component={BusinessViewModern} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: route.params?.business?.business_name || strings.business,
                             headerTitleStyle: {
@@ -2806,9 +2911,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="AdminBusiness" component={AdminBusiness} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: route.params?.business?.business_name || strings.business,
                             headerTitleStyle: {
@@ -2821,9 +2926,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             title: strings.inventory || "Inventory",
                         }} />
 
@@ -2831,9 +2936,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             title: strings.users || "Users",
                         }} />
 
@@ -2841,9 +2946,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             title: strings.sales || "Sales",
                         }} />
 
@@ -2851,9 +2956,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             title: (strings as any).edit_subscription || "Edit Subscription",
                         }} />
 
@@ -2861,9 +2966,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.business,
                             headerTitleStyle: {
@@ -2875,9 +2980,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewBusinessItem" component={NewBusinessItem} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.add_item,
                             headerTitleStyle: {
@@ -2889,9 +2994,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewSalesPoint" component={NewSalesPoint} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_sales_point,
                             headerTitleStyle: {
@@ -2903,9 +3008,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="AddItemSale" component={AddItemSale} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
@@ -2916,9 +3021,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="BusinessItem" component={BusinessItem} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
@@ -2929,9 +3034,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Cart" component={Cart} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.cart,
                             headerTitleStyle: {
@@ -2946,9 +3051,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="SearchMarketplace" component={SearchMarketplace} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: false, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.search_marketplace,
                             headerTitleStyle: {
@@ -2960,9 +3065,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="BusinessItems" component={BusinessItemss} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.items,
                             headerTitleStyle: {
@@ -2977,9 +3082,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="BusinessSales" component={SalesModern} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.sales,
                             headerTitleStyle: {
@@ -2991,9 +3096,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="ItemSales" component={ItemSales} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.sales,
                             headerTitleStyle: {
@@ -3005,9 +3110,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="SettingsYambi" component={SettingsYambi} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: false, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             // animation: 'fade',
                             // animationDuration: 500,
                             // animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
@@ -3023,9 +3128,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Languages" component={Languages} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.select_language,
                             headerTitleStyle: {
@@ -3037,9 +3142,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="AboutYambi" component={AboutYambi} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.about_yambi,
                             headerTitleStyle: {
@@ -3051,9 +3156,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="MakeDonation" component={MakeDonation} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.support_the_project || strings.make_donation,
                             headerTitleStyle: {
@@ -3065,9 +3170,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="AddBusinessSubscription" component={AddBusinessSubscription} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.renew_subscription || "Renew Subscription",
                             headerTitleStyle: {
@@ -3079,9 +3184,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="BusinessSubscriptionPlans" component={BusinessSubscriptionPlans} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).subscription_plans || "Subscription Plans",
                             headerTitleStyle: {
@@ -3094,9 +3199,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).select_payment_method || "Payment method",
                             headerTitleStyle: {
@@ -3108,9 +3213,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="SubscriptionHistory" component={SubscriptionHistory} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).subscription_history || "Subscription History",
                             headerTitleStyle: {
@@ -3123,9 +3228,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title:
                                 route.params?.share_kind === 'item'
@@ -3141,9 +3246,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.inventory_movement_history,
                             headerTitleStyle: {
@@ -3156,9 +3261,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.inventory_movement,
                             headerTitleStyle: {
@@ -3170,9 +3275,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="UpdateYambi" component={UpdateYambi} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.update_yambi,
                             headerTitleStyle: {
@@ -3184,9 +3289,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="PictureMessage" component={SendPictureMessage} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: 'slide_from_bottom',
                             title: strings.select_picture,
                             headerTitleStyle: {
@@ -3198,9 +3303,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditProfile" component={EditProfile} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_profile,
                             headerTitleStyle: {
@@ -3212,9 +3317,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="ViewFullInboxImage" component={ViewFullInboxImage} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.picture,
                             headerTitleStyle: {
@@ -3226,9 +3331,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewBusiness" component={NewBusinesses} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_business,
                             headerTitleStyle: {
@@ -3240,9 +3345,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewBusinessUser" component={NewBusinessUser} options={{
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_business_user,
                             headerTitleStyle: {
@@ -3254,9 +3359,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditBusinessItem" component={EditBusinessItem} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_item,
                             headerTitleStyle: {
@@ -3272,9 +3377,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1,
+                                backgroundColor: app_theme.colors.header_background_color,
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.renew_stock,
                             headerTitleStyle: {
@@ -3286,9 +3391,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditBusiness" component={EditBusiness} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_business,
                             headerTitleStyle: {
@@ -3303,9 +3408,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditSalesPoint" component={EditSalesPoint} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_sales_point,
                             headerTitleStyle: {
@@ -3320,9 +3425,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Sale" component={Sale} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.sale_operation,
                             headerTitleStyle: {
@@ -3337,9 +3442,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditSalePayments" component={EditSalePayments} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).payments || "Payments",
                             headerTitleStyle: {
@@ -3351,9 +3456,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).payment_details,
                             headerTitleStyle: {
@@ -3371,9 +3476,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Customize" component={Customize} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.customize || "Customize",
                             headerTitleStyle: {
@@ -3385,9 +3490,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="CustomizeBusiness" component={CustomizeBusiness} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.customize_business_actions,
                             headerTitleStyle: {
@@ -3402,9 +3507,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="CustomizeExpenses" component={CustomizeExpenses} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.customize_expenses || "Customize expenses",
                             headerTitleStyle: {
@@ -3416,9 +3521,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="UserBusinessUsers" component={UserBusinessUsers} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.users,
                             headerTitleStyle: {
@@ -3433,9 +3538,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="BusinessSubscribers" component={BusinessSubscribers} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.followers,
                             headerTitleStyle: {
@@ -3447,9 +3552,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="MessageUs" component={MessageUs} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.message_us,
                             headerTitleStyle: {
@@ -3464,11 +3569,11 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="ViewPhoto" component={ViewPhoto} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
                             // presentation: 'modal',
                             gestureEnabled: true,
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.picture,
                             headerTitleStyle: {
@@ -3483,9 +3588,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditBusinessUser" component={EditBusinessUser} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_user,
                             headerTitleStyle: {
@@ -3500,9 +3605,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="ContactUs" component={ContactUs} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.contact_us,
                             headerTitleStyle: {
@@ -3517,9 +3622,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="MyAccount" component={MyAccount} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.my_account,
                             headerTitleStyle: {
@@ -3534,9 +3639,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="CategoryItems" component={CategoryItems} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
@@ -3550,9 +3655,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewCompany" component={NewCompany} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_company,
                             headerTitleStyle: {
@@ -3567,9 +3672,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="NewCompanyUser" component={NewCompanyUser} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.add_user,
                             headerTitleStyle: {
@@ -3584,9 +3689,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditCompany" component={EditCompany} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_company,
                             headerTitleStyle: {
@@ -3598,9 +3703,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditCompanyUser" component={EditCompanyUser} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_company_user,
                             headerTitleStyle: {
@@ -3614,9 +3719,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             return {
                                 headerShadowVisible: false,
                                 headerShown: true, headerStyle: {
-                                    backgroundColor: app_theme.colors.design_tip1
+                                    backgroundColor: app_theme.colors.header_background_color
                                 },
-                                headerTintColor: app_theme.colors.text_design1,
+                                headerTintColor: app_theme.colors.header_foreground_color,
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                                 title: flag === 1 ? ((strings as any).post_news || "Post News") : ((strings as any).add_timetable || "Add Timetable"),
                                 headerTitleStyle: {
@@ -3629,9 +3734,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="EditNews" component={EditNews} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).edit_news || "Edit News",
                             headerTitleStyle: {
@@ -3646,9 +3751,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             return {
                                 headerShadowVisible: false,
                                 headerShown: true, headerStyle: {
-                                    backgroundColor: app_theme.colors.design_tip1
+                                    backgroundColor: app_theme.colors.header_background_color
                                 },
-                                headerTintColor: app_theme.colors.text_design1,
+                                headerTintColor: app_theme.colors.header_foreground_color,
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                                 title: title,
                                 headerTitleStyle: {
@@ -3661,9 +3766,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Post" component={Post} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).news || "Post",
                             headerTitleStyle: {
@@ -3675,9 +3780,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="PostReactions" component={PostReactions} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).reactions || strings.reactions || "Reactions",
                             headerTitleStyle: {
@@ -3689,9 +3794,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="CompanyUser" component={CompanyUser} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.user_details || strings.user_name,
                             headerTitleStyle: {
@@ -3706,9 +3811,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Companies" component={Companies} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.companies,
                             headerTitleStyle: {
@@ -3720,9 +3825,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Company" component={Company} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.companies,
                             headerTitleStyle: {
@@ -3734,9 +3839,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Timetables" component={Timetables} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.timetable || "Timetable",
                             headerTitleStyle: {
@@ -3748,9 +3853,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="ForwardMessage" component={ForwardMessage} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.forward_to + "...",
                             headerTitleStyle: {
@@ -3765,9 +3870,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="MessageInfo" component={MessageInfo} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: "",
                             headerTitleStyle: {
@@ -3779,9 +3884,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="UserProfileInfo" component={UserProfileInfo} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.user_information,
                             headerTitleStyle: {
@@ -3793,9 +3898,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="AllMessages" component={AllMessages} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.all_messages,
                             headerTitleStyle: {
@@ -3807,9 +3912,9 @@ const Yambi = ({ navigation }: NavProps) => {
                         <Stack.Screen name="Stories" component={Stories} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.stories,
                             headerTitleStyle: {
@@ -3822,9 +3927,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_story,
                             headerTitleStyle: {
@@ -3837,9 +3942,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             // title: strings.story,
                             headerTitleStyle: {
@@ -3852,9 +3957,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.calculator,
                             headerTitleStyle: {
@@ -3867,9 +3972,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: route.params?.flag === 1
                                 ? (strings.business_expenses || "Business Expenses")
@@ -3889,9 +3994,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: route.params?.flag === 1
                                 ? (strings.business_expenses || "Business Expenses")
@@ -3911,9 +4016,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).view_reservations || "Reservations",
                             headerTitleStyle: {
@@ -3926,9 +4031,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: (strings as any).reservation_detail || "Reservation detail",
                             headerTitleStyle: {
@@ -3941,9 +4046,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit || "Edit Reservation",
                             headerTitleStyle: {
@@ -3956,9 +4061,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.add_expense || "Add Expense",
                             headerTitleStyle: {
@@ -3971,9 +4076,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.expense || "Expense",
                             headerTitleStyle: {
@@ -3989,9 +4094,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: route.params?.category_name || strings.expense_categories || "Category Expenses",
                             headerTitleStyle: {
@@ -4007,9 +4112,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerShadowVisible: false,
                             headerShown: true,
                             headerStyle: {
-                                backgroundColor: app_theme.colors.design_tip1
+                                backgroundColor: app_theme.colors.header_background_color
                             },
-                            headerTintColor: app_theme.colors.text_design1,
+                            headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.edit_expense || "Edit Expense",
                             headerTitleStyle: {

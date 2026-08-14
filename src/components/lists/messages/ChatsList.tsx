@@ -1,4 +1,5 @@
-import { Text, View, Image, Pressable, Vibration } from "react-native";
+import { Text, View, Image, Pressable } from "react-native";
+import * as Haptics from "expo-haptics";
 import { TChat, TUser } from "../../../types/types";
 import Animated from "react-native-reanimated";
 // import MessageText from "./ReturnMessage";
@@ -98,19 +99,19 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
     const IconMessageRead = (icon: number) => {
         if (icon === 3 || icon === 4) {
-            return <IconApp pack="MC" name="checkbox-multiple-marked-circle" size={17} color={app_theme.colors.high_color} styles={{ marginRight: 8, marginTop: 0 }} />
+            return <IconApp pack="MC" name="check-all" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
         }
 
         if (icon === 2) {
-            return <IconApp pack="MC" name="checkbox-multiple-marked-circle" size={17} color={app_theme.colors.gray} styles={{ marginRight: 8, marginTop: 0 }} />
+            return <IconApp pack="MC" name="check-all" size={16} color={app_theme.colors.gray} styles={{ marginRight: 6 }} />
         }
 
         if (icon === 1) {
-            return <IconApp pack="MC" name="check" size={15} color={app_theme.colors.gray} styles={{ marginRight: 8, marginTop: 0 }} />
+            return <IconApp pack="MC" name="check" size={14} color={app_theme.colors.gray} styles={{ marginRight: 6 }} />
         }
 
         else {
-            return <IconApp pack="MC" name="progress-upload" size={15} color={app_theme.colors.gray} styles={{ marginRight: 8, marginTop: 0 }} />
+            return <IconApp pack="MC" name="clock-outline" size={14} color={app_theme.colors.gray} styles={{ marginRight: 6 }} />
         }
     }
 
@@ -148,7 +149,37 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
     //     }
     // }
 
+    const typing_statuses = useAppSelector(state => state.app.typing_statuses);
+    const current_activity = typing_statuses[item._id] || typing_statuses[item.phone_number] || '';
+
     const render_last_message = () => {
+
+        if (current_activity === 'typing') {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    <YambiText text={strings.typing || "typing..."} size="small" color="high" style={{ flex: 1, marginRight: 10, fontStyle: 'italic', fontWeight: 'bold' }} />
+                </View>
+            );
+        }
+
+        if (current_activity === 'recording') {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    <IconApp pack="MC" name="microphone" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                    <YambiText text={strings.recording_voice_note || "Recording voice note..."} size="small" color="high" style={{ flex: 1, marginRight: 10, fontStyle: 'italic', fontWeight: 'bold' }} />
+                </View>
+            );
+        }
 
         if (message === null) return;
 
@@ -176,7 +207,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     marginTop: 3
                 }}>
                     {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
-                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FA" name="microphone" size={14} color={app_theme.colors.gray} styles={{ marginRight: 8 }} />}
+                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="MC" name="microphone" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
                     <YambiText text={message.deleted !== 0 ? strings.message_deleted : strings.voice_note} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 10 }} />
                 </View>
             );
@@ -347,7 +378,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
     };
 
     const handleLongPress = () => {
-        Vibration.vibrate(25);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setIsLongPressed(true);
     };
 

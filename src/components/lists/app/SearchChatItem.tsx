@@ -1,13 +1,14 @@
 import React, { memo } from "react";
-import { View, Pressable, StyleSheet } from "react-native";
+import { View, Pressable, StyleSheet, Image } from "react-native";
 import { useAppSelector } from "../../../store/app/hooks";
 import { useObject } from "@realm/react";
-import { UserContacts, YambiGroups, UsersMessages } from "../../../store/database/Models";
+import { UserContacts, YambiGroups, UsersMessages, GroupMessages } from "../../../store/database/Models";
 import { YambiText } from "../../app/Text";
 import { IconApp } from "../../app/IconApp";
 import { formatPhoneInternational, media_url, renderDateTime } from "../../../../GlobalVariables";
 import { Image as ExpoImage } from 'expo-image';
 import { strings } from "../../../lang/lang";
+import { normalizeText } from "../../../pages/chat/Search";
 
 interface SearchChatItemProps {
     item: any;
@@ -33,6 +34,13 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
     const contactInfo = type === 'contact' ? item : localContactInfo;
     const groupInfo = type === 'chat' || type === 'message' ? useObject(YambiGroups, targetId) : null;
 
+    const lastMsgToken = (type === 'chat' && item?.last_message) ? item.last_message : "";
+    const lastDirectMsg = useObject(UsersMessages, lastMsgToken);
+    const lastGroupMsg = useObject(GroupMessages, lastMsgToken);
+    const lastMsgObj = isGroup ? lastGroupMsg : lastDirectMsg;
+
+    const chatLastMessageText = lastMsgObj ? (lastMsgObj.main_text_message || lastMsgObj.caption || "") : "";
+
     const displayName = isGroup
         ? (groupInfo?.user_names || strings.group_chat)
         : (() => {
@@ -48,29 +56,36 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
         ? `${media_url}/profile_pictures/${profilePic}`
         : null;
 
-    // Helper to highlight matching text in search results
-    const renderHighlightedText = (text: string, keyword: string | undefined) => {
-        if (!keyword || !text) return <YambiText text={text} size="normal" color="gray" numberLines={2} />;
-        const index = text.toLowerCase().indexOf(keyword.toLowerCase());
-        if (index === -1) return <YambiText text={text} size="normal" color="gray" numberLines={2} />;
+    // Helper to highlight matching text in search results with normalized matching
+    const renderHighlightedText = (text: string, keyword: string | undefined, maxLines: number = 2) => {
+        if (!text) return null;
+        if (!keyword) return <YambiText text={text} size="normal" color="gray" numberLines={maxLines} />;
 
-        const before = text.substring(0, index);
-        const match = text.substring(index, index + keyword.length);
-        const after = text.substring(index + keyword.length);
+        const normKeyword = normalizeText(keyword);
+        if (!normKeyword) return <YambiText text={text} size="normal" color="gray" numberLines={maxLines} />;
 
-        return (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-                {before ? <YambiText text={before} size="normal" color="gray" style={{ padding: 0, margin: 0 }} /> : null}
-                <YambiText text={match} size="normal" color="high" bold style={{ padding: 0, margin: 0 }} />
-                {after ? <YambiText text={after} size="normal" color="gray" style={{ padding: 0, margin: 0 }} /> : null}
-            </View>
-        );
+        const index = text.toLowerCase().indexOf(keyword.toLowerCase().trim());
+        if (index !== -1) {
+            const before = text.substring(0, index);
+            const match = text.substring(index, index + keyword.trim().length);
+            const after = text.substring(index + keyword.trim().length);
+
+            return (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {before ? <YambiText text={before} size="normal" color="gray" numberLines={maxLines} style={{ padding: 0, margin: 0 }} /> : null}
+                    <YambiText text={match} size="normal" color="high" bold numberLines={maxLines} style={{ padding: 0, margin: 0 }} />
+                    {after ? <YambiText text={after} size="normal" color="gray" numberLines={maxLines} style={{ padding: 0, margin: 0 }} /> : null}
+                </View>
+            );
+        }
+
+        return <YambiText text={text} size="normal" color="gray" numberLines={maxLines} />;
     };
 
     const subtitleText = type === 'chat'
-        ? (item.last_message_text || strings.no_messages)
+        ? chatLastMessageText
         : (type === 'contact'
-            ? (item.status_information || formatPhoneInternational({ phone_number: item.phone_number, country: item.country || "" } as any))
+            ? (item.status_information || item.bio || formatPhoneInternational({ phone_number: item.phone_number, country: item.country || "" } as any))
             : item.main_text_message);
 
     const timeStamp = type === 'chat' ? item.updatedAt : (type === 'contact' ? null : item.createdAt);
@@ -86,30 +101,41 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
                 }
             ]}
         >
-            {/* Avatar / Profile picture */}
-            <View style={styles.avatarContainer}>
-                {profilePicUrl ? (
-                    <ExpoImage
-                        source={{ uri: profilePicUrl }}
-                        style={styles.avatar}
-                        contentFit="cover"
-                    />
-                ) : (
-                    <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.border }]}>
-                        <IconApp
-                            pack="FI"
-                            name={isGroup ? "users" : "user"}
-                            size={20}
-                            color={theme.colors.gray}
+            {/* Avatar / Profile picture (hidden in message search block) */}
+            {type !== 'message' && (
+                <View style={styles.avatarContainer}>
+                    {profilePic ? (
+                        <ExpoImage
+                            source={{ uri: profilePicUrl }}
+                            style={styles.avatar}
+                            contentFit="cover"
                         />
-                    </View>
-                )}
-            </View>
+                    ) : (
+                        <Image
+                            source={require('../../../assets/profile_black.jpg')}
+                            style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 24,
+                                borderWidth: 1,
+                                borderColor: theme.colors.border
+                            }}
+                        />
+                    )}
+                </View>
+            )}
 
             {/* Content info */}
             <View style={styles.textContainer}>
                 <View style={styles.headerRow}>
-                    <YambiText bold text={displayName} size="normal" color="default" style={{ flex: 1 }} numberLines={1} />
+                    <YambiText
+                        bold={type !== 'message'}
+                        text={displayName}
+                        size="normal"
+                        color={type === 'message' ? "gray" : "default"}
+                        style={{ flex: 1 }}
+                        numberLines={1}
+                    />
                     {timeStamp ? (
                         <YambiText
                             text={renderDateTime(timeStamp, 0, true, true)}
@@ -121,7 +147,7 @@ const SearchChatItem: React.FC<SearchChatItemProps> = ({ item, type, onPress, se
 
                 <View style={styles.bodyRow}>
                     <View style={{ flex: 1 }}>
-                        {renderHighlightedText(subtitleText, searchKeyword)}
+                        {renderHighlightedText(subtitleText, searchKeyword, type === 'chat' ? 1 : 2)}
                     </View>
                     {isGroup && type === 'message' && (
                         <View style={[styles.badge, { backgroundColor: theme.colors.border }]}>

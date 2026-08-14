@@ -39,7 +39,7 @@ const HeaderBusiness = ({ navigation, route }: NavProps) => {
                     justifyContent: 'center',
                     marginRight: 10
                 }}>
-                <IconApp pack="FI" name="users" size={20} color={theme.colors.text_design1} />
+                <IconApp pack="FI" name="users" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
 
             <Pressable
@@ -51,7 +51,7 @@ const HeaderBusiness = ({ navigation, route }: NavProps) => {
                     justifyContent: 'center',
                     marginLeft: 5
                 }}>
-                <IconApp pack="FA6" name="circle-plus" size={20} color={theme.colors.text_design1} />
+                <IconApp pack="FA6" name="circle-plus" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
         </View>
     )

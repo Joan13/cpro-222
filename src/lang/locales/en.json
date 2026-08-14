@@ -1,4 +1,6 @@
 {
+  "typing": "typing...",
+  "recording_voice_note": "Recording voice note...",
   "slogan_yambi": "Yambi is you and I, toi et moi 😊",
   "fast": "Fast",
   "secure": "Secure",
@@ -943,6 +945,13 @@
   "story": "Story",
   "my_stories": "My stories",
   "my_story": "My story",
+  "create_status": "Create Status",
+  "pick_photo_for_status": "Pick photo for status",
+  "whats_on_your_mind": "What's on your mind?",
+  "publish_status": "Publish status",
+  "tap_to_add_status": "Tap to add status update",
+  "add_story": "Add a story",
+  "no_active_stories": "No active stories",
   "items_categories": {
     "clothing_shoes": {
       "id": "clothing_shoes",

@@ -104,7 +104,7 @@ const HeaderRightExpense = ({ navigation, route }: NavProps) => {
                         marginRight: 10
                     }}
                 >
-                    <IconApp pack="FI" name="edit" size={20} color={theme.text_design1} />
+                    <IconApp pack="FI" name="edit" size={20} color={theme.header_foreground_color} />
                 </Pressable>
             )}
             <Pressable

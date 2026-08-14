@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
+import * as Notifications from 'expo-notifications';
 import { Text, Pressable, StyleSheet, View, BackHandler } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import StatusBarYambi from '../../components/app/StatusBar';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 // import { NavigationContainer } from '@react-navigation/native';
@@ -50,6 +53,15 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
     // Check if user is admin in any company
     const isAdminInAnyCompany = companyUsers.some((cu: any) => cu.is_admin === 1);
 
+    // Synchronize OS application launcher badge with chats badge + enterprise/business badge
+    useEffect(() => {
+        const chatsBadgeCount = chatss ? chatss.length : 0;
+        const businessBadgeCount = business_badge ? business_badge.length : 0;
+        const totalBadgeCount = chatsBadgeCount + businessBadgeCount;
+
+        Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => { });
+    }, [chatss?.length, business_badge]);
+
     const GoNew = () => {
         if (title === strings.chats) {
             navigation.navigate('NewChat');
@@ -92,12 +104,12 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
         if (title === strings.status) {
             return true;
         }
-        
+
         if (title === strings.notice_board) {
             // Only show plus button if user is admin in any company
             return isAdminInAnyCompany;
         }
-        
+
         if (title === strings.expenses) {
             // Only show plus button if password is not required, or if password is required and expenses is opened
             if (!app_description.require_password_expenses || expenses_opened) {
@@ -130,21 +142,21 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
     return (
         <Animated.View style={[{ backgroundColor: app_theme.colors.border, flex: 1 }, StyleSheet.absoluteFill]}>
 
-<View
-      style={{
-        paddingTop: insets.top,
-        height: insets.top + 56,
-        flexDirection: "row",
-        alignItems: "center",
-        width: "100%",
-        paddingHorizontal: 12,
-        justifyContent: "space-between",
-        backgroundColor: app_theme.colors.design_tip1
-      }}
-    >
-      <HeaderHome />
-      <HeaderRightHome />
-    </View>
+            <View
+                style={{
+                    paddingTop: insets.top,
+                    height: insets.top + 56,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    width: "100%",
+                    paddingHorizontal: 12,
+                    justifyContent: "space-between",
+                    backgroundColor: app_theme.colors.header_background_color
+                }}
+            >
+                <HeaderHome />
+                <HeaderRightHome />
+            </View>
 
             <StatusBarYambi />
 
@@ -227,7 +239,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                     }} component={StoriesComponent} /> */}
 
                 {/* <Tab.Screen name={strings.status}
-                        listeners={{ tabPress: e => { dispatch(setTitle(strings.status)); Vibration.vibrate(10);} }}
+                        listeners={{ tabPress: e => { dispatch(setTitle(strings.status)); Haptics.selectionAsync();} }}
                         options={{
                             // tabBarLabel: strings.status,
                             headerShown: false, tabBarBadge: 49,
@@ -255,14 +267,14 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                 )}
 
                 {app_description.tab_visible_noticeboard && (
-               <Tab.Screen name={strings.notice_board}
-                    listeners={{ tabPress: e => { dispatch(setTitle(strings.notice_board)); } }}
-                    options={{
-                        tabBarLabel: strings.notice_board,
-                        headerShown: false,
-                        // tabBarBadge: business_badge ? business_badge.length === 0 ? null : business_badge.length : null,
-                        tabBarIcon: ({ color, size }) => (<IconApp pack='MC' name="developer-board" size={size} color={color} />)
-                    }} component={NoticeBoard} />
+                    <Tab.Screen name={strings.notice_board}
+                        listeners={{ tabPress: e => { dispatch(setTitle(strings.notice_board)); } }}
+                        options={{
+                            tabBarLabel: strings.notice_board,
+                            headerShown: false,
+                            // tabBarBadge: business_badge ? business_badge.length === 0 ? null : business_badge.length : null,
+                            tabBarIcon: ({ color, size }) => (<IconApp pack='MC' name="developer-board" size={size} color={color} />)
+                        }} component={NoticeBoard} />
                 )}
 
                 {user_data.user_level !== 0 && app_description.tab_visible_admin ?
@@ -275,7 +287,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         }} component={AdminDashboard} /> : null}
 
                 {/* <Tab.Screen name={strings.groups}
-                        listeners={{ tabPress: e => { dispatch(setTitle(strings.groups)); Vibration.vibrate(10);} }}
+                        listeners={{ tabPress: e => { dispatch(setTitle(strings.groups)); Haptics.selectionAsync();} }}
                         options={{
                             tabBarLabel: strings.groups,
                             headerShown: false, tabBarBadge: 898,
@@ -283,7 +295,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         }} component={Signup} /> */}
 
                 {/* <Tab.Screen name={strings.admin}
-                        listeners={{ tabPress: e => { dispatch(setTitle(strings.admin)); Vibration.vibrate(10);} }}
+                        listeners={{ tabPress: e => { dispatch(setTitle(strings.admin)); Haptics.selectionAsync();} }}
                         options={{
                             tabBarLabel: strings.admin,
                             headerShown: false,
@@ -301,7 +313,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         right: 15,
                         borderWidth: 1,
                         borderColor: app_theme.colors.border,
-                        backgroundColor: app_theme.colors.design_tip2,
+                        backgroundColor: app_theme.colors.button_background_color,
                         height: 50,
                         width: 50,
                         justifyContent: 'center',
@@ -309,11 +321,11 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         borderRadius: 50,
                         elevation: 0
                     }}>
-                    {title === strings.chats||title===strings.expenses||title===strings.notice_board ?
-                        <IconApp name="plus" pack="FI" size={18} color={app_theme.colors.text_design2} /> : null}
+                    {title === strings.chats || title === strings.expenses || title === strings.notice_board ?
+                        <IconApp name="plus" pack="FI" size={18} color={app_theme.colors.button_foreground_color} /> : null}
 
                     {title === strings.status ?
-                        <IconApp name="camera" pack="FI" size={18} color={app_theme.colors.text_design2} /> : null}
+                        <IconApp name="camera" pack="FI" size={18} color={app_theme.colors.button_foreground_color} /> : null}
                 </Pressable> : null}
 
             {title === strings.news ?
@@ -326,7 +338,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                             right: 21,
                             borderWidth: 1,
                             borderColor: app_theme.colors.border,
-                            backgroundColor: app_theme.colors.design_tip1,
+                            backgroundColor: app_theme.colors.header_background_color,
                             height: 46,
                             width: 46,
                             justifyContent: 'center',
@@ -337,7 +349,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         <Text style={{
                             fontSize: 20,
                             fontWeight: "900",
-                            color: app_theme.colors.text_design1
+                            color: app_theme.colors.header_foreground_color
                         }}>A</Text>
                     </Pressable> */}
 
@@ -349,7 +361,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                             right: 15,
                             borderWidth: 1,
                             borderColor: app_theme.colors.border,
-                            backgroundColor: app_theme.colors.design_tip2,
+                            backgroundColor: app_theme.colors.button_background_color,
                             height: 50,
                             width: 50,
                             justifyContent: 'center',
@@ -358,7 +370,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                             elevation: 0
                         }}>
                         {title === strings.news ?
-                            <IconApp name="camera-plus" pack="MC" size={18} color={app_theme.colors.text_design2} /> : null}
+                            <IconApp name="camera-plus" pack="MC" size={18} color={app_theme.colors.button_foreground_color} /> : null}
                     </Pressable>
                 </View> : null}
         </Animated.View>

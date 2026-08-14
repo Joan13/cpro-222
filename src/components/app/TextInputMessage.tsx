@@ -13,6 +13,7 @@ const TextInputComponent = ({ user }: { user: string }) => {
     const app_theme = useAppSelector(state => state.app_theme);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
     const show_custom_keyboard = useAppSelector(state => state.app.show_custom_keyboard);
+    const response_to = useAppSelector(state => state.app.response_to);
     // const drafts = useAppSelector(state => state.drafts);
     // const current_user = useAppSelector(state => state.current_user);
     const [selection, setSelection] = useState({ start: 0, end: 0 });
@@ -127,6 +128,16 @@ const TextInputComponent = ({ user }: { user: string }) => {
             // }, 200);
         }
     }, [show_custom_keyboard]);
+
+    // Auto-focus when swipe-to-reply is triggered
+    useEffect(() => {
+        if (response_to && response_to !== '') {
+            const timer = setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [response_to]);
 
     const handleChangeText = useCallback((text: string) => {
 

@@ -156,8 +156,16 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
             return ss.filtered('item_active == $0 && business_id == $1', 1, item._id);
         }, [item._id]);
 
+    const uuser = useQuery(
+        BusinessUsers, bss => {
+            return bss.filtered('user == $0 && business_id == $1 && user_active == $2', user_data.phone_number, item._id, 1)
+        }, [item._id]);
+
+    const oo = uuser.find(element => element.user === user_data.phone_number);
+
     const lowStockItems = useMemo(() => {
         try {
+            if (!oo || oo.user_active !== 1) return [];
             const arr = Array.from(bitems as any);
             return arr
                 .filter((i: any) => {
@@ -170,7 +178,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
         } catch {
             return [];
         }
-    }, [bitems]);
+    }, [bitems, oo]);
 
     const outOfStockItems = useMemo(() => {
         try {
@@ -293,13 +301,6 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     const canUploadImages = true;
 
     const isAppAdmin = user_data.user_level !== 0;
-
-    const uuser = useQuery(
-        BusinessUsers, bss => {
-            return bss.filtered('user == $0 && business_id == $1 && user_active == $2', user_data.phone_number, item._id, 1)
-        }, [item._id]);
-
-    const oo = uuser.find(element => element.user === user_data.phone_number);
 
     const conditionGoUsers = () => {
         // Admin has full access
@@ -491,7 +492,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                     <YambiText size="small" color="gray" text={business._id} />
                                 </View>
                                 {index === currentBusinessIndex ?
-                                    <IconApp pack="FA" name="check-circle" size={20} color={app_theme.colors.high_color} /> : null}
+                                    <IconApp pack="IO" name="checkmark-circle" size={20} color={app_theme.colors.high_color} /> : null}
                             </Pressable>
                         ))}
                     </ScrollView>

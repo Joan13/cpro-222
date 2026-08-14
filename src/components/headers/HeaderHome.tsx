@@ -37,7 +37,7 @@ const HeaderHome = () => {
       alignItems: 'center',
       // paddingHorizontal: 15,
       // height: 60,
-      // backgroundColor: theme.colors.design_tip1,
+      // backgroundColor: theme.colors.header_background_color,
       // elevation: 0,
       // backgroundColor: 'green',
       // marginRight: 150
@@ -85,7 +85,7 @@ const HeaderHome = () => {
         : null}
 
       <Text style={{
-        color: theme.colors.text_design1,
+        color: theme.colors.header_foreground_color,
         fontSize: app_description.home_title_font_size,
         fontWeight: app_description.home_title_font_weight as any,
         elevation: 0,

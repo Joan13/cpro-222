@@ -34,7 +34,7 @@ const PLANS = [
         maxPointsOfSale: 5,
         maxArticles: 400,
         imagesAllowed: true,
-        maxImagesPerArticle: 1
+        maxImagesPerArticle: 3
     },
     {
         id: 3,
@@ -43,7 +43,7 @@ const PLANS = [
         maxPointsOfSale: 10,
         maxArticles: 3000,
         imagesAllowed: true,
-        maxImagesPerArticle: 1
+        maxImagesPerArticle: 5
     }
 ];
 

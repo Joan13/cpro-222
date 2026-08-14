@@ -302,14 +302,14 @@ const PostReactions = ({ navigation, route }: NavProps) => {
                             style={{
                                 padding: 10,
                                 borderRadius: 20,
-                                backgroundColor: theme.design_tip2
+                                backgroundColor: theme.button_background_color
                             }}
                         >
                             <IconApp 
                                 pack="FI" 
                                 name="send" 
                                 size={18} 
-                                color={theme.text_design2} 
+                                color={theme.button_foreground_color} 
                             />
                         </Pressable>
                     )}

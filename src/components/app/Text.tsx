@@ -37,7 +37,7 @@ export const YambiText: React.FC<IYambiText> = ({
         high: theme.colors.high_color,
         high2: theme.colors.high_color2,
         high3: theme.colors.high_color3,
-        design: theme.colors.text_design2,
+        design: theme.colors.button_foreground_color,
         error: theme.colors.error,
         success: theme.colors.success,
         badge: theme.colors.badge_color,
@@ -294,7 +294,7 @@ export const TextNormalYambiInDesign: React.FC<IText> = ({ text, bold, styles, n
         <Text
             numberOfLines={numberLines}
             style={[styles, {
-                color: theme.colors.text_design2,
+                color: theme.colors.button_foreground_color,
                 fontSize: app_description.general_font_size,
                 fontWeight: bold ? app_description.general_font_weight as any : 'normal'
             }]}>{text}</Text>
@@ -310,7 +310,7 @@ export const TextBigYambiInDesign: React.FC<IText> = ({ text, bold, styles, numb
         <Text
             numberOfLines={numberLines}
             style={[styles, {
-                color: theme.colors.text_design2,
+                color: theme.colors.button_foreground_color,
                 fontSize: app_description.big_general_font_size,
                 fontWeight: bold ? app_description.big_general_font_weight as any : 'normal'
             }]}>{text}</Text>
@@ -326,7 +326,7 @@ export const TextSmallYambiInDesign: React.FC<IText> = ({ text, bold, styles, nu
         <Text
             numberOfLines={numberLines}
             style={[styles, {
-                color: theme.colors.text_design2,
+                color: theme.colors.button_foreground_color,
                 fontSize: app_description.small_general_font_size,
                 fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
             }]}>{text}</Text>

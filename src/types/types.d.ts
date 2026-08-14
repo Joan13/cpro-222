@@ -76,10 +76,11 @@ export type TStore = {
     users_connected: string[],
     show_favorite_chats: boolean,
     category: string,
+    typing_statuses: Record<string, string>,
     // message_photo_view: TMessage
 }
 
-type colorVariant = "background" | "primary" | "border" | "gray" | "high_color" | "text" | "design_tip_1" | "design_tip_2" | "text_design_1" | "text_design_2";
+type colorVariant = "background" | "primary" | "border" | "gray" | "high_color" | "text" | "header_background_color" | "button_background_color" | "header_foreground_color" | "button_foreground_color";
 
 export type TSelection = {
     start: number,
@@ -192,8 +193,6 @@ export type TTheme = {
     name: string,
     dark: boolean,
     statusbar: string,
-    statusbar_tip1: string,
-    statusbar_tip2: string,
     colors: {
         primary: string,
         background: string,
@@ -207,14 +206,17 @@ export type TTheme = {
         notification: string,
         gray: string,
         high_color: string,
+        primary_high_color: string,
         high_color2: string,
         high_color3: string,
         chat_sent: string,
         chat_received: string,
-        design_tip1: string,
-        design_tip2: string,
-        text_design1: string,
-        text_design2: string,
+        chat_sent_foreground: string,
+        chat_received_foreground: string,
+        header_background_color: string,
+        button_background_color: string,
+        header_foreground_color: string,
+        button_foreground_color: string,
         home_badge_background_color: string,
         home_badge_color: string,
         badge_background_color: string,
@@ -403,6 +405,7 @@ export type TStory = {
     type_story: number,
     main_text: string,
     caption: string,
+    styles?: string,
     mentions: string,
     comments: string,
     reactions: string,

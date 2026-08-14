@@ -1351,7 +1351,7 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                             {/* <Pressable
                                 onPress={() => navigation.navigate('AddExpense', { business_id, sales_point_id })}
                                 style={{
-                                    backgroundColor: theme.design_tip2,
+                                    backgroundColor: theme.button_background_color,
                                     paddingHorizontal: 12,
                                     paddingVertical: 6,
                                     borderRadius: 8,
@@ -1359,7 +1359,7 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                                     alignItems: 'center',
                                 }}
                             >
-                                <IconApp pack="FI" name="plus" size={14} color={theme.text_design2} styles={{ marginRight: 6 }} />
+                                <IconApp pack="FI" name="plus" size={14} color={theme.button_foreground_color} styles={{ marginRight: 6 }} />
                                 <YambiText text={strings.add_expense} style={{ fontSize: 14 }} color="design"  />
                             </Pressable> */}
                         </View>
@@ -1792,7 +1792,7 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                     right: 15,
                     borderWidth: 1,
                     borderColor: theme.border,
-                    backgroundColor: theme.design_tip2,
+                    backgroundColor: theme.button_background_color,
                     height: 50,
                     width: 50,
                     justifyContent: 'center',
@@ -1801,7 +1801,7 @@ const ExpensesPage = ({ navigation, route }: NavProps) => {
                     elevation: 0
                 }}
             >
-                <IconApp pack="FI" name="plus" size={18} color={theme.text_design2} />
+                <IconApp pack="FI" name="plus" size={18} color={theme.button_foreground_color} />
             </Pressable> */}
         </View>
     );

@@ -473,7 +473,7 @@ const HeaderRightHome = () => {
             justifyContent: 'center',
             // position: "absolute"
             // height: 60
-            // backgroundColor: theme.colors.design_tip1
+            // backgroundColor: theme.colors.header_background_color
         }}>
             {/* <View style={{
                 width: 30,
@@ -481,7 +481,7 @@ const HeaderRightHome = () => {
                 justifyContent: 'center',
                 marginHorizontal: 5
             }}>
-                <ActivityIndicator size={20} color={theme.colors.text_design1} />
+                <ActivityIndicator size={20} color={theme.colors.header_foreground_color} />
             </View> */}
             {showInternetError ?
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
@@ -502,7 +502,7 @@ const HeaderRightHome = () => {
                         marginHorizontal: 15,
                         marginRight: 0
                     }}>
-                        <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
+                        <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
                     </Pressable>
                 </View> : null} */}
 
@@ -530,7 +530,18 @@ const HeaderRightHome = () => {
                 )}
 
                 {title === strings.chats ?
-                    <Animated.View entering={FadeIn}>
+                    <Animated.View entering={FadeIn} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Pressable
+                            onPress={() => { RootNavigation.navigate("Stories") }}
+                            style={{
+                                height: 30,
+                                width: 30,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginHorizontal: 6
+                            }}>
+                            <IconApp pack="MC" name="camera-plus" size={20} color={theme.colors.header_foreground_color} />
+                        </Pressable>
                         <Pressable
                             onPress={() => { RootNavigation.navigate("Search") }}
                             style={{
@@ -538,9 +549,9 @@ const HeaderRightHome = () => {
                                 width: 30,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                marginHorizontal: 20
+                                marginHorizontal: 12
                             }}>
-                            <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
+                            <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
                         </Pressable>
                     </Animated.View> : null}
 
@@ -556,7 +567,7 @@ const HeaderRightHome = () => {
                                 marginHorizontal: 15,
                                 marginRight: title === strings.expenses ? 20 : 0
                             }}>
-                            <IconApp pack="IO" name="calculator" size={20} color={theme.colors.text_design1} />
+                            <IconApp pack="IO" name="calculator" size={20} color={theme.colors.header_foreground_color} />
                         </Pressable>
                     </Animated.View> : null}
 
@@ -573,7 +584,7 @@ const HeaderRightHome = () => {
                                     marginHorizontal: 15,
                                     marginRight: 20
                                 }}>
-                                <IconApp pack="FI" name="plus" size={20} color={theme.colors.text_design1} />
+                                <IconApp pack="FI" name="plus" size={20} color={theme.colors.header_foreground_color} />
                             </Pressable>
                         </Animated.View>
                     </> : null}
@@ -591,7 +602,7 @@ const HeaderRightHome = () => {
                             // marginRight: 20,
                             marginLeft: 15,
                         }}>
-                            <IconApp pack="FI" name="search" size={20} color={theme.colors.text_design1} />
+                            <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
                         </Pressable>
 
                         <Pressable onPress={GoCart} style={{
@@ -604,7 +615,7 @@ const HeaderRightHome = () => {
                             // marginRight: 20,
                             marginLeft: 15,
                         }}>
-                            <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.text_design1} />
+                            <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.header_foreground_color} />
 
                             {cart && cart.length !== 0 ?
                                 <View style={{
@@ -641,7 +652,7 @@ const HeaderRightHome = () => {
                             marginHorizontal: 15,
                             marginRight: 20
                         }}>
-                        <IconApp pack="OC" name={show_favorite_chats ? "star-fill" : "star"} size={20} color={theme.colors.text_design1} />
+                        <IconApp pack="OC" name={show_favorite_chats ? "star-fill" : "star"} size={20} color={theme.colors.header_foreground_color} />
                     </Pressable>
                 </Animated.View>
                 : null}
@@ -650,7 +661,7 @@ const HeaderRightHome = () => {
             {app_description.home_user_image_position === 'right' ?
                 <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}
                     style={{
-                        // backgroundColor: theme.colors.design_tip1
+                        // backgroundColor: theme.colors.header_background_color
                     }}
                 >
                     {/* {user_data.user_profile !== "" ?
@@ -691,7 +702,7 @@ const HeaderRightHome = () => {
                                     width: app_description.home_user_image_size,
                                     height: app_description.home_user_image_size,
                                     borderRadius: 50,
-                                    backgroundColor: theme.colors.design_tip1
+                                    backgroundColor: theme.colors.header_background_color
                                 }}
                             />
                             :
@@ -702,7 +713,7 @@ const HeaderRightHome = () => {
                                     width: app_description.home_user_image_size,
                                     height: app_description.home_user_image_size,
                                     borderRadius: 50,
-                                    backgroundColor: theme.colors.design_tip1
+                                    backgroundColor: theme.colors.header_background_color
                                 }}
                             />}
                     </Animated.View>

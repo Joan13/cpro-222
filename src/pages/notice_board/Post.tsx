@@ -493,7 +493,7 @@ const Post = ({ navigation, route }: NavProps) => {
                         pack="FI"
                         name={Platform.OS === 'android' ? 'arrow-left' : 'chevron-left'}
                         size={22}
-                        color={theme.text_design1}
+                        color={theme.header_foreground_color}
                     />
                 </Pressable>
             )
@@ -517,7 +517,7 @@ const Post = ({ navigation, route }: NavProps) => {
                             marginRight: 10
                         }}
                     >
-                        <IconApp pack="FI" name="edit" size={20} color={theme.text_design1} />
+                        <IconApp pack="FI" name="edit" size={20} color={theme.header_foreground_color} />
                     </Pressable>
                     <Pressable
                         onPress={() => {
@@ -1382,14 +1382,14 @@ const Post = ({ navigation, route }: NavProps) => {
                                         style={{
                                             padding: 8,
                                             borderRadius: 20,
-                                            backgroundColor: theme.design_tip2
+                                            backgroundColor: theme.button_background_color
                                         }}
                                     >
                                         <IconApp 
                                             pack="FI" 
                                             name="send" 
                                             size={18} 
-                                            color={theme.text_design2} 
+                                            color={theme.button_foreground_color} 
                                         />
                                     </Pressable>
                                 )}

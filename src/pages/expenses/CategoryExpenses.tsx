@@ -483,7 +483,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                     {/* <Pressable
                         onPress={() => navigation.navigate('AddExpense', { category_id, business_id, sales_point_id })}
                         style={{
-                            backgroundColor: theme.design_tip2,
+                            backgroundColor: theme.button_background_color,
                             borderRadius: 12,
                             padding: 15,
                             marginBottom: 20,
@@ -494,7 +494,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                             borderColor: theme.border,
                         }}
                     >
-                        <IconApp pack="FI" name="plus" size={18} color={theme.text_design2} styles={{ marginRight: 10 }} />
+                        <IconApp pack="FI" name="plus" size={18} color={theme.button_foreground_color} styles={{ marginRight: 10 }} />
                         <YambiText
                             text={strings.add_expense || "Add Expense"}
                             size="normal"
@@ -748,7 +748,7 @@ const CategoryExpenses = ({ navigation, route }: NavProps) => {
                         </View>
                     ) : (
                         <View style={{
-                            backgroundColor: theme.design_tip1,
+                            backgroundColor: theme.header_background_color,
                             borderRadius: 16,
                             padding: 30,
                             alignItems: 'center',

@@ -36,8 +36,19 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   const this_chat = useObject(UserChats, user || "");
   const realm = useRealm();
 
+  const selectedTokens = message_selected ? message_selected.split(',').filter(Boolean) : [];
+  const selectedCount = selectedTokens.length;
+
+  const canDeleteForEveryone = () => {
+    if (selectedTokens.length === 0) return false;
+    return selectedTokens.every(token => {
+      const msgObj = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', token);
+      return msgObj && msgObj.isValid() && msgObj.deleted === 0 && msgObj.sender === user_data.phone_number;
+    });
+  };
+
   const copyToClipboard = () => {
-    if (message === null) return;
+    if (message === null || !message.isValid()) return;
     Clipboard.setString(message.main_text_message);
     dispatch(setMessageSelected(""));
   };
@@ -47,10 +58,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
       return msgs.filtered('(receiver == $0 && sender == $1 && deleted == $2) || (sender == $3 && receiver == $4 && deleted == $5)', user, user_data.phone_number, 0, user, user_data.phone_number, 0)
     }, []);
 
-  // console.log(messages_undeleted[messages_undeleted.length-1])
-
   const forwardMessage = () => {
-    // dispatch(setMessageSelected(""));
     navigation.navigate("ForwardMessage", { message_id: message_selected });
   }
 
@@ -59,7 +67,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   }
 
   const CanEditMessage = () => {
-    if (message === null) return;
+    if (selectedCount !== 1 || message === null || !message.isValid()) return false;
     if (message.message_read <= 2 && message.message_type === 0 && message.deleted === 0) {
       return true;
     }
@@ -72,75 +80,76 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   }
 
   const DeleteMessage = (flag: number) => {
-    if (message) {
-
-      const msg: TMessage = {
-        sender: message.sender,
-        receiver: message.receiver,
-        main_text_message: message.main_text_message,
-        caption: message.caption,
-        message_type: message.message_type,
-        reactions: message.reactions,
-        response_to: message.response_to,
-        message_read: flag === 0 ? 0 : message.message_read,
-        message_effect: message.message_effect,
-        read_once: message.read_once,
-        flag: message.flag,
-        token: message.token,
-        deleted: flag === 0 ? 1 : 2,
-        platform: message.platform,
-        createdAt: message.createdAt,
-        receivedAt: message.receivedAt,
-        readAt: message.readAt,
-        playedAt: message.playedAt,
-        cc: message.cc,//moment(time).format('DD/MM/YYYY'),
-        alignment: message.alignment//moment().format()
+    const msgsToUpdate: TMessage[] = [];
+    selectedTokens.forEach(token => {
+      const msgObj = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', token);
+      if (msgObj && msgObj.isValid()) {
+        const msg: TMessage = {
+          sender: msgObj.sender,
+          receiver: msgObj.receiver,
+          main_text_message: msgObj.main_text_message,
+          caption: msgObj.caption,
+          message_type: msgObj.message_type,
+          reactions: msgObj.reactions,
+          response_to: msgObj.response_to,
+          message_read: flag === 0 ? 0 : msgObj.message_read,
+          message_effect: msgObj.message_effect,
+          read_once: msgObj.read_once,
+          flag: msgObj.flag,
+          token: msgObj.token,
+          deleted: flag === 0 ? 1 : 2,
+          platform: msgObj.platform,
+          createdAt: msgObj.createdAt,
+          receivedAt: msgObj.receivedAt,
+          readAt: msgObj.readAt,
+          playedAt: msgObj.playedAt,
+          cc: msgObj.cc,
+          alignment: msgObj.alignment
+        };
+        msgsToUpdate.push(msg);
       }
+    });
 
-      // console.log(msg)
-
+    if (msgsToUpdate.length > 0) {
       realm.write(() => {
-        try {
-          realm.create('UsersMessages', msg, true);
-        } catch (error) { }
+        msgsToUpdate.forEach(msg => {
+          try {
+            realm.create('UsersMessages', msg, true);
+          } catch (error) { }
+        });
       });
 
-      // Only notify the server when deleting for everyone (flag === 0, deleted === 1).
-      // "Delete for me" (flag === 1, deleted === 2) is purely local.
-      if (flag === 0) {
-        SocketApp.emit('newMessage', msg);
-      }
-
-      if (flag === 1) {
-        // console.log(messages_undeleted)
-        if (messages_undeleted.length !== 0) {
-          const last_message = messages_undeleted[messages_undeleted.length - 1];
-          if (last_message !== undefined) {
-            const time = moment(new Date()).format();
-            const chat = {
-              _id: last_message.receiver,
-              phone_number: last_message.receiver,
-              type_chat: this_chat !== undefined ? this_chat.type_chat : 0,
-              last_message: last_message.token,
-              user: user_data.phone_number,
-              flag: this_chat !== undefined ? this_chat.flag : 0,
-              chat_read: 1,
-              deleted: 0,
-              chat_effect: this_chat !== undefined ? this_chat.chat_effect : 0,
-              createdAt: this_chat !== undefined ? this_chat.createdAt : time,
-              updatedAt: this_chat !== undefined ? this_chat.updatedAt : time
-            }
-
-            realm.write(() => {
-              try {
-                realm.create('UserChats', chat, true);
-              } catch (error) { }
-            });
-          }
+      msgsToUpdate.forEach(msg => {
+        if (flag === 0) {
+          SocketApp.emit('newMessage', msg);
         }
-      }
+      });
+    }
 
-      // SocketApp.emit('newMessage', msg);
+    if (flag === 1 && messages_undeleted.length !== 0) {
+      const last_message = messages_undeleted[messages_undeleted.length - 1];
+      if (last_message !== undefined) {
+        const time = moment(new Date()).format();
+        const chat = {
+          _id: last_message.receiver,
+          phone_number: last_message.receiver,
+          type_chat: this_chat !== undefined ? this_chat.type_chat : 0,
+          last_message: last_message.token,
+          user: user_data.phone_number,
+          flag: this_chat !== undefined ? this_chat.flag : 0,
+          chat_read: 1,
+          deleted: 0,
+          chat_effect: this_chat !== undefined ? this_chat.chat_effect : 0,
+          createdAt: this_chat !== undefined ? this_chat.createdAt : time,
+          updatedAt: this_chat !== undefined ? this_chat.updatedAt : time
+        }
+
+        realm.write(() => {
+          try {
+            realm.create('UserChats', chat, true);
+          } catch (error) { }
+        });
+      }
     }
 
     setShowDeleteMessage(false);
@@ -157,23 +166,11 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
       paddingRight: 8,
     }}>
 
-      {/* <Pressable
-              onPress={forwardMessage}
-              style={{
-                height: 30,
-                width: 30,
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                // marginLeft: 15
-              }}>
-              <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
-            </Pressable> */}
-
-      {showDeleteMessage && message ?
+      {showDeleteMessage && selectedCount > 0 ?
         <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowDeleteMessage(false) }} singleButton title={strings.delete_message} textCancel={strings.cancel}>
           <TextNormalYambiGray text={strings.delete_message_text} />
 
-          {message.deleted === 0 && message.sender === user_data.phone_number ?
+          {canDeleteForEveryone() ?
             <Pressable
               style={{
                 height: 40,
@@ -211,35 +208,6 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            {/* <View style={{
-          width: 30,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginHorizontal: 5
-        }}>
-          <ActivityIndicator size={20} color={app_theme.colors.text_design1} />
-        </View> */}
-
-            {/* <Pressable style={{
-              height: 30,
-              width: 30,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginHorizontal: 5
-            }}>
-              <Feather name="search" size={20} color={app_theme.colors.text_design1} />
-            </Pressable>
-
-            <Pressable style={{
-              height: 30,
-              width: 30,
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-              marginLeft: 5
-            }}>
-              <Feather name="camera" size={20} color={app_theme.colors.text_design1} />
-            </Pressable> */}
-
             {!userrr ?
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
@@ -250,15 +218,12 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: 18,
-                      // backgroundColor: app_theme.colors.border + '50',
                     }}>
-                    <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
+                    <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.header_foreground_color} />
                   </Pressable>
                 </DropdownMenu.Trigger>
 
                 <DropdownMenu.Content>
-                  {/* <DropdownMenu.Label placeholder={"title"}>Title</DropdownMenu.Label> */}
-
                   <DropdownMenu.Item key={'1'} onSelect={() => Linking.openURL("tel:" + user)}>
                     <DropdownMenu.ItemTitle>{strings.add_to_contacts}</DropdownMenu.ItemTitle>
                   </DropdownMenu.Item>
@@ -274,39 +239,6 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
             flexDirection: 'row',
             alignItems: 'center',
           }}>
-          {/* <Pressable onPress={() => navigation.navigate('Themes' as never)}>
-        <Animated.View
-          sharedTransitionTag='viewImageInbox'
-          style={{
-            justifyContent: 'center',
-            alignContent: 'center',
-            alignItems: 'center',
-            marginRight: 10
-          }}>
-          <Animated.Image
-            sharedTransitionTag='imageInbox'
-            source={require('./../../assets/profile_blackkk.jpg')}
-            style={{ width: 40, height: 40, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
-          />
-        </Animated.View>
-      </Pressable> */}
-          {/* <View style={{
-        flex: 1,
-        marginRight: 2
-      }}>
-        <Text numberOfLines={1}
-          style={{
-            fontSize: app_description.inbox_title_size,
-            fontWeight: app_description.inbox_title_font_weight as any,
-            color: app_theme.colors.text_design1
-          }}>{current_user.user_names}</Text>
-        <Text style={{
-          fontSize: app_description.small_general_font_size,
-          fontWeight: app_description.small_general_font_weight as any,
-          color: app_theme.colors.high_color
-        }}>{strings.online}</Text>
-      </View> */}
-
           <View style={{ flex: 1 }}></View>
 
           <View style={{
@@ -315,44 +247,25 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
             justifyContent: 'center',
             gap: 8,
           }}>
-            <Pressable
-              onPress={() => {
-                dispatch(setResponseTo(message_selected));
-                dispatch(setMessageSelected(""));
-              }}
-              style={{
-                height: 36,
-                width: 36,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 18,
-                backgroundColor: app_theme.colors.border + "50",
-              }}>
-              <Entypo name="reply" size={18} color={app_theme.colors.text_design1} />
-            </Pressable>
+            {selectedCount === 1 ? (
+              <Pressable
+                onPress={() => {
+                  dispatch(setResponseTo(selectedTokens[0]));
+                  dispatch(setMessageSelected(""));
+                }}
+                style={{
+                  height: 36,
+                  width: 36,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 18,
+                  backgroundColor: app_theme.colors.border + "50",
+                }}>
+                <Entypo name="reply" size={18} color={app_theme.colors.header_foreground_color} />
+              </Pressable>
+            ) : null}
 
-            {/* <Pressable
-              onPress={() => dispatch(setResponseTo(message_selected))}
-              style={{
-                height: 30,
-                width: 30,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginHorizontal: 5
-              }}>
-              <MaterialCommunityIcons name="delete-outline" size={20} color={app_theme.colors.text_design1} />
-            </Pressable> */}
-
-            {/* <Pressable style={{
-              height: 30,
-              width: 30,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginLeft: 5
-            }}>
-              <Entypo name="forward" size={20} color={app_theme.colors.text_design1} />
-            </Pressable> */}
-            {message !== null && message.deleted === 0 ?
+            {selectedCount === 1 && message !== null && message.deleted === 0 ?
               message.message_type === 0 ?
                 <Pressable
                   onPress={copyToClipboard}
@@ -364,10 +277,10 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                     borderRadius: 18,
                     backgroundColor: app_theme.colors.border + "50",
                   }}>
-                  <IconApp pack='MC' name="content-copy" size={18} color={app_theme.colors.text_design1} />
+                  <IconApp pack='MC' name="content-copy" size={18} color={app_theme.colors.header_foreground_color} />
                 </Pressable> : null : null}
 
-            {message !== null && message.deleted === 0 ?
+            {selectedCount === 1 && message !== null && message.deleted === 0 ?
               <Pressable
                 onPress={seeMessageInfo}
                 style={{
@@ -378,7 +291,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                   borderRadius: 18,
                   backgroundColor: app_theme.colors.border + "50",
                 }}>
-                <IconApp pack='FI' name="info" size={18} color={app_theme.colors.text_design1} />
+                <IconApp pack='FI' name="info" size={18} color={app_theme.colors.header_foreground_color} />
               </Pressable> : null}
 
             <Pressable
@@ -392,29 +305,15 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                 backgroundColor: app_theme.colors.border + "50",
                 marginRight: 8,
               }}>
-              <IconApp pack='ET' name="forward" size={18} color={app_theme.colors.text_design1} />
+              <IconApp pack='ET' name="forward" size={18} color={app_theme.colors.header_foreground_color} />
             </Pressable>
-
-            {/* <Pressable
-              onPress={forwardMessage}
-              style={{
-                height: 30,
-                width: 30,
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                // marginLeft: 15
-              }}>
-              <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
-            </Pressable> */}
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger>
-                <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.text_design1} />
+                <IconApp pack='MC' name="dots-vertical" size={20} color={app_theme.colors.header_foreground_color} />
               </DropdownMenu.Trigger>
 
               <DropdownMenu.Content>
-                {/* <DropdownMenu.Label placeholder={"title"}>Title</DropdownMenu.Label> */}
-
                 {CanEditMessage() ?
                   <DropdownMenu.Item key={'2'} onSelect={EditMessage}>
                     <DropdownMenu.ItemTitle>{strings.edit}</DropdownMenu.ItemTitle>
@@ -423,10 +322,6 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                 <DropdownMenu.Item key={'3'} onSelect={() => { dispatch(setShowModalApp(true)); setShowDeleteMessage(true); }}>
                   <DropdownMenu.ItemTitle>{strings.delete}</DropdownMenu.ItemTitle>
                 </DropdownMenu.Item>
-
-                {/* <DropdownMenu.Item key={'4'} onSelect={() => Linking.openURL("tel:" + user)}>
-                  <DropdownMenu.ItemTitle>{strings.pin}</DropdownMenu.ItemTitle>
-                </DropdownMenu.Item> */}
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           </View>

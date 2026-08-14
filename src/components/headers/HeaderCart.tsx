@@ -20,7 +20,7 @@ const HeaderCart = ({ navigation, route }: NavProps) => {
     // return (
     //     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
     //         <Pressable onPress={() => navigation.navigate("Cart")}>
-    //             <IconApp pack="FA6" name="cart-shopping" size={20} color={theme.colors.text_design1} />
+    //             <IconApp pack="FA6" name="cart-shopping" size={20} color={theme.colors.header_foreground_color} />
     //         </Pressable>
     //     </View>
     // );

@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Vibration, } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useRealm } from '@realm/react';
 import { UsersMessages } from '../../store/database/Models';
@@ -6,7 +7,7 @@ import { TMessage } from '../../types/types';
 import Animated, { FadeIn, FadeInDown, FadeInUp, } from 'react-native-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useAppDispatch, useAppSelector, } from '../../store/app/hooks';
-import { setMessageSelected } from '../../store/reducers/appSlice';
+import { setMessageSelected, setScrollToEnd } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MessagesList from '../lists/messages/MessagesList';
@@ -14,11 +15,16 @@ import { displayDate, SocketApp } from '../../../GlobalVariables';
 import { IconApp } from '../app/IconApp';
 import { LegendList } from '@legendapp/list';
 import moment from 'moment';
+import { YambiText } from '../app/Text';
+
 const Messages = ({ user, highlightMessageToken }: { user: string; highlightMessageToken?: string }) => {
     const app_theme = useAppSelector(state => state.app_theme);
     const user_data = useAppSelector(state => state.user_data);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
     const lang = useAppSelector(state => state.persisted_app.langApp);
+    const scroll_to_end = useAppSelector(state => state.app.scroll_to_end);
+    const typing_statuses = useAppSelector(state => state.app.typing_statuses);
+    const current_activity = typing_statuses[user] || '';
     const dispatch = useAppDispatch();
 
     const flashListRef = useRef<any>(null);
@@ -70,7 +76,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
             platform: msg.platform,
             deleted: msg.deleted,
             read_once: msg.read_once,
-            alignment: msg.createdAt,
+            alignment: msg.alignment || msg.createdAt,
             createdAt: msg.createdAt,
             receivedAt: msg.receivedAt,
             playedAt: msg.playedAt,
@@ -152,6 +158,19 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
         return () => clearTimeout(timer);
     }, [setChatRead]);
 
+    // Scroll to end when a new message is sent
+    useEffect(() => {
+        if (scroll_to_end && flashListRef.current) {
+            const timer = setTimeout(() => {
+                try {
+                    flashListRef.current?.scrollToEnd({ animated: true });
+                } catch (e) {}
+                dispatch(setScrollToEnd(false));
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [scroll_to_end, dispatch]);
+
     useEffect(() => {
         if (highlightMessageToken) {
             dispatch(setMessageSelected(highlightMessageToken));
@@ -185,7 +204,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
      * SELECT MESSAGE
      */
     const setMS = useCallback((token: string) => {
-        Vibration.vibrate(20);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         dispatch(setMessageSelected(token));
     }, []);
 
@@ -372,6 +391,45 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                         />
                     ), [messages, setMS, user, scrollToMessage])}
                 />
+                {current_activity === 'typing' || current_activity === 'recording' ? (
+                    <Animated.View
+                        entering={FadeInUp.duration(200)}
+                        exiting={FadeInDown.duration(200)}
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingHorizontal: 16,
+                            paddingVertical: 8,
+                            marginHorizontal: 12,
+                            marginBottom: 8,
+                            alignSelf: 'flex-start',
+                            backgroundColor: app_theme.colors.chat_received || app_theme.colors.card,
+                            borderRadius: 18,
+                            borderBottomLeftRadius: 4,
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.border,
+                        }}
+                    >
+                        {current_activity === 'typing' ? (
+                            <YambiText
+                                text={strings.typing || "typing..."}
+                                size="small"
+                                color="high"
+                                style={{ fontStyle: 'italic', fontWeight: '600' }}
+                            />
+                        ) : (
+                            <>
+                                <IconApp pack="MC" name="microphone" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                <YambiText
+                                    text={strings.recording_voice_note || "Recording voice note..."}
+                                    size="small"
+                                    color="high"
+                                    style={{ fontStyle: 'italic', fontWeight: '600' }}
+                                />
+                            </>
+                        )}
+                    </Animated.View>
+                ) : null}
                 {
                     stickyDate !== '' && (
 

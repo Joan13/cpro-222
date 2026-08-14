@@ -30,14 +30,14 @@ const ViewApp: React.FC<IVIew> = ({ type, color, styles, children }) => {
                 return theme.high_color;
             case "text":
                 return theme.text;
-            case "design_tip_1":
-                return theme.design_tip1;
-            case "design_tip_2":
-                return theme.design_tip2;
-            case "text_design_1":
-                return theme.text_design1;
-            case "text_design_2":
-                return theme.text_design2;
+            case "header_background_color":
+                return theme.header_background_color;
+            case "button_background_color":
+                return theme.button_background_color;
+            case "header_foreground_color":
+                return theme.header_foreground_color;
+            case "button_foreground_color":
+                return theme.button_foreground_color;
             default:
                 return theme.background;
         }

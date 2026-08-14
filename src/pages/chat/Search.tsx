@@ -11,12 +11,22 @@ import SearchChatItem from "../../components/lists/app/SearchChatItem";
 import { strings } from "../../lang/lang";
 import { setMessageSelected } from "../../store/reducers/appSlice";
 
+export const normalizeText = (text: string): string => {
+    if (!text) return "";
+    return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\p{L}\p{N}]/gu, "");
+};
+
 const Search = ({ navigation }: any) => {
     const theme = useAppSelector(state => state.app_theme);
     const dispatch = useAppDispatch();
     const insets = useSafeAreaInsets();
     const { width } = useWindowDimensions();
 
+    const user_data = useAppSelector(state => state.user_data);
     const [keyword, setKeyword] = useState("");
 
     // Database Queries
@@ -28,9 +38,9 @@ const Search = ({ navigation }: any) => {
 
     // Filter conversations where contact name, group name, or last message matches
     const filteredChats = useMemo(() => {
-        if (!keyword.trim()) return [];
+        const cleanKeyword = normalizeText(keyword);
+        if (!cleanKeyword) return [];
 
-        const cleanKeyword = keyword.toLowerCase().trim();
         return allChats.filter(chat => {
             if (chat.deleted !== 0) return false;
 
@@ -48,9 +58,9 @@ const Search = ({ navigation }: any) => {
                 phoneNumber = contact?.phone_number || "";
             }
 
-            const nameMatches = displayName.toLowerCase().includes(cleanKeyword);
-            const phoneMatches = phoneNumber.toLowerCase().includes(cleanKeyword);
-            const lastMessageMatches = chat.last_message && chat.last_message.toLowerCase().includes(cleanKeyword);
+            const nameMatches = normalizeText(displayName).includes(cleanKeyword);
+            const phoneMatches = normalizeText(phoneNumber).includes(cleanKeyword);
+            const lastMessageMatches = chat.last_message && normalizeText(chat.last_message).includes(cleanKeyword);
 
             return nameMatches || phoneMatches || lastMessageMatches;
         });
@@ -58,35 +68,40 @@ const Search = ({ navigation }: any) => {
 
     // Filter contacts where name or phone number matches
     const filteredContacts = useMemo(() => {
-        if (!keyword.trim()) return [];
+        const cleanKeyword = normalizeText(keyword);
+        if (!cleanKeyword) return [];
 
-        const cleanKeyword = keyword.toLowerCase().trim();
         return allContacts.filter(contact => {
-            const nameMatches = contact.user_names && contact.user_names.toLowerCase().includes(cleanKeyword);
-            const phoneMatches = contact.phone_number && contact.phone_number.toLowerCase().includes(cleanKeyword);
+            const nameMatches = contact.user_names && normalizeText(contact.user_names).includes(cleanKeyword);
+            const phoneMatches = contact.phone_number && normalizeText(contact.phone_number).includes(cleanKeyword);
             return nameMatches || phoneMatches;
         });
     }, [keyword, allContacts]);
 
     // Filter individual messages containing keyword
     const filteredMessages = useMemo(() => {
-        if (!keyword.trim()) return [];
+        const cleanKeyword = normalizeText(keyword);
+        if (!cleanKeyword) return [];
 
-        const cleanKeyword = keyword.toLowerCase().trim();
+        const results: any[] = [];
 
-        // Query both direct and group messages
-        const matchedDirect = directMessages.filtered(
-            "main_text_message LIKE[c] $0 && deleted != 2 && message_type != 2",
-            `*${cleanKeyword}*`
-        );
-        const matchedGroup = groupMessages.filtered(
-            "main_text_message LIKE[c] $0 && deleted != 2 && message_type != 2",
-            `*${cleanKeyword}*`
-        );
+        directMessages.forEach(msg => {
+            if (msg.deleted !== 2 && msg.message_type !== 2 && msg.main_text_message) {
+                if (normalizeText(msg.main_text_message).includes(cleanKeyword)) {
+                    results.push(msg);
+                }
+            }
+        });
 
-        const merged = [...matchedDirect, ...matchedGroup];
-        // Sort descending by creation date
-        return merged.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        groupMessages.forEach(msg => {
+            if (msg.deleted !== 2 && msg.message_type !== 2 && msg.main_text_message) {
+                if (normalizeText(msg.main_text_message).includes(cleanKeyword)) {
+                    results.push(msg);
+                }
+            }
+        });
+
+        return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     }, [keyword, directMessages, groupMessages]);
 
     // Handle navigation to chat
@@ -184,25 +199,6 @@ const Search = ({ navigation }: any) => {
                     contentContainerStyle={styles.listContent}
                     ListHeaderComponent={
                         <View style={{ marginBottom: 8 }}>
-                            {/* Conversations Card (Matching Chats) */}
-                            {filteredChats.length > 0 ? (
-                                <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
-                                    <View style={styles.cardHeader}>
-                                        <YambiText bold text={strings.chats} size="normal" color="high" />
-                                        <YambiText text={`${filteredChats.length} ${strings.found}`} size="small" color="gray" />
-                                    </View>
-                                    {filteredChats.map((chat) => (
-                                        <SearchChatItem
-                                            key={chat._id}
-                                            item={chat}
-                                            type="chat"
-                                            searchKeyword={keyword}
-                                            onPress={() => navigateToChat(chat._id)}
-                                        />
-                                    ))}
-                                </View>
-                            ) : null}
-
                             {/* Contacts Card (Matching Contacts) */}
                             {filteredContacts.length > 0 ? (
                                 <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
@@ -222,6 +218,25 @@ const Search = ({ navigation }: any) => {
                                 </View>
                             ) : null}
 
+                            {/* Conversations Card (Matching Chats) */}
+                            {filteredChats.length > 0 ? (
+                                <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+                                    <View style={styles.cardHeader}>
+                                        <YambiText bold text={strings.chats} size="normal" color="high" />
+                                        <YambiText text={`${filteredChats.length} ${strings.found}`} size="small" color="gray" />
+                                    </View>
+                                    {filteredChats.map((chat) => (
+                                        <SearchChatItem
+                                            key={chat._id}
+                                            item={chat}
+                                            type="chat"
+                                            searchKeyword={keyword}
+                                            onPress={() => navigateToChat(chat._id)}
+                                        />
+                                    ))}
+                                </View>
+                            ) : null}
+
                             {/* Messages Section Header */}
                             {filteredMessages.length > 0 ? (
                                 <View style={styles.sectionHeader}>
@@ -233,7 +248,7 @@ const Search = ({ navigation }: any) => {
                     }
                     renderItem={({ item }) => {
                         const isGroup = item.receiver.startsWith("G");
-                        const chatUser = isGroup ? item.receiver : (item.alignment === 'outgoing' ? item.receiver : item.sender);
+                        const chatUser = isGroup ? item.receiver : (item.sender === user_data.phone_number ? item.receiver : item.sender);
                         return (
                             <SearchChatItem
                                 item={item}

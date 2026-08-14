@@ -647,7 +647,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                                 style={{
                                     flex: 1,
                                     minWidth: '30%',
-                                    backgroundColor: payment_type === 1 ? theme.design_tip2 : theme.gray,
+                                    backgroundColor: payment_type === 1 ? theme.button_background_color : theme.gray,
                                     paddingVertical: 12,
                                     borderRadius: 8,
                                     marginRight: 8,
@@ -658,7 +658,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                             >
                                 <YambiText
                                     text={strings.cash || "Cash"}
-                                    style={{ color: payment_type === 1 ? theme.text_design2 : theme.text, fontSize: 14 }}
+                                    style={{ color: payment_type === 1 ? theme.button_foreground_color : theme.text, fontSize: 14 }}
                                     color="design"
                                 />
                             </Pressable>
@@ -668,7 +668,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                                 style={{
                                     flex: 1,
                                     minWidth: '30%',
-                                    backgroundColor: payment_type === 2 ? theme.design_tip2 : theme.gray,
+                                    backgroundColor: payment_type === 2 ? theme.button_background_color : theme.gray,
                                     paddingVertical: 12,
                                     borderRadius: 8,
                                     marginRight: 8,
@@ -679,7 +679,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                             >
                                 <YambiText
                                     text={strings.card || "Card"}
-                                    style={{ color: payment_type === 2 ? theme.text_design2 : theme.text, fontSize: 14 }}
+                                    style={{ color: payment_type === 2 ? theme.button_foreground_color : theme.text, fontSize: 14 }}
                                     color="design"
                                 />
                             </Pressable>
@@ -689,7 +689,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                                 style={{
                                     flex: 1,
                                     minWidth: '30%',
-                                    backgroundColor: payment_type === 3 ? theme.design_tip2 : theme.gray,
+                                    backgroundColor: payment_type === 3 ? theme.button_background_color : theme.gray,
                                     paddingVertical: 12,
                                     marginBottom: 8,
                                     borderRadius: 8,
@@ -699,7 +699,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                             >
                                 <YambiText
                                     text={strings.bank || "Bank"}
-                                    style={{ color: payment_type === 3 ? theme.text_design2 : theme.text, fontSize: 14 }}
+                                    style={{ color: payment_type === 3 ? theme.button_foreground_color : theme.text, fontSize: 14 }}
                                     numberLines={1} color="design"
                                 />
                             </Pressable>

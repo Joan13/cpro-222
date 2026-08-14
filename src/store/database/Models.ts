@@ -414,6 +414,7 @@ export class Stories extends Realm.Object<Stories> {
     type_story!: number;
     main_text!: string;
     caption!: string;
+    styles?: string;
     mentions!: string;
     comments!: string;
     reactions!: string;
@@ -436,6 +437,7 @@ export class Stories extends Realm.Object<Stories> {
             comments: 'string',
             mentions: 'string',
             caption: 'string',
+            styles: { type: 'string', default: '{}' },
             reactions: 'string',
             viewers: 'string',
             only_with: 'string',

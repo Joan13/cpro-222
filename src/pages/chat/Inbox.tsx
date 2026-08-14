@@ -126,7 +126,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
           width: '100%',
           // paddingHorizontal: 12,
           paddingRight: 12,
-          backgroundColor: theme.colors.design_tip1
+          backgroundColor: theme.colors.header_background_color
         }}
       >
         {/* LEFT */}
@@ -135,7 +135,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
         </View>
 
         {/* RIGHT */}
-        <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center', marginLeft: 50 }}>
           <HeaderRightInbox navigation={navigation as any} user={user} />
         </View>
       </View>

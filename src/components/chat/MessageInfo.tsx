@@ -144,7 +144,7 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                 <View style={[
                     styles.previewCard,
                     {
-                        backgroundColor: isSender ? app_theme.colors.chat_sent || (app_theme.colors.design_tip2 + '18') : app_theme.colors.chat_received || app_theme.colors.card,
+                        backgroundColor: isSender ? app_theme.colors.chat_sent || (app_theme.colors.button_background_color + '18') : app_theme.colors.chat_received || app_theme.colors.card,
                         borderColor: app_theme.colors.border,
                     }
                 ]}>
@@ -322,18 +322,18 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                                 styles.sendButton,
                                 {
                                     backgroundColor: message.main_text_message.trim() !== edited_message.trim()
-                                        ? app_theme.colors.design_tip2
+                                        ? app_theme.colors.button_background_color
                                         : app_theme.colors.gray,
                                     opacity: pressed ? 0.8 : 1.0
                                 }
                             ]}>
                             {!loading ? (
                                 <View style={styles.sendButtonContent}>
-                                    <FontAwesome6 name="paper-plane" size={14} color={app_theme.colors.text_design2} style={{ marginRight: 6 }} />
-                                    <Text style={{ color: app_theme.colors.text_design2, fontWeight: '600' }}>{strings.send}</Text>
+                                    <FontAwesome6 name="paper-plane" size={14} color={app_theme.colors.button_foreground_color} style={{ marginRight: 6 }} />
+                                    <Text style={{ color: app_theme.colors.button_foreground_color, fontWeight: '600' }}>{strings.send}</Text>
                                 </View>
                             ) : (
-                                <AppActivityIndicator color={app_theme.colors.text_design2} />
+                                <AppActivityIndicator color={app_theme.colors.button_foreground_color} />
                             )}
                         </Pressable>
                     </Animated.View>

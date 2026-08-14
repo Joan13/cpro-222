@@ -998,9 +998,9 @@ export default UserProfileInfo;
 //                     <Animated.View
 //                          entering={FadeIn.duration(300)}
 //                          exiting={FadeOut.duration(300)}
-//                          style={[styles.header, {backgroundColor: theme.colors.design_tip2}]}
+//                          style={[styles.header, {backgroundColor: theme.colors.button_background_color}]}
 //                     >
-//                          <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={18} color={theme.colors.text_design2} styles={{ marginRight: 20, marginLeft: 20 }} />
+//                          <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={18} color={theme.colors.button_foreground_color} styles={{ marginRight: 20, marginLeft: 20 }} />
 //                          <Text style={styles.headerText}>{user_data.user_names}</Text>
 //                     </Animated.View>
 //                )}

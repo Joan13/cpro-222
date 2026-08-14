@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, Text, Vibration, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { NavProps, RootStackParamList, TMessage } from "../../../types/types";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
@@ -53,7 +54,7 @@ const PictureMessageItem = ({ message }: { message: TMessage }) => {
     const sendMessage = (text: string) => {
         if (message.main_text_message !== "") {
             //   playActionSound(2);
-            Vibration.vibrate(10);
+            Haptics.selectionAsync();
             const time = moment(new Date()).format();
             const token = randomString(30) + renderDateUpToMilliseconds();
 

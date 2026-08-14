@@ -217,18 +217,18 @@ const SellsPointsList = ({ item, index, show_sell, show_users, show_edit }: { it
                                 height: 44,
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                backgroundColor: app_theme.colors.design_tip2,
+                                backgroundColor: app_theme.colors.button_background_color,
                                 borderRadius: 12,
                                 flexDirection: 'row',
-                                shadowColor: app_theme.colors.design_tip2,
+                                shadowColor: app_theme.colors.button_background_color,
                                 shadowOffset: { width: 0, height: 2 },
                                 shadowOpacity: 0.3,
                                 shadowRadius: 3,
                                 elevation: 3,
                             }}>
-                            <IconApp pack="FI" name="shopping-cart" size={16} color={app_theme.colors.text_design2} />
+                            <IconApp pack="FI" name="shopping-cart" size={16} color={app_theme.colors.button_foreground_color} />
                             <Text style={{
-                                color: app_theme.colors.text_design2,
+                                color: app_theme.colors.button_foreground_color,
                                 marginLeft: 6,
                                 fontWeight: '600',
                             }}>{strings.sell}</Text>

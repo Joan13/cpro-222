@@ -17,7 +17,7 @@ const HeaderRightInbox = () => {
                 justifyContent: 'center',
                 marginHorizontal: 5
             }}>
-                <ActivityIndicator size={20} color={theme.colors.text_design1} />
+                <ActivityIndicator size={20} color={theme.colors.header_foreground_color} />
             </View> */}
 
             <Pressable style={{
@@ -27,7 +27,7 @@ const HeaderRightInbox = () => {
                 justifyContent: 'center',
                 marginHorizontal: 5
             }}>
-                <Feather name="search" size={20} color={theme.colors.text_design1} />
+                <Feather name="search" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
 
             <Pressable style={{
@@ -37,7 +37,7 @@ const HeaderRightInbox = () => {
                 justifyContent: 'center',
                 marginLeft: 5
             }}>
-                <Feather name="camera" size={20} color={theme.colors.text_design1} />
+                <Feather name="camera" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
         </View>
     )

@@ -429,14 +429,14 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                             height: 50,
                             minWidth: 50,
                             borderRadius: 50,
-                            backgroundColor: theme.design_tip2,
+                            backgroundColor: theme.button_background_color,
                             borderWidth: 1,
                             borderColor: theme.background
                         }}>
                             {loading_profile ?
-                                <ActivityIndicator color={theme.text_design2} size={20} /> :
+                                <ActivityIndicator color={theme.button_foreground_color} size={20} /> :
                                 profile === "" ?
-                                    <IconApp pack='FI' name="camera" size={20} color={theme.text_design2} />
+                                    <IconApp pack='FI' name="camera" size={20} color={theme.button_foreground_color} />
                                     :
                                     <View style={{
                                         flexDirection: 'row',
@@ -445,7 +445,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                                         paddingHorizontal: 10
                                     }}>
                                         <TextNormalYambiInDesign text={strings.send} />
-                                        <IconApp pack='FI' name="send" size={15} color={theme.text_design2} styles={{ marginLeft: 5 }} />
+                                        <IconApp pack='FI' name="send" size={15} color={theme.button_foreground_color} styles={{ marginLeft: 5 }} />
                                     </View>}
                         </Pressable>
                     </View>

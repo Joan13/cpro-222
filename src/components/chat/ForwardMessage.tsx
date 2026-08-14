@@ -51,211 +51,233 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
 
     const realm = useRealm();
 
-    const chats = useQuery(UserChats);
+    const userChatsDesc = useQuery(
+        UserChats,
+        chts => chts.filtered('deleted == 0').sorted('updatedAt', true),
+        []
+    );
 
     const contacts = useQuery(
-        UserContacts, ccs => {
-            return ccs.filtered('phone_number != $0 && user_active != $1', user_data.phone_number, 0)
-                .sorted('user_names', false);
-        }, []);
-    const [IIItems, setIIItems] = useState([]);
+        UserContacts,
+        ccs => ccs.filtered('phone_number != $0 && user_active != $1', user_data.phone_number, 0),
+        [user_data.phone_number]
+    );
 
-    const message = useObject(UsersMessages, message_selected);
+    const allForwardItems = useMemo(() => {
+        const list: TUser[] = [];
+        const addedPhones = new Set<string>();
 
-    const update_user = () => {
-        // console.log(raw_contacts)
-        SocketApp.emit('update_contacts', raw_contacts);
+        // Helper to convert live Realm contact object to plain JS object
+        const toPlainUser = (c: any): TUser => ({
+            user_id: c.user_id || c.phone_number || "",
+            user_names: c.user_names || c.phone_number || "",
+            phone_number: c.phone_number || "",
+            gender: c.gender || 0,
+            birth_date: c.birth_date || "",
+            country: c.country || "",
+            user_profile: c.user_profile || "",
+            profession: c.profession || "",
+            bio: c.bio || "",
+            user_email: c.user_email || "",
+            user_address: c.user_address || "",
+            status_information: c.status_information || "",
+            user_password: c.user_password || "",
+            account_privacy: c.account_privacy || 0,
+            user_level: c.user_level || 0,
+            user_active: c.user_active ?? 1,
+            user_verified: c.user_verified || 0,
+            user_verified_at: c.user_verified_at || "",
+            notification_token: c.notification_token || "",
+            createdAt: c.createdAt || "",
+            updatedAt: c.updatedAt || "",
+        });
 
-        // SocketApp.on('server', () => {
+        // 1. Add all chats sorted by updatedAt DESC
+        userChatsDesc.forEach(chat => {
+            if (!chat || !chat.isValid()) return;
+            const phone = chat.phone_number || chat._id;
+            if (!phone || addedPhones.has(phone)) return;
 
-        // });
-    }
-    // console.log(contacts);
+            const existingContact = contacts.find(c => c && c.isValid() && (c.phone_number === phone || c.user_id === phone));
+            if (existingContact && existingContact.isValid()) {
+                list.push(toPlainUser(existingContact));
+            } else {
+                list.push({
+                    user_id: chat._id,
+                    user_names: phone,
+                    phone_number: phone,
+                    gender: 0,
+                    birth_date: "",
+                    country: "",
+                    user_profile: "",
+                    profession: "",
+                    bio: "",
+                    user_email: "",
+                    user_address: "",
+                    status_information: "",
+                    user_password: "",
+                    account_privacy: 0,
+                    user_level: 0,
+                    user_active: 1,
+                    user_verified: 0,
+                    user_verified_at: "",
+                    notification_token: "",
+                    createdAt: chat.createdAt,
+                    updatedAt: chat.updatedAt,
+                });
+            }
+            addedPhones.add(phone);
+        });
+
+        // 2. Add remaining contacts not in active chats
+        contacts.forEach(contact => {
+            if (contact && contact.isValid() && !addedPhones.has(contact.phone_number)) {
+                list.push(toPlainUser(contact));
+                addedPhones.add(contact.phone_number);
+            }
+        });
+
+        return list;
+    }, [userChatsDesc, contacts]);
+
+    const [IIItems, setIIItems] = useState<TUser[]>([]);
+
     useEffect(() => {
-        // changeNavigationColors(app_theme.colors.background);
-        // set_base_theme();
-        // CreateTables();
+        if (!text_contact_search) {
+            setIIItems(allForwardItems);
+        } else {
+            SearchItem(text_contact_search);
+        }
+    }, [allForwardItems]);
 
-        // if (Platform.OS === 'android') {
-        //     PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CONTACTS, {
-        //         title: 'Yambi contacts',
-        //         message: 'Yambi wants to access your contacts in order to run properly',
-        //     }).then((i) => {
-        //         // loadContacts();
-        //         console.log(i)
-        //     });
-        // } else {
-        //     // loadContacts();
-        // }
-
-        // console.log(raw_contacts);
-
-        // console.log(navigation)
-
-        const iii = contacts.filter(item => item.user_active !== 0);
-        setIIItems(iii as never);
-
-        // update_user();
-    }, [contacts]);
-
-
-
-    // const SearchCountry = (search: String) => {
-    //     let cc = countries.filter(item => item.name.includes(search.toString()));
-    //     setCcc(cc);
-    // }
+    const rawMsgId = route.params?.message_id || message_selected || "";
+    const selectedTokens = useMemo(() => rawMsgId ? rawMsgId.split(',').filter(Boolean) : [], [rawMsgId]);
+    const messagesToForward = useMemo(() => {
+        return selectedTokens
+            .map(token => {
+                const msgObj = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', token);
+                if (!msgObj || !msgObj.isValid()) return null;
+                return {
+                    token: msgObj.token,
+                    sender: msgObj.sender,
+                    receiver: msgObj.receiver,
+                    main_text_message: msgObj.main_text_message || "",
+                    caption: msgObj.caption || "",
+                    message_type: msgObj.message_type,
+                    message_effect: msgObj.message_effect || 0,
+                    read_once: msgObj.read_once || 0,
+                    deleted: msgObj.deleted || 0,
+                    reactions: msgObj.reactions || "[]",
+                    flag: msgObj.flag || 0,
+                    createdAt: msgObj.createdAt,
+                };
+            })
+            .filter((m): m is NonNullable<typeof m> => m !== null);
+    }, [selectedTokens, realm]);
 
     const selectCon = useCallback((item: TUser) => {
-        // dispatch(setCurrentUser(item));
-        // navigation.navigate("Inbox", { user: item.phone_number });
-
-        if (item.phone_number === message.receiver) {
+        if (messagesToForward.some(m => m.receiver === item.phone_number)) {
             return;
         }
-
         dispatch(setPhoneNumbersList(item.phone_number));
-    }, []);
-
-    // const renderItem = useCallback(({ item }: { item: TUser }) => {
-    //     console.log('Show items');
-    //     return (<ContactsList
-    //         item={item}
-    //         app_theme={app_theme}
-    //         dispatch={dispatch}
-    //         navigation={navigation}
-    //         type_contact={type_contact}
-    //     />)
-    // }, []);
+    }, [messagesToForward, dispatch]);
 
     const ForwardTheMessage = () => {
-        if (message) {
+        if (messagesToForward.length > 0 && phone_numbers_list.length > 0) {
             setLoading(true);
-            for (let i in phone_numbers_list) {
-                PlayActionSound(2);
-                const time = moment(new Date()).format();
-                const token = randomString(30) + renderDateUpToMilliseconds();
+            const newMsgs: TMessage[] = [];
+            const newChats: any[] = [];
 
-                // let message_read = 0;
+            for (let mIdx = 0; mIdx < messagesToForward.length; mIdx++) {
+                const message = messagesToForward[mIdx];
+                for (let i = 0; i < phone_numbers_list.length; i++) {
+                    const recipientPhone = phone_numbers_list[i];
+                    PlayActionSound(2);
+                    const time = moment(new Date()).format();
+                    const token = randomString(30) + renderDateUpToMilliseconds();
 
-                // if (!tokenn) {
-                //   tokenn = token;
-                // }
+                    const msg: TMessage = {
+                        sender: user_data.phone_number,
+                        receiver: recipientPhone,
+                        main_text_message: message.main_text_message,
+                        caption: message.caption,
+                        message_type: message.message_type,
+                        reactions: '[]',
+                        response_to: "",
+                        message_read: 0,
+                        message_effect: message.message_effect,
+                        read_once: message.read_once,
+                        flag: 2,
+                        token: token,
+                        deleted: 0,
+                        platform: Platform.OS,
+                        createdAt: time,
+                        receivedAt: '',
+                        readAt: '',
+                        playedAt: '',
+                        cc: moment(time).format('DD/MM/YYYY'),
+                        alignment: moment().utc().toISOString()
+                    };
 
-                // if (message.message_type === 1) {
-                //   message_read = 5;
-                // }
+                    const this_chat = userChatsDesc.find(cc => cc.isValid() && (cc._id === recipientPhone || cc.phone_number === recipientPhone));
+                    const chat = {
+                        _id: recipientPhone,
+                        phone_number: recipientPhone,
+                        type_chat: (this_chat && this_chat.isValid()) ? this_chat.type_chat : 0,
+                        last_message: token,
+                        user: user_data.phone_number,
+                        flag: (this_chat && this_chat.isValid()) ? this_chat.flag : 0,
+                        chat_read: (this_chat && this_chat.isValid()) ? this_chat.chat_read : 1,
+                        deleted: 0,
+                        chat_effect: (this_chat && this_chat.isValid()) ? this_chat.chat_effect : 0,
+                        createdAt: time,
+                        updatedAt: time
+                    };
 
-                const msg: TMessage = {
-                    sender: user_data.phone_number,
-                    receiver: phone_numbers_list[i],
-                    main_text_message: message.main_text_message,
-                    caption: message.caption,
-                    message_type: message.message_type,
-                    reactions: '[]',
-                    response_to: "",
-                    message_read: 0,
-                    message_effect: message.message_effect,
-                    read_once: message.read_once,
-                    flag: 2,
-                    token: token,
-                    deleted: 0,
-                    platform: Platform.OS,
-                    createdAt: time,
-                    receivedAt: '',
-                    readAt: '',
-                    playedAt: '',
-                    cc: moment(time).format('DD/MM/YYYY'),
-                    alignment: moment().format()
-                }
-
-                const this_chat = chats.find(cc => cc._id === phone_numbers_list[i]);
-                //   const chat = {
-                //     _id: this_chat !== undefined ? this_chat._id : message.receiver,
-                //     phone_number: this_chat !== undefined ? this_chat.phone_number : message.receiver,
-                //     type_chat: this_chat !== undefined ? this_chat.type_chat : 0,
-                //     last_message: this_chat !== undefined ? this_chat.token : token,
-                //     user: user_data.phone_number,
-                //     flag: this_chat !== undefined ? this_chat.flag : 0,
-                //     chat_read: this_chat !== undefined ? this_chat.chat_read : 1,
-                //     deleted: this_chat !== undefined ? this_chat.deleted : 0,
-                //     chat_effect: this_chat !== undefined ? this_chat.chat_effect : 0,
-                //     createdAt: this_chat !== undefined ? this_chat.createdAt : time,
-                //     updatedAt: this_chat !== undefined ? this_chat.updatedAt : time
-                //   }
-
-                const chat = {
-                    _id: phone_numbers_list[i],
-                    phone_number: phone_numbers_list[i],
-                    type_chat: this_chat !== undefined ? this_chat.type_chat : 0,
-                    last_message: token,
-                    user: user_data.phone_number,
-                    flag: this_chat !== undefined ? this_chat.flag : 0,
-                    chat_read: this_chat !== undefined ? this_chat.chat_read : 1,
-                    deleted: 0,
-                    chat_effect: this_chat !== undefined ? this_chat.chat_effect : 0,
-                    createdAt: time,
-                    updatedAt: time
-                }
-
-                realm.write(() => {
-                    try {
-                        realm.create('UsersMessages', msg);
-                        // } catch (error) { }
-
-                        // try {
-                        realm.create('UserChats', chat, true);
-                    } catch (error) { }
-                });
-
-                // realm.write(() => {
-                //   try {
-                //     realm.create('UserChats', chat, true);
-                //   } catch (error) { }
-                // });
-
-
-                // dispatch(setMessageInbox(""));
-                // // dispatch(setMessageInbox(""));
-
-                // // dispatch(addDraft({ message_inbox: "", user: current_user }));
-                // dispatch(setResponseTo(""));
-
-                // dispatch(setPhoneNumbersList(""));
-
-                // dispatch(setMessageSelected(""));
-
-                // console.log("Message sent")
-
-                if (message.message_type === 0) {
-                    SocketApp.emit('newMessage', msg);
+                    newMsgs.push(msg);
+                    newChats.push(chat);
                 }
             }
+
+            realm.write(() => {
+                try {
+                    newMsgs.forEach(msg => realm.create('UsersMessages', msg));
+                    newChats.forEach(chat => realm.create('UserChats', chat, true));
+                } catch (error) {
+                    console.error("Error creating forwarded messages in Realm:", error);
+                }
+            });
+
+            newMsgs.forEach(msg => {
+                if (msg.message_type === 0) {
+                    SocketApp.emit('newMessage', msg);
+                }
+            });
+
+            setTimeout(() => {
+                dispatch(setMessageInbox(""));
+                dispatch(setResponseTo(""));
+                dispatch(setPhoneNumbersList(""));
+                dispatch(setMessageSelected(""));
+                navigation.navigate("Home");
+            }, phone_numbers_list.length <= 5 ? 800 : 1300);
         }
-
-        setTimeout(() => {
-            dispatch(setMessageInbox(""));
-            // dispatch(setMessageInbox(""));
-            // dispatch(addDraft({ message_inbox: "", user: current_user }));
-            dispatch(setResponseTo(""));
-
-            dispatch(setPhoneNumbersList(""));
-
-            dispatch(setMessageSelected(""));
-
-            navigation.navigate("Home");
-
-        }, phone_numbers_list.length <= 5 ? 800 : 1300);
-    }
+    };
 
     const SearchItem = (search: string) => {
         dispatch(setTextContactSearch(search));
-        let filtered_items = contacts.filter(item => {
-            return item.user_active !== 0 && item.user_names.toLowerCase().includes(search.toLowerCase().toString())
-                || item.user_active !== 0 && item.phone_number.toLowerCase().includes(search.toLowerCase().toString());
+        if (!search.trim()) {
+            setIIItems(allForwardItems);
+            return;
+        }
+        let filtered_items = allForwardItems.filter(item => {
+            return (
+                (item.user_names && item.user_names.toLowerCase().includes(search.toLowerCase())) ||
+                (item.phone_number && item.phone_number.toLowerCase().includes(search.toLowerCase()))
+            );
         });
-
-        setIIItems(filtered_items as never);
-    }
+        setIIItems(filtered_items);
+    };
 
     // const renderItem = memo(Ii);
 
@@ -426,13 +448,13 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                     </View>
                     <Pressable
                         onPress={ForwardTheMessage}
-                        style={{ height: 35, paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.design_tip2, borderRadius: 5, borderColor: app_theme.colors.border, borderWidth: 1 }}>
+                        style={{ height: 35, paddingHorizontal: 25, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.button_background_color, borderRadius: 5, borderColor: app_theme.colors.border, borderWidth: 1 }}>
                         {!loading ?
                             <Text style={{
-                                color: app_theme.colors.text_design2,
+                                color: app_theme.colors.button_foreground_color,
                                 fontSize: app_description.general_font_size
                             }}>{strings.send}</Text> :
-                            <AppActivityIndicator color={app_theme.colors.text_design2} />}
+                            <AppActivityIndicator color={app_theme.colors.button_foreground_color} />}
                     </Pressable>
                 </Animated.View> : null}
         </SafeAreaView>

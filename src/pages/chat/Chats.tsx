@@ -250,11 +250,11 @@ const Chats = ({ navigation, route }: NavProps) => {
         chts.filtered('flag == 2 && deleted == 0'));
 
     const otherChats = useQuery(UserChats, chts =>
-        chts.filtered('flag != 2 && deleted == 0').sorted('createdAt', true)
+        chts.filtered('flag != 2 && deleted == 0').sorted('updatedAt', true)
     );
 
     const favoriteChats = useQuery(UserChats, chts =>
-        chts.filtered('flag == 1 && deleted == 0').sorted('createdAt', true)
+        chts.filtered('flag == 1 && deleted == 0').sorted('updatedAt', true)
     );
 
     const GoInbox = useCallback((user: string) => {

@@ -140,7 +140,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
                         pack="FI"
                         name={Platform.OS === "android" ? "arrow-left" : "chevron-left"}
                         size={22}
-                        color={app_theme.colors.text_design1}
+                        color={app_theme.colors.header_foreground_color}
                     />
                 </Pressable>
             )
@@ -150,7 +150,7 @@ const BusinessModern = ({ navigation, route }: NavProps) => {
             title: business?.business_name ?? strings.business,
             headerLeft,
         });
-    }, [business, navigation, needsDeepLinkHeader, app_theme.colors.text_design1]);
+    }, [business, navigation, needsDeepLinkHeader, app_theme.colors.header_foreground_color]);
 
     // Helper function to check if business is expired
     // "Mwanga Business" always remains active

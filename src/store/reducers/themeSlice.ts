@@ -13,8 +13,6 @@ export const themeSlice = createSlice({
             state.dark = action.payload.dark;
             state.name = action.payload.name;
             state.statusbar = action.payload.statusbar;
-            state.statusbar_tip1 = action.payload.statusbar_tip1;
-            state.statusbar_tip2 = action.payload.statusbar_tip2;
             state.colors = {
                 primary: action.payload.colors.primary,
                 like_border: action.payload.colors.like_border,
@@ -28,14 +26,17 @@ export const themeSlice = createSlice({
                 card: action.payload.colors.card,
                 other: action.payload.colors.other,
                 high_color: action.payload.colors.high_color,
+                primary_high_color: action.payload.colors.primary_high_color,
                 high_color2: action.payload.colors.high_color2,
                 high_color3: action.payload.colors.high_color3,
                 chat_sent: action.payload.colors.chat_sent,
                 chat_received: action.payload.colors.chat_received,
-                design_tip1: action.payload.colors.design_tip1,
-                design_tip2: action.payload.colors.design_tip2,
-                text_design1: action.payload.colors.text_design1,
-                text_design2: action.payload.colors.text_design2,
+                chat_sent_foreground: action.payload.colors.chat_sent_foreground,
+                chat_received_foreground: action.payload.colors.chat_received_foreground,
+                header_background_color: action.payload.colors.header_background_color,
+                button_background_color: action.payload.colors.button_background_color,
+                header_foreground_color: action.payload.colors.header_foreground_color,
+                button_foreground_color: action.payload.colors.button_foreground_color,
                 home_badge_background_color: action.payload.colors.home_badge_background_color,
                 home_badge_color: action.payload.colors.home_badge_color,
                 badge_color: action.payload.colors.badge_color,

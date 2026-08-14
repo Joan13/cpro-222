@@ -1,4 +1,6 @@
 {
+  "typing": "anaandika...",
+  "recording_voice_note": "Anarekodi sauti...",
   "slogan_yambi": "Yambi is you and I, toi et moi 😊",
   "loading": "Chargement... ",
   "fast": "Rapide ",
@@ -957,8 +959,15 @@
   "reactions": "Réactions",
   "views": "Vues",
   "story": "Story",
-  "my_stories": "My stories",
-  "my_story": "My story",
+  "my_stories": "Story zangu",
+  "my_story": "Story yangu",
+  "create_status": "Tengeneza status",
+  "pick_photo_for_status": "Chagua picha ya status",
+  "whats_on_your_mind": "Unawaza nini?",
+  "publish_status": "Tangaza status",
+  "tap_to_add_status": "Bonyo ili kuongeza status",
+  "add_story": "Ongeza story",
+  "no_active_stories": "Hakuna story inayo tumika",
   "items_categories": {
     "clothing_shoes": {
       "id": "clothing_shoes",

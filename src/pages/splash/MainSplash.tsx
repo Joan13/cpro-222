@@ -392,8 +392,8 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
                             exiting={FadeOut.duration(200)}>
                             <Pressable
                                 onPress={handleNext}
-                                style={[styles.navButtonTop, { backgroundColor: app_theme.colors.design_tip2 }]}>
-                                <Feather name="arrow-right" size={20} color={app_theme.colors.text_design2} />
+                                style={[styles.navButtonTop, { backgroundColor: app_theme.colors.button_background_color }]}>
+                                <Feather name="arrow-right" size={20} color={app_theme.colors.button_foreground_color} />
                             </Pressable>
                         </Animated.View>
                     ) : null}
@@ -437,7 +437,7 @@ const SplashYambiStart = ({ navigation }: NavProps) => {
                     <PageIndicator 
                         key={index} 
                         index={index} 
-                        primaryColor={app_theme.colors.design_tip2}
+                        primaryColor={app_theme.colors.button_background_color}
                         borderColor={app_theme.colors.gray}
                     />
                 ))}

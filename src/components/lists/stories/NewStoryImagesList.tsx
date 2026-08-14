@@ -230,10 +230,10 @@ const NewStoryImagesList = ({ item, index, onReadyStatus, onGoBack, onDeleteStat
                     height: 40,
                     paddingHorizontal: 10,
                     borderRadius: 30,
-                    backgroundColor: app_theme.colors.design_tip2
+                    backgroundColor: app_theme.colors.button_background_color
                 }} onPress={UploadStatus}>
                     {loading_photo ?
-                        <AppActivityIndicator color={app_theme.colors.text_design2} /> :
+                        <AppActivityIndicator color={app_theme.colors.button_foreground_color} /> :
                         <View style={{
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -241,10 +241,10 @@ const NewStoryImagesList = ({ item, index, onReadyStatus, onGoBack, onDeleteStat
                             height: 35
                         }}>
                             <Text style={{
-                                color: app_theme.colors.text_design2,
+                                color: app_theme.colors.button_foreground_color,
                                 fontSize: app_description.general_font_size
                             }}>{strings.send_photo}</Text>
-                            <IconApp name="chevron-right" pack="FI" size={15} color={app_theme.colors.text_design2} />
+                            <IconApp name="chevron-right" pack="FI" size={15} color={app_theme.colors.button_foreground_color} />
                         </View>}
                 </Pressable>
             </View>

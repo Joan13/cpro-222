@@ -6,7 +6,7 @@ import { strings } from '../../lang/lang';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
-import { setCurrentUser, setMessageInbox, setPlayingRecorded, setRecordingAudio, setResponseTo, setShowCustomKeyboard, setVoiceNoteBeingPlayed } from '../../store/reducers/appSlice';
+import { setCurrentUser, setMessageInbox, setPlayingRecorded, setRecordingAudio, setResponseTo, setScrollToEnd, setShowCustomKeyboard, setVoiceNoteBeingPlayed } from '../../store/reducers/appSlice';
 import { TChat, TMessage } from '../../types/types';
 // import { SocketApp } from '../../../App';
 import moment from 'moment';
@@ -116,6 +116,74 @@ const FooterChat = ({ user }: { user: string }) => {
 
   const chatt = useObject(UserChats, user || "");
 
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!user || !user_data.phone_number) return;
+
+    if (message_inbox && message_inbox.trim() !== '') {
+      SocketApp.emit('user_typing_status', {
+        sender: user_data.phone_number,
+        recipient: user,
+        status: 'typing'
+      });
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      typingTimeoutRef.current = setTimeout(() => {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: ''
+        });
+      }, 3000);
+    } else {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      SocketApp.emit('user_typing_status', {
+        sender: user_data.phone_number,
+        recipient: user,
+        status: ''
+      });
+    }
+  }, [message_inbox, user, user_data.phone_number]);
+
+  useEffect(() => {
+    if (!user || !user_data.phone_number) return;
+
+    if (recordingAudio) {
+      SocketApp.emit('user_typing_status', {
+        sender: user_data.phone_number,
+        recipient: user,
+        status: 'recording'
+      });
+    } else {
+      SocketApp.emit('user_typing_status', {
+        sender: user_data.phone_number,
+        recipient: user,
+        status: ''
+      });
+    }
+  }, [recordingAudio, user, user_data.phone_number]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (user && user_data.phone_number) {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: ''
+        });
+      }
+    };
+  }, [user, user_data.phone_number]);
+
   const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
   const recorder = useAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
@@ -151,7 +219,7 @@ const FooterChat = ({ user }: { user: string }) => {
           alignItems: 'center'
         }}>
           {/* {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null} */}
-          <IconApp pack="FA6" name="microphone" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
+          <IconApp pack="MC" name="microphone" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
           <YambiText text={strings.voice_note} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
         </View>
 
@@ -693,6 +761,7 @@ const FooterChat = ({ user }: { user: string }) => {
 
       // dispatch(addDraft({ message_inbox: "", user: current_user }));
       dispatch(setResponseTo(""));
+      dispatch(setScrollToEnd(true));
 
       // console.log("Message sent")
 
@@ -1280,15 +1349,15 @@ const FooterChat = ({ user }: { user: string }) => {
                   width: 48,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: app_theme.colors.design_tip2,
+                  backgroundColor: app_theme.colors.button_background_color,
                   borderRadius: 24,
-                  shadowColor: app_theme.colors.design_tip2,
+                  shadowColor: app_theme.colors.button_background_color,
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
                   // elevation: 4,
                 }}>
-                <Ionicons name="send" size={20} color={app_theme.colors.text_design2} />
+                <Ionicons name="send" size={20} color={app_theme.colors.button_foreground_color} />
               </Pressable>
             </Animated.View> : null}
 
@@ -1301,15 +1370,15 @@ const FooterChat = ({ user }: { user: string }) => {
                   width: 48,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: app_theme.colors.design_tip2,
+                  backgroundColor: app_theme.colors.button_background_color,
                   borderRadius: 24,
-                  shadowColor: app_theme.colors.design_tip2,
+                  shadowColor: app_theme.colors.button_background_color,
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
                   // elevation: 4,
                 }}>
-                <Ionicons name="send" size={20} color={app_theme.colors.text_design2} />
+                <Ionicons name="send" size={20} color={app_theme.colors.button_foreground_color} />
               </Pressable></Animated.View> : null}
 
           {recordingAudio ?
@@ -1321,21 +1390,21 @@ const FooterChat = ({ user }: { user: string }) => {
                   width: 48,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: app_theme.colors.design_tip2,
+                  backgroundColor: app_theme.colors.button_background_color,
                   borderRadius: 24,
-                  shadowColor: app_theme.colors.design_tip2,
+                  shadowColor: app_theme.colors.button_background_color,
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
                 }}>
-                <Ionicons name="send" size={20} color={app_theme.colors.text_design2} />
+                <Ionicons name="send" size={20} color={app_theme.colors.button_foreground_color} />
               </Pressable></Animated.View> : null}
 
           {/* {RecordingOrPlaying() ?
             <Pressable
               onPress={sendVoiceNote}
-              style={{ height: 50, width: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.design_tip2, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1 }}>
-              <Ionicons name="stop" size={18} color={app_theme.colors.text_design2} />
+              style={{ height: 50, width: 50, justifyContent: 'center', alignItems: 'center', backgroundColor: app_theme.colors.button_background_color, borderRadius: 50, borderColor: app_theme.colors.border, borderWidth: 1 }}>
+              <Ionicons name="stop" size={18} color={app_theme.colors.button_foreground_color} />
             </Pressable> : null} */}
 
 
@@ -1348,15 +1417,15 @@ const FooterChat = ({ user }: { user: string }) => {
                   width: 48,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  backgroundColor: app_theme.colors.design_tip2,
+                  backgroundColor: app_theme.colors.button_background_color,
                   borderRadius: 24,
-                  shadowColor: app_theme.colors.design_tip2,
+                  shadowColor: app_theme.colors.button_background_color,
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
                   // elevation: 4,
                 }}>
-                <IconApp pack='FA6' name="microphone" size={20} color={app_theme.colors.text_design2} />
+                <IconApp pack='MC' name="microphone" size={20} color={app_theme.colors.button_foreground_color} />
               </Pressable></Animated.View> : null}
         </View>
       </View>

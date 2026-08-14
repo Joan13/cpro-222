@@ -1,6 +1,6 @@
 import { FlashList, type FlashListProps } from '@shopify/flash-list';
 
-/** FlashList v2 removed MasonryFlashList; this keeps marketplace grids building. */
+/** FlashList v2 masonry layout component */
 export function MasonryFlashList<T>(props: FlashListProps<T>) {
-  return <FlashList {...props} />;
+  return <FlashList masonry={true} optimizeItemArrangement={true} {...props} />;
 }

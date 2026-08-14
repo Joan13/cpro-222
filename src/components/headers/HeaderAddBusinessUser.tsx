@@ -44,7 +44,7 @@ const HeaderAddBusinessUser = ({ navigation, route }: NavProps) => {
                     justifyContent: 'center',
                     marginLeft: 5
                 }}>
-                <IconApp pack="MT" name="delete" size={20} color={theme.colors.text_design1} />
+                <IconApp pack="MT" name="delete" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
         </View>
     )

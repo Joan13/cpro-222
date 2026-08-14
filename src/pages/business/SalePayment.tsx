@@ -37,7 +37,7 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                         }}
                         style={{ paddingHorizontal: 12, paddingVertical: 8 }}
                     >
-                        <Feather name="trash-2" size={22} color={app_theme.colors.text_design1 || app_theme.colors.text} />
+                        <Feather name="trash-2" size={22} color={app_theme.colors.header_foreground_color || app_theme.colors.text} />
                     </Pressable>
                 ),
             });
@@ -46,7 +46,7 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                 headerRight: undefined,
             });
         }
-    }, [navigation, payment, payment?.payment_status, app_theme.colors.text_design1, app_theme.colors.text]);
+    }, [navigation, payment, payment?.payment_status, app_theme.colors.header_foreground_color, app_theme.colors.text]);
 
     // Resolve sale object from DB using payment.sale_id as fallback
     const saleObject = useObject(BusinessItemsSale, payment?.sale_id || '');

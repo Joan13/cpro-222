@@ -1,4 +1,5 @@
-import { View, Text, Image, Vibration, Pressable } from 'react-native';
+import { View, Text, Image, Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { useObject } from '@realm/react';
@@ -135,12 +136,12 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
     // ))
 
     const handleSwipeToReply = () => {
-        Vibration.vibrate(25);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         dispatch(setResponseTo(item.token));
     };
 
     const handleHapticFeedback = () => {
-        Vibration.vibrate(10);
+        Haptics.selectionAsync();
     };
 
     const panGesture = Gesture.Pan()
@@ -303,12 +304,12 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                     </View> : null}
                 <Pressable
                     onLongPress={() => {
-                        Vibration.vibrate(25);
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                         selectMessage(item.token);
                     }}
                     onPress={() => {
-                        if (message_selected === item.token) {
-                            selectMessage("");
+                        if (message_selected !== "") {
+                            selectMessage(item.token);
                         }
                     }}
 
@@ -318,7 +319,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                         // marginVertical: 2,
                         paddingVertical: 4,
                         // paddingHorizontal: 2,
-                        backgroundColor: message_selected === item.token ? app_theme.colors.high_color + "30" : 'transparent',
+                        backgroundColor: (message_selected ? message_selected.split(',').includes(item.token) : false) ? app_theme.colors.high_color + "30" : 'transparent',
                         borderRadius: 12,
                     }}>
                     <View style={{ flex: 1, position: 'relative', justifyContent: 'center' }}>
@@ -479,7 +480,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                     : null}
 
                                                 {item.message_type === 0 ? <Text style={{
-                                                    color: app_theme.colors.text,
+                                                    color: item.sender === user_data.phone_number ? app_theme.colors.chat_sent_foreground : app_theme.colors.chat_received_foreground,
                                                     flex: 1,
                                                     marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
                                                     marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,

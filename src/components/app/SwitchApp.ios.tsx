@@ -1,4 +1,4 @@
-// import { Vibration, ViewStyle } from "react-native"
+// import * as Haptics from "expo-haptics";
 // import { useAppSelector } from "../../store/app/hooks";
 // import Switch from 'react-native-ui-lib/switch';
 
@@ -43,7 +43,7 @@
 //             // value={value}
 //             disabled={disabled}
 //             // onValueChange={() => {
-//             //     // Vibration.vibrate(20);
+//             // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 //             //     onPress();
 //             // }}
 //         />

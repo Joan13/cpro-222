@@ -57,7 +57,7 @@ export const realmConfig = {
     Payments,
     Reservations,
   ],
-  schemaVersion: 23,
+  schemaVersion: 24,
 };
 
 export const openRealmInstance = async () => {
@@ -154,7 +154,12 @@ export const insertBackgroundMessage = async (msg: any) => {
         };
       }
 
-      msg.alignment = moment().utc().toISOString();
+      const existingMsg = realm.objectForPrimaryKey<UsersMessages>('UsersMessages', msg.token);
+      if (existingMsg && existingMsg.alignment) {
+        msg.alignment = existingMsg.alignment;
+      } else {
+        msg.alignment = moment().utc().toISOString();
+      }
       msg.message_read = 2; // Marked as delivered locally
 
       try {

@@ -75,11 +75,10 @@ const MarketplaceItems = forwardRef<MarketplaceItemsRef>((props, ref) => {
         fetchItems(false);
     }, []);
 
-    const renderItem = ({ item, index }) => (
+    const renderItem = ({ item, index }: { item: TCartItem, index: number }) => (
         <View style={{
             flex: 1,
-            // width: ITEM_WIDTH, 
-            marginRight: index % 2 === 0 ? 5 : 0
+            padding: 3
         }}>
             <MarketplaceItem
                 item={item}

@@ -125,7 +125,7 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                         }}
                         style={{ paddingHorizontal: 8, paddingVertical: 8 }}
                     >
-                        <Feather name="edit-2" size={20} color={app_theme.colors.text_design1 || app_theme.colors.text} />
+                        <Feather name="edit-2" size={20} color={app_theme.colors.header_foreground_color || app_theme.colors.text} />
                     </Pressable>
                     <Pressable
                         onPress={() => {
@@ -134,7 +134,7 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                         }}
                         style={{ paddingHorizontal: 8, paddingVertical: 8 }}
                     >
-                        <Feather name="trash-2" size={20} color={app_theme.colors.text_design1 || app_theme.colors.text} />
+                        <Feather name="trash-2" size={20} color={app_theme.colors.header_foreground_color || app_theme.colors.text} />
                     </Pressable>
                 </View>
             ),

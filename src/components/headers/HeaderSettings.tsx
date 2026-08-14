@@ -23,7 +23,7 @@ const HeaderSettings = ({ navigation }: { navigation: any }) => {
             paddingLeft: 5,
             // height: 60,
             // marginHorizontal: 15,
-            backgroundColor: theme.colors.design_tip1
+            backgroundColor: theme.colors.header_background_color
         }}>
             <Pressable onPress={() => navigation.goBack()} style={{
                 width: 44,
@@ -34,12 +34,12 @@ const HeaderSettings = ({ navigation }: { navigation: any }) => {
                 // marginHorizontal: 5,
                 // backgroundColor: theme.colors.border,
             }}>
-                <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={25} color={theme.colors.text_design1} />
+                <IconApp pack='FI' name={Platform.OS === 'android' ? "arrow-left" : "chevron-left"} size={25} color={theme.colors.header_foreground_color} />
             </Pressable>
 
             {/* <YambiText text={strings.account_settings} style={{flex:1, textAlign:'center'}}  /> */}
             <Text style={{
-                color: theme.colors.text_design1,
+                color: theme.colors.header_foreground_color,
                 fontSize: 20,
                 flex: 1,
                 textAlign: 'center',
@@ -56,7 +56,7 @@ const HeaderSettings = ({ navigation }: { navigation: any }) => {
                 // marginHorizontal: 5,
                 borderRadius: 50
             }}>
-                <IconApp pack='FI' name="edit" size={20} color={theme.colors.text_design1} />
+                <IconApp pack='FI' name="edit" size={20} color={theme.colors.header_foreground_color} />
             </Pressable>
 
             {/* <Pressable style={{
@@ -66,7 +66,7 @@ const HeaderSettings = ({ navigation }: { navigation: any }) => {
                 justifyContent: 'center',
                 marginHorizontal: 5
             }}>
-                <Feather name="search" size={20} color={theme.colors.text_design1} />
+                <Feather name="search" size={20} color={theme.colors.header_foreground_color} />
             </Pressable> */}
 
             {/* <Pressable style={{
@@ -77,7 +77,7 @@ const HeaderSettings = ({ navigation }: { navigation: any }) => {
                 justifyContent: 'center',
                 marginLeft: 5
             }}>
-                <Feather name="camera" size={20} color={theme.colors.text_design1} />
+                <Feather name="camera" size={20} color={theme.colors.header_foreground_color} />
             </Pressable> */}
 
             {/* {app_description.home_user_image_position === 'right' ?

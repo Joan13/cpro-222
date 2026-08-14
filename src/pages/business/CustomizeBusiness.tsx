@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { View, ScrollView, Pressable, TextInput, Platform } from 'react-native';
+import { View, ScrollView, Pressable, TextInput, Platform, Vibration } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Animated, { BounceIn, FadeInDown, FadeInUp, SlideInDown, SlideInUp } from 'react-native-reanimated';
 import { strings } from '../../lang/lang';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -89,6 +90,11 @@ const CustomizeBusiness = () => {
      }
 
      const SetPP = (pp: string) => {
+          try {
+               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+               Vibration.vibrate(30);
+          } catch (error) { }
+
           // Only allow numeric characters
           const numericOnly = pp.replace(/[^0-9]/g, '');
 
@@ -129,6 +135,11 @@ const CustomizeBusiness = () => {
      }
 
      const SETCP = (cpp: string) => {
+          try {
+               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+               Vibration.vibrate(30);
+          } catch (error) { }
+
           setCp(cpp);
 
           if (flag_pass === 0) {
@@ -480,7 +491,7 @@ const CustomizeBusiness = () => {
                                    {/* Success Indicator */}
                                    {business_password.length === 6 && (
                                         <Animated.View entering={BounceIn} style={{ marginRight: 15 }}>
-                                             <IconApp name="check-circle" pack='FA' size={24} color={theme.colors.success} />
+                                             <IconApp name="checkmark-circle" pack='IO' size={24} color={theme.colors.success} />
                                         </Animated.View>
                                    )}
 

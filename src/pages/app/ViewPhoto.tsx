@@ -3,14 +3,15 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Image as ExpoImage } from 'expo-image';
 import { useAppSelector } from "../../store/app/hooks";
 import { NavProps } from "../../types/types";
-import { TextNormalYambiGray } from "../../components/app/Text";
+import { TextNormalYambiGray, YambiText } from "../../components/app/Text";
+import { IconApp } from "../../components/app/IconApp";
 import { strings } from "../../lang/lang";
 import Animated, { 
     useSharedValue, 
     useAnimatedStyle, 
-    withSpring, 
     withTiming,
-    runOnJS 
+    runOnJS,
+    Easing
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppActivityIndicator from "../../components/app/AppActivityIndicator";
@@ -125,10 +126,10 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
             .onEnd(() => {
                 savedScale.value = scale.value;
                 if (scale.value < BASE_ZOOM - 0.001) {
-                    scale.value = withSpring(BASE_ZOOM);
+                    scale.value = withTiming(BASE_ZOOM, { duration: 200, easing: Easing.out(Easing.quad) });
                     savedScale.value = BASE_ZOOM;
-                    translateX.value = withSpring(0);
-                    translateY.value = withSpring(0);
+                    translateX.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
+                    translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
                     savedTx.value = 0;
                     savedTy.value = 0;
                 } else {
@@ -206,10 +207,10 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
             .onEnd(() => {
                 'worklet';
                 if (scale.value > BASE_ZOOM + 0.05) {
-                    scale.value = withSpring(BASE_ZOOM);
+                    scale.value = withTiming(BASE_ZOOM, { duration: 200, easing: Easing.out(Easing.quad) });
                     savedScale.value = BASE_ZOOM;
-                    translateX.value = withSpring(0);
-                    translateY.value = withSpring(0);
+                    translateX.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
+                    translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
                     savedTx.value = 0;
                     savedTy.value = 0;
                 } else {
@@ -322,9 +323,9 @@ const ViewPhoto = ({ route, navigation }: NavProps) => {
 
     // Update translateX when currentIndex changes programmatically
     useEffect(() => {
-        translateX.value = withSpring(-currentIndex * SCREEN_WIDTH, {
-            damping: 20,
-            stiffness: 90,
+        translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
+            duration: 250,
+            easing: Easing.out(Easing.quad),
         });
     }, [currentIndex]);
 
@@ -374,23 +375,23 @@ const ViewPhoto = ({ route, navigation }: NavProps) => {
                         runOnJS(goToNextImage)();
                     } else {
                         // Snap back to current position
-                        translateX.value = withSpring(-currentIndex * SCREEN_WIDTH, {
-                            damping: 20,
-                            stiffness: 90,
+                        translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
+                            duration: 200,
+                            easing: Easing.out(Easing.quad),
                         });
                     }
                 } else {
                     // Snap back to current position
-                    translateX.value = withSpring(-currentIndex * SCREEN_WIDTH, {
-                        damping: 20,
-                        stiffness: 90,
+                    translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
+                        duration: 200,
+                        easing: Easing.out(Easing.quad),
                     });
                 }
             } else {
                 // Reset if gesture was cancelled
-                translateX.value = withSpring(-currentIndex * SCREEN_WIDTH, {
-                    damping: 20,
-                    stiffness: 90,
+                translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
+                    duration: 200,
+                    easing: Easing.out(Easing.quad),
                 });
             }
         });
@@ -410,25 +411,27 @@ const ViewPhoto = ({ route, navigation }: NavProps) => {
         .onEnd((event) => {
             // Only process if vertical movement was primary
             if (Math.abs(event.translationY) > Math.abs(event.translationX) && event.translationY > 0) {
-            if (event.translationY > SCREEN_HEIGHT * 0.3 || event.velocityY > 500) {
+                if (event.translationY > SCREEN_HEIGHT * 0.3 || event.velocityY > 500) {
                     // Smooth slideDown animation
                     translateY.value = withTiming(SCREEN_HEIGHT, { 
                         duration: 300,
+                        easing: Easing.out(Easing.quad),
                     });
                     opacity.value = withTiming(0, { 
                         duration: 300,
+                        easing: Easing.out(Easing.quad),
                     }, () => {
-                    runOnJS(closePhoto)();
-                });
-            } else {
-                // Spring back to original position
-                    translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
-                    opacity.value = withSpring(1, { damping: 20, stiffness: 90 });
+                        runOnJS(closePhoto)();
+                    });
+                } else {
+                    // Snap back to original position
+                    translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
+                    opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) });
                 }
             } else {
                 // Reset if gesture was cancelled
-                translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
-                opacity.value = withSpring(1, { damping: 20, stiffness: 90 });
+                translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
+                opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) });
             }
         });
 
@@ -504,11 +507,79 @@ const ViewPhoto = ({ route, navigation }: NavProps) => {
                 flex: 1,
                 backgroundColor: app_theme.colors.background
             }}>
+                {/* Header overlay */}
+                <View style={{
+                    position: 'absolute',
+                    top: 40,
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 16,
+                }}>
+                    <Pressable
+                        onPress={closePhoto}
+                        hitSlop={12}
+                        style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
+                        <IconApp pack="FI" name="x" size={22} color="#FFFFFF" />
+                    </Pressable>
+
+                    {hasMultipleImages && (
+                        <View style={{
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            paddingHorizontal: 14,
+                            paddingVertical: 6,
+                            borderRadius: 16,
+                        }}>
+                            <YambiText size="small" color="white" bold text={`${currentIndex + 1} / ${imageArray.length}`} />
+                        </View>
+                    )}
+                </View>
+
+                {/* Main photo carousel */}
                 <GestureDetector gesture={combinedGesture}>
                     <Animated.View style={[{ flex: 1 }, animatedStyle]}>
                         {renderImagesContainer()}
                     </Animated.View>
                 </GestureDetector>
+
+                {/* Bottom pagination dots for multiple images */}
+                {hasMultipleImages && (
+                    <View style={{
+                        position: 'absolute',
+                        bottom: 36,
+                        left: 0,
+                        right: 0,
+                        zIndex: 10,
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
+                        {imageArray.map((_, idx) => (
+                            <Pressable
+                                key={idx}
+                                onPress={() => setCurrentIndex(idx)}
+                                hitSlop={10}
+                                style={{
+                                    width: currentIndex === idx ? 22 : 8,
+                                    height: 8,
+                                    borderRadius: 4,
+                                    backgroundColor: currentIndex === idx ? (app_theme.colors.high_color || '#FFFFFF') : 'rgba(255,255,255,0.4)',
+                                    marginHorizontal: 4,
+                                }}
+                            />
+                        ))}
+                    </View>
+                )}
             </View>
         </GestureHandlerRootView>
     )

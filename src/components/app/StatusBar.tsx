@@ -7,8 +7,8 @@ const StatusBarYambi = () => {
     return (
         <StatusBar
             style={theme.statusbar as any}
-            translucent={Platform.OS === 'android' ? false : true}
-            backgroundColor={theme.colors.design_tip1}
+        // translucent={Platform.OS === 'android' ? false : true}
+        // backgroundColor={theme.colors.header_background_color}
         />
     )
 }

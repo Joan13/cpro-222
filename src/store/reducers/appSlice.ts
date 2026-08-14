@@ -73,7 +73,8 @@ const initialState: TStore = {
     chats_selected: [],
     users_connected: [],
     show_favorite_chats: false,
-    category: ""
+    category: "",
+    typing_statuses: {}
 }
 
 export const appSlice = createSlice({
@@ -84,11 +85,20 @@ export const appSlice = createSlice({
             state.rootNavigation = action.payload;
         },
         setMessageSelected: (state, action: PayloadAction<string>) => {
-            if (state.message_selected === action.payload) {
+            if (!action.payload) {
                 state.message_selected = "";
-            } else {
-                state.message_selected = action.payload;
+                return;
             }
+
+            let currentTokens = state.message_selected ? state.message_selected.split(',').filter(Boolean) : [];
+
+            if (currentTokens.includes(action.payload)) {
+                currentTokens = currentTokens.filter(t => t !== action.payload);
+            } else {
+                currentTokens.push(action.payload);
+            }
+
+            state.message_selected = currentTokens.join(',');
         },
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.loading = action.payload;
@@ -152,6 +162,9 @@ export const appSlice = createSlice({
         },
         setResponseTo: (state, action: PayloadAction<string>) => {
             state.response_to = action.payload;
+        },
+        setScrollToEnd: (state, action: PayloadAction<boolean>) => {
+            state.scroll_to_end = action.payload;
         },
         setTitleApp: (state, action: PayloadAction<string>) => {
             state.title = action.payload;
@@ -222,9 +235,14 @@ export const appSlice = createSlice({
                 state.users_connected.push(action.payload);
             }
         },
-        // setCategory: (state, action: PayloadAction<string>) => {
-        //     state.category = action.payload;
-        // },
+        setUserTypingStatus: (state, action: PayloadAction<{ sender: string, status: string }>) => {
+            if (action.payload && action.payload.sender) {
+                state.typing_statuses = {
+                    ...state.typing_statuses,
+                    [action.payload.sender]: action.payload.status || ""
+                };
+            }
+        }
     }
 })
 
@@ -261,7 +279,9 @@ export const {
     setBusinessItemsFilter,
     setTextBusinessSearch,
     setCategory,
-    setSearchYambiText } = appSlice.actions;
+    setSearchYambiText,
+    setScrollToEnd,
+    setUserTypingStatus } = appSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectApp = (state: RootState) => state.app;

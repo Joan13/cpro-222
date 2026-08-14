@@ -1,4 +1,5 @@
-import {  View, Image, RefreshControl, ScrollView, Pressable, Text } from "react-native";
+import {  View, Image, RefreshControl, ScrollView, Pressable, Text, Vibration } from "react-native";
+import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { NavProps, TBusiness, TBusinessSubscription, TBusinessUser, TItem, TItemPrices, TSale, TSellsPoint } from "../../types/types";
 import { strings } from "../../lang/lang";
@@ -580,6 +581,11 @@ const Businesses = ({}: NavProps) => {
         // Block input during unlock animation or wrong-password clear
         if (isUnlocking.current || showWrongPassword) return;
 
+        try {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            Vibration.vibrate(30);
+        } catch (error) { }
+
         if (key === 'backspace') {
             if (passwordInput.length > 0) {
                 SETCP(passwordInput.slice(0, -1));
@@ -661,7 +667,7 @@ const Businesses = ({}: NavProps) => {
                                 marginBottom: 20,
                                 alignItems: 'center'
                             }}>
-                            <IconApp name="check-circle" pack='FA' size={32} color={theme.success} />
+                            <IconApp name="checkmark-circle" pack='IO' size={32} color={theme.success} />
                         </Animated.View>
                     )}
 
