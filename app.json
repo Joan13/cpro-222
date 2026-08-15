@@ -142,6 +142,14 @@
         {
           "photosPermission": "Permettre à $(PRODUCT_NAME) d'accéder à vos photos pour sélectionner des images."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Permettre à Yambi d'accéder à votre galerie pour sélectionner des photos.",
+          "savePhotosPermission": "Permettre à Yambi d'enregistrer des photos dans votre galerie.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ]
   }

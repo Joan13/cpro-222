@@ -158,6 +158,7 @@ import MessageInfo from './src/components/chat/MessageInfo';
 import UserProfileInfo from './src/pages/app/UserProfileInfo';
 import AllMessages from './src/components/chat/AllMessages';
 import NewStory from './src/pages/news/NewStory';
+import Gallery from './src/pages/gallery/Gallery';
 import Stories from './src/pages/news/Stories';
 import UserStories from './src/pages/news/UserStories';
 import useAudioPermission from './src/components/hooks/useAudioPermission';
@@ -3932,6 +3933,21 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerTintColor: app_theme.colors.header_foreground_color,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                             title: strings.new_story,
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            }
+                        })} />
+
+                        <Stack.Screen name="Gallery" component={Gallery} options={({ navigation, route }) => ({
+                            headerShadowVisible: false,
+                            headerShown: true,
+                            headerStyle: {
+                                backgroundColor: app_theme.colors.header_background_color
+                            },
+                            headerTintColor: app_theme.colors.header_foreground_color,
+                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            title: (strings as any).gallery || "Gallery",
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
                                 fontWeight: app_description.title_font_weight as any,
