@@ -149,8 +149,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
     //     }
     // }
 
-    const typing_statuses = useAppSelector(state => state.app.typing_statuses);
-    const current_activity = typing_statuses[item._id] || typing_statuses[item.phone_number] || '';
+    const current_activity = useAppSelector(state => state.app.typing_statuses[item._id] || state.app.typing_statuses[item.phone_number] || '');
 
     const render_last_message = () => {
 

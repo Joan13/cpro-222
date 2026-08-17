@@ -247,3 +247,10 @@ Notifications.addNotificationResponseReceivedListener(async (response) => {
 // And down should be the total cash.
 
 // Then modernize the statistics cards
+
+
+
+
+// In the photo editor there is a bug. When two photos are selected the design becomes weird because of the new view of the selected photos. Can you enhance the design to make things more realistic ? like a slider to go to the other picture if many pictures have been selected. Meaning that each photo editor will be a page of a paginated flashlist where each page represent a photo to be edited.
+
+// Change the select button in Photo editor to "Finish"

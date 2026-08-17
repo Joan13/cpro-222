@@ -1,4 +1,5 @@
 import { View, Text, Pressable, Platform, TextInput, Keyboard, useWindowDimensions, BackHandler } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import Animated, { BounceIn, BounceOut, FadeIn, FadeInDown, FadeInUp, FadeOut, useAnimatedStyle, useSharedValue, withTiming, SharedValue } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
@@ -116,64 +117,116 @@ const FooterChat = ({ user }: { user: string }) => {
 
   const chatt = useObject(UserChats, user || "");
 
+  const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
+  const recorderState = useAudioRecorderState(recorder, 100);
+  const playerStatus = useAudioPlayerStatus(sound);
+
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastEmittedTypingRef = useRef<string>('');
+  const lastEmittedRecordingRef = useRef<string>('');
 
   useEffect(() => {
     if (!user || !user_data.phone_number) return;
 
     if (message_inbox && message_inbox.trim() !== '') {
-      SocketApp.emit('user_typing_status', {
-        sender: user_data.phone_number,
-        recipient: user,
-        status: 'typing'
-      });
+      if (lastEmittedTypingRef.current !== 'typing') {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: 'typing'
+        });
+        lastEmittedTypingRef.current = 'typing';
+      }
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
 
       typingTimeoutRef.current = setTimeout(() => {
-        SocketApp.emit('user_typing_status', {
-          sender: user_data.phone_number,
-          recipient: user,
-          status: ''
-        });
+        if (lastEmittedTypingRef.current !== '') {
+          SocketApp.emit('user_typing_status', {
+            sender: user_data.phone_number,
+            recipient: user,
+            status: ''
+          });
+          lastEmittedTypingRef.current = '';
+        }
       }, 3000);
     } else {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      SocketApp.emit('user_typing_status', {
-        sender: user_data.phone_number,
-        recipient: user,
-        status: ''
-      });
+      if (lastEmittedTypingRef.current !== '') {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: ''
+        });
+        lastEmittedTypingRef.current = '';
+      }
     }
   }, [message_inbox, user, user_data.phone_number]);
 
   useEffect(() => {
     if (!user || !user_data.phone_number) return;
 
-    if (recordingAudio) {
-      SocketApp.emit('user_typing_status', {
-        sender: user_data.phone_number,
-        recipient: user,
-        status: 'recording'
-      });
+    if (recordingAudio && !isRecordingPaused) {
+      if (lastEmittedRecordingRef.current !== 'recording') {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: 'recording'
+        });
+        lastEmittedRecordingRef.current = 'recording';
+      }
+
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+      if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+
+      recordingIntervalRef.current = setInterval(() => {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: 'recording'
+        });
+      }, 2000);
+
+      recordingTimeoutRef.current = setTimeout(() => {
+        if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+        if (lastEmittedRecordingRef.current !== '') {
+          SocketApp.emit('user_typing_status', {
+            sender: user_data.phone_number,
+            recipient: user,
+            status: ''
+          });
+          lastEmittedRecordingRef.current = '';
+        }
+      }, 3000);
     } else {
-      SocketApp.emit('user_typing_status', {
-        sender: user_data.phone_number,
-        recipient: user,
-        status: ''
-      });
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+      if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+      if (lastEmittedRecordingRef.current !== '') {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: ''
+        });
+        lastEmittedRecordingRef.current = '';
+      }
     }
-  }, [recordingAudio, user, user_data.phone_number]);
+  }, [recordingAudio, isRecordingPaused, user, user_data.phone_number]);
 
   useEffect(() => {
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
       if (user && user_data.phone_number) {
         SocketApp.emit('user_typing_status', {
           sender: user_data.phone_number,
@@ -183,14 +236,6 @@ const FooterChat = ({ user }: { user: string }) => {
       }
     };
   }, [user, user_data.phone_number]);
-
-  const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60 }));
-  const recorder = useAudioRecorder({
-    ...RecordingPresets.HIGH_QUALITY,
-    isMeteringEnabled: true,
-  });
-  const recorderState = useAudioRecorderState(recorder, 100);
-  const playerStatus = useAudioPlayerStatus(sound);
 
   useEffect(() => {
     setStatus(playerStatus);
@@ -269,6 +314,7 @@ const FooterChat = ({ user }: { user: string }) => {
   }
 
   const PlayVoice = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (!sound) {
       return;
     }
@@ -354,6 +400,7 @@ const FooterChat = ({ user }: { user: string }) => {
 
 
   const recordVoiceNote = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     dispatch(setVoiceNoteBeingPlayed(""));
 
     // playActionSound(1);
@@ -464,6 +511,7 @@ const FooterChat = ({ user }: { user: string }) => {
   }, [recorderState?.durationMillis, recorderState?.isRecording]);
 
   const togglePauseResumeRecording = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isRecordingPaused) {
       dispatch(setVoiceNoteBeingPlayed(""));
       recorder.record();
@@ -475,6 +523,7 @@ const FooterChat = ({ user }: { user: string }) => {
   };
 
   const stopAndSendVoiceNote = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     dispatch(setRecordingAudio(false));
     setIsRecordingPaused(false);
 
@@ -545,6 +594,7 @@ const FooterChat = ({ user }: { user: string }) => {
   }, [uri]);
 
   const onVoice = async (index: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     PlayActionSound(5);
 
     if (index === 0) {
@@ -620,6 +670,7 @@ const FooterChat = ({ user }: { user: string }) => {
   // };
 
   const sendVoiceNote = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     // console.log(uri)
 
@@ -656,6 +707,20 @@ const FooterChat = ({ user }: { user: string }) => {
 
   const sendMessage = (message: string, type: number, tokenn?: string) => {
     if (message !== "") {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+      lastEmittedTypingRef.current = '';
+      lastEmittedRecordingRef.current = '';
+
+      if (user && user_data.phone_number) {
+        SocketApp.emit('user_typing_status', {
+          sender: user_data.phone_number,
+          recipient: user,
+          status: ''
+        });
+      }
+
       PlayActionSound(2);
       const time = moment(new Date()).format();
       const token = randomString(30) + renderDateUpToMilliseconds();
@@ -804,6 +869,7 @@ const FooterChat = ({ user }: { user: string }) => {
   }
 
   const stopBeforeQuit = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     PlayActionSound(3);
     if (openPlaySurface) {
       setOpenPlaySurface(false);
@@ -1104,16 +1170,40 @@ const FooterChat = ({ user }: { user: string }) => {
                 </Pressable> */}
                 {!playingAudio || !voice_surface() ?
                   <>
+
                     <Pressable
-                      onPress={() => RootNavigation.navigate("PictureMessage", { user: user })}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        RootNavigation.navigate("SendDocument", { user: user });
+                      }}
                       style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
-                      <IconApp pack='FI' name="image" size={20} color={app_theme.colors.gray} />
+                      <IconApp pack='IO' name="document" size={20} color={app_theme.colors.gray} />
                     </Pressable>
 
+                    <Pressable
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        RootNavigation.navigate("SendContact", { user: user });
+                      }}
+                      style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
+                      <IconApp pack='FA' name="user" size={20} color={app_theme.colors.gray} />
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        RootNavigation.navigate("PictureMessage", { user: user });
+                      }}
+                      style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
+                      <IconApp pack='MT' name="insert-photo" size={22} color={app_theme.colors.gray} />
+                    </Pressable>
 
                     {message_inbox !== "" ?
                       <Pressable
-                        onPress={() => setEnterCaption(!enterCaption)}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setEnterCaption(!enterCaption);
+                        }}
                         style={{ paddingRight: 5, paddingLeft: 5, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, height: 30 }}>
                         {enterCaption ?
                           <IconApp pack='MC' name="closed-caption" size={24} color={app_theme.colors.gray} />

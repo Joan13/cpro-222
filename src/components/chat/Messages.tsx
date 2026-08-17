@@ -23,8 +23,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
     const app_description = useAppSelector(state => state.persisted_app.app_description);
     const lang = useAppSelector(state => state.persisted_app.langApp);
     const scroll_to_end = useAppSelector(state => state.app.scroll_to_end);
-    const typing_statuses = useAppSelector(state => state.app.typing_statuses);
-    const current_activity = typing_statuses[user] || '';
+    const current_activity = useAppSelector(state => state.app.typing_statuses[user] || '');
     const dispatch = useAppDispatch();
 
     const flashListRef = useRef<any>(null);

@@ -18,18 +18,23 @@ import { IconApp } from '../../app/IconApp';
 import BottomSheet from '../../app/BottomSheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { strings } from '../../../lang/lang';
+import { ProcessedPhoto } from '../../../types/gallery';
+import { PhotoEditor } from './PhotoEditor';
+
 
 export interface MediaGalleryProps {
   multiple?: boolean;
   maxSelection?: number;
   initialSelection?: MediaLibrary.Asset[];
   onSelectAssets?: (assets: MediaLibrary.Asset[]) => void;
-  onConfirm?: (assets: MediaLibrary.Asset[]) => void;
+  onConfirm?: (assets: any[]) => void;
+  onComplete?: (photos: ProcessedPhoto[]) => void;
   headerTitle?: string;
   showConfirmButton?: boolean;
   showSelectAll?: boolean;
   pageSize?: number;
   mediaTypes?: MediaLibrary.MediaTypeValue[];
+  enableEditing?: boolean;
 }
 
 const DATE_FILTERS: Array<{ key: DateFilterType; labelKey: string }> = [
@@ -46,11 +51,13 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   initialSelection = [],
   onSelectAssets,
   onConfirm,
+  onComplete,
   headerTitle,
   showConfirmButton = true,
   showSelectAll = true,
   pageSize = 30,
   mediaTypes = [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
+  enableEditing = false,
 }) => {
   const theme = useAppSelector(state => state.app_theme);
   const { width } = useWindowDimensions();
@@ -168,11 +175,43 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     }
   }, [assets, selectedMap, selectedAssets, maxSelection, onSelectAssets]);
 
+  const [isEditingMode, setIsEditingMode] = useState<boolean>(false);
+
+  const handleEditorComplete = useCallback(
+    (processedPhotos: ProcessedPhoto[]) => {
+      setIsEditingMode(false);
+      if (onComplete) {
+        onComplete(processedPhotos);
+      }
+      if (onConfirm) {
+        onConfirm(processedPhotos);
+      }
+    },
+    [onComplete, onConfirm]
+  );
+
   const handleConfirm = useCallback(() => {
-    if (onConfirm) {
-      onConfirm(selectedAssets);
+    if (selectedAssets.length === 0) return;
+    if (enableEditing) {
+      setIsEditingMode(true);
+    } else {
+      const processed: ProcessedPhoto[] = selectedAssets.map(a => ({
+        uri: a.uri,
+        width: a.width,
+        height: a.height,
+        mimeType: (a.mediaType as any) === 'video' ? 'video/mp4' : 'image/jpeg',
+        assetId: a.id,
+        originalAsset: a,
+      }));
+
+      if (onComplete) {
+        onComplete(processed);
+      }
+      if (onConfirm) {
+        onConfirm(selectedAssets);
+      }
     }
-  }, [onConfirm, selectedAssets]);
+  }, [enableEditing, selectedAssets, onConfirm, onComplete]);
 
   const selectedAlbumObj = useMemo(() => {
     if (!selectedAlbumId) return null;
@@ -580,6 +619,14 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
           />
         </View>
       ) : null}
+
+      {/* Photo Editor Step Modal */}
+      <PhotoEditor
+        visible={isEditingMode}
+        assets={selectedAssets}
+        onClose={() => setIsEditingMode(false)}
+        onComplete={handleEditorComplete}
+      />
     </View>
   );
 };

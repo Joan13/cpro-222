@@ -500,6 +500,7 @@ const NewStory = ({ navigation, route }: NavProps) => {
                             <MediaGallery
                                 multiple
                                 showSelectAll={false}
+                                enableEditing={true}
                                 onConfirm={handleSelectGalleryPhotos}
                             />
                         </View>

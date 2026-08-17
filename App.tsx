@@ -838,6 +838,9 @@ const Yambi = ({ navigation }: NavProps) => {
     const NewMessagesInsert = (msgs) => {
         realm.write(() => {
             msgs.forEach((msg) => {
+                if (msg.sender) {
+                    dispatch(setUserTypingStatus({ sender: msg.sender, status: '' }));
+                }
                 const existingLocalMsg = realm.objectForPrimaryKey('UsersMessages', msg.token) as any;
                 const isNewMessage = !existingLocalMsg;
 
@@ -1012,23 +1015,37 @@ const Yambi = ({ navigation }: NavProps) => {
             SocketApp.emit('yesImConnected', { phone2: user_data.phone_number, phone1: phone_number });
         });
 
-        SocketApp.on('user_typing_status' + user_data.phone_number, data => {
+        const typingTimeouts: Record<string, NodeJS.Timeout> = {};
+
+        const handleTypingStatus = (data: any) => {
             try {
                 const parsed = typeof data === 'string' ? JSON.parse(data) : data;
                 if (parsed && parsed.sender) {
-                    dispatch(setUserTypingStatus({ sender: parsed.sender, status: parsed.status || '' }));
-                }
-            } catch (error) { }
-        });
+                    if (parsed.recipient && parsed.recipient !== user_data.phone_number) {
+                        return;
+                    }
+                    const sender = parsed.sender;
+                    const status = parsed.status || '';
 
-        SocketApp.on('user_typing_status', data => {
-            try {
-                const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-                if (parsed && parsed.sender && parsed.recipient === user_data.phone_number) {
-                    dispatch(setUserTypingStatus({ sender: parsed.sender, status: parsed.status || '' }));
+                    if (typingTimeouts[sender]) {
+                        clearTimeout(typingTimeouts[sender]);
+                        delete typingTimeouts[sender];
+                    }
+
+                    dispatch(setUserTypingStatus({ sender, status }));
+
+                    if (status !== '') {
+                        typingTimeouts[sender] = setTimeout(() => {
+                            dispatch(setUserTypingStatus({ sender, status: '' }));
+                            delete typingTimeouts[sender];
+                        }, 4000);
+                    }
                 }
             } catch (error) { }
-        });
+        };
+
+        SocketApp.on('user_typing_status' + user_data.phone_number, handleTypingStatus);
+        SocketApp.on('user_typing_status', handleTypingStatus);
 
         SocketApp.emit("assemble", user_data.phone_number);
 

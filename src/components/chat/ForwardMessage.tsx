@@ -31,7 +31,6 @@ import { UserChats, UserContacts, UsersMessages } from '../../store/database/Mod
 import { PlayActionSound, randomString, renderDateUpToMilliseconds, SocketApp } from '../../../GlobalVariables';
 import moment from 'moment';
 import AppActivityIndicator from '../app/AppActivityIndicator';
-import { SafeAreaView } from 'react-native-safe-area-context';
 // import { SocketApp } from '../../../App';
 
 // const navigation = NativeStackScreenProps<RootStackParamList>();
@@ -377,7 +376,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 1 }}>
+        <View style={{ flex: 1, backgroundColor: app_theme.colors.background, borderColor: app_theme.colors.border, borderTopWidth: 1 }}>
 
             <StatusBarYambi />
 
@@ -427,7 +426,8 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                         />)}
                     contentContainerStyle={{
                         backgroundColor: app_theme.colors.background,
-                        paddingHorizontal: 15
+                        paddingHorizontal: 15,
+                        paddingBottom: 50
                     }}
                 />
             </View>
@@ -440,7 +440,8 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingVertical: 10,
-                    marginHorizontal: 15
+                    marginHorizontal: 15,
+                    marginBottom: 50
                 }} entering={FadeIn} exiting={FadeOut}>
                     <View>
                         <TextNormalYambi text={phone_numbers_list.length <= 1 ? phone_numbers_list.length + " " + strings.contact_selected.toLowerCase() : phone_numbers_list.length + " " + strings.contacts_selected.toLowerCase()} />
@@ -457,7 +458,7 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                             <AppActivityIndicator color={app_theme.colors.button_foreground_color} />}
                     </Pressable>
                 </Animated.View> : null}
-        </SafeAreaView>
+        </View>
     );
 
 }

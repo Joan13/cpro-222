@@ -237,10 +237,20 @@ export const appSlice = createSlice({
         },
         setUserTypingStatus: (state, action: PayloadAction<{ sender: string, status: string }>) => {
             if (action.payload && action.payload.sender) {
-                state.typing_statuses = {
-                    ...state.typing_statuses,
-                    [action.payload.sender]: action.payload.status || ""
-                };
+                const newStatus = action.payload.status || "";
+                const currentStatus = state.typing_statuses[action.payload.sender] || "";
+                if (currentStatus === newStatus) return;
+
+                if (newStatus) {
+                    state.typing_statuses = {
+                        ...state.typing_statuses,
+                        [action.payload.sender]: newStatus
+                    };
+                } else {
+                    const newStatuses = { ...state.typing_statuses };
+                    delete newStatuses[action.payload.sender];
+                    state.typing_statuses = newStatuses;
+                }
             }
         }
     }
