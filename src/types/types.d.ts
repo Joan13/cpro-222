@@ -761,6 +761,8 @@ export type RootStackParamList = {
     SettingsYambi: undefined;
     Languages: undefined;
     PictureMessage: { user: string };
+    SendDocument: { user: string };
+    SendContact: { user: string };
     ViewFullInboxImage: { message: string };
     NewBusiness: undefined;
     AboutYambi: undefined;

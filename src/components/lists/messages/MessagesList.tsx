@@ -10,6 +10,8 @@ import moment from 'moment';
 import { strings } from '../../../lang/lang';
 import VoiceMessageItem from '../../chat/message/VoiceMessageItem';
 import PictureMessageItem from '../../chat/message/PictureMessageItem';
+import DocumentMessageItem from '../../chat/message/DocumentMessageItem';
+import ContactMessageItem from '../../chat/message/ContactMessageItem';
 import { displayDate } from '../../../../GlobalVariables';
 import { TextSmallYambiGray, TextSmallYambiHighColor } from '../../app/Text';
 import { IconApp } from '../../app/IconApp';
@@ -496,7 +498,11 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
 
                                                 {item.message_type === 2 ? <PictureMessageItem message={item} /> : null}
 
-                                                {item.caption !== "" ?
+                                                {item.message_type === 3 ? <DocumentMessageItem message={item} /> : null}
+
+                                                {item.message_type === 4 ? <ContactMessageItem message={item} /> : null}
+
+                                                {item.caption !== "" && item.message_type !== 4 && item.message_type !== 3 ?
                                                     <Text style={{
                                                         // marginRight:40,
                                                         color: item.message_type === 0 ? app_theme.colors.gray : app_theme.colors.text,
@@ -588,4 +594,13 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
     }
 };
 
-export default memo(MessagesList);
+export default memo(MessagesList, (prevProps, nextProps) => {
+    return (
+        prevProps.item.token === nextProps.item.token &&
+        prevProps.item.message_read === nextProps.item.message_read &&
+        prevProps.item.main_text_message === nextProps.item.main_text_message &&
+        prevProps.item.caption === nextProps.item.caption &&
+        prevProps.index === nextProps.index &&
+        prevProps.user === nextProps.user
+    );
+});

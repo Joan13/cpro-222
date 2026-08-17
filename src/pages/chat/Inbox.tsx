@@ -49,71 +49,19 @@ const Inbox = ({ navigation, route }: NavProps) => {
   // }
 
   useEffect(() => {
-    // }
-
     dispatch(setCurrentUser(user));
     Notifications.dismissNotificationAsync(`chat_${user}`).catch((err) => console.log('Failed to dismiss notification:', err));
-    // console.log(user);
+  }, [user]);
 
-    // SocketApp.on('newMessage'+user_data.phone_number, msg=>{
-    //   console.log("Received message");
-    // })
-
-    if (cc !== null) {
-
-      // console.log("Update chat called");
-
-
-      // if(chats_badge.includes(cc._id)){
-      //     dispatch(setRemoveChatBadge(cc._id));
-      // }
-
-      const chat: TChat = {
-        _id: cc._id,
-        phone_number: cc.phone_number,
-        user: cc.user,
-        type_chat: cc.type_chat,
-        last_message: cc.last_message,
-        flag: cc.flag,
-        chat_read: 1,
-        deleted: cc.deleted,
-        chat_effect: cc.chat_effect,
-        createdAt: cc.createdAt,
-        updatedAt: cc.updatedAt,
-      }
-
-      if (cc.chat_read === 0) {
-        realm.write(() => {
-          try {
-            realm.create('UserChats', chat, true);
-          } catch (error) { }
-        });
-      }
+  useEffect(() => {
+    if (cc !== null && cc.chat_read === 0) {
+      realm.write(() => {
+        try {
+          cc.chat_read = 1;
+        } catch (error) { }
+      });
     }
-
-    // return () => {
-    //   dispatch(setCurrentUser({
-    //     user_id: 0,
-    //     user_names: "",
-    //     phone_number: "",
-    //     gender: '0',
-    //     birth_date: "",
-    //     country: "",
-    //     user_profile: "",
-    //     profession: "",
-    //     bio: "",
-    //     user_email: "",
-    //     user_address: "",
-    //     notification_token: "",
-    //     status_information: "",
-    //     user_password: "",
-    //     account_privacy: "",
-    //     account_valid: "",
-    //     createdAt: "",
-    //     updatedAt: ""
-    //   }))
-    // }
-  }, [cc]);
+  }, [cc?.chat_read]);
 
   return (
     <View style={{ flex: 1 }}>

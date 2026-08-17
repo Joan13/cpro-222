@@ -234,8 +234,8 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                 },
             });
 
-            if (parseInt(response.data.success) === 1 && response.data.message) {
-                const serverFileName = response.data.message;
+            const serverFileName = response.data?.file_name || response.data?.message || response.data?.file;
+            if (serverFileName && typeof serverFileName === 'string' && serverFileName !== '1' && serverFileName !== '0') {
                 const newPath = FileSystem.documentDirectory + "YambiVoiceNotes/" + serverFileName;
 
                 const localExists = await FileSystem.getInfoAsync(message.main_text_message);
@@ -568,31 +568,18 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
     }, [voice_note_being_played]);
 
     useEffect(() => {
-
-        const timeout = setTimeout(()=>{
-            FirstActions();
-        }, 150);
-
-        // pauseBecauseAnotherVoiceStartedPlaying();
-
-        // console.log(message.main_text_message);
-
-        // // return () => {
-        // //     if (sound) {
-        // //         sound.current.unloadAsync();
-        // //     }
-        // // };
-        // return sound
-        //     ? () => {
-        //         // console.log('Unloading Sound');
-        //         sound.current.unloadAsync();
-        //     }
-        //     : undefined;
-        return () => {
-            sound.remove();
-            clearTimeout(timeout);
-        };
-    }, [message.main_text_message]);
+        if (message.message_read === 5 && message.sender === user_data.phone_number) {
+            const timeout = setTimeout(() => {
+                UploadVoiceNote();
+            }, 200);
+            return () => clearTimeout(timeout);
+        } else {
+            const timeout = setTimeout(() => {
+                FirstActions();
+            }, 150);
+            return () => clearTimeout(timeout);
+        }
+    }, [message.message_read, message.main_text_message]);
 
     const PlaybackRate = async () => {
         let rate = 1;
@@ -680,7 +667,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             alignItems: 'center',
             paddingVertical: 6,
             paddingHorizontal: 4,
-            minWidth: 220,
+            width: 235,
         }}>
             {/* Play/Pause Button / Download Progress */}
             {downloadingAudio ?

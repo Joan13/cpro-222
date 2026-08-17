@@ -264,8 +264,9 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
 
         const maxOffset = contentHeight - layoutHeight;
         const isAtBottom = offsetY >= maxOffset - 50;
+        const show = !isAtBottom;
 
-        setShowJumpToBottom(!isAtBottom);
+        setShowJumpToBottom(prev => (prev !== show ? show : prev));
 
     }, []);
 
@@ -363,6 +364,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                     showsVerticalScrollIndicator={false}
                     keyExtractor={(item) => item.token}
                     scrollEventThrottle={16}
+                    contentContainerStyle={{ paddingBottom: 24, paddingTop: 12 }}
                     onScroll={handleScroll}
                     onViewableItemsChanged={
                         updateStickyDate

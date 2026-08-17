@@ -73,6 +73,8 @@ import InventoryMovement from './src/pages/business/InventoryMovement';
 import NewGroup from './src/pages/app/NewGroup';
 import { createPersistedFolders } from './src/util/AppFoldersCreator';
 import SendPictureMessage from './src/components/chat/SendPictureMessage';
+import SendDocument from './src/components/chat/SendDocument';
+import SendContact from './src/components/chat/SendContact';
 import ViewFullInboxImage from './src/components/chat/ViewFullInboxImage';
 // import HeaderRightInbox from './src/components/headers/HaderRightInbox';
 // import YambiEmojiKeyboard from './src/components/app/YambiEmojiKeyboard';
@@ -3312,6 +3314,34 @@ const Yambi = ({ navigation }: NavProps) => {
                             headerTintColor: app_theme.colors.header_foreground_color,
                             animation: 'slide_from_bottom',
                             title: strings.select_picture,
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                        }} />
+
+                        <Stack.Screen name="SendDocument" component={SendDocument} options={{
+                            headerShadowVisible: false,
+                            headerShown: true, headerStyle: {
+                                backgroundColor: app_theme.colors.header_background_color
+                            },
+                            headerTintColor: app_theme.colors.header_foreground_color,
+                            animation: 'slide_from_bottom',
+                            title: (strings as any).select_document || "Select Document",
+                            headerTitleStyle: {
+                                fontSize: app_description.title_font_size,
+                                fontWeight: app_description.title_font_weight as any,
+                            },
+                        }} />
+
+                        <Stack.Screen name="SendContact" component={SendContact} options={{
+                            headerShadowVisible: false,
+                            headerShown: true, headerStyle: {
+                                backgroundColor: app_theme.colors.header_background_color
+                            },
+                            headerTintColor: app_theme.colors.header_foreground_color,
+                            animation: 'slide_from_bottom',
+                            title: (strings as any).send_contact || "Send Contact",
                             headerTitleStyle: {
                                 fontSize: app_description.title_font_size,
                                 fontWeight: app_description.title_font_weight as any,
