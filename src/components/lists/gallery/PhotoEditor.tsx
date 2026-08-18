@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   PanResponder,
   BackHandler,
+  Modal,
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library';
@@ -799,7 +800,13 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
   const cropHPercent = `${currentTransform.cropH * 100}%`;
 
   return (
-    <View style={[styles.modalOverlay, { backgroundColor: theme.colors.background }]}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={false}
+      onRequestClose={onClose}
+    >
+      <View style={[styles.modalOverlay, { backgroundColor: theme.colors.background }]}>
       {/* Top Header Bar */}
       <View
         style={[
@@ -1620,6 +1627,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
         />
       </View>
     </View>
+  </Modal>
   );
 };
 

@@ -20,6 +20,9 @@ import SwitchApp from "../../components/app/SwitchApp";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ImagePicker from '../../utils/imagePicker';
 import { Image as ExpoImage } from 'expo-image';
+import * as MediaLibrary from 'expo-media-library';
+import { PhotoEditor } from '../../components/lists/gallery/PhotoEditor';
+import { ProcessedPhoto } from '../../types/gallery';
 
 const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
@@ -32,6 +35,8 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
     const loading_app = useAppSelector(state => state.app.loading);
     const user_data = useAppSelector(state => state.user_data);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
+    const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.Asset[]>([]);
+    const [showEditor, setShowEditor] = useState<boolean>(false);
     const [currency, setCurrency] = useState<number>(1);
     const [name, setName] = useState<string>("");
     const [itemDescription, setItemDescription] = useState<string>("");
@@ -452,6 +457,52 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
         )
     };
 
+    const handleEditorComplete = async (processedPhotos: ProcessedPhoto[]) => {
+        setShowEditor(false);
+        if (processedPhotos && processedPhotos.length > 0 && itemm !== null) {
+            setLoading_image(true);
+            let latestImages = currentImages || itemm?.images || "";
+
+            for (let i = 0; i < processedPhotos.length; i++) {
+                const photo = processedPhotos[i];
+                const filename = Date.now() + '-' + i + '-' + Math.round(Math.random() * 1E9);
+                const base_url = remote_host + "/yambi/API/upload_item_image";
+                const formData = new FormData();
+                formData.append('assemble', itemm._id);
+                formData.append('item_images', latestImages);
+                formData.append('image', { type: 'image/jpeg', uri: photo.uri, name: `${filename}item.jpg` } as any);
+
+                try {
+                    const response = await axios.post(base_url, formData, {
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+
+                    if (response.data.message === "1" && response.data.item_images) {
+                        latestImages = response.data.item_images;
+                        imagesManuallyUpdatedRef.current = true;
+                        setCurrentImages(latestImages);
+
+                        realm.write(() => {
+                            try {
+                                realm.create('UserBusinessArticles', {
+                                    _id: itemm._id,
+                                    images: latestImages,
+                                    updatedAt: moment().format()
+                                }, true);
+                            } catch (e) { }
+                        });
+                    }
+                } catch (error) {
+                    console.log('Error uploading article image:', error);
+                }
+            }
+            setLoading_image(false);
+        }
+    };
+
     const pick_item_image = () => {
         if (!effectiveCanUploadImages) {
             Alert.alert(
@@ -468,10 +519,13 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             return;
         }
 
+        if (itemm === null) return;
+
         const imagesToUse = currentImages || itemm?.images || "";
         const existingImages = parseImagesArray(imagesToUse);
+        const remainingQuota = maxImagesForPlan - existingImages.length;
 
-        if (existingImages.length >= maxImagesForPlan) {
+        if (remainingQuota <= 0) {
             Alert.alert(
                 strings.error || "Limit Reached",
                 `Your subscription plan allows up to ${maxImagesForPlan} image${maxImagesForPlan > 1 ? "s" : ""} per article.`,
@@ -486,19 +540,16 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
             return;
         }
 
-        ImagePicker.openPicker({
-            width: 800,
-            height: 800,
-            cropping: true,
-            quality: 0.7,
-            noData: true,
-            mediaType: "photo",
-        }).then(image => {
-            if (image && image.path) {
-                upload_item_image(image.path, image.mime);
+        (navigation as any).navigate('Gallery', {
+            multiple: true,
+            maxSelection: remainingQuota,
+            onSelect: (assets: MediaLibrary.Asset[]) => {
+                if (assets && assets.length > 0) {
+                    setSelectedAssets(assets);
+                    setShowEditor(true);
+                }
             }
-        })
-            .catch((e) => { });
+        });
     };
 
     const upload_item_image = (fileUri?: string, fileMime?: string) => {
@@ -1549,6 +1600,14 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
                     </ModalApp>
                 )}
             </ScrollView>
+            {showEditor && selectedAssets.length > 0 ? (
+                <PhotoEditor
+                    assets={selectedAssets}
+                    visible={showEditor}
+                    onClose={() => setShowEditor(false)}
+                    onComplete={handleEditorComplete}
+                />
+            ) : null}
         </View>
     )
 }

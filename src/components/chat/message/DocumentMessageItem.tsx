@@ -10,6 +10,7 @@ import axios from "axios";
 import moment from "moment";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { YambiText } from "../../app/Text";
+import { strings } from "../../../lang/lang";
 import { randomString, remote_host, renderDateUpToMilliseconds, SocketApp, media_url } from "../../../../GlobalVariables";
 
 const formatFileSize = (bytes: number) => {
@@ -316,12 +317,12 @@ const DocumentMessageItem = ({ message }: { message: TMessage }) => {
                 <YambiText
                     text={
                         uploading
-                            ? "Uploading..."
+                            ? ((strings as any).uploading || "Uploading...")
                             : downloading
-                            ? "Downloading..."
+                            ? (strings.downloading || "Downloading...")
                             : fileSizeStr
-                            ? `${fileSizeStr} • Open in reader`
-                            : "Document • Open in reader"
+                            ? `${fileSizeStr} • ${(strings as any).open_in_reader || "Open in reader"}`
+                            : `${(strings as any).document_file || "Document"} • ${(strings as any).open_in_reader || "Open in reader"}`
                     }
                     size="small"
                     color="gray"

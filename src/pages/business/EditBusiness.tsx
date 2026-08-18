@@ -16,6 +16,9 @@ import { useRealm } from "@realm/react";
 import { Image as ExpoImage } from 'expo-image';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from "moment";
+import * as MediaLibrary from 'expo-media-library';
+import { PhotoEditor } from '../../components/lists/gallery/PhotoEditor';
+import { ProcessedPhoto } from '../../types/gallery';
 
 const EditBusiness = ({ navigation, route }: NavProps) => {
 
@@ -38,6 +41,8 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
     const [phones, setPhones] = useState<string>("");
     const [emails, setEmails] = useState<string>("");
     const [profile, setProfile] = useState<string>("");
+    const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.Asset[]>([]);
+    const [showEditor, setShowEditor] = useState<boolean>(false);
     const [loading_profile, setLoading_profile] = useState<boolean>(false);
 
     // Admin controls
@@ -288,21 +293,26 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
         }
     }
 
+    const handleEditorComplete = (processedPhotos: ProcessedPhoto[]) => {
+        if (processedPhotos && processedPhotos.length > 0) {
+            setProfile(processedPhotos[0].uri);
+        }
+        setShowEditor(false);
+    };
+
     const pick_profile = () => {
 
         if (profile === "") {
-            ImagePicker.openPicker({
-                width: 500,
-                height: 500,
-                cropping: true,
-                quality: 0.5,
-                noData: true,
-                mediaType: "photo",
-            }).then(image => {
-
-                setProfile(image.path);
-            })
-                .catch((e) => { });
+            (navigation as any).navigate('Gallery', {
+                multiple: false,
+                maxSelection: 1,
+                onSelect: (assets: MediaLibrary.Asset[]) => {
+                    if (assets && assets.length > 0) {
+                        setSelectedAssets(assets);
+                        setShowEditor(true);
+                    }
+                }
+            });
         } else {
             upload_profile_picture();
         }
@@ -704,6 +714,14 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                 <ButtonNormal title={strings.edit_business} loading={loading} onPress={EBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }} normal={true} />
 
             </View>
+            {showEditor && selectedAssets.length > 0 ? (
+                <PhotoEditor
+                    assets={selectedAssets}
+                    visible={showEditor}
+                    onClose={() => setShowEditor(false)}
+                    onComplete={handleEditorComplete}
+                />
+            ) : null}
         </ScrollView>
     )
 }

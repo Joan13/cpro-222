@@ -1,4 +1,5 @@
-import { View, useWindowDimensions, Image as RNImage } from 'react-native'
+import { View, useWindowDimensions } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { useEffect } from 'react'
 import HeaderChat from '../../components/headers/HeaderInbox';
 import Messages from '../../components/chat/Messages';
@@ -9,7 +10,6 @@ import { useObject, useQuery, useRealm } from '@realm/react';
 import { UserChats } from '../../store/database/Models';
 import StatusBarYambi from '../../components/app/StatusBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Canvas, Blur, Image, useImage } from "@shopify/react-native-skia";
 import { setCurrentUser } from '../../store/reducers/appSlice';
 import { SocketApp } from '../../../GlobalVariables';
 import HeaderInbox from '../../components/headers/HeaderInbox';
@@ -25,7 +25,6 @@ const Inbox = ({ navigation, route }: NavProps) => {
   const theme = useAppSelector(state => state.app_theme);
   const chats_badge = useAppSelector(state => state.app.chats_badge);
   const realm = useRealm();
-  const image = useImage(require("./../../assets/bitmap11.png"));
   const width = useWindowDimensions().width;
   const height = useWindowDimensions().height;
   const insets = useSafeAreaInsets();
@@ -101,7 +100,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
         }}>
       </ImageBackground> */}
 
-        <RNImage
+        <ExpoImage
           source={require('./../../assets/bitmap11.png')}
           style={{
             position: 'absolute',
@@ -113,7 +112,7 @@ const Inbox = ({ navigation, route }: NavProps) => {
             height: '100%',
             backgroundColor: theme.dark ? 'black' : '#e3e3e3',
           }}
-          resizeMode="cover"
+          contentFit="cover"
         />
 
         <View style={{

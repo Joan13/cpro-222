@@ -2274,5 +2274,18 @@
   "duotone_midnight": "Midnight Cyan",
   "flip_h": "Geuza H",
   "flip_v": "Geuza V",
-  "finish": "Maliza"
+  "finish": "Maliza",
+  "send_contact": "Tuma contact",
+  "send_document": "Tuma document",
+  "send_documents": "Tuma ma document",
+  "browse_files": "Fungua ma fayili",
+  "select_documents": "Chagua ma document",
+  "selected_documents": "zilizochaguliwa",
+  "checking_phone_number": "Kuangalia namba...",
+  "open_in_reader": "Fungua kwa reader",
+  "document_file": "Document",
+  "search_contacts": "Tafuta ma contact...",
+  "search_documents": "Tafuta ma document...",
+  "available_on_yambi": "Yupo kwa Yambi",
+  "add": "Ongeza"
 }

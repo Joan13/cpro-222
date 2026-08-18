@@ -17,6 +17,9 @@ import { setShowModalApp } from '../../store/reducers/appSlice';
 import ModalApp from '../../components/app/ModalApp';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderSettings from '../../components/headers/HeaderSettings';
+import * as MediaLibrary from 'expo-media-library';
+import { PhotoEditor } from '../../components/lists/gallery/PhotoEditor';
+import { ProcessedPhoto } from '../../types/gallery';
 
 const SettingsYambi = ({ navigation, route }: NavProps) => {
 
@@ -26,6 +29,8 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
      const app_description = useAppSelector(state => state.persisted_app.app_description);
      const raw_contacts = useAppSelector(state => state.persisted_app.raw_contacts);
      const [profile, setProfile] = useState<string>("");
+     const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.Asset[]>([]);
+     const [showEditor, setShowEditor] = useState<boolean>(false);
      const [loading_profile, setLoading_profile] = useState<boolean>(false);
      const [showInternetError, setShowInternetError] = useState<boolean>(false);
      const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -109,21 +114,26 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
                });
      };
 
+     const handleEditorComplete = (processedPhotos: ProcessedPhoto[]) => {
+          if (processedPhotos && processedPhotos.length > 0) {
+               setProfile(processedPhotos[0].uri);
+          }
+          setShowEditor(false);
+     };
+
      const pick_profile = () => {
 
           if (profile === "") {
-               ImagePicker.openPicker({
-                    width: 500,
-                    height: 500,
-                    cropping: true,
-                    quality: 0.5,
-                    noData: true,
-                    mediaType: "photo",
-               }).then(image => {
-
-                    setProfile(image.path);
-               })
-                    .catch((e) => { });
+               (navigation as any).navigate('Gallery', {
+                    multiple: false,
+                    maxSelection: 1,
+                    onSelect: (assets: MediaLibrary.Asset[]) => {
+                         if (assets && assets.length > 0) {
+                              setSelectedAssets(assets);
+                              setShowEditor(true);
+                         }
+                    }
+               });
           } else {
                upload_profile_picture();
           }
@@ -703,12 +713,19 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
                               />
                          </View>
                     </ScrollView>
-               </View>
-               {/* </SafeAreaView> */}
-          </View>
+                </View>
+                {/* </SafeAreaView> */}
+                {showEditor && selectedAssets.length > 0 ? (
+                     <PhotoEditor
+                          assets={selectedAssets}
+                          visible={showEditor}
+                          onClose={() => setShowEditor(false)}
+                          onComplete={handleEditorComplete}
+                     />
+                ) : null}
+           </View>
      )
 }
 // }
 
 export default SettingsYambi;
-

@@ -3,7 +3,6 @@ import { View, Pressable, Text, ScrollView, TextInput, StyleSheet } from 'react-
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useObject, useRealm } from '@realm/react';
 import moment from 'moment';
 
@@ -98,12 +97,12 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
 
     if (!message) {
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: app_theme.colors.background }]}>
+            <View style={[styles.container, { backgroundColor: app_theme.colors.background }]}>
                 <StatusBarYambi />
                 <View style={styles.centerContainer}>
                     <TextNormalYambiGray text={strings.no_sales_available || 'Message not found'} />
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
@@ -132,7 +131,7 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: app_theme.colors.background, borderTopWidth: 1, borderColor: app_theme.colors.border }]}>
+        <View style={[styles.container, { backgroundColor: app_theme.colors.background, borderTopWidth: 1, borderColor: app_theme.colors.border }]}>
             <StatusBarYambi />
 
             <ScrollView
@@ -339,7 +338,7 @@ const MessageInfo = ({ route, navigation }: NavProps) => {
                     </Animated.View>
                 </View>
             ) : null}
-        </SafeAreaView>
+        </View>
     );
 };
 

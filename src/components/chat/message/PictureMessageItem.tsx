@@ -56,7 +56,6 @@ const PictureMessageItem = ({ message }: { message: TMessage }) => {
             //   playActionSound(2);
             Haptics.selectionAsync();
             const time = moment(new Date()).format();
-            const token = randomString(30) + renderDateUpToMilliseconds();
 
             const msg: TMessage = {
                 sender: message.sender,

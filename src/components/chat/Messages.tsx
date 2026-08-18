@@ -104,7 +104,28 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
      * ARRAY
      */
     const mm = useMemo(() => {
-        return [...messages];
+        return messages.map(m => ({
+            token: m.token,
+            sender: m.sender,
+            receiver: m.receiver,
+            main_text_message: m.main_text_message,
+            caption: m.caption,
+            message_type: m.message_type,
+            reactions: m.reactions,
+            response_to: m.response_to,
+            message_read: m.message_read,
+            message_effect: m.message_effect,
+            read_once: m.read_once,
+            flag: m.flag,
+            deleted: m.deleted,
+            platform: m.platform,
+            createdAt: m.createdAt,
+            receivedAt: m.receivedAt,
+            readAt: m.readAt,
+            playedAt: m.playedAt,
+            cc: m.cc,
+            alignment: m.alignment
+        }));
     }, [messages]);
 
     /**

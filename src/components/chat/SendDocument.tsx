@@ -202,7 +202,7 @@ const SendDocument = ({ navigation, route }: NavProps) => {
                 }}>
                     <Ionicons name="search" size={18} color={app_theme.colors.gray} style={{ marginRight: 8 }} />
                     <TextInput
-                        placeholder={strings.search || "Search documents..."}
+                        placeholder={(strings as any).search_documents || strings.search || "Search documents..."}
                         placeholderTextColor={app_theme.colors.gray}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -231,7 +231,7 @@ const SendDocument = ({ navigation, route }: NavProps) => {
                     }}
                 >
                     <MaterialCommunityIcons name="folder-open-outline" size={20} color={app_theme.colors.high_color} style={{ marginRight: 6 }} />
-                    <YambiText text={(strings as any).browse_files || "Select More Documents"} size="normal" color="high" bold />
+                    <YambiText text={(strings as any).browse_files || "Browse Files"} size="normal" color="high" bold />
                 </Pressable>
             </View>
 
@@ -244,7 +244,7 @@ const SendDocument = ({ navigation, route }: NavProps) => {
             ) : filteredDocs.length === 0 ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
                     <MaterialCommunityIcons name="file-cancel-outline" size={48} color={app_theme.colors.gray} />
-                    <YambiText text={(strings as any).no_documents_found || "No documents selected"} size="normal" color="gray" style={{ marginTop: 12, textAlign: 'center' }} />
+                    <YambiText text={(strings as any).select_documents || "No documents selected"} size="normal" color="gray" style={{ marginTop: 12, textAlign: 'center' }} />
                     <Pressable
                         onPress={pickDocumentWithExpo}
                         style={{
@@ -255,7 +255,7 @@ const SendDocument = ({ navigation, route }: NavProps) => {
                             borderRadius: 20
                         }}
                     >
-                        <YambiText text={(strings as any).browse_files || "Select Documents"} size="normal" color="white" bold />
+                        <YambiText text={(strings as any).browse_files || "Browse Files"} size="normal" color="white" bold />
                     </Pressable>
                 </View>
             ) : (

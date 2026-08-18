@@ -223,7 +223,7 @@ const SendContact = ({ navigation, route }: NavProps) => {
                 }}>
                     <Ionicons name="search" size={18} color={app_theme.colors.gray} style={{ marginRight: 8 }} />
                     <TextInput
-                        placeholder={strings.search || "Search contacts..."}
+                        placeholder={(strings as any).search_contacts || strings.search || "Search contacts..."}
                         placeholderTextColor={app_theme.colors.gray}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -305,7 +305,7 @@ const SendContact = ({ navigation, route }: NavProps) => {
                     marginBottom: Platform.OS === 'ios' ? 20 : 0
                 }}>
                     <YambiText
-                        text={`${selectedContacts.length} ${(strings as any).contacts_selected || 'contact(s) selected'}`}
+                        text={`${selectedContacts.length} ${(strings as any).selected_documents || (strings as any).contacts_selected || 'selected'}`}
                         size="normal"
                         color="default"
                     />

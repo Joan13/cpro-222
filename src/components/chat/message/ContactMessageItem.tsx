@@ -166,7 +166,7 @@ const ContactMessageItem = ({ message }: { message: TMessage }) => {
                         }}
                     >
                         <Ionicons name="person-add-outline" size={16} color={app_theme.colors.high_color} style={{ marginRight: 4 }} />
-                        <YambiText text={strings.add_contact || "Add contact"} size="small" color="high" bold />
+                        <YambiText text={(strings as any).add || "Add"} size="small" color="high" bold />
                     </Pressable>
                 )}
             </View>

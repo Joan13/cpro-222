@@ -2275,5 +2275,18 @@
   "duotone_midnight": "Cyan Minuit",
   "flip_h": "Miroir H",
   "flip_v": "Miroir V",
-  "finish": "Terminer"
+  "finish": "Terminer",
+  "send_contact": "Envoyer un contact",
+  "send_document": "Envoyer un document",
+  "send_documents": "Envoyer les documents",
+  "browse_files": "Parcourir les fichiers",
+  "select_documents": "Sélectionner des documents",
+  "selected_documents": "sélectionné(s)",
+  "checking_phone_number": "Vérification du numéro...",
+  "open_in_reader": "Ouvrir dans le lecteur",
+  "document_file": "Document",
+  "search_contacts": "Rechercher des contacts...",
+  "search_documents": "Rechercher des documents...",
+  "available_on_yambi": "Disponible sur Yambi",
+  "add": "Ajouter"
 }

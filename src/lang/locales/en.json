@@ -2278,5 +2278,18 @@
   "duotone_midnight": "Midnight Cyan",
   "flip_h": "Flip H",
   "flip_v": "Flip V",
-  "finish": "Finish"
+  "finish": "Finish",
+  "send_contact": "Send contact",
+  "send_document": "Send document",
+  "send_documents": "Send documents",
+  "browse_files": "Browse Files",
+  "select_documents": "Select Documents",
+  "selected_documents": "selected",
+  "checking_phone_number": "Checking phone number",
+  "open_in_reader": "Open in reader",
+  "document_file": "Document",
+  "search_contacts": "Search contacts...",
+  "search_documents": "Search documents...",
+  "available_on_yambi": "Available on Yambi",
+  "add": "Add"
 }
