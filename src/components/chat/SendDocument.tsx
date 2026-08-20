@@ -65,7 +65,6 @@ const SendDocument = ({ navigation, route }: NavProps) => {
     const [documents, setDocuments] = useState<DocItem[]>([]);
     const [selectedDocs, setSelectedDocs] = useState<DocItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [caption, setCaption] = useState('');
     const [loading, setLoading] = useState(false);
 
     const pickDocumentWithExpo = async () => {
@@ -132,7 +131,7 @@ const SendDocument = ({ navigation, route }: NavProps) => {
                 sender: user_data.phone_number,
                 receiver: user,
                 main_text_message: doc.path,
-                caption: caption.trim() !== '' ? `${caption.trim()} (${formatFileSize(doc.size)})` : `${doc.name} (${formatFileSize(doc.size)})`,
+                caption: `${doc.name} (${formatFileSize(doc.size)})`,
                 message_type: 3, // Document
                 reactions: '[]',
                 response_to: response_to,
@@ -301,23 +300,10 @@ const SendDocument = ({ navigation, route }: NavProps) => {
                     borderColor: app_theme.colors.border,
                     flexDirection: 'row',
                     alignItems: 'center',
+                    justifyContent: 'space-between',
                     marginBottom: 50
                 }}>
-                    <TextInput
-                        placeholder={strings.caption || "Add a caption..."}
-                        placeholderTextColor={app_theme.colors.gray}
-                        value={caption}
-                        onChangeText={setCaption}
-                        style={{
-                            flex: 1,
-                            backgroundColor: app_theme.colors.background,
-                            borderRadius: 20,
-                            paddingHorizontal: 14,
-                            paddingVertical: 8,
-                            color: app_theme.colors.text,
-                            marginRight: 10
-                        }}
-                    />
+                    <YambiText text={`${selectedDocs.length} ${(strings as any).selected_documents || 'selected'}`} size="normal" color="default" style={{ marginLeft: 8 }} />
                     <Pressable
                         onPress={sendSelectedDocuments}
                         style={{

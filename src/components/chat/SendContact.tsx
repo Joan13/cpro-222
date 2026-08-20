@@ -302,7 +302,7 @@ const SendContact = ({ navigation, route }: NavProps) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: Platform.OS === 'ios' ? 20 : 0
+                    marginBottom: Platform.OS === 'ios' ? 20 : 50
                 }}>
                     <YambiText
                         text={`${selectedContacts.length} ${(strings as any).selected_documents || (strings as any).contacts_selected || 'selected'}`}

@@ -210,6 +210,48 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     <YambiText text={message.deleted !== 0 ? strings.message_deleted : strings.voice_note} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 10 }} />
                 </View>
             );
+        } else if (message.message_type === 2) {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
+                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FI" name="image" size={12} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
+                    <YambiText text={message.deleted !== 0 ? strings.message_deleted : strings.picture} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 5 }} />
+                </View>
+            );
+        } else if (message.message_type === 3) {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
+                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FI" name="file-text" size={12} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
+                    <YambiText text={message.deleted !== 0 ? strings.message_deleted : (strings.document_file || "Document")} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 5 }} />
+                </View>
+            );
+        } else if (message.message_type === 4) {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
+                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FA" name="user" size={15} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
+                    <YambiText text={message.deleted !== 0 ? strings.message_deleted : ((strings as any).contact || "Contact")} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 5 }} />
+                </View>
+            );
         } else {
             return (
                 <View style={{
@@ -220,7 +262,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     marginTop: 3
                 }}>
                     {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
-                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FI" name="image" size={12} color={app_theme.colors.gray} styles={{ marginRight: 8 }} />}
+                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FI" name="image" size={12} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
                     <YambiText text={message.deleted !== 0 ? strings.message_deleted : strings.picture} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 5 }} />
                 </View>
             );
@@ -412,13 +454,13 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                         <Pressable onPress={ViewPhoto}>
                             {userr.user_profile === "" ? <Image
                                 source={require('./../../../assets/profile_black.jpg')}
-                                style={{ width: 45, height: 45, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
+                                style={{ width: 50, height: 50, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
                             />
                                 :
                                 <ExpoImage
                                     style={{
-                                        height: 45,
-                                        width: 45,
+                                        height: 50,
+                                        width: 50,
                                         borderRadius: 50
                                     }}
                                     contentFit="cover"
@@ -435,7 +477,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                             }}>
                                 <View style={{ marginBottom: 2, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                                     <YambiText bold text={ShowUser(userr)} size="normal" color="default" numberLines={1} />
-                                    {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                                    {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 3, marginTop: 3 }} /> : null}
                                 </View>
                                 {message !== null ?
                                     chat && chat.chat_read !== 0 ?

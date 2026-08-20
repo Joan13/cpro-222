@@ -309,7 +309,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                     onPress={GoNew}
                     style={{
                         position: 'absolute',
-                        bottom: 100,
+                        bottom: 130,
                         right: 15,
                         borderWidth: 1,
                         borderColor: app_theme.colors.border,
@@ -357,7 +357,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                         onPress={() => navigation.navigate('NewStory', { flag: 1 })}
                         style={{
                             position: 'absolute',
-                            bottom: 100,
+                            bottom: 130,
                             right: 15,
                             borderWidth: 1,
                             borderColor: app_theme.colors.border,

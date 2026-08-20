@@ -7,6 +7,7 @@ import KeyboardRootView from './src/components/layout/KeyboardRootView';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AudioPlayerProvider } from './src/services/AudioPlayerContext';
 // import AudioMessage from "./src/pages/app";
 // import { navigationRef } from './src/pages/main/root_stack';
 // import SQLite from 'react-native-sqlite-storage';
@@ -135,7 +136,7 @@ import {
 } from 'expo-notifications';
 // handleQuickReply and handleMarkAsReadAction are now handled in index.tsx at the top level
 import ViewPhoto from './src/pages/app/ViewPhoto';
-import { setAddBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace, setThemeSet } from './src/store/reducers/persistedAppSlice';
+import { setAddBusinessBadge, setRemoveBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace, setThemeSet } from './src/store/reducers/persistedAppSlice';
 import ContactUs from './src/pages/app/ContactUs';
 import HeaderRightInbox from './src/components/headers/HeaderRightInbox';
 import HeaderInbox from './src/components/headers/HeaderInbox';
@@ -410,7 +411,7 @@ const Yambi = ({ navigation }: NavProps) => {
         const businessBadgeCount = business_badge ? business_badge.length : 0;
         const totalBadgeCount = chatsBadgeCount + businessBadgeCount;
 
-        Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => {});
+        Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => { });
     }, [unreadChats?.length, business_badge]);
     //   const socket_chat = useAppSelector(state => state.socket_chat);
     const language_yambi = useAppSelector(state => state.persisted_app.langApp);
@@ -1393,15 +1394,18 @@ const Yambi = ({ navigation }: NavProps) => {
                     SocketApp.emit('salesChanged', JSON.stringify({ phone_number: user_data.phone_number, item: sal._id }));
 
                     if (ssi[i].sale_operator !== user_data.phone_number) {
-                        const new_badge: TBusinessBadge = {
-                            business_id: ssi[i].business_id,
-                            item_id: ssi[i].item_id,
-                            sales_point_id: ssi[i].sales_point_id,
-                            sale_id: ssi[i]._id,
-                            seller: ssi[i].sale_operator
-                        }
+                        const isActiveUser = Array.from(activeBusinessUsers as any).some((bu: any) => bu.business_id === ssi[i].business_id && bu.user_active === 1);
+                        if (isActiveUser) {
+                            const new_badge: TBusinessBadge = {
+                                business_id: ssi[i].business_id,
+                                item_id: ssi[i].item_id,
+                                sales_point_id: ssi[i].sales_point_id,
+                                sale_id: ssi[i]._id,
+                                seller: ssi[i].sale_operator
+                            };
 
-                        dispatch(setAddBusinessBadge(new_badge));
+                            dispatch(setAddBusinessBadge(new_badge));
+                        }
                     }
                 }
             });
@@ -2496,21 +2500,46 @@ const Yambi = ({ navigation }: NavProps) => {
             try {
                 const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
                 const hasNoSales = allScheduled.some(n => n.identifier === 'midday-no-sales-reminder');
-                const hasWeekend = allScheduled.some(n => n.identifier === 'weekend-expenses-reminder');
+                const hasWeekendSat = allScheduled.some(n => n.identifier === 'weekend-expenses-reminder-sat');
+                const hasWeekendSun = allScheduled.some(n => n.identifier === 'weekend-expenses-reminder-sun');
 
-                // --- Weekend expenses reminder ---
-                // Schedule once; it fires at 12:00 every day — users will see it on weekends.
-                if (!hasWeekend) {
+                // Cancel legacy daily weekend-expenses-reminder if present
+                if (allScheduled.some(n => n.identifier === 'weekend-expenses-reminder')) {
+                    await Notifications.cancelScheduledNotificationAsync('weekend-expenses-reminder');
+                }
+
+                // --- Weekend expenses reminder (Saturday at 12:00 PM) ---
+                if (!hasWeekendSat) {
                     await Notifications.scheduleNotificationAsync({
-                        identifier: 'weekend-expenses-reminder',
+                        identifier: 'weekend-expenses-reminder-sat',
                         content: {
                             title: strings.weekend_expenses_reminder_title,
                             body: strings.weekend_expenses_reminder_body,
-                            data: {},
+                            data: { screen: 'AddExpense' },
                             sound: true,
                         },
                         trigger: {
-                            type: SchedulableTriggerInputTypes.DAILY,
+                            type: SchedulableTriggerInputTypes.WEEKLY,
+                            weekday: 7, // Saturday (1 = Sunday, 7 = Saturday)
+                            hour: 12,
+                            minute: 0,
+                        },
+                    });
+                }
+
+                // --- Weekend expenses reminder (Sunday at 12:00 PM) ---
+                if (!hasWeekendSun) {
+                    await Notifications.scheduleNotificationAsync({
+                        identifier: 'weekend-expenses-reminder-sun',
+                        content: {
+                            title: strings.weekend_expenses_reminder_title,
+                            body: strings.weekend_expenses_reminder_body,
+                            data: { screen: 'AddExpense' },
+                            sound: true,
+                        },
+                        trigger: {
+                            type: SchedulableTriggerInputTypes.WEEKLY,
+                            weekday: 1, // Sunday (1 = Sunday, 7 = Saturday)
                             hour: 12,
                             minute: 0,
                         },
@@ -2575,6 +2604,18 @@ const Yambi = ({ navigation }: NavProps) => {
         scheduleDailyMiddayReminders();
     }, [activeBusinessUsers, saless, language_yambi]);
 
+    // Clean up badges for businesses where the user is no longer an active user
+    useEffect(() => {
+        if (!business_badge || business_badge.length === 0) return;
+        const activeBusinessIds = new Set(Array.from(activeBusinessUsers as any).map((bu: any) => bu.business_id));
+        const invalidBadges = business_badge.filter(b => !activeBusinessIds.has(b.business_id));
+        if (invalidBadges.length > 0) {
+            invalidBadges.forEach(b => {
+                dispatch(setRemoveBusinessBadge(b.business_id));
+            });
+        }
+    }, [activeBusinessUsers, business_badge]);
+
     // AppState listener for socket lifecycle (assemble / assemble_background).
     // Kept separate from the reminder scheduling to avoid coupling.
     useEffect(() => {
@@ -2583,7 +2624,7 @@ const Yambi = ({ navigation }: NavProps) => {
             const businessBadgeCount = business_badge ? business_badge.length : 0;
             const totalBadgeCount = chatsBadgeCount + businessBadgeCount;
 
-            Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => {});
+            Notifications.setBadgeCountAsync(totalBadgeCount).catch(() => { });
         };
 
         const appStateSubscription = AppState.addEventListener("change", (state) => {
@@ -2772,1426 +2813,1428 @@ const Yambi = ({ navigation }: NavProps) => {
     return (
         <SafeAreaProvider style={{ flex: 1 }}>
             <KeyboardRootView>
-                <NavigationContainer
-                    linking={linking}
-                    onReady={() => RNBootSplash.hide({ fade: true })}
-                    ref={navigationRef}>
-                    <Stack.Navigator
-                        id="RootStack"
-                        // {user_session_exists ? initialRouteName="home" : initialRouteName="signup"}
-                        initialRouteName={user_data.user_id === "0" ? 'SplashStartYambi' : 'Home'}>
-                        <Stack.Screen name="Signup" options={{
-                            headerShown: false,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                        }} component={Signup} />
-                        {/* <Stack.Screen name="Signin" options={{ headerShown: false, presentation: 'transparentModal' }} component={Signin} /> */}
-                        {/* <Stack.Screen name="keyboard" options={{ headerShown: false }} component={KeyboardInput} /> */}
-                        <Stack.Screen name="Themes" options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.select_theme
-                        }} component={Themes} />
-
-                        <Stack.Screen name="NewGroup" options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.new_group
-                        }} component={NewGroup} />
-
-                        <Stack.Screen name="Home" options={{
-                            headerShadowVisible: false,
-                            headerBackVisible: false,
-                            // navigationBarColor: app_theme.colors.background,
-                            // statusBarHidden:false,
-                            headerTitleAlign: 'left',
-                            // headerBackTitle: '',
-                            headerBackButtonDisplayMode: 'minimal',
-                            headerBackButtonMenuEnabled: false,
-                            headerShown: false, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTitleStyle: {
-                                fontSize: app_description.home_title_font_size,
-                                fontWeight: app_description.home_title_font_weight as any,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            // animation: 'fade',
-                            // headerRight: () => (
-                            //     <HeaderRightHome />
-                            // ),
-                            // headerLeft: () => (
-                            //     <HeaderHome />
-                            // ),
-                            // title: ""
-                        }} component={HomeRootStack} />
-
-                        <Stack.Screen name="Inbox"
-                            options={({ navigation, route }) => ({
-                                headerShadowVisible: false,
-                                headerBackVisible: true,
+                <AudioPlayerProvider>
+                    <NavigationContainer
+                        linking={linking}
+                        onReady={() => RNBootSplash.hide({ fade: true })}
+                        ref={navigationRef}>
+                        <Stack.Navigator
+                            id="RootStack"
+                            // {user_session_exists ? initialRouteName="home" : initialRouteName="signup"}
+                            initialRouteName={user_data.user_id === "0" ? 'SplashStartYambi' : 'Home'}>
+                            <Stack.Screen name="Signup" options={{
                                 headerShown: false,
-                                headerTransparent: false,
-                                headerTitle: '',
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                            }} component={Signup} />
+                            {/* <Stack.Screen name="Signin" options={{ headerShown: false, presentation: 'transparentModal' }} component={Signin} /> */}
+                            {/* <Stack.Screen name="keyboard" options={{ headerShown: false }} component={KeyboardInput} /> */}
+                            <Stack.Screen name="Themes" options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.select_theme
+                            }} component={Themes} />
+
+                            <Stack.Screen name="NewGroup" options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.new_group
+                            }} component={NewGroup} />
+
+                            <Stack.Screen name="Home" options={{
+                                headerShadowVisible: false,
+                                headerBackVisible: false,
+                                // navigationBarColor: app_theme.colors.background,
+                                // statusBarHidden:false,
+                                headerTitleAlign: 'left',
+                                // headerBackTitle: '',
+                                headerBackButtonDisplayMode: 'minimal',
+                                headerBackButtonMenuEnabled: false,
+                                headerShown: false, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTitleStyle: {
+                                    fontSize: app_description.home_title_font_size,
+                                    fontWeight: app_description.home_title_font_weight as any,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                // animation: 'fade',
+                                // headerRight: () => (
+                                //     <HeaderRightHome />
+                                // ),
+                                // headerLeft: () => (
+                                //     <HeaderHome />
+                                // ),
+                                // title: ""
+                            }} component={HomeRootStack} />
+
+                            <Stack.Screen name="Inbox"
+                                options={({ navigation, route }) => ({
+                                    headerShadowVisible: false,
+                                    headerBackVisible: true,
+                                    headerShown: false,
+                                    headerTransparent: false,
+                                    headerTitle: '',
+                                    headerStyle: {
+                                        backgroundColor: app_theme.colors.header_background_color,
+                                    },
+                                    headerTintColor: app_theme.colors.header_foreground_color,
+                                    headerTitleStyle: {
+                                        fontSize: app_description.inbox_title_size,
+                                        fontWeight: app_description.inbox_title_font_weight as any,
+                                    },
+                                    headerLeftContainerStyle: {
+                                        flex: 1,
+                                        // maxWidth: '82%',
+                                    },
+                                    headerRightContainerStyle: {
+                                        flexShrink: 0,
+                                        alignItems: 'flex-end',
+                                    },
+                                    animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                    // headerRight: (props) => (
+                                    //     <HeaderRightInbox {...props} navigation={navigation} route={route} />
+                                    // ),
+                                    // headerLeft: (props) => (
+                                    //     <HeaderInbox {...props} navigation={navigation} route={route} />
+                                    // ),
+                                    gestureEnabled: true,
+                                })} component={Inbox} />
+
+                            {/* <Stack.Screen name="profile" options={{ headerShown: false }} component={ProfileYambi} /> */}
+                            {/* <Stack.Screen name="contacts" component={ContactsUser} options={{ headerShown: false }} /> */}
+                            <Stack.Screen name="NewChat" component={NewChat} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.contacts + "  (" + all_contacts.length + ")",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: () => (
+                                    <HeaderRightNewChat />
+                                ),
+                            }} />
+
+                            <Stack.Screen name="Search" component={Search} options={{
+                                headerShown: false
+                            }} />
+
+                            <Stack.Screen name="Business" component={Business} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderBusiness {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
+
+                            <Stack.Screen name="BusinessViewModern" component={BusinessViewModern} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: route.params?.business?.business_name || strings.business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
+
+                            <Stack.Screen name="AdminBusiness" component={AdminBusiness} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: route.params?.business?.business_name || strings.business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
+
+                            <Stack.Screen name="AdminInventory" component={AdminInventory} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
                                 headerStyle: {
                                     backgroundColor: app_theme.colors.header_background_color,
                                 },
                                 headerTintColor: app_theme.colors.header_foreground_color,
-                                headerTitleStyle: {
-                                    fontSize: app_description.inbox_title_size,
-                                    fontWeight: app_description.inbox_title_font_weight as any,
+                                title: strings.inventory || "Inventory",
+                            }} />
+
+                            <Stack.Screen name="AdminBusinessUsers" component={AdminBusinessUsers} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
                                 },
-                                headerLeftContainerStyle: {
-                                    flex: 1,
-                                    // maxWidth: '82%',
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                title: strings.users || "Users",
+                            }} />
+
+                            <Stack.Screen name="AdminSales" component={AdminSales} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
                                 },
-                                headerRightContainerStyle: {
-                                    flexShrink: 0,
-                                    alignItems: 'flex-end',
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                title: strings.sales || "Sales",
+                            }} />
+
+                            <Stack.Screen name="AdminEditSubscription" component={AdminEditSubscription} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
                                 },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                title: (strings as any).edit_subscription || "Edit Subscription",
+                            }} />
+
+                            <Stack.Screen name="BusinessModern" component={BusinessModern} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
+
+                            <Stack.Screen name="NewBusinessItem" component={NewBusinessItem} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.add_item,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
+
+                            <Stack.Screen name="NewSalesPoint" component={NewSalesPoint} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.new_sales_point,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="AddItemSale" component={AddItemSale} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="BusinessItem" component={BusinessItem} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="Cart" component={Cart} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.cart,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderCart {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
+
+                            <Stack.Screen name="SearchMarketplace" component={SearchMarketplace} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: false, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.search_marketplace,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="BusinessItems" component={BusinessItemss} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.items,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderBusinessItems {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
+
+                            <Stack.Screen name="BusinessSales" component={SalesModern} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.sales,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="ItemSales" component={ItemSales} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.sales,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="SettingsYambi" component={SettingsYambi} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: false, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                // animation: 'fade',
+                                // animationDuration: 500,
+                                // animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.settings,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
                                 // headerRight: (props) => (
-                                //     <HeaderRightInbox {...props} navigation={navigation} route={route} />
+                                //     <HeaderSettings  {...props} navigation={navigation} route={route} />
                                 // ),
-                                // headerLeft: (props) => (
-                                //     <HeaderInbox {...props} navigation={navigation} route={route} />
-                                // ),
-                                gestureEnabled: true,
-                            })} component={Inbox} />
+                            })} />
+                            <Stack.Screen name="Languages" component={Languages} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.select_language,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        {/* <Stack.Screen name="profile" options={{ headerShown: false }} component={ProfileYambi} /> */}
-                        {/* <Stack.Screen name="contacts" component={ContactsUser} options={{ headerShown: false }} /> */}
-                        <Stack.Screen name="NewChat" component={NewChat} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.contacts + "  (" + all_contacts.length + ")",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: () => (
-                                <HeaderRightNewChat />
-                            ),
-                        }} />
+                            <Stack.Screen name="AboutYambi" component={AboutYambi} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.about_yambi,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="Search" component={Search} options={{
-                            headerShown: false
-                        }} />
+                            <Stack.Screen name="MakeDonation" component={MakeDonation} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.support_the_project || strings.make_donation,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="Business" component={Business} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderBusiness {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
+                            <Stack.Screen name="AddBusinessSubscription" component={AddBusinessSubscription} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.renew_subscription || "Renew Subscription",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="BusinessViewModern" component={BusinessViewModern} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: route.params?.business?.business_name || strings.business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="BusinessSubscriptionPlans" component={BusinessSubscriptionPlans} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).subscription_plans || "Subscription Plans",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="AdminBusiness" component={AdminBusiness} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: route.params?.business?.business_name || strings.business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="SelectPaymentType" component={SelectPaymentType} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).select_payment_method || "Payment method",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="AdminInventory" component={AdminInventory} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            title: strings.inventory || "Inventory",
-                        }} />
+                            <Stack.Screen name="SubscriptionHistory" component={SubscriptionHistory} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).subscription_history || "Subscription History",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="AdminBusinessUsers" component={AdminBusinessUsers} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            title: strings.users || "Users",
-                        }} />
+                            <Stack.Screen name="ShareBusiness" component={ShareBusiness} options={({ route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title:
+                                    route.params?.share_kind === 'item'
+                                        ? route.params?.item_name || strings.share_item
+                                        : route.params?.business_name || strings.share_business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="AdminSales" component={AdminSales} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            title: strings.sales || "Sales",
-                        }} />
+                            <Stack.Screen name="BusinessInventoryMovementHistory" component={BusinessInventoryMovementHistory} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.inventory_movement_history,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="AdminEditSubscription" component={AdminEditSubscription} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            title: (strings as any).edit_subscription || "Edit Subscription",
-                        }} />
+                            <Stack.Screen name="InventoryMovement" component={InventoryMovement} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.inventory_movement,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="BusinessModern" component={BusinessModern} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="UpdateYambi" component={UpdateYambi} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.update_yambi,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="NewBusinessItem" component={NewBusinessItem} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.add_item,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="PictureMessage" component={SendPictureMessage} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: 'slide_from_bottom',
+                                title: strings.select_picture,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="NewSalesPoint" component={NewSalesPoint} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.new_sales_point,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="SendDocument" component={SendDocument} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: 'slide_from_bottom',
+                                title: (strings as any).select_document || "Select Document",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="AddItemSale" component={AddItemSale} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="SendContact" component={SendContact} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: 'slide_from_bottom',
+                                title: (strings as any).send_contact || "Send Contact",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="BusinessItem" component={BusinessItem} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="EditProfile" component={EditProfile} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_profile,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="Cart" component={Cart} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.cart,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderCart {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
+                            <Stack.Screen name="ViewFullInboxImage" component={ViewFullInboxImage} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.picture,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="SearchMarketplace" component={SearchMarketplace} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: false, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.search_marketplace,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="NewBusiness" component={NewBusinesses} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.new_business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="BusinessItems" component={BusinessItemss} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.items,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderBusinessItems {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
+                            <Stack.Screen name="NewBusinessUser" component={NewBusinessUser} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.new_business_user,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="BusinessSales" component={SalesModern} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.sales,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="EditBusinessItem" component={EditBusinessItem} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_item,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderEditBusinessItem {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="ItemSales" component={ItemSales} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.sales,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="RenewStock" component={RenewStock} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color,
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.renew_stock,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
-                        <Stack.Screen name="SettingsYambi" component={SettingsYambi} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: false, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            // animation: 'fade',
-                            // animationDuration: 500,
-                            // animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.settings,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            // headerRight: (props) => (
-                            //     <HeaderSettings  {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-                        <Stack.Screen name="Languages" component={Languages} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.select_language,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="EditBusiness" component={EditBusiness} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_business,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderEditBusiness {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="AboutYambi" component={AboutYambi} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.about_yambi,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="EditSalesPoint" component={EditSalesPoint} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_sales_point,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderEditSalesPoint {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="MakeDonation" component={MakeDonation} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.support_the_project || strings.make_donation,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="Sale" component={Sale} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.sale_operation,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderSale {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="AddBusinessSubscription" component={AddBusinessSubscription} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.renew_subscription || "Renew Subscription",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="EditSalePayments" component={EditSalePayments} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).payments || "Payments",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="BusinessSubscriptionPlans" component={BusinessSubscriptionPlans} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).subscription_plans || "Subscription Plans",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
+                            <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).payment_details,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="SelectPaymentType" component={SelectPaymentType} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).select_payment_method || "Payment method",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="SubscriptionHistory" component={SubscriptionHistory} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).subscription_history || "Subscription History",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="ShareBusiness" component={ShareBusiness} options={({ route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title:
-                                route.params?.share_kind === 'item'
-                                    ? route.params?.item_name || strings.share_item
-                                    : route.params?.business_name || strings.share_business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="BusinessInventoryMovementHistory" component={BusinessInventoryMovementHistory} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.inventory_movement_history,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="InventoryMovement" component={InventoryMovement} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.inventory_movement,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="UpdateYambi" component={UpdateYambi} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.update_yambi,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="PictureMessage" component={SendPictureMessage} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: 'slide_from_bottom',
-                            title: strings.select_picture,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="SendDocument" component={SendDocument} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: 'slide_from_bottom',
-                            title: (strings as any).select_document || "Select Document",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="SendContact" component={SendContact} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: 'slide_from_bottom',
-                            title: (strings as any).send_contact || "Send Contact",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="EditProfile" component={EditProfile} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_profile,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="ViewFullInboxImage" component={ViewFullInboxImage} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.picture,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="NewBusiness" component={NewBusinesses} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.new_business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="NewBusinessUser" component={NewBusinessUser} options={{
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.new_business_user,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="EditBusinessItem" component={EditBusinessItem} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_item,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderEditBusinessItem {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="RenewStock" component={RenewStock} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color,
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.renew_stock,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        }} />
-
-                        <Stack.Screen name="EditBusiness" component={EditBusiness} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_business,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderEditBusiness {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="EditSalesPoint" component={EditSalesPoint} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_sales_point,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderEditSalesPoint {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="Sale" component={Sale} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.sale_operation,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderSale {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="EditSalePayments" component={EditSalePayments} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).payments || "Payments",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).payment_details,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        {/* <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
+                            {/* <Stack.Screen name="SalePayment" component={SalePayment} options={({ navigation, route }) => ({
                             headerShadowVisible: false,
                             headerShown: false,
                             animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                         })} /> */}
 
-                        <Stack.Screen name="Customize" component={Customize} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.customize || "Customize",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="CustomizeBusiness" component={CustomizeBusiness} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.customize_business_actions,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            // headerRight: (props) => (
-                            //     <HeaderSale {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="CustomizeExpenses" component={CustomizeExpenses} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.customize_expenses || "Customize expenses",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="UserBusinessUsers" component={UserBusinessUsers} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.users,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderBusinessUsers {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="BusinessSubscribers" component={BusinessSubscribers} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.followers,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="MessageUs" component={MessageUs} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.message_us,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            // headerRight: (props) => (
-                            //     <HeaderSale {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="ViewPhoto" component={ViewPhoto} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            // presentation: 'modal',
-                            gestureEnabled: true,
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.picture,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            // headerRight: (props) => (
-                            //     <HeaderSale {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="EditBusinessUser" component={EditBusinessUser} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_user,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="ContactUs" component={ContactUs} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.contact_us,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                            // headerRight: (props) => (
-                            //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="MyAccount" component={MyAccount} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.my_account,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                            // headerRight: (props) => (
-                            //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="CategoryItems" component={CategoryItems} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderCategoryItems {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
-
-                        <Stack.Screen name="NewCompany" component={NewCompany} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.new_company,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                            // headerRight: (props) => (
-                            //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="NewCompanyUser" component={NewCompanyUser} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.add_user,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                            // headerRight: (props) => (
-                            //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
-                            // ),
-                        })} />
-
-                        <Stack.Screen name="EditCompany" component={EditCompany} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_company,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="EditCompanyUser" component={EditCompanyUser} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_company_user,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="PostNews" component={PostNews} options={({ navigation, route }) => {
-                            const flag = (route.params as any)?.flag || 1;
-                            return {
+                            <Stack.Screen name="Customize" component={Customize} options={({ navigation, route }) => ({
                                 headerShadowVisible: false,
                                 headerShown: true, headerStyle: {
                                     backgroundColor: app_theme.colors.header_background_color
                                 },
                                 headerTintColor: app_theme.colors.header_foreground_color,
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                                title: flag === 1 ? ((strings as any).post_news || "Post News") : ((strings as any).add_timetable || "Add Timetable"),
+                                title: strings.customize || "Customize",
                                 headerTitleStyle: {
                                     fontSize: app_description.title_font_size,
                                     fontWeight: app_description.title_font_weight as any,
                                 },
-                            };
-                        }} />
+                            })} />
 
-                        <Stack.Screen name="EditNews" component={EditNews} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).edit_news || "Edit News",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
-
-                        <Stack.Screen name="News" component={News} options={({ navigation, route }) => {
-                            const flag = (route.params as any)?.flag;
-                            const title = flag === 1 ? strings.my_posts : (strings.news || "News");
-                            return {
+                            <Stack.Screen name="CustomizeBusiness" component={CustomizeBusiness} options={({ navigation, route }) => ({
                                 headerShadowVisible: false,
                                 headerShown: true, headerStyle: {
                                     backgroundColor: app_theme.colors.header_background_color
                                 },
                                 headerTintColor: app_theme.colors.header_foreground_color,
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                                title: title,
+                                title: strings.customize_business_actions,
                                 headerTitleStyle: {
                                     fontSize: app_description.title_font_size,
                                     fontWeight: app_description.title_font_weight as any,
                                 },
-                            };
-                        }} />
+                                // headerRight: (props) => (
+                                //     <HeaderSale {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="Post" component={Post} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).news || "Post",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="CustomizeExpenses" component={CustomizeExpenses} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.customize_expenses || "Customize expenses",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="PostReactions" component={PostReactions} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).reactions || strings.reactions || "Reactions",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="UserBusinessUsers" component={UserBusinessUsers} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.users,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderBusinessUsers {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="CompanyUser" component={CompanyUser} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.user_details || strings.user_name,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderCompanyUser {...props} navigation={navigation} route={route} />
-                            ),
-                        })} />
+                            <Stack.Screen name="BusinessSubscribers" component={BusinessSubscribers} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.followers,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="Companies" component={Companies} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.companies,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="MessageUs" component={MessageUs} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.message_us,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                // headerRight: (props) => (
+                                //     <HeaderSale {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="Company" component={Company} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.companies,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="ViewPhoto" component={ViewPhoto} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                // presentation: 'modal',
+                                gestureEnabled: true,
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.picture,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                // headerRight: (props) => (
+                                //     <HeaderSale {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="Timetables" component={Timetables} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.timetable || "Timetable",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                        })} />
+                            <Stack.Screen name="EditBusinessUser" component={EditBusinessUser} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_user,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="ForwardMessage" component={ForwardMessage} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.forward_to + "...",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderRightNewChat />
-                            ),
-                        })} />
+                            <Stack.Screen name="ContactUs" component={ContactUs} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.contact_us,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                                // headerRight: (props) => (
+                                //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="MessageInfo" component={MessageInfo} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: "",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="MyAccount" component={MyAccount} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.my_account,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                                // headerRight: (props) => (
+                                //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="UserProfileInfo" component={UserProfileInfo} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.user_information,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="CategoryItems" component={CategoryItems} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderCategoryItems {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="AllMessages" component={AllMessages} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.all_messages,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="NewCompany" component={NewCompany} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.new_company,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                                // headerRight: (props) => (
+                                //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="Stories" component={Stories} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true, headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.stories,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="NewCompanyUser" component={NewCompanyUser} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.add_user,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                                // headerRight: (props) => (
+                                //     <HeaderEditBusinessUser {...props} navigation={navigation} route={route} />
+                                // ),
+                            })} />
 
-                        <Stack.Screen name="NewStory" component={NewStory} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.new_story,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="EditCompany" component={EditCompany} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_company,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="Gallery" component={Gallery} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).gallery || "Gallery",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="EditCompanyUser" component={EditCompanyUser} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_company_user,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="UserStories" component={UserStories} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            // title: strings.story,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="PostNews" component={PostNews} options={({ navigation, route }) => {
+                                const flag = (route.params as any)?.flag || 1;
+                                return {
+                                    headerShadowVisible: false,
+                                    headerShown: true, headerStyle: {
+                                        backgroundColor: app_theme.colors.header_background_color
+                                    },
+                                    headerTintColor: app_theme.colors.header_foreground_color,
+                                    animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                    title: flag === 1 ? ((strings as any).post_news || "Post News") : ((strings as any).add_timetable || "Add Timetable"),
+                                    headerTitleStyle: {
+                                        fontSize: app_description.title_font_size,
+                                        fontWeight: app_description.title_font_weight as any,
+                                    },
+                                };
+                            }} />
 
-                        <Stack.Screen name="Calculator" component={Calculator} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.calculator,
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="EditNews" component={EditNews} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).edit_news || "Edit News",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="Expenses" component={ExpensesPage} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: route.params?.flag === 1
-                                ? (strings.business_expenses || "Business Expenses")
-                                : route.params?.flag === 2
-                                    ? (strings.pos_expenses || "POS Expenses")
-                                    : (strings.expenses || "Expenses"),
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderRightExpenses {...props} navigation={navigation} route={route} />
-                            )
-                        })} />
+                            <Stack.Screen name="News" component={News} options={({ navigation, route }) => {
+                                const flag = (route.params as any)?.flag;
+                                const title = flag === 1 ? strings.my_posts : (strings.news || "News");
+                                return {
+                                    headerShadowVisible: false,
+                                    headerShown: true, headerStyle: {
+                                        backgroundColor: app_theme.colors.header_background_color
+                                    },
+                                    headerTintColor: app_theme.colors.header_foreground_color,
+                                    animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                    title: title,
+                                    headerTitleStyle: {
+                                        fontSize: app_description.title_font_size,
+                                        fontWeight: app_description.title_font_weight as any,
+                                    },
+                                };
+                            }} />
 
-                        <Stack.Screen name="GetExpenses" component={GetExpenses} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: route.params?.flag === 1
-                                ? (strings.business_expenses || "Business Expenses")
-                                : route.params?.flag === 2
-                                    ? (strings.pos_expenses || "POS Expenses")
-                                    : (strings.expenses || "Expenses"),
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderRightExpenses {...props} navigation={navigation} route={route} />
-                            )
-                        })} />
+                            <Stack.Screen name="Post" component={Post} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).news || "Post",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="Reservations" component={ReservationsPage} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).view_reservations || "Reservations",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="PostReactions" component={PostReactions} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).reactions || strings.reactions || "Reactions",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="Reservation" component={ReservationDetail} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: (strings as any).reservation_detail || "Reservation detail",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="CompanyUser" component={CompanyUser} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.user_details || strings.user_name,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderCompanyUser {...props} navigation={navigation} route={route} />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="EditReservation" component={EditReservation} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit || "Edit Reservation",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        })} />
+                            <Stack.Screen name="Companies" component={Companies} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.companies,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="AddExpense" component={AddExpense} options={{
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.add_expense || "Add Expense",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            }
-                        }} />
+                            <Stack.Screen name="Company" component={Company} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.companies,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="Expense" component={Expense} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.expense || "Expense",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderRightExpense {...props} navigation={navigation} route={route} />
-                            )
-                        })} />
+                            <Stack.Screen name="Timetables" component={Timetables} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.timetable || "Timetable",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            })} />
 
-                        <Stack.Screen name="CategoryExpenses" component={CategoryExpenses} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: route.params?.category_name || strings.expense_categories || "Category Expenses",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderRightExpenses {...props} navigation={navigation} route={route} />
-                            )
-                        })} />
+                            <Stack.Screen name="ForwardMessage" component={ForwardMessage} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.forward_to + "...",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderRightNewChat />
+                                ),
+                            })} />
 
-                        <Stack.Screen name="EditExpense" component={EditExpense} options={({ navigation, route }) => ({
-                            headerShadowVisible: false,
-                            headerShown: true,
-                            headerStyle: {
-                                backgroundColor: app_theme.colors.header_background_color
-                            },
-                            headerTintColor: app_theme.colors.header_foreground_color,
-                            animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                            title: strings.edit_expense || "Edit Expense",
-                            headerTitleStyle: {
-                                fontSize: app_description.title_font_size,
-                                fontWeight: app_description.title_font_weight as any,
-                            },
-                            headerRight: (props) => (
-                                <HeaderRightExpense {...props} navigation={navigation} route={route} />
-                            )
-                        })} />
+                            <Stack.Screen name="MessageInfo" component={MessageInfo} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: "",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
 
-                        <Stack.Screen name="SplashStartYambi" options={{ headerShown: false }} component={SplashYambiStart} />
-                    </Stack.Navigator>
-                </NavigationContainer>
+                            <Stack.Screen name="UserProfileInfo" component={UserProfileInfo} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.user_information,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="AllMessages" component={AllMessages} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.all_messages,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="Stories" component={Stories} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.stories,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="NewStory" component={NewStory} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.new_story,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="Gallery" component={Gallery} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).gallery || "Gallery",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="UserStories" component={UserStories} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                // title: strings.story,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="Calculator" component={Calculator} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.calculator,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="Expenses" component={ExpensesPage} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: route.params?.flag === 1
+                                    ? (strings.business_expenses || "Business Expenses")
+                                    : route.params?.flag === 2
+                                        ? (strings.pos_expenses || "POS Expenses")
+                                        : (strings.expenses || "Expenses"),
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderRightExpenses {...props} navigation={navigation} route={route} />
+                                )
+                            })} />
+
+                            <Stack.Screen name="GetExpenses" component={GetExpenses} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: route.params?.flag === 1
+                                    ? (strings.business_expenses || "Business Expenses")
+                                    : route.params?.flag === 2
+                                        ? (strings.pos_expenses || "POS Expenses")
+                                        : (strings.expenses || "Expenses"),
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderRightExpenses {...props} navigation={navigation} route={route} />
+                                )
+                            })} />
+
+                            <Stack.Screen name="Reservations" component={ReservationsPage} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).view_reservations || "Reservations",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="Reservation" component={ReservationDetail} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).reservation_detail || "Reservation detail",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="EditReservation" component={EditReservation} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit || "Edit Reservation",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            })} />
+
+                            <Stack.Screen name="AddExpense" component={AddExpense} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.add_expense || "Add Expense",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="Expense" component={Expense} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.expense || "Expense",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderRightExpense {...props} navigation={navigation} route={route} />
+                                )
+                            })} />
+
+                            <Stack.Screen name="CategoryExpenses" component={CategoryExpenses} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: route.params?.category_name || strings.expense_categories || "Category Expenses",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderRightExpenses {...props} navigation={navigation} route={route} />
+                                )
+                            })} />
+
+                            <Stack.Screen name="EditExpense" component={EditExpense} options={({ navigation, route }) => ({
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.edit_expense || "Edit Expense",
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                                headerRight: (props) => (
+                                    <HeaderRightExpense {...props} navigation={navigation} route={route} />
+                                )
+                            })} />
+
+                            <Stack.Screen name="SplashStartYambi" options={{ headerShown: false }} component={SplashYambiStart} />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+                </AudioPlayerProvider>
             </KeyboardRootView>
         </SafeAreaProvider>
     );

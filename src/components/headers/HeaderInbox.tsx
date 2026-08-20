@@ -237,7 +237,8 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
           flexDirection: 'row',
           flex: 1
         }}>
-          <Pressable onPress={ViewPhoto}>
+          <Pressable
+            onPress={ViewPhoto}>
             {!userr.user_profile ? <Image
               source={require('./../../assets/profile_black.jpg')}
               style={{ width: 40, height: 40, marginRight: 10, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
@@ -245,8 +246,8 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
               :
               <ExpoImage
                 style={{
-                  height: 40,
-                  width: 40,
+                  height: 45,
+                  width: 45,
                   borderRadius: 50,
                   marginRight: 10
                 }}
@@ -257,7 +258,6 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
           <Pressable onPress={GoUserProfileInfo}
             style={{
               flex: 1,
-              // backgroundColor:'green',
               marginRight: 2,
               justifyContent: 'center'
             }}>
@@ -270,7 +270,7 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
                 }}>{ShowUserName(userr.phone_number)}
               </Text>
 
-              {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={18} color={app_theme.colors.primary_high_color} styles={{ marginLeft: 5 }} /> : null}
+              {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={18} color={app_theme.colors.primary_high_color} styles={{ marginLeft: 3, marginTop: 2 }} /> : null}
             </View>
 
             {last_activity_status !== "" ?

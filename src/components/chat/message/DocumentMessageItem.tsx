@@ -46,6 +46,8 @@ const getCleanFileName = (mainText: string, caption?: string) => {
     return `${base}.pdf`;
 };
 
+const documentSizeCacheMap = new Map<string, string>();
+
 const DocumentMessageItem = ({ message }: { message: TMessage }) => {
     const user_data = useAppSelector(state => state.user_data);
     const app_theme = useAppSelector(state => state.app_theme);
@@ -53,16 +55,23 @@ const DocumentMessageItem = ({ message }: { message: TMessage }) => {
 
     const [uploading, setUploading] = useState<boolean>(false);
     const [downloading, setDownloading] = useState<boolean>(false);
-    const [fileSizeStr, setFileSizeStr] = useState<string>('');
+    const [fileSizeStr, setFileSizeStr] = useState<string>(() => message.main_text_message ? documentSizeCacheMap.get(message.main_text_message) || '' : '');
 
     useEffect(() => {
         let isMounted = true;
         const checkSize = async () => {
-            if (message.main_text_message && (message.main_text_message.startsWith('file://') || message.main_text_message.startsWith('/storage/') || message.main_text_message.startsWith('/data/'))) {
+            if (!message.main_text_message) return;
+            if (documentSizeCacheMap.has(message.main_text_message)) {
+                setFileSizeStr(documentSizeCacheMap.get(message.main_text_message)!);
+                return;
+            }
+            if (message.main_text_message.startsWith('file://') || message.main_text_message.startsWith('/storage/') || message.main_text_message.startsWith('/data/')) {
                 try {
                     const fileStat = await RNFS.stat(message.main_text_message);
                     if (isMounted && fileStat && fileStat.size) {
-                        setFileSizeStr(formatFileSize(fileStat.size));
+                        const formatted = formatFileSize(fileStat.size);
+                        documentSizeCacheMap.set(message.main_text_message, formatted);
+                        setFileSizeStr(formatted);
                     }
                 } catch (e) { }
             }

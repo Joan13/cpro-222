@@ -2,14 +2,14 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { useAppSelector } from '../../store/app/hooks';
-import { TextBigYambi, TextNormalYambiHighColor, TextSmallYambiGray, YambiText } from '../../components/app/Text';
+import { YambiText } from '../../components/app/Text';
 import { IconApp } from '../../components/app/IconApp';
 import { NavProps } from '../../types/types';
 import StatusBarYambi from '../../components/app/StatusBar';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const Calculator = ({}: NavProps) => {
+const Calculator = ({ }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme);
     const [display, setDisplay] = useState('0');
     const [previousValue, setPreviousValue] = useState<number | null>(null);
@@ -78,7 +78,7 @@ const Calculator = ({}: NavProps) => {
             const formattedValue = formatNumber(newValue);
             const formattedPrev = formatNumber(previousValue);
             const formattedInput = formatNumber(inputValue);
-            
+
             // Show the full calculation expression
             setCalculationExpression(`${formattedPrev} ${operation} ${formattedInput} =`);
             setDisplay(formattedValue);
@@ -113,18 +113,18 @@ const Calculator = ({}: NavProps) => {
         }
     };
 
-    const Button = ({ 
-        onPress, 
-        text, 
-        style = {}, 
+    const Button = ({
+        onPress,
+        text,
+        style = {},
         textStyle = {},
         icon,
         iconPack,
         iconSize = 24,
         useBadgeColor = false
-    }: { 
-        onPress: () => void; 
-        text?: string; 
+    }: {
+        onPress: () => void;
+        text?: string;
         style?: any;
         textStyle?: any;
         icon?: string;
@@ -134,7 +134,7 @@ const Calculator = ({}: NavProps) => {
     }) => (
         <Pressable
             onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Haptics.selectionAsync();
                 onPress();
             }}
             style={[
@@ -153,25 +153,27 @@ const Calculator = ({}: NavProps) => {
             {icon ? (
                 <IconApp pack={iconPack || 'FI'} name={icon} size={iconSize} color={textStyle.color || theme.colors.text} />
             ) : useBadgeColor ? (
-                <YambiText 
-                    text={text || ''} 
-                    bold 
-                    size="normal"
+                <YambiText
+                    text={text || ''}
+                    bold
+                    size="big"
                     color="badge"
                     style={{
                         fontSize: 28,
                         ...textStyle
-                    }} 
+                    }}
                 />
             ) : (
-                <TextNormalYambiHighColor 
-                    text={text || ''} 
-                    bold 
-                    styles={{
+                <YambiText
+                    text={text || ''}
+                    bold
+                    size="big"
+                    color="high"
+                    style={{
                         fontSize: 28,
-                        color: textStyle.color || theme.colors.high_color,
+                        ...(textStyle.color ? { color: textStyle.color } : {}),
                         ...textStyle
-                    }} 
+                    }}
                 />
             )}
         </Pressable>
@@ -182,7 +184,7 @@ const Calculator = ({}: NavProps) => {
             <StatusBarYambi />
             <View style={{ flex: 1, padding: 15 }}>
                 {/* Display */}
-                <Animated.View 
+                <Animated.View
                     entering={FadeIn.duration(300)}
                     style={{
                         flex: 1,
@@ -192,40 +194,46 @@ const Calculator = ({}: NavProps) => {
                         marginBottom: 20,
                         justifyContent: 'flex-end',
                         alignItems: 'flex-end',
-                        
+
                     }}
                 >
                     {/* Calculation Expression */}
                     {calculationExpression && (
-                        <TextSmallYambiGray 
-                            text={calculationExpression} 
-                            styles={{ 
-                                fontSize: 18, 
+                        <YambiText
+                            text={calculationExpression}
+                            color="gray"
+                            size="small"
+                            style={{
+                                fontSize: 18,
                                 marginBottom: 8,
-                                opacity: 0.7 
-                            }} 
+                                opacity: 0.7
+                            }}
                         />
                     )}
                     {/* Current Operation Preview */}
                     {!calculationExpression && previousValue !== null && operation && (
-                        <TextSmallYambiGray 
-                            text={`${formatNumber(previousValue)} ${operation}`} 
-                            styles={{ 
-                                fontSize: 18, 
+                        <YambiText
+                            text={`${formatNumber(previousValue)} ${operation}`}
+                            color="gray"
+                            size="small"
+                            style={{
+                                fontSize: 18,
                                 marginBottom: 8,
-                                opacity: 0.6 
-                            }} 
+                                opacity: 0.6
+                            }}
                         />
                     )}
                     {/* Main Display */}
-                    <TextBigYambi 
-                        text={display} 
-                        bold 
-                        styles={{ 
-                            fontSize: 52, 
+                    <YambiText
+                        text={display}
+                        bold
+                        size="big"
+                        color="default"
+                        style={{
+                            fontSize: 52,
                             color: theme.colors.text,
                             textAlign: 'right',
-                        }} 
+                        }}
                     />
                 </Animated.View>
 
@@ -307,7 +315,7 @@ const Calculator = ({}: NavProps) => {
                             onPress={handleEquals}
                             text="="
                             useBadgeColor={true}
-                            style={{ 
+                            style={{
                                 flex: 1,
                                 backgroundColor: theme.colors.badge_background_color,
                             }}

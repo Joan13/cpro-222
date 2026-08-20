@@ -9,6 +9,7 @@ const initialState: TPersistedStore = {
     business_badge: [],
     business_subscriptions: [],
     cart: [],
+    chatDrafts: {},
     app_description: {
         home_title_font_size: 22,
         home_title_font_weight: '900',
@@ -208,13 +209,27 @@ export const persistedAppSlice = createSlice({
             }
         },
         setResetCart: (state) => {
-            state.cart = []
+            state.cart = [];
+        },
+        saveChatDraft: (state, action: PayloadAction<{ user: string; responseTo?: string; message: string }>) => {
+            if (!state.chatDrafts) state.chatDrafts = {};
+            const { user, responseTo = '', message } = action.payload;
+            if (!message.trim() && !responseTo.trim()) {
+                delete state.chatDrafts[user];
+            } else {
+                state.chatDrafts[user] = { user, responseTo, message };
+            }
+        },
+        removeChatDraft: (state, action: PayloadAction<string>) => {
+            if (!state.chatDrafts) state.chatDrafts = {};
+            delete state.chatDrafts[action.payload];
         },
         resetPersistedApp: (state) => {
             state.raw_contacts = [];
             state.business_badge = [];
             state.business_subscriptions = [];
             state.cart = [];
+            state.chatDrafts = {};
             if (state.app_description) {
                 state.app_description.require_password_business = false;
                 state.app_description.require_password_chat = false;
@@ -258,6 +273,8 @@ export const {
     setRawContactsPersisted,
     setAddRemoveCartItem,
     setResetCart,
+    saveChatDraft,
+    removeChatDraft,
     resetPersistedApp,
     setDefaultMessageSettingsData } = persistedAppSlice.actions;
 

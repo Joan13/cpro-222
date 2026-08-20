@@ -2,10 +2,11 @@ import { View, Pressable } from 'react-native'
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { TMessage } from '../../../types/types';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { AudioStatus, createAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { useProximity } from '../../hooks/useProximity';
 import { setVoiceNoteBeingPlayed } from '../../../store/reducers/appSlice';
+import { useAudioPlayer } from '../../../services/AudioPlayerContext';
 // import { SocketApp } from '../../../../App';
 import { useRealm } from '@realm/react';
 import { strings } from '../../../lang/lang';
@@ -105,52 +106,34 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
     const dispatch = useAppDispatch();
     const realm = useRealm();
-    const [sound] = useState(() => createAudioPlayer(null, { updateInterval: 1000 / 60, keepAudioSessionActive: true }));
-    const status = useAudioPlayerStatus(sound);
-    const isPlaying = status?.isLoaded ? status.playing : false;
+
+    const {
+        sound,
+        activeAudioToken,
+        activeAudioUri,
+        isPlaying: globalIsPlaying,
+        currentTime: globalCurrentTime,
+        duration: globalDuration,
+        didJustFinish,
+        playAudio,
+        pauseAudio,
+        seekTo: globalSeekTo,
+    } = useAudioPlayer();
+
+    const isCurrentlyActive = activeAudioToken === message.token;
+    const isPlaying = isCurrentlyActive && globalIsPlaying;
+
     const [fileSize, setFileSize] = useState<string>();
-    const [isPaused, setIsPaused] = useState<boolean>(false);
+    const [itemDuration, setItemDuration] = useState<number>(0);
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
 
-    const isNear = useProximity(isPlaying && voice_note_being_played === message.main_text_message);
-
-    useEffect(() => {
-        const setupLockScreen = async () => {
-            if (voice_note_being_played === message.main_text_message) {
-                if (isPlaying) {
-                    try {
-                        await setAudioModeAsync({
-                            playsInSilentMode: true,
-                            shouldPlayInBackground: true,
-                            interruptionMode: 'doNotMix',
-                        });
-                        sound.setActiveForLockScreen(true, {
-                            title: strings.voice_note,
-                            artist: 'Yambi',
-                        });
-                    } catch (e) {
-                        console.warn('Failed to configure audio mode or lock screen:', e);
-                    }
-                } else if (status?.isLoaded && status.didJustFinish) {
-                    try {
-                        sound.setActiveForLockScreen(false);
-                    } catch (e) {}
-                }
-            } else {
-                try {
-                    sound.setActiveForLockScreen(false);
-                } catch (e) {}
-            }
-        };
-
-        setupLockScreen();
-    }, [isPlaying, voice_note_being_played, message.main_text_message, sound, status?.didJustFinish]);
+    const isNear = useProximity(isPlaying);
 
     const wasNearRef = useRef(false);
 
     useEffect(() => {
         const updateAudioRoute = async () => {
-            if (voice_note_being_played === message.main_text_message && isPlaying) {
+            if (isCurrentlyActive && globalIsPlaying) {
                 try {
                     if (isNear) {
                         await setAudioModeAsync({
@@ -159,7 +142,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                         });
                     } else {
                         if (wasNearRef.current) {
-                            sound.pause();
+                            pauseAudio();
                         }
                         await setAudioModeAsync({
                             shouldRouteThroughEarpiece: false,
@@ -180,7 +163,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                 allowsRecording: false,
             }).catch(() => {});
         };
-    }, [isNear, isPlaying, voice_note_being_played, message.main_text_message, sound]);
+    }, [isNear, globalIsPlaying, isCurrentlyActive]);
 
     const ensureDirExists = async () => {
         try {
@@ -203,13 +186,24 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
     const loadSoundFile = async (targetPath: string) => {
         try {
-            sound.replace({ uri: targetPath });
             const info = await FileSystem.getInfoAsync(targetPath);
             if (info.exists && info.size && info.size > 100) {
                 const sizeInBytes = info.size;
                 const sizeInKB = sizeInBytes / 1024;
                 const sizeInMB = sizeInKB / 1024;
                 setFileSize(sizeInKB > 1023 ? sizeInMB.toFixed(1) + "MB" : sizeInKB.toFixed(1) + "KB");
+
+                try {
+                    const tempPlayer = createAudioPlayer({ uri: targetPath });
+                    setTimeout(() => {
+                        try {
+                            if (tempPlayer.duration && tempPlayer.duration > 0) {
+                                setItemDuration(tempPlayer.duration * 1000);
+                            }
+                            tempPlayer.remove();
+                        } catch (e) { }
+                    }, 100);
+                } catch (e) { }
             }
         } catch (error) {
             console.warn('loadSoundFile error:', error);
@@ -381,12 +375,10 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
     };
 
     const PlayVoice = async () => {
-        if (!sound) return;
-
         const targetPath = getAudioFileUri();
-        const fileInfo = await FileSystem.getInfoAsync(targetPath);
+        const fileInfo = await FileSystem.getInfoAsync(targetPath).catch(() => ({ exists: false, size: 0 }));
 
-        if (!status?.isLoaded || !fileInfo.exists || (fileInfo.size || 0) <= 100) {
+        if (!fileInfo.exists || (fileInfo.size || 0) <= 100) {
             if (message.sender === user_data.phone_number) {
                 UploadVoiceNote();
             } else {
@@ -397,42 +389,16 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
         markAsPlayed();
 
-        if (voice_note_being_played !== message.main_text_message) {
-            dispatch(setVoiceNoteBeingPlayed(message.main_text_message));
-        }
-
-        if (status?.isLoaded && status?.playing === false && status?.didJustFinish === true) {
-            setIsPaused(false);
-            await sound.seekTo(0);
-            sound.play();
-        }
-        else if (status?.isLoaded && status?.playing && isPaused === false) {
-            setIsPaused(true);
-            sound.pause();
-        } else if (status?.isLoaded && (status?.playing === false && status?.didJustFinish === false && isPaused === false)) {
-            setIsPaused(false);
-            await sound.seekTo(0);
-            sound.play();
-        }
-        else {
-            setIsPaused(false);
-            sound.play();
+        if (isCurrentlyActive && globalIsPlaying) {
+            pauseAudio();
+        } else {
+            await playAudio(message.token, message.main_text_message);
         }
     };
 
     const stopVoice = async () => {
-        if (!sound) {
-            return;
-        }
-
-        sound.pause();
-        await sound.seekTo(0);
-        setIsPaused(false);
-        // setPlayingVoiceNote(false);
-        // if (voice_note_being_played == message.main_text_message) {
-        // dispatch(setVoiceNoteBeingPlayed(""));
-        // }
-    }
+        pauseAudio();
+    };
 
     // const onVoice = async (index: number) => {
 
@@ -556,17 +522,6 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
     //     }
     // };
 
-    const pauseBecauseAnotherVoiceStartedPlaying = async () => {
-        if (voice_note_being_played !== message.main_text_message) {
-            sound.pause();
-            setIsPaused(true);
-        }
-    }
-
-    useEffect(() => {
-        pauseBecauseAnotherVoiceStartedPlaying();
-    }, [voice_note_being_played]);
-
     useEffect(() => {
         if (message.message_read === 5 && message.sender === user_data.phone_number) {
             const timeout = setTimeout(() => {
@@ -584,20 +539,18 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
     const PlaybackRate = async () => {
         let rate = 1;
 
-        if (status?.isLoaded) {
-            if (status?.playbackRate === 2) {
-                rate = 1;
-            } else {
-                rate = status?.playbackRate + 0.5;
-            }
+        if (sound) {
+            try {
+                const currentRate = (sound as any).playbackRate || 1;
+                rate = currentRate === 2 ? 1 : currentRate + 0.5;
+                sound.setPlaybackRate(rate);
+            } catch (e) {}
         }
-
-        sound.setPlaybackRate(rate);
     }
 
-    const position = status?.isLoaded ? status.currentTime * 1000 : 0;
-    const duration = status?.isLoaded ? status.duration * 1000 : 1;
-    const progress = position / duration;
+    const position = isCurrentlyActive ? globalCurrentTime * 1000 : 0;
+    const duration = (isCurrentlyActive && globalDuration > 0) ? globalDuration * 1000 : itemDuration;
+    const progress = (duration > 0) ? position / duration : 0;
 
     const formatMilliseconds = (milliseconds: number) => {
         const minutes = Math.floor(milliseconds / (1000 * 60));
@@ -608,22 +561,21 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
 
     const progressStyle = useAnimatedStyle(() => ({
         width: progress * 100
-        // withTiming(progress * 100, { duration: 100 })
     }))
 
     const progressValue = useSharedValue(0);
     const pulseValue = useSharedValue(0);
 
     useEffect(() => {
-        if (status?.isLoaded) {
-            progressValue.value = status.currentTime / status.duration;
+        if (isCurrentlyActive && globalDuration > 0) {
+            progressValue.value = globalCurrentTime / globalDuration;
         } else {
             progressValue.value = 0;
         }
-    }, [status?.currentTime, status?.duration, status?.isLoaded]);
+    }, [globalCurrentTime, globalDuration, isCurrentlyActive]);
 
     useEffect(() => {
-        if (isPlaying && voice_note_being_played === message.main_text_message) {
+        if (isPlaying) {
             pulseValue.value = withRepeat(
                 withTiming(1, { duration: 500 }),
                 -1,
@@ -632,29 +584,29 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
         } else {
             pulseValue.value = 0;
         }
-    }, [isPlaying, voice_note_being_played, message.main_text_message]);
+    }, [isPlaying]);
 
     const seekAudio = (seconds: number) => {
-        if (status?.isLoaded) {
+        if (isCurrentlyActive && globalDuration > 0) {
             try {
-                progressValue.value = seconds / status.duration;
-                sound.seekTo(seconds);
+                progressValue.value = seconds / globalDuration;
+                globalSeekTo(seconds);
             } catch (e) {}
         }
     };
 
     const tapGesture = Gesture.Tap().onStart((event) => {
-        if (status?.isLoaded) {
+        if (isCurrentlyActive && globalDuration > 0) {
             const ratio = Math.max(0, Math.min(1, event.x / 110));
-            const targetSeconds = ratio * status.duration;
+            const targetSeconds = ratio * globalDuration;
             runOnJS(seekAudio)(targetSeconds);
         }
     });
 
     const panGesture = Gesture.Pan().onUpdate((event) => {
-        if (status?.isLoaded) {
+        if (isCurrentlyActive && globalDuration > 0) {
             const ratio = Math.max(0, Math.min(1, event.x / 110));
-            const targetSeconds = ratio * status.duration;
+            const targetSeconds = ratio * globalDuration;
             runOnJS(seekAudio)(targetSeconds);
         }
     });
@@ -716,7 +668,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                     message={message}
                     progressValue={progressValue}
                     pulseValue={pulseValue}
-                    isPlaying={isPlaying && voice_note_being_played === message.main_text_message}
+                    isPlaying={isPlaying}
                     app_theme={app_theme}
                     waveformGesture={waveformGesture}
                 />
@@ -738,7 +690,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
             </View>
 
             {/* Playback Rate / Speed Badge */}
-            {status?.isLoaded ?
+            {isCurrentlyActive ?
                 <Animated.View
                     entering={FadeIn}
                     exiting={FadeOut}
@@ -760,7 +712,7 @@ const VoiceMessageItem = ({ message }: { message: TMessage }) => {
                             borderColor: app_theme.colors.high_color + '25',
                             marginLeft: 10,
                         }}>
-                        <TextSmallYambi text={status?.playbackRate + "x"} styles={{ color: app_theme.colors.high_color, fontWeight: '600' }} />
+                        <TextSmallYambi text="1x" styles={{ color: app_theme.colors.high_color, fontWeight: '600' }} />
                     </Pressable>
                 </Animated.View> : null}
         </View>

@@ -102,6 +102,16 @@ export type TDraft = {
     phone_number: string
 }
 
+export type TChatDraft = {
+    user: string,
+    responseTo: string,
+    message: string
+};
+
+export type TChatDrafts = {
+    [user: string]: TChatDraft;
+};
+
 export type TDrafts = TDraft[];
 
 export type TPersistedStore = {
@@ -111,6 +121,7 @@ export type TPersistedStore = {
     business_badge: TBusinessBadge[],
     business_subscriptions: TBusinessSubscription[],
     cart: TCartItem[],
+    chatDrafts?: TChatDrafts,
     app_description: TAppDescription
 }
 

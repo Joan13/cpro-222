@@ -8,6 +8,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { setCurrentUser, setMessageInbox, setPlayingRecorded, setRecordingAudio, setResponseTo, setScrollToEnd, setShowCustomKeyboard, setVoiceNoteBeingPlayed } from '../../store/reducers/appSlice';
+import { removeChatDraft } from '../../store/reducers/persistedAppSlice';
 import { TChat, TMessage } from '../../types/types';
 // import { SocketApp } from '../../../App';
 import moment from 'moment';
@@ -266,6 +267,43 @@ const FooterChat = ({ user }: { user: string }) => {
           {/* {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null} */}
           <IconApp pack="MC" name="microphone" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
           <YambiText text={strings.voice_note} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
+        </View>
+
+      );
+    } else if (message.message_type === 2) {
+      return (
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center'
+        }}>
+          {/* {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null} */}
+          <IconApp pack="FI" name="image" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
+          <YambiText text={strings.picture} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
+        </View>
+
+      );
+    } else if (message.message_type === 3) {
+      return (
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center'
+        }}>
+          <IconApp pack="FI" name="file-text" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
+          <YambiText text={strings.document_file || "Document"} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
+        </View>
+
+      );
+    } else if (message.message_type === 4) {
+      return (
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center'
+        }}>
+          <IconApp pack="FA" name="user" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
+          <YambiText text={(strings as any).contact || "Contact"} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
         </View>
 
       );
@@ -822,10 +860,9 @@ const FooterChat = ({ user }: { user: string }) => {
       dispatch(setMessageInbox(""));
       setCaption("");
       setEnterCaption(false);
-      // dispatch(setMessageInbox(""));
 
-      // dispatch(addDraft({ message_inbox: "", user: current_user }));
       dispatch(setResponseTo(""));
+      dispatch(removeChatDraft(user));
       dispatch(setScrollToEnd(true));
 
       // console.log("Message sent")

@@ -1,8 +1,8 @@
 import { View, Text, Image, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
-import React, { memo, useCallback, useEffect, useState } from 'react';
-import { useObject } from '@realm/react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRealm } from '@realm/react';
 import { UsersMessages } from '../../../store/database/Models';
 import { TMessage } from '../../../types/types';
 import _ from 'lodash';
@@ -55,8 +55,16 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
 
     // console.log("Message rendered" + item.main_text_message)
 
+    const realm = useRealm();
     const responseToken = item.response_to || "";
-    const message = useObject(UsersMessages, responseToken);
+    const message = useMemo(() => {
+        if (!responseToken) return null;
+        try {
+            return realm.objectForPrimaryKey(UsersMessages, responseToken);
+        } catch (e) {
+            return null;
+        }
+    }, [responseToken, realm]);
 
     let can_show_image_left: boolean = true;
     let can_show_image_right: boolean = true;
@@ -286,6 +294,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                             paddingHorizontal: 16,
                             borderRadius: 16,
                             backgroundColor: app_theme.colors.background,
+                            // backgroundColor: 'green',
                             borderWidth: 1,
                             borderColor: app_theme.colors.border,
                             shadowColor: '#000',
@@ -322,7 +331,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                         paddingVertical: 4,
                         // paddingHorizontal: 2,
                         backgroundColor: (message_selected ? message_selected.split(',').includes(item.token) : false) ? app_theme.colors.high_color + "30" : 'transparent',
-                        borderRadius: 12,
+                        borderRadius: 0,
                     }}>
                     <View style={{ flex: 1, position: 'relative', justifyContent: 'center' }}>
                         <Animated.View style={[
@@ -429,11 +438,50 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                         fontSize: app_description.small_general_font_size,
                                                         fontWeight: app_description.small_general_font_weight as any
                                                     }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
-                                                    <Text numberOfLines={5} style={{
-                                                        color: app_theme.colors.text,
-                                                        fontSize: app_description.small_general_font_size,
-                                                        fontWeight: app_description.small_general_font_weight as any
-                                                    }}>{message.message_type === 2 ? strings.picture : message.message_type === 1 ? strings.voice_note : message.main_text_message}</Text>
+                                                     {message.message_type === 4 ? (
+                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                             <IconApp pack="FA" name="user" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                             <Text style={{
+                                                                 color: app_theme.colors.text,
+                                                                 fontSize: app_description.small_general_font_size,
+                                                                 fontWeight: app_description.small_general_font_weight as any
+                                                             }}>{(strings as any).contact || "Contact"}</Text>
+                                                         </View>
+                                                     ) : message.message_type === 3 ? (
+                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                             <IconApp pack="FI" name="file-text" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                             <Text style={{
+                                                                 color: app_theme.colors.text,
+                                                                 fontSize: app_description.small_general_font_size,
+                                                                 fontWeight: app_description.small_general_font_weight as any
+                                                             }}>{strings.document_file || "Document"}</Text>
+                                                         </View>
+                                                     ) : message.message_type === 2 ? (
+                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                             <IconApp pack="FI" name="image" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                             <Text style={{
+                                                                 color: app_theme.colors.text,
+                                                                 fontSize: app_description.small_general_font_size,
+                                                                 fontWeight: app_description.small_general_font_weight as any
+                                                             }}>{strings.picture}</Text>
+                                                         </View>
+                                                     ) : message.message_type === 1 ? (
+                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                             <IconApp pack="MC" name="microphone" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                             <Text style={{
+                                                                 color: app_theme.colors.text,
+                                                                 fontSize: app_description.small_general_font_size,
+                                                                 fontWeight: app_description.small_general_font_weight as any
+                                                             }}>{strings.voice_note}</Text>
+                                                         </View>
+                                                     ) : (
+                                                         <Text numberOfLines={5} style={{
+                                                             color: app_theme.colors.text,
+                                                             fontSize: app_description.small_general_font_size,
+                                                             fontWeight: app_description.small_general_font_weight as any,
+                                                             marginTop: 2
+                                                         }}>{message.main_text_message}</Text>
+                                                     )}
                                                 </Pressable>
                                             </View>
                                             : null : null}

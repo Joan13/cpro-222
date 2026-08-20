@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Pressable, Image, ActivityIndicator, Linking } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import * as Contacts from 'expo-contacts';
 import { TMessage } from '../../../types/types';
 import { useAppSelector } from '../../../store/app/hooks';
 import { Image as ExpoImage } from 'expo-image';
@@ -8,31 +9,65 @@ import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { YambiText } from '../../app/Text';
-import { formatPhoneInternational, media_url, remote_host } from '../../../../GlobalVariables';
+import { formatPhoneInternational, media_url, remote_host, copyToClipboard } from '../../../../GlobalVariables';
 import * as RootNavigation from '../../../services/Navigation_ref';
 import { strings } from '../../../lang/lang';
+
+// Global cache for checked phone numbers to avoid redundant HTTP requests
+const yambiUserCacheMap = new Map<string, { isYambiUser: boolean; userProfile: string; yambiName: string }>();
 
 const ContactMessageItem = ({ message }: { message: TMessage }) => {
     const app_theme = useAppSelector(state => state.app_theme);
     const raw_contacts = useAppSelector(state => state.persisted_app.raw_contacts || state.app.raw_contacts || []);
 
-    const [checking, setChecking] = useState<boolean>(true);
-    const [isYambiUser, setIsYambiUser] = useState<boolean>(false);
-    const [userProfile, setUserProfile] = useState<string>('');
-    const [yambiName, setYambiName] = useState<string>('');
-
     const contactPhone = message.main_text_message;
     const contactName = message.caption || contactPhone;
 
-    // Check if contact is in receiver's phonebook
-    const isInPhonebook = raw_contacts.some((c: any) => {
-        const p1 = (c.phoneNumber || c.phone_number || '').replace(/\D/g, '');
+    const cachedInfo = contactPhone ? yambiUserCacheMap.get(contactPhone) : undefined;
+    const [checking, setChecking] = useState<boolean>(!cachedInfo && !!contactPhone);
+    const [isYambiUser, setIsYambiUser] = useState<boolean>(cachedInfo?.isYambiUser || false);
+    const [userProfile, setUserProfile] = useState<string>(cachedInfo?.userProfile || '');
+    const [yambiName, setYambiName] = useState<string>(cachedInfo?.yambiName || '');
+
+    const handleLongPress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        copyToClipboard(contactPhone);
+    };
+
+    // Check if contact is in receiver's phonebook (memoized)
+    const isInPhonebook = useMemo(() => {
         const p2 = (contactPhone || '').replace(/\D/g, '');
-        return p1.length > 5 && p2.length > 5 && (p1.endsWith(p2) || p2.endsWith(p1));
-    });
+        if (!p2 || p2.length < 5) return false;
+
+        return raw_contacts.some((c: any) => {
+            const numbersToCheck: string[] = [];
+            if (c.phoneNumber) numbersToCheck.push(c.phoneNumber);
+            if (c.phone_number) numbersToCheck.push(c.phone_number);
+            if (c.number) numbersToCheck.push(c.number);
+            if (Array.isArray(c.phoneNumbers)) {
+                c.phoneNumbers.forEach((pn: any) => {
+                    if (pn?.number) numbersToCheck.push(pn.number);
+                });
+            }
+
+            return numbersToCheck.some(num => {
+                const p1 = (num || '').replace(/\D/g, '');
+                return p1.length > 5 && (p1.endsWith(p2) || p2.endsWith(p1));
+            });
+        });
+    }, [contactPhone, raw_contacts]);
 
     const checkYambiUser = async () => {
         if (!contactPhone) {
+            setChecking(false);
+            return;
+        }
+
+        if (yambiUserCacheMap.has(contactPhone)) {
+            const info = yambiUserCacheMap.get(contactPhone)!;
+            setIsYambiUser(info.isYambiUser);
+            setUserProfile(info.userProfile);
+            setYambiName(info.yambiName);
             setChecking(false);
             return;
         }
@@ -44,12 +79,16 @@ const ContactMessageItem = ({ message }: { message: TMessage }) => {
 
             const data = response.data;
             if (data?.success === '1' || data?.message === '1' || data?.user || data?.data) {
-                setIsYambiUser(true);
                 const u = data.user || data.data || data.assemble || {};
-                if (u.user_profile) setUserProfile(u.user_profile);
-                if (u.user_names) setYambiName(u.user_names);
+                const profile = u.user_profile || '';
+                const names = u.user_names || '';
+                setIsYambiUser(true);
+                setUserProfile(profile);
+                setYambiName(names);
+                yambiUserCacheMap.set(contactPhone, { isYambiUser: true, userProfile: profile, yambiName: names });
             } else {
                 setIsYambiUser(false);
+                yambiUserCacheMap.set(contactPhone, { isYambiUser: false, userProfile: '', yambiName: '' });
             }
         } catch (e) {
             setIsYambiUser(false);
@@ -67,21 +106,36 @@ const ContactMessageItem = ({ message }: { message: TMessage }) => {
         RootNavigation.navigate("Inbox", { user: contactPhone });
     };
 
-    const handleAddContactPress = () => {
+    const handleAddContactPress = async () => {
         Haptics.selectionAsync();
-        Linking.openURL(`tel:${contactPhone}`).catch(() => { });
+        try {
+            const contact: Contacts.Contact = {
+                name: contactName || contactPhone,
+                [Contacts.Fields.FirstName]: contactName !== contactPhone ? contactName : '',
+                [Contacts.Fields.PhoneNumbers]: [{
+                    number: contactPhone,
+                    label: 'mobile',
+                }],
+                contactType: Contacts.ContactTypes.Person,
+            };
+            await Contacts.presentFormAsync(null, contact);
+        } catch (e) {
+            Linking.openURL(`tel:${contactPhone}`).catch(() => { });
+        }
     };
 
     return (
-        <View style={{
-            backgroundColor: app_theme.colors.card,
-            padding: 12,
-            borderRadius: 7,
-            marginVertical: 4,
-            borderWidth: 1,
-            borderColor: app_theme.colors.border,
-            width: 235
-        }}>
+        <Pressable
+            onLongPress={handleLongPress}
+            style={{
+                backgroundColor: app_theme.colors.card,
+                padding: 12,
+                borderRadius: 7,
+                marginVertical: 4,
+                borderWidth: 1,
+                borderColor: app_theme.colors.border,
+                width: 235
+            }}>
             {/* Contact Details Header */}
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {userProfile ? (
@@ -128,49 +182,51 @@ const ContactMessageItem = ({ message }: { message: TMessage }) => {
                 )}
             </View>
 
-            {/* Action Buttons: Message & Add Contact */}
-            <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-around',
-                alignItems: 'center',
-                marginTop: 10,
-                paddingTop: 8,
-                borderTopWidth: 1,
-                borderColor: app_theme.colors.border
-            }}>
-                {/* Message Option (if user is available on Yambi) */}
-                {isYambiUser && (
-                    <Pressable
-                        onPress={handleMessagePress}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            paddingVertical: 4,
-                            paddingHorizontal: 8
-                        }}
-                    >
-                        <Ionicons name="chatbubble-ellipses-outline" size={16} color={app_theme.colors.high_color} style={{ marginRight: 4 }} />
-                        <YambiText text={strings.message || "Message"} size="small" color="high" bold />
-                    </Pressable>
-                )}
+            {/* Action Buttons: Message & Add Contact (shown after check finishes) */}
+            {!checking && (isYambiUser || !isInPhonebook) && (
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+                    marginTop: 10,
+                    paddingTop: 8,
+                    borderTopWidth: 1,
+                    borderColor: app_theme.colors.border
+                }}>
+                    {/* Message Option (if user is available on Yambi) */}
+                    {isYambiUser && (
+                        <Pressable
+                            onPress={handleMessagePress}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingVertical: 4,
+                                paddingHorizontal: 8
+                            }}
+                        >
+                            <Ionicons name="chatbubble-ellipses-outline" size={16} color={app_theme.colors.high_color} style={{ marginRight: 4 }} />
+                            <YambiText text={strings.message || "Message"} size="small" color="high" bold />
+                        </Pressable>
+                    )}
 
-                {/* Add Contact Option (if not in receiver's phonebook) */}
-                {!isInPhonebook && (
-                    <Pressable
-                        onPress={handleAddContactPress}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            paddingVertical: 4,
-                            paddingHorizontal: 8
-                        }}
-                    >
-                        <Ionicons name="person-add-outline" size={16} color={app_theme.colors.high_color} style={{ marginRight: 4 }} />
-                        <YambiText text={(strings as any).add || "Add"} size="small" color="high" bold />
-                    </Pressable>
-                )}
-            </View>
-        </View>
+                    {/* Add Contact Option (if not in receiver's phonebook) */}
+                    {!isInPhonebook && (
+                        <Pressable
+                            onPress={handleAddContactPress}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingVertical: 4,
+                                paddingHorizontal: 8
+                            }}
+                        >
+                            <Ionicons name="person-add-outline" size={16} color={app_theme.colors.high_color} style={{ marginRight: 4 }} />
+                            <YambiText text={(strings as any).add || "Add"} size="small" color="high" bold />
+                        </Pressable>
+                    )}
+                </View>
+            )}
+        </Pressable>
     );
 };
 

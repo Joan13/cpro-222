@@ -7,6 +7,7 @@ import { NavProps, TChat, TChats } from '../../types/types';
 import { useFocusEffect } from '@react-navigation/native';
 import * as RootNavigation from './../../services/Navigation_ref';
 import RenderChats from '../../components/lists/messages/ChatsList';
+import AudioBackgroundReader from '../../components/chat/AudioBackgroundReader';
 import { FlashList } from '@shopify/flash-list';
 import { TextSmallYambiGray, YambiText } from '../../components/app/Text';
 import { strings } from '../../lang/lang';
@@ -299,6 +300,7 @@ const Chats = ({ navigation, route }: NavProps) => {
             borderColor: app_theme.colors.border,
             borderTopWidth: 1
         }}>
+            <AudioBackgroundReader />
             {chats.length === 0 ?
                 <ScrollView
                     contentContainerStyle={{
