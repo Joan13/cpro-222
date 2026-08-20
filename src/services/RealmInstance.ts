@@ -57,7 +57,7 @@ export const realmConfig = {
     Payments,
     Reservations,
   ],
-  schemaVersion: 24,
+  schemaVersion: 25,
 };
 
 export const openRealmInstance = async () => {

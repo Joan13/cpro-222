@@ -15,6 +15,7 @@ import * as DropdownMenu from 'zeego/dropdown-menu'
 import ModalApp from '../app/ModalApp';
 import { TextNormalYambiGray, TextNormalYambiHighColor } from '../app/Text';
 import moment from 'moment';
+import { callManager } from '../../services/call/CallManager';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -30,6 +31,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   const message_selected = useAppSelector(state => state.app.message_selected);
   const recordingAudio = useAppSelector(state => state.app.recordingAudio);
   const playingRecorded = useAppSelector(state => state.app.playingRecorded);
+  const call_active = useAppSelector(state => state.app.call_active);
   const [showDeleteMessage, setShowDeleteMessage] = useState<boolean>(false);
   const message = useObject(UsersMessages, message_selected || "");
   const userrr = useObject(UserContacts, user || "");
@@ -202,7 +204,49 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
           style={{
             flexDirection: 'row',
             alignItems: 'center',
+            gap: 4,
           }}>
+
+          {/* <Pressable
+            disabled={call_active}
+            onPress={() => {
+              if (call_active) return;
+              const contact = contacts.find((c) => c.phoneNumber === user);
+              const name = contact ? contact.displayName : user;
+              callManager.startCall(user, 'audio', name, userrr?.user_profile || '');
+              navigation.navigate('AudioCallScreen');
+            }}
+            style={{
+              height: 36,
+              width: 36,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 18,
+              opacity: call_active ? 0.35 : 1,
+            }}>
+            <IconApp pack='MC' name="phone" size={20} color={app_theme.colors.header_foreground_color} />
+          </Pressable>
+
+          <Pressable
+            disabled={call_active}
+            onPress={() => {
+              if (call_active) return;
+              const contact = contacts.find((c) => c.phoneNumber === user);
+              const name = contact ? contact.displayName : user;
+              callManager.startCall(user, 'video', name, userrr?.user_profile || '');
+              navigation.navigate('VideoCallScreen');
+            }}
+            style={{
+              height: 36,
+              width: 36,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 18,
+              opacity: call_active ? 0.35 : 1,
+            }}>
+            <IconApp pack='MC' name="video" size={20} color={app_theme.colors.header_foreground_color} />
+          </Pressable> */}
+
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',

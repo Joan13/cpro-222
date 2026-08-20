@@ -34,6 +34,7 @@ const defaultTheme: TTheme = {
         gray: '#808080',
         high_color: '#780006',
         primary_high_color: '#FFA726',
+        primary_high_color_foreground: '#FFFFFF',
         high_color2: '#e67300',
         high_color3: '#ac3973',
         chat_sent: '#FFEBEB',
@@ -52,7 +53,8 @@ const defaultTheme: TTheme = {
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#000000',
         bottom_navigation_inactive: '#808080',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#1DA1F2'
     },
 };
 
@@ -93,7 +95,8 @@ const whiteTheme: TTheme = {
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#000000',
         bottom_navigation_inactive: '#808080',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#0095F6'
     },
 };
 
@@ -135,6 +138,7 @@ const darkTheme: TTheme = {
         bottom_navigation_active: '#FFFFFF',
         bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
+        certified_badge: '#1DA1F2'
     },
 };
 
@@ -176,6 +180,7 @@ const blackTheme: TTheme = {
         bottom_navigation_active: '#FFFFFF',
         bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
+        certified_badge: '#1DA1F2'
     },
 };
 
@@ -220,7 +225,8 @@ const blueLightTheme: TTheme = {
         bottom_navigation_text: '#424242',
         bottom_navigation_active: '#1976D2',
         bottom_navigation_inactive: '#9E9E9E',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#1976D2'
     },
 };
 
@@ -261,7 +267,8 @@ const greenLightTheme: TTheme = {
         bottom_navigation_text: '#424242',
         bottom_navigation_active: '#2E7D32',
         bottom_navigation_inactive: '#9E9E9E',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#2E7D32'
     },
 };
 
@@ -302,7 +309,8 @@ const purpleLightTheme: TTheme = {
         bottom_navigation_text: '#424242',
         bottom_navigation_active: '#7B1FA2',
         bottom_navigation_inactive: '#9E9E9E',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#7B1FA2'
     },
 };
 
@@ -343,7 +351,8 @@ const orangeLightTheme: TTheme = {
         bottom_navigation_text: '#424242',
         bottom_navigation_active: '#E65100',
         bottom_navigation_inactive: '#9E9E9E',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#E65100'
     },
 };
 
@@ -384,7 +393,8 @@ const tealLightTheme: TTheme = {
         bottom_navigation_text: '#424242',
         bottom_navigation_active: '#00695C',
         bottom_navigation_inactive: '#9E9E9E',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#00695C'
     },
 };
 
@@ -429,7 +439,8 @@ const blueDarkTheme: TTheme = {
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#42A5F5',
         bottom_navigation_inactive: '#757575',
-        modal_background: '#1E1E2E'
+        modal_background: '#1E1E2E',
+        certified_badge: '#42A5F5'
     },
 };
 
@@ -470,7 +481,8 @@ const greenDarkTheme: TTheme = {
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#66BB6A',
         bottom_navigation_inactive: '#757575',
-        modal_background: '#1E2E1E'
+        modal_background: '#1E2E1E',
+        certified_badge: '#66BB6A'
     },
 };
 
@@ -511,7 +523,8 @@ const purpleDarkTheme: TTheme = {
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#BA68C8',
         bottom_navigation_inactive: '#757575',
-        modal_background: '#2E1E2E'
+        modal_background: '#2E1E2E',
+        certified_badge: '#BA68C8'
     },
 };
 
@@ -552,7 +565,8 @@ const orangeDarkTheme: TTheme = {
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#FFA726',
         bottom_navigation_inactive: '#757575',
-        modal_background: '#2E1E1A'
+        modal_background: '#2E1E1A',
+        certified_badge: '#FFA726'
     },
 };
 
@@ -593,7 +607,8 @@ const tealDarkTheme: TTheme = {
         bottom_navigation_text: '#FFFFFF',
         bottom_navigation_active: '#26A69A',
         bottom_navigation_inactive: '#757575',
-        modal_background: '#1E2E2A'
+        modal_background: '#1E2E2A',
+        certified_badge: '#26A69A'
     },
 };
 
@@ -638,7 +653,8 @@ const whiteTheme2: TTheme = {
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#2E7D32',
         bottom_navigation_inactive: '#808080',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#2E7D32'
     },
 };
 
@@ -679,7 +695,8 @@ const whiteTheme3: TTheme = {
         bottom_navigation_text: '#000000',
         bottom_navigation_active: '#7B1FA2',
         bottom_navigation_inactive: '#808080',
-        modal_background: '#FFFFFF'
+        modal_background: '#FFFFFF',
+        certified_badge: '#7B1FA2'
     },
 };
 
@@ -725,6 +742,7 @@ const blackTheme2: TTheme = {
         bottom_navigation_active: '#4CAF50',
         bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
+        certified_badge: '#4CAF50'
     },
 };
 
@@ -766,6 +784,7 @@ const blackTheme3: TTheme = {
         bottom_navigation_active: '#BA68C8',
         bottom_navigation_inactive: '#808080',
         modal_background: '#272525',
+        certified_badge: '#BA68C8'
     },
 };
 
@@ -841,6 +860,7 @@ export const isThemeAligned = (theme: TTheme | null | undefined): boolean => {
         'bottom_navigation_active',
         'bottom_navigation_inactive',
         'modal_background',
+        'certified_badge',
     ];
 
     return requiredColorKeys.every(key => typeof theme.colors[key] === 'string' && theme.colors[key].length > 0);

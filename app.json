@@ -20,8 +20,11 @@
       "infoPlist": {
         "UIBackgroundModes": [
           "audio",
-          "remote-notification"
+          "remote-notification",
+          "voip"
         ],
+        "NSCameraUsageDescription": "Yambi a besoin d’accéder à la caméra pour les appels vidéo.",
+        "NSMicrophoneUsageDescription": "Yambi a besoin d’accéder au microphone pour les appels vocaux et vidéo.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
           "NSAllowsLocalNetworking": true,

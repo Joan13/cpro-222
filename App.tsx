@@ -63,6 +63,10 @@ import RNBootSplash from 'react-native-bootsplash';
 import moment from 'moment';
 import SettingsYambi from './src/pages/app/SettingsYambi';
 import Languages from './src/pages/app/Languages';
+import AudioCallScreen from './src/pages/call/AudioCallScreen';
+import VideoCallScreen from './src/pages/call/VideoCallScreen';
+import IncomingCallOverlay from './src/components/call/IncomingCallOverlay';
+import { callManager } from './src/services/call/CallManager';
 import AboutYambi from './src/pages/app/AboutYambi';
 import MakeDonation from './src/pages/app/MakeDonation';
 import AddBusinessSubscription from './src/pages/business/AddBusinessSubscription';
@@ -1051,6 +1055,7 @@ const Yambi = ({ navigation }: NavProps) => {
         SocketApp.on('user_typing_status', handleTypingStatus);
 
         SocketApp.emit("assemble", user_data.phone_number);
+        callManager.init(user_data.phone_number, user_data.user_names, user_data.user_profile);
 
         // SocketApp.on("room_message", () => {
         //     console.log('Room message');
@@ -2916,6 +2921,9 @@ const Yambi = ({ navigation }: NavProps) => {
                                     gestureEnabled: true,
                                 })} component={Inbox} />
 
+                            <Stack.Screen name="AudioCallScreen" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} component={AudioCallScreen} />
+                            <Stack.Screen name="VideoCallScreen" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} component={VideoCallScreen} />
+
                             {/* <Stack.Screen name="profile" options={{ headerShown: false }} component={ProfileYambi} /> */}
                             {/* <Stack.Screen name="contacts" component={ContactsUser} options={{ headerShown: false }} /> */}
                             <Stack.Screen name="NewChat" component={NewChat} options={{
@@ -4233,6 +4241,7 @@ const Yambi = ({ navigation }: NavProps) => {
 
                             <Stack.Screen name="SplashStartYambi" options={{ headerShown: false }} component={SplashYambiStart} />
                         </Stack.Navigator>
+                        <IncomingCallOverlay navigation={navigationRef} />
                     </NavigationContainer>
                 </AudioPlayerProvider>
             </KeyboardRootView>

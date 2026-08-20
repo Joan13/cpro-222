@@ -10,6 +10,7 @@ const initialState: TPersistedStore = {
     business_subscriptions: [],
     cart: [],
     chatDrafts: {},
+    status_badge: 0,
     app_description: {
         home_title_font_size: 22,
         home_title_font_weight: '900',
@@ -243,6 +244,9 @@ export const persistedAppSlice = createSlice({
                 state.app_description.password_expenses = "";
                 state.app_description.enable_expense_reminder_notifications = true;
             }
+        },
+        setStatusBadge: (state, action: PayloadAction<number>) => {
+            state.status_badge = action.payload;
         }
     }
 })
@@ -250,6 +254,7 @@ export const persistedAppSlice = createSlice({
 export const {
     setThemeSet,
     setLanguageApp,
+    setStatusBadge,
     setAfterSale,
     setTypeSaleBoard,
     setCloseSaleBoardAfterOperation,

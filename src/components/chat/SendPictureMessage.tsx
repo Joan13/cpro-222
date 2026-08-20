@@ -98,6 +98,7 @@ const SendPictureMessage = ({ navigation, route }: NavProps) => {
     const openGallery = () => {
         (navigation as any).navigate('Gallery', {
             multiple: true,
+            showSelectAll: false,
             onSelect: (newAssets: MediaLibrary.Asset[]) => {
                 if (newAssets && newAssets.length > 0) {
                     setSelectedAssets(prev => {

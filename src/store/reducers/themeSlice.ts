@@ -27,6 +27,7 @@ export const themeSlice = createSlice({
                 other: action.payload.colors.other,
                 high_color: action.payload.colors.high_color,
                 primary_high_color: action.payload.colors.primary_high_color,
+                primary_high_color_foreground: action.payload.colors.primary_high_color_foreground || '#FFFFFF',
                 high_color2: action.payload.colors.high_color2,
                 high_color3: action.payload.colors.high_color3,
                 chat_sent: action.payload.colors.chat_sent,
@@ -45,7 +46,8 @@ export const themeSlice = createSlice({
                 bottom_navigation_text: action.payload.colors.bottom_navigation_text,
                 bottom_navigation_active: action.payload.colors.bottom_navigation_active,
                 bottom_navigation_inactive: action.payload.colors.bottom_navigation_inactive,
-                modal_background: action.payload.colors.modal_background
+                modal_background: action.payload.colors.modal_background,
+                certified_badge: action.payload.colors.certified_badge || '#1DA1F2'
             }
         }
     }

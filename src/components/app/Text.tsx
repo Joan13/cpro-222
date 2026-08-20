@@ -1,5 +1,6 @@
 import { Text, TextStyle } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
+import { TTheme } from "../../types/types";
 
 export interface IYambiText {
     text: string;
@@ -7,7 +8,7 @@ export interface IYambiText {
     numberLines?: number;
     style?: TextStyle;
     size?: "xsmall" | "small" | "normal" | "big";
-    color?: "default" | "gray" | "high" | "high2" | "high3" | "design" | "error" | "success" | "badge" | "white";
+    color?: keyof TTheme['colors'] | "default" | "gray" | "high" | "high2" | "high3" | "design" | "error" | "success" | "badge" | "white" | (string & {});
     lineThrough?: boolean;
 }
 
@@ -31,7 +32,7 @@ export const YambiText: React.FC<IYambiText> = ({
         big: app_description.big_general_font_size
     }[size];
 
-    const textColor = {
+    const legacyColors: Record<string, string> = {
         default: theme.colors.text,
         gray: theme.colors.gray,
         high: theme.colors.high_color,
@@ -42,7 +43,16 @@ export const YambiText: React.FC<IYambiText> = ({
         success: theme.colors.success,
         badge: theme.colors.badge_color,
         white: "white"
-    }[color];
+    };
+
+    let textColor = legacyColors[color];
+    if (!textColor) {
+        if (theme.colors && (color in theme.colors)) {
+            textColor = (theme.colors as any)[color];
+        } else {
+            textColor = color || theme.colors.text;
+        }
+    }
 
     return (
         <Text

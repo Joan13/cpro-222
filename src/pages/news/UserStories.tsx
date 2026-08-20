@@ -1,14 +1,17 @@
-import { View, Text, Pressable, Image, Dimensions, StyleSheet } from "react-native";
+import { View, Text, Pressable, Image, Dimensions, StyleSheet, ScrollView, PanResponder, Animated } from "react-native";
 import { useEffect, useState, useRef } from 'react';
 import { NavProps, TStory } from "../../types/types";
 import { strings } from "../../lang/lang";
 import { IconApp } from "../../components/app/IconApp";
+import { YambiText } from "../../components/app/Text";
+import BottomSheet from "../../components/app/BottomSheet";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
-import { useObject, useQuery } from "@realm/react";
+import { useObject, useQuery, useRealm } from "@realm/react";
 import { Stories, UserContacts } from "../../store/database/Models";
 import { Image as ExpoImage } from 'expo-image';
-import { media_url, renderDateTime } from "../../../GlobalVariables";
+import { media_url, renderDateTime, SocketApp } from "../../../GlobalVariables";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { cleanExpiredLocalStories, isStoryExpired } from "../../utils/storyCleanup";
 
 const STORY_DURATION = 5000; // 5 seconds per story
 
@@ -18,21 +21,73 @@ const UserStories = ({ navigation, route }: NavProps) => {
     const contactsList = useAppSelector(state => state.app.raw_contacts);
     const insets = useSafeAreaInsets();
 
+    const realm = useRealm();
+
     const { phone_number } = route.params;
     const [currentIndex, setCurrentIndex] = useState<number>(0);
     const [progress, setProgress] = useState<number>(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const stories = useQuery(Stories, sts => {
-        return sts.filtered('phone_number == $0', phone_number).sorted('createdAt', true);
+    const rawStories = useQuery(Stories, sts => {
+        return sts.filtered('phone_number == $0', phone_number).sorted('createdAt', false);
     }, [phone_number]);
+
+    const stories = rawStories.filter(st => !isStoryExpired(st));
+
+    useEffect(() => {
+        cleanExpiredLocalStories(realm);
+    }, [realm]);
+
+    const [isPaused, setIsPaused] = useState<boolean>(false);
+    const isPausedRef = useRef<boolean>(false);
+    const pressStartTimeRef = useRef<number>(0);
+    const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        isPausedRef.current = isPaused;
+    }, [isPaused]);
+
+    const handlePressIn = () => {
+        pressStartTimeRef.current = Date.now();
+        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+
+        holdTimerRef.current = setTimeout(() => {
+            setIsPaused(true);
+        }, 180);
+    };
+
+    const handlePressOutLeft = () => {
+        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+        const pressDuration = Date.now() - pressStartTimeRef.current;
+
+        if (isPausedRef.current) {
+            setIsPaused(false);
+        }
+
+        if (pressDuration < 200) {
+            handlePrev();
+        }
+    };
+
+    const handlePressOutRight = () => {
+        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+        const pressDuration = Date.now() - pressStartTimeRef.current;
+
+        if (isPausedRef.current) {
+            setIsPaused(false);
+        }
+
+        if (pressDuration < 200) {
+            handleNext();
+        }
+    };
 
     const targetContact = useObject(UserContacts, phone_number);
 
     const ShowUserName = () => {
         if (phone_number === user_data.phone_number) {
-            return strings.my_story || "My Story";
+            return strings.my_status || "My Status";
         }
         const contact = contactsList.find((cc) => cc.phoneNumber === phone_number);
         if (contact?.displayName) {
@@ -49,25 +104,29 @@ const UserStories = ({ navigation, route }: NavProps) => {
         navigation.setOptions({ headerShown: false });
     }, [navigation]);
 
-    // Manage story progress timer
+    // Manage story progress timer with pause capability on touch hold
     useEffect(() => {
         if (!stories || stories.length === 0) return;
 
         setProgress(0);
-        const startTime = Date.now();
+        let elapsedTime = 0;
+        const intervalTime = 50;
 
         intervalRef.current = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const currentProgress = Math.min(1, elapsed / STORY_DURATION);
+            if (isPausedRef.current) {
+                return;
+            }
+            elapsedTime += intervalTime;
+            const currentProgress = Math.min(1, elapsedTime / STORY_DURATION);
             setProgress(currentProgress);
-        }, 50);
 
-        timerRef.current = setTimeout(() => {
-            handleNext();
-        }, STORY_DURATION);
+            if (elapsedTime >= STORY_DURATION) {
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                handleNext();
+            }
+        }, intervalTime);
 
         return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [currentIndex, stories?.length]);
@@ -144,8 +203,102 @@ const UserStories = ({ navigation, route }: NavProps) => {
     const statusFontStyle = storyStyles.fontStyle || 'normal';
     const statusTextAlign = storyStyles.textAlign || 'center';
 
+    useEffect(() => {
+        if (!currentStory || !user_data.phone_number || !currentStory._id) return;
+        if (user_data.phone_number === currentStory.phone_number) return;
+
+        let viewersList: string[] = [];
+        try {
+            viewersList = JSON.parse(currentStory.viewers || '[]');
+        } catch (e) {
+            viewersList = [];
+        }
+
+        if (!viewersList.includes(user_data.phone_number)) {
+            viewersList.push(user_data.phone_number);
+            const updatedViewers = JSON.stringify(viewersList);
+
+            realm.write(() => {
+                try {
+                    const realmStory = realm.objectForPrimaryKey<Stories>('Stories', currentStory._id);
+                    if (realmStory) {
+                        realmStory.viewers = updatedViewers;
+                    }
+                } catch (e) { }
+            });
+
+            SocketApp.emit('OnViewStatus', {
+                story_id: currentStory._id,
+                viewer_phone: user_data.phone_number
+            });
+        }
+    }, [currentIndex, currentStory?._id, currentStory?.phone_number, user_data.phone_number, realm]);
+
+    const [showViewersSheet, setShowViewersSheet] = useState<boolean>(false);
+
+    const translateY = useRef(new Animated.Value(0)).current;
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => false,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return gestureState.dy > 15 && gestureState.dy > Math.abs(gestureState.dx);
+            },
+            onPanResponderGrant: () => {
+                setIsPaused(true);
+            },
+            onPanResponderMove: (_, gestureState) => {
+                if (gestureState.dy > 0) {
+                    translateY.setValue(gestureState.dy);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                if (gestureState.dy > 120 || gestureState.vy > 0.5) {
+                    Animated.timing(translateY, {
+                        toValue: Dimensions.get('window').height,
+                        duration: 150,
+                        useNativeDriver: true,
+                    }).start(() => {
+                        navigation.goBack();
+                    });
+                } else {
+                    Animated.spring(translateY, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                        bounciness: 5,
+                    }).start(() => {
+                        setIsPaused(false);
+                    });
+                }
+            },
+            onPanResponderTerminate: () => {
+                Animated.spring(translateY, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                }).start(() => {
+                    setIsPaused(false);
+                });
+            }
+        })
+    ).current;
+
+    let currentViewers: string[] = [];
+    try {
+        currentViewers = JSON.parse(currentStory?.viewers || '[]');
+    } catch (e) {
+        currentViewers = [];
+    }
+
     return (
-        <View style={[styles.container, { backgroundColor: '#000000' }]}>
+        <Animated.View
+            {...panResponder.panHandlers}
+            style={[
+                styles.container,
+                {
+                    backgroundColor: '#000000',
+                    transform: [{ translateY }]
+                }
+            ]}>
             {/* Main Content */}
             {isPhotoStatus ? (
                 <View style={styles.mediaContainer}>
@@ -155,7 +308,7 @@ const UserStories = ({ navigation, route }: NavProps) => {
                         source={media_url + "/photo_status/" + currentStory.main_text}
                     />
                     {currentStory.caption ? (
-                        <View style={styles.captionOverlay}>
+                        <View style={[styles.captionOverlay, { bottom: insets.bottom + 64 }]}>
                             <Text style={styles.captionText}>{currentStory.caption}</Text>
                         </View>
                     ) : null}
@@ -176,8 +329,21 @@ const UserStories = ({ navigation, route }: NavProps) => {
                 </View>
             )}
 
+            {/* Bottom Viewers Button */}
+            <View style={[styles.bottomViewersContainer, { paddingBottom: insets.bottom + 16 }]} pointerEvents="box-none">
+                <Pressable
+                    onPress={() => {
+                        setIsPaused(true);
+                        setShowViewersSheet(true);
+                    }}
+                    style={styles.eyeBtn}>
+                    <IconApp pack="FI" name="eye" size={18} color="#FFFFFF" />
+                    <Text style={styles.eyeCountText}>{currentViewers.length}</Text>
+                </Pressable>
+            </View>
+
             {/* Top Controls & Overlay */}
-            <View style={[styles.topOverlay, { paddingTop: insets.top + 8 }]}>
+            <View style={[styles.topOverlay, { paddingTop: insets.top + 8, opacity: isPaused ? 0.2 : 1 }]}>
                 {/* Segmented Progress Bars */}
                 <View style={styles.progressRow}>
                     {stories.map((s, idx) => {
@@ -225,12 +391,66 @@ const UserStories = ({ navigation, route }: NavProps) => {
                 </View>
             </View>
 
-            {/* Tap Navigation Touch Zones */}
+            {/* Tap Navigation Touch Zones with Hold-to-Pause support */}
             <View style={styles.touchOverlay} pointerEvents="box-none">
-                <Pressable style={styles.touchLeft} onPress={handlePrev} />
-                <Pressable style={styles.touchRight} onPress={handleNext} />
+                <Pressable
+                    style={styles.touchLeft}
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOutLeft}
+                />
+                <Pressable
+                    style={styles.touchRight}
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOutRight}
+                />
             </View>
-        </View>
+
+            {/* Viewers BottomSheet */}
+            <BottomSheet
+                visible={showViewersSheet}
+                onClose={() => {
+                    setShowViewersSheet(false);
+                    setIsPaused(false);
+                }}
+                title={strings.views ? `${strings.views} (${currentViewers.length})` : `Status Viewers (${currentViewers.length})`}
+            >
+                <ScrollView style={{ width: '100%', maxHeight: 380, paddingVertical: 8 }}>
+                    {currentViewers.length === 0 ? (
+                        <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 30 }}>
+                            <IconApp pack="FI" name="eye-off" size={36} color={theme.gray} />
+                            <YambiText text="No views yet" style={{ marginTop: 10, color: theme.gray, fontSize: 14 }} />
+                        </View>
+                    ) : (
+                        currentViewers.map((viewerPhone, idx) => {
+                            const viewerContact = contactsList.find((c: any) => c.phoneNumber === viewerPhone || c.phone_number === viewerPhone);
+                            const viewerName = viewerContact ? (viewerContact.displayName || viewerPhone) : viewerPhone;
+
+                            return (
+                                <View
+                                    key={viewerPhone + idx}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingVertical: 10,
+                                        borderBottomWidth: idx === currentViewers.length - 1 ? 0 : 1,
+                                        borderBottomColor: theme.border + '30'
+                                    }}>
+                                    <Image
+                                        source={require('./../../assets/profile_black.jpg')}
+                                        style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: theme.border }}
+                                    />
+                                    <View style={{ flex: 1, marginLeft: 12 }}>
+                                        <YambiText text={viewerName} bold style={{ fontSize: 14, color: theme.text }} />
+                                        <YambiText text={viewerPhone} style={{ fontSize: 12, color: theme.gray, marginTop: 1 }} />
+                                    </View>
+                                    <IconApp pack="MC" name="check-all" size={18} color={theme.primary_high_color || theme.high_color} />
+                                </View>
+                            );
+                        })
+                    )}
+                </ScrollView>
+            </BottomSheet>
+        </Animated.View>
     );
 };
 
@@ -276,6 +496,30 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
         lineHeight: 34
+    },
+    bottomViewersContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 20
+    },
+    eyeBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.25)'
+    },
+    eyeCountText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginLeft: 6
     },
     topOverlay: {
         position: 'absolute',

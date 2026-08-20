@@ -77,6 +77,8 @@ export type TStore = {
     show_favorite_chats: boolean,
     category: string,
     typing_statuses: Record<string, string>,
+    call_active: boolean,
+    call_state: string,
     // message_photo_view: TMessage
 }
 
@@ -122,6 +124,7 @@ export type TPersistedStore = {
     business_subscriptions: TBusinessSubscription[],
     cart: TCartItem[],
     chatDrafts?: TChatDrafts,
+    status_badge?: number,
     app_description: TAppDescription
 }
 
@@ -218,6 +221,7 @@ export type TTheme = {
         gray: string,
         high_color: string,
         primary_high_color: string,
+        primary_high_color_foreground?: string,
         high_color2: string,
         high_color3: string,
         chat_sent: string,
@@ -236,7 +240,8 @@ export type TTheme = {
         bottom_navigation_text: string,
         bottom_navigation_active: string,
         bottom_navigation_inactive: string,
-        modal_background: string
+        modal_background: string,
+        certified_badge: string
     },
 }
 
@@ -425,6 +430,7 @@ export type TStory = {
     excluded: string,
     reposts: string,
     story_privacy: number,
+    story_active?: number,
     createdAt: string,
     updatedAt: string,
     expiresAt: string
@@ -763,6 +769,8 @@ export type TInventoryMovement = {
 export type RootStackParamList = {
     Home: undefined;
     Inbox: { user: string; highlight_message_token?: string };
+    AudioCallScreen: undefined;
+    VideoCallScreen: undefined;
     Search: undefined;
     SplashStartYambi: undefined;
     Signup: undefined;
@@ -865,7 +873,7 @@ export type RootStackParamList = {
     News: { flag?: number, company_id?: string };
     Post: { post?: TNews; id?: string };
     PostReactions: { post: TNews };
-    Gallery: { multiple?: boolean; maxSelection?: number; initialSelection?: any[]; onSelect?: (assets: any[]) => void };
+    Gallery: { multiple?: boolean; maxSelection?: number; initialSelection?: any[]; showSelectAll?: boolean; onSelect?: (assets: any[]) => void };
 };
 
 type NavProps = NativeStackScreenProps<RootStackParamList, 'Home', 'Inbox', 'SplashStartYambi', 'Signup', 'Themes', 'NewGroup', 'NewChat', 'SettingsYambi', 'Languages', 'PictureMessage', 'ViewFullInboxImage', 'NewBusiness', 'AboutYambi', 'NewBusinessItem', 'BusinessItems', 'EditBusinessItem', 'RenewStock', 'NewSalesPoint', 'EditBusiness', 'EditSalesPoint', 'BusinessSales', 'SalesPointSales', 'NewBusinessUser', 'Sale', 'EditSalePayments', 'SalePayment', 'BusinessItem', 'BusinessModern', 'EditSalesPoint', 'CustomizeBusiness', 'MessageUs', 'UserBusinessUsers', 'BusinessSubscribers', 'EditBusinessUser', 'ItemSales', 'EditProfile', 'ViewPhoto', 'ContactUs', 'MyAccount', 'Companies', 'Company', 'NewCompany', 'NewCompanyUser', 'EditCompany', 'EditCompanyUser', 'CompanyUser', 'ForwardMessage', 'MessageInfo', 'UserProfileInfo', 'AllMessages', 'NewStory', 'Stories', 'UserStories', 'UpdateYambi', 'AddItemSale', 'Cart', 'CategoryItems', 'SearchMarketplace', 'Calculator', 'PostNews', 'EditNews', 'News', 'Post', 'PostReactions', 'BusinessInventoryMovementHistory', 'InventoryMovement', 'ShareBusiness', 'Expenses', 'AddExpense', 'EditExpense', 'Expense', 'CategoryExpenses', 'GetExpenses', 'Reservations', 'Reservation', 'EditReservation', 'Gallery'>;

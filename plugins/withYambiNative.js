@@ -17,6 +17,13 @@ const ANDROID_PERMISSIONS = [
   'android.permission.POST_NOTIFICATIONS',
   'android.permission.READ_CONTACTS',
   'android.permission.WAKE_LOCK',
+  'android.permission.CAMERA',
+  'android.permission.RECORD_AUDIO',
+  'android.permission.MODIFY_AUDIO_SETTINGS',
+  'android.permission.BLUETOOTH',
+  'android.permission.BLUETOOTH_CONNECT',
+  'android.permission.FOREGROUND_SERVICE_MICROPHONE',
+  'android.permission.FOREGROUND_SERVICE_CAMERA',
 ];
 
 const CUSTOM_SCHEME_INTENT_FILTERS = [

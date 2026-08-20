@@ -24,6 +24,7 @@ const HeaderRightHome = () => {
     const title = useAppSelector(state => state.app.title);
     const show_favorite_chats = useAppSelector(state => state.app.show_favorite_chats);
     const cart = useAppSelector(state => state.persisted_app.cart);
+    const status_badge = useAppSelector(state => state.persisted_app.status_badge || 0);
     const loading_header = useAppSelector(state => state.app.loading_header);
     const [loading, setLoading] = useState(false);
     const [showInternetError, setShowInternetError] = useState(false);
@@ -538,9 +539,23 @@ const HeaderRightHome = () => {
                                 width: 30,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                marginHorizontal: 6
+                                marginHorizontal: 6,
+                                position: 'relative'
                             }}>
-                            <IconApp pack="MC" name="camera-plus" size={20} color={theme.colors.header_foreground_color} />
+                            <IconApp pack="MT" name="donut-large" size={20} color={theme.colors.header_foreground_color} />
+                            {status_badge > 0 && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 1,
+                                    right: 1,
+                                    backgroundColor: theme.colors.primary_high_color || theme.colors.high_color || '#25D366',
+                                    height: 10,
+                                    width: 10,
+                                    borderRadius: 5,
+                                    borderWidth: 1.5,
+                                    borderColor: theme.colors.header_background_color || '#000000'
+                                }} />
+                            )}
                         </Pressable>
                         <Pressable
                             onPress={() => { RootNavigation.navigate("Search") }}
@@ -584,7 +599,41 @@ const HeaderRightHome = () => {
                                     marginHorizontal: 15,
                                     marginRight: 20
                                 }}>
-                                <IconApp pack="FI" name="plus" size={20} color={theme.colors.header_foreground_color} />
+                                <IconApp pack="FI" name="plus-circle" size={20} color={theme.colors.header_foreground_color} />
+                            </Pressable>
+                        </Animated.View>
+
+                        <Animated.View entering={FadeIn}>
+                            <Pressable
+                                onPress={() => { RootNavigation.navigate("Cart") }}
+                                style={{
+                                    height: 30,
+                                    width: 30,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginRight: 20,
+                                    marginLeft: 15,
+                                }}>
+                                <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.header_foreground_color} />
+
+                                {cart && cart.length !== 0 ?
+                                    <View style={{
+                                        backgroundColor: theme.colors.primary_high_color || theme.colors.badge_background_color,
+                                        minWidth: 15,
+                                        height: 15,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        borderRadius: 20,
+                                        marginTop: -25,
+                                        marginLeft: -5
+                                    }}>
+                                        <Text style={{
+                                            color: theme.colors.primary_high_color_foreground || theme.colors.badge_color || '#FFFFFF',
+                                            fontSize: 12
+                                        }}>
+                                            {cart ? cart.length : ""}
+                                        </Text>
+                                    </View> : null}
                             </Pressable>
                         </Animated.View>
                     </> : null}
@@ -619,7 +668,7 @@ const HeaderRightHome = () => {
 
                             {cart && cart.length !== 0 ?
                                 <View style={{
-                                    backgroundColor: theme.colors.badge_background_color,
+                                    backgroundColor: theme.colors.primary_high_color || theme.colors.badge_background_color,
                                     minWidth: 15,
                                     height: 15,
                                     justifyContent: 'center',
@@ -629,7 +678,7 @@ const HeaderRightHome = () => {
                                     marginLeft: -5
                                 }}>
                                     <Text style={{
-                                        color: theme.colors.badge_color,
+                                        color: theme.colors.primary_high_color_foreground || theme.colors.badge_color || '#FFFFFF',
                                         fontSize: 12
                                     }}>
                                         {cart ? cart.length : ""}

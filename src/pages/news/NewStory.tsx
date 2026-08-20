@@ -1,4 +1,4 @@
-import { View, ScrollView, TextInput, Image, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator, Text } from "react-native";
+import { View, ScrollView, TextInput, Image, Pressable, KeyboardAvoidingView, Platform, Dimensions, ActivityIndicator, Text, FlatList } from "react-native";
 import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
@@ -73,6 +73,8 @@ const NewStory = ({ navigation, route }: NavProps) => {
     const [storyType, setStoryType] = useState<number>(initialFlag); // 0 = text, 1 = photo
 
     const [photos, setPhotos] = useState([]);
+    const [captions, setCaptions] = useState<{ [key: number]: string }>({});
+    const [loadingUploadAll, setLoadingUploadAll] = useState<boolean>(false);
     const [textStatus, setTextStatus] = useState<string>("");
     const [loadingTextStatus, setLoadingTextStatus] = useState<boolean>(false);
 
@@ -136,18 +138,82 @@ const NewStory = ({ navigation, route }: NavProps) => {
         }
     }, [photos, storyType, theme]);
 
-    const deleteStatus = (item: any) => {
+    const deleteStatus = (item: any, isPublished = false) => {
+        const itemIndex = photos.findIndex((element: any) => element.path === item.path);
         const pp = photos.filter((element: any) => element.path !== item.path);
         setPhotos(pp);
+
+        if (itemIndex !== -1) {
+            setCaptions(prev => {
+                const next = { ...prev };
+                delete next[itemIndex];
+                return next;
+            });
+        }
 
         if (pp.length === 0) {
             navigation.setOptions({
                 headerShown: true,
                 statusBarHidden: false,
                 statusBarStyle: theme.statusbar,
-                statusBarColor: theme.colors.button_background_color
+                statusBarColor: theme.colors.button_background_color,
+                title: strings.add_status || "Add status"
             });
+            if (isPublished) {
+                navigation.goBack();
+            }
+        }
+    };
+
+    const handleUploadAllPhotos = async () => {
+        if (photos.length === 0 || loadingUploadAll) return;
+        setLoadingUploadAll(true);
+
+        try {
+            const uploadPromises = photos.map((item: any, idx: number) => {
+                const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + idx;
+                const base_url = remote_host + "/yambi/API/upload_status_photo";
+                const formData = new FormData();
+                formData.append('assemble', user_data.phone_number);
+                formData.append('caption', (captions[idx] || '').trim());
+                formData.append('privacy', "0");
+                formData.append('reposts', "[]");
+                formData.append('only_with', JSON.stringify(contacts));
+                formData.append('image', {
+                    type: 'image/jpg',
+                    uri: item.path,
+                    name: filename + 'status.jpg'
+                } as any);
+
+                return axios.post(base_url, formData, {
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+            });
+
+            const responses = await Promise.all(uploadPromises);
+
+            realm.write(() => {
+                responses.forEach(res => {
+                    if (res.data && res.data.message === "1" && res.data.story) {
+                        try {
+                            realm.create('Stories', res.data.story, true);
+                        } catch (e) { }
+                    }
+                });
+            });
+
+            setLoadingUploadAll(false);
+            setPhotos([]);
+            setCaptions({});
             navigation.goBack();
+        } catch (error) {
+            console.error("Error uploading all status photos:", error);
+            setLoadingUploadAll(false);
+            setShowInternetError(true);
+            dispatch(setShowModalApp(true));
         }
     };
 
@@ -203,7 +269,7 @@ const NewStory = ({ navigation, route }: NavProps) => {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: photos.length === 0 ? theme.colors.background : "#000000" }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            behavior={photos.length === 0 && Platform.OS === 'ios' ? 'padding' : undefined}
         >
             {showInternetError ? (
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
@@ -508,23 +574,28 @@ const NewStory = ({ navigation, route }: NavProps) => {
                 </View>
             ) : (
                 /* Photo Editor View */
-                <FlashList
-                    estimatedItemSize={width}
+                <FlatList
+                    style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#000000' }}
                     data={photos}
+                    horizontal
                     pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(item, index) => item.path || index.toString()}
                     keyboardShouldPersistTaps="handled"
                     renderItem={({ item, index }: { item: any, index: number }) => (
                         <NewStoryImagesList
                             item={item}
                             index={index}
-                            onGoBack={() => navigation.goBack()}
-                            onDeleteStatus={() => deleteStatus(item)}
+                            totalCount={photos.length}
+                            caption={captions[index] || ""}
+                            onChangeCaption={(text) => setCaptions(prev => ({ ...prev, [index]: text }))}
+                            onSendAll={handleUploadAllPhotos}
+                            loading={loadingUploadAll}
+                            onGoBack={() => setPhotos([])}
+                            onDeleteStatus={(isPublished?: boolean) => deleteStatus(item, isPublished)}
                             onReadyStatus={() => { }}
                         />
                     )}
-                    contentContainerStyle={{
-                        backgroundColor: '#000000'
-                    }}
                 />
             )}
         </KeyboardAvoidingView>

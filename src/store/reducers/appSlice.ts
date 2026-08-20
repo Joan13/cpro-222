@@ -74,13 +74,22 @@ const initialState: TStore = {
     users_connected: [],
     show_favorite_chats: false,
     category: "",
-    typing_statuses: {}
+    typing_statuses: {},
+    call_active: false,
+    call_state: 'IDLE'
 }
 
 export const appSlice = createSlice({
     name: 'app',
     initialState,
     reducers: {
+        setCallActive: (state, action: PayloadAction<boolean>) => {
+            state.call_active = action.payload;
+        },
+        setCallState: (state, action: PayloadAction<string>) => {
+            state.call_state = action.payload;
+            state.call_active = action.payload !== 'IDLE' && action.payload !== 'ENDED' && action.payload !== 'FAILED' && action.payload !== 'BUSY';
+        },
         setRootNavigation: (state, action: PayloadAction) => {
             state.rootNavigation = action.payload;
         },
@@ -291,7 +300,9 @@ export const {
     setCategory,
     setSearchYambiText,
     setScrollToEnd,
-    setUserTypingStatus } = appSlice.actions;
+    setUserTypingStatus,
+    setCallActive,
+    setCallState } = appSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectApp = (state: RootState) => state.app;

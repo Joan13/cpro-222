@@ -423,6 +423,7 @@ export class Stories extends Realm.Object<Stories> {
     excluded!: string;
     reposts!: string;
     story_privacy!: number;
+    story_active?: number;
     createdAt!: string;
     updatedAt!: string;
     expiresAt!: string;
@@ -444,6 +445,7 @@ export class Stories extends Realm.Object<Stories> {
             excluded: 'string',
             reposts: 'string',
             story_privacy: 'int',
+            story_active: { type: 'int', default: 1, optional: true },
             createdAt: 'string',
             updatedAt: 'string',
             expiresAt: 'string'

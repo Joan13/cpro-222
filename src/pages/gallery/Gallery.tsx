@@ -11,6 +11,7 @@ const GalleryScreen: React.FC<NavProps> = ({ navigation, route }) => {
     const multiple = route.params?.multiple ?? true;
     const maxSelection = route.params?.maxSelection;
     const initialSelection = route.params?.initialSelection ?? [];
+    const showSelectAll = route.params?.showSelectAll;
     const onSelectCallback = route.params?.onSelect;
 
     const handleConfirm = useCallback(
@@ -32,6 +33,7 @@ const GalleryScreen: React.FC<NavProps> = ({ navigation, route }) => {
                     initialSelection={initialSelection}
                     onConfirm={handleConfirm}
                     showConfirmButton={true}
+                    showSelectAll={showSelectAll}
                 />
             </View>
         </SafeAreaView>
