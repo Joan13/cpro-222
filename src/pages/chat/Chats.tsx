@@ -1,7 +1,7 @@
 import { View, Image, ScrollView, Pressable, ActivityIndicator, Alert, Text } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useRealm } from '@realm/react';
-import { UserChats } from '../../store/database/Models';
+import { UserChats, Stories, UserContacts } from '../../store/database/Models';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { NavProps, TChat, TChats } from '../../types/types';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,8 +16,11 @@ import { setMessageSelected, setTitle } from '../../store/reducers/appSlice';
 import { IconApp } from '../../components/app/IconApp';
 import ImagePicker from '../../utils/imagePicker';
 import axios from 'axios';
-import { remote_host } from '../../../GlobalVariables';
+import { remote_host, media_url } from '../../../GlobalVariables';
 import { updateUser, updateUserProfile } from '../../store/reducers/userSlice';
+import { Image as ExpoImage } from 'expo-image';
+import { cleanExpiredLocalStories, isStoryExpired } from '../../utils/storyCleanup';
+import StoriesList from '../../components/lists/stories/StoriesList';
 
 interface IChecklistItem {
     title: string;
@@ -154,6 +157,186 @@ const Chats = ({ navigation, route }: NavProps) => {
     const [loadingProfile, setLoadingProfile] = useState<boolean>(false);
     const dispatch = useAppDispatch();
     const realm = useRealm();
+
+    const contacts = useAppSelector(state => state.app.raw_contacts);
+    const realmContacts = useQuery(UserContacts);
+    const raw_stories = useQuery(Stories);
+    const my_stories = useQuery(Stories, sts => {
+        return sts.filtered('phone_number == $0', user_data.phone_number).sorted('createdAt', false);
+    }, [user_data.phone_number]);
+
+    const active_my_stories = my_stories.filter(st => !isStoryExpired(st));
+    const [userStories, setUserStories] = useState<any[]>([]);
+
+    useEffect(() => {
+        cleanExpiredLocalStories(realm);
+        const assembledStories: any[] = [];
+
+        // Group raw_stories by phone_number (excluding my own and expired stories)
+        const storiesByPhone: { [phone: string]: any[] } = {};
+        for (let i = 0; i < raw_stories.length; i++) {
+            const st = raw_stories[i];
+            if (st.phone_number && st.phone_number !== user_data.phone_number && !isStoryExpired(st)) {
+                if (!storiesByPhone[st.phone_number]) {
+                    storiesByPhone[st.phone_number] = [];
+                }
+                storiesByPhone[st.phone_number].push(st);
+            }
+        }
+
+        for (const phone in storiesByPhone) {
+            const userStoriesList = storiesByPhone[phone];
+            if (userStoriesList.length > 0) {
+                // Look up contact in Realm UserContacts first, then Redux raw_contacts
+                const realmContact = realmContacts.find((c: any) => c.phone_number === phone || c.phoneNumber === phone);
+                const reduxContact = contacts.find((c: any) => c.phoneNumber === phone || c.phone_number === phone);
+
+                const userObj = {
+                    phone_number: phone,
+                    user_names: realmContact?.user_names || (reduxContact as any)?.displayName || phone,
+                    user_profile: realmContact?.user_profile || (reduxContact as any)?.user_profile || '',
+                    displayName: (reduxContact as any)?.displayName || realmContact?.user_names || phone,
+                };
+
+                const hasUnseen = userStoriesList.some(st => {
+                    let viewersList: any[] = [];
+                    try {
+                        viewersList = JSON.parse(st.viewers || '[]');
+                    } catch (e) { }
+                    return !viewersList.some((v: any) =>
+                        typeof v === 'string' ? v === user_data.phone_number : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+                    );
+                });
+
+                assembledStories.push({
+                    user: userObj,
+                    stories: userStoriesList,
+                    lastDate: userStoriesList[userStoriesList.length - 1].createdAt,
+                    hasUnseen: hasUnseen
+                });
+            }
+        }
+
+        assembledStories.sort((a, b) => {
+            if (a.hasUnseen !== b.hasUnseen) {
+                return a.hasUnseen ? -1 : 1;
+            }
+            const timeA = new Date(a.lastDate).getTime();
+            const timeB = new Date(b.lastDate).getTime();
+            return timeB - timeA;
+        });
+
+        setUserStories(assembledStories);
+    }, [raw_stories, contacts, realmContacts, user_data.phone_number, realm]);
+
+    const renderHeaderStoriesBar = () => {
+        if (active_my_stories.length === 0 && userStories.length === 0) {
+            return null;
+        }
+
+        return (
+            <View style={{
+                width: '100%',
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: app_theme.colors.border + '30',
+                backgroundColor: app_theme.colors.background,
+            }}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ width: '100%' }}
+                    contentContainerStyle={{ paddingHorizontal: 12, alignItems: 'center' }}
+                >
+                    {/* My Status Item */}
+                    <Pressable
+                        onPress={() => {
+                            if (active_my_stories.length > 0) {
+                                RootNavigation.navigate("UserStories", { phone_number: user_data.phone_number });
+                            } else {
+                                RootNavigation.navigate("NewStory", { flag: 1 });
+                            }
+                        }}
+                        style={{
+                            alignItems: 'center',
+                            marginRight: 14,
+                            width: 68,
+                        }}
+                    >
+                        <View style={{ position: 'relative' }}>
+                            <View
+                                style={{
+                                    width: 62,
+                                    height: 62,
+                                    borderRadius: 31,
+                                    padding: 2,
+                                    borderWidth: active_my_stories.length > 0 ? 2.5 : 1.5,
+                                    borderColor: active_my_stories.length > 0
+                                        ? (app_theme.colors.header_background_color || app_theme.colors.primary_high_color || app_theme.colors.high_color)
+                                        : (app_theme.colors.border || 'rgba(150, 150, 150, 0.3)'),
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: app_theme.colors.background,
+                                }}
+                            >
+                                {user_data.user_profile === "" || !user_data.user_profile ? (
+                                    <Image
+                                        source={require('./../../assets/profile_black.jpg')}
+                                        style={{ width: 54, height: 54, borderRadius: 27 }}
+                                    />
+                                ) : (
+                                    <ExpoImage
+                                        style={{ width: 54, height: 54, borderRadius: 27 }}
+                                        contentFit="cover"
+                                        source={{ uri: media_url + "/profile_pictures/" + user_data.user_profile }}
+                                    />
+                                )}
+                            </View>
+                            {active_my_stories.length === 0 && (
+                                <View style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                    backgroundColor: app_theme.colors.header_background_color || app_theme.colors.primary_high_color || app_theme.colors.high_color || '#1E68FF',
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: 10,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    borderWidth: 2,
+                                    borderColor: app_theme.colors.background
+                                }}>
+                                    <IconApp pack="FI" name="plus" size={12} color="#FFFFFF" />
+                                </View>
+                            )}
+                        </View>
+                        <YambiText
+                            text={strings.my_status || "My status"}
+                            size="xsmall"
+                            style={{
+                                marginTop: 4,
+                                textAlign: 'center',
+                                fontSize: 11,
+                                color: app_theme.colors.text
+                            }}
+                            numberLines={1}
+                        />
+                    </Pressable>
+
+                    {/* Contacts' Stories using StoriesList with horizontal prop */}
+                    {userStories.map((item, idx) => (
+                        <StoriesList
+                            key={item.user?.phone_number || idx}
+                            item={item}
+                            index={idx}
+                            horizontal
+                            GoStory={() => RootNavigation.navigate("UserStories", { phone_number: item.user.phone_number })}
+                        />
+                    ))}
+                </ScrollView>
+            </View>
+        );
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -594,6 +777,7 @@ const Chats = ({ navigation, route }: NavProps) => {
                 <FlashList
                     data={chats as never}
                     estimatedItemSize={70}
+                    ListHeaderComponent={renderHeaderStoriesBar()}
                     renderItem={({ item, index }: { item: TChat, index: number }) => (
                         <RenderChats item={item} GoInbox={GoInbox} />
                     )}

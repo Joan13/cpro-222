@@ -54,7 +54,7 @@ function getCreatedAfterTimestamp(filter: DateFilterType): number | undefined {
 
 export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaGalleryReturn {
   const {
-    pageSize = 30,
+    pageSize = 50,
     autoLoad = true,
     mediaTypes = [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
   } = options;
@@ -71,7 +71,17 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
   const [error, setError] = useState<string | null>(null);
   const [permissionResponse, setPermissionResponse] = useState<MediaLibrary.PermissionResponse | null>(null);
 
+  // Synchronous refs to prevent stale closure bugs & re-binding onEndReached
   const isFetchingRef = useRef<boolean>(false);
+  const isLoadingMoreRef = useRef<boolean>(false);
+  const endCursorRef = useRef<string | undefined>(undefined);
+  const hasMoreRef = useRef<boolean>(true);
+  const requestIdRef = useRef<number>(0);
+  const selectedAlbumIdRef = useRef<string | null>(null);
+  const dateFilterRef = useRef<DateFilterType>('all');
+
+  selectedAlbumIdRef.current = selectedAlbumId;
+  dateFilterRef.current = dateFilter;
 
   // Check initial permissions
   const checkPermissions = useCallback(async () => {
@@ -92,7 +102,7 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
       const response = await MediaLibrary.requestPermissionsAsync();
       setPermissionResponse(response);
       if (response.granted || response.accessPrivileges === 'limited') {
-        fetchInitialAssets(selectedAlbumId, dateFilter);
+        fetchInitialAssets(selectedAlbumIdRef.current, dateFilterRef.current);
         loadAlbums();
       }
       return response;
@@ -101,7 +111,7 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
       setError(err?.message || 'Failed to request media permissions');
       throw err;
     }
-  }, [selectedAlbumId, dateFilter]);
+  }, []);
 
   // Open device settings
   const openSettings = useCallback(async () => {
@@ -128,24 +138,19 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
     }
   }, []);
 
-  // Present permission picker for limited access mode
-  const presentPermissionsPicker = useCallback(async () => {
-    try {
-      if (MediaLibrary.presentPermissionsPickerAsync) {
-        await MediaLibrary.presentPermissionsPickerAsync();
-        await fetchInitialAssets(selectedAlbumId, dateFilter);
-        await loadAlbums();
-      }
-    } catch (err: any) {
-      console.error('Error presenting permission picker:', err);
-    }
-  }, [selectedAlbumId, dateFilter, loadAlbums]);
-
   // Fetch initial assets (first page)
   const fetchInitialAssets = useCallback(
     async (albumId: string | null, filter: DateFilterType) => {
+      const currentRequestId = ++requestIdRef.current;
       isFetchingRef.current = true;
+      isLoadingMoreRef.current = false;
+      hasMoreRef.current = true;
+      endCursorRef.current = undefined;
+
       setLoading(true);
+      setLoadingMore(false);
+      setHasMore(true);
+      setEndCursor(undefined);
       setError(null);
 
       try {
@@ -165,55 +170,94 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
 
         const page = await MediaLibrary.getAssetsAsync(options);
 
+        if (currentRequestId !== requestIdRef.current) return;
+
         setAssets(page.assets);
+        endCursorRef.current = page.endCursor;
         setEndCursor(page.endCursor);
-        setHasMore(page.hasNextPage);
+
+        const canLoadMore = page.hasNextPage && page.assets.length > 0;
+        hasMoreRef.current = canLoadMore;
+        setHasMore(canLoadMore);
       } catch (err: any) {
+        if (currentRequestId !== requestIdRef.current) return;
         console.error('Error loading photos:', err);
         setError(err?.message || 'Failed to load photos');
       } finally {
-        setLoading(false);
-        isFetchingRef.current = false;
+        if (currentRequestId === requestIdRef.current) {
+          setLoading(false);
+          isFetchingRef.current = false;
+        }
       }
     },
     [pageSize, mediaTypes]
   );
 
+  // Present permission picker for limited access mode
+  const presentPermissionsPicker = useCallback(async () => {
+    try {
+      if (MediaLibrary.presentPermissionsPickerAsync) {
+        await MediaLibrary.presentPermissionsPickerAsync();
+        await fetchInitialAssets(selectedAlbumIdRef.current, dateFilterRef.current);
+        await loadAlbums();
+      }
+    } catch (err: any) {
+      console.error('Error presenting permission picker:', err);
+    }
+  }, [fetchInitialAssets, loadAlbums]);
+
   // Set selected album ID and reload
   const setSelectedAlbumId = useCallback(
     (albumId: string | null) => {
       setSelectedAlbumIdState(albumId);
-      fetchInitialAssets(albumId, dateFilter);
+      selectedAlbumIdRef.current = albumId;
+      fetchInitialAssets(albumId, dateFilterRef.current);
     },
-    [dateFilter, fetchInitialAssets]
+    [fetchInitialAssets]
   );
 
   // Set date filter and reload
   const setDateFilter = useCallback(
     (filter: DateFilterType) => {
       setDateFilterState(filter);
-      fetchInitialAssets(selectedAlbumId, filter);
+      dateFilterRef.current = filter;
+      fetchInitialAssets(selectedAlbumIdRef.current, filter);
     },
-    [selectedAlbumId, fetchInitialAssets]
+    [fetchInitialAssets]
   );
 
-  // Fetch next page of assets
+  // Fetch next page of assets with stable ref dependencies
   const loadMoreAssets = useCallback(async () => {
-    if (isFetchingRef.current || !hasMore || loading || loadingMore || !endCursor) return;
+    const currentCursor = endCursorRef.current;
+
+    if (
+      isFetchingRef.current ||
+      isLoadingMoreRef.current ||
+      !hasMoreRef.current ||
+      !currentCursor
+    ) {
+      return;
+    }
+
+    const currentRequestId = requestIdRef.current;
     isFetchingRef.current = true;
+    isLoadingMoreRef.current = true;
     setLoadingMore(true);
 
     try {
-      const createdAfter = getCreatedAfterTimestamp(dateFilter);
+      const currentAlbumId = selectedAlbumIdRef.current;
+      const currentFilter = dateFilterRef.current;
+      const createdAfter = getCreatedAfterTimestamp(currentFilter);
+
       const options: MediaLibrary.AssetsOptions = {
         first: pageSize,
-        after: endCursor,
+        after: currentCursor,
         mediaType: mediaTypes,
         sortBy: [[MediaLibrary.SortBy.creationTime, false]],
       };
 
-      if (selectedAlbumId) {
-        options.album = selectedAlbumId;
+      if (currentAlbumId) {
+        options.album = currentAlbumId;
       }
       if (createdAfter) {
         options.createdAfter = createdAfter;
@@ -221,27 +265,55 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
 
       const page = await MediaLibrary.getAssetsAsync(options);
 
+      if (currentRequestId !== requestIdRef.current) return;
+
+      // Detect cursor stagnation or empty response
+      if (page.assets.length === 0 || page.endCursor === currentCursor) {
+        hasMoreRef.current = false;
+        setHasMore(false);
+        return;
+      }
+
+      let addedAny = false;
       setAssets(prev => {
         const existingIds = new Set(prev.map(a => a.id));
         const newAssets = page.assets.filter(a => !existingIds.has(a.id));
+        if (newAssets.length === 0) {
+          return prev;
+        }
+        addedAny = true;
         return [...prev, ...newAssets];
       });
 
+      if (!addedAny) {
+        hasMoreRef.current = false;
+        setHasMore(false);
+        return;
+      }
+
+      endCursorRef.current = page.endCursor;
       setEndCursor(page.endCursor);
-      setHasMore(page.hasNextPage);
+
+      const canLoadMore = page.hasNextPage;
+      hasMoreRef.current = canLoadMore;
+      setHasMore(canLoadMore);
     } catch (err: any) {
+      if (currentRequestId !== requestIdRef.current) return;
       console.error('Error loading more photos:', err);
     } finally {
-      setLoadingMore(false);
-      isFetchingRef.current = false;
+      if (currentRequestId === requestIdRef.current) {
+        setLoadingMore(false);
+        isLoadingMoreRef.current = false;
+        isFetchingRef.current = false;
+      }
     }
-  }, [pageSize, endCursor, hasMore, loading, loadingMore, dateFilter, selectedAlbumId]);
+  }, [pageSize, mediaTypes]);
 
   // Refresh assets
   const refreshAssets = useCallback(async () => {
-    await fetchInitialAssets(selectedAlbumId, dateFilter);
+    await fetchInitialAssets(selectedAlbumIdRef.current, dateFilterRef.current);
     await loadAlbums();
-  }, [fetchInitialAssets, selectedAlbumId, dateFilter, loadAlbums]);
+  }, [fetchInitialAssets, loadAlbums]);
 
   // Handle initial auto load
   useEffect(() => {
@@ -249,7 +321,7 @@ export function useMediaGallery(options: UseMediaGalleryOptions = {}): UseMediaG
 
     checkPermissions().then(res => {
       if (res && (res.granted || res.accessPrivileges === 'limited')) {
-        fetchInitialAssets(selectedAlbumId, dateFilter);
+        fetchInitialAssets(selectedAlbumIdRef.current, dateFilterRef.current);
         loadAlbums();
       } else {
         setLoading(false);

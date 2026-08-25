@@ -3,14 +3,15 @@ import { View, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useAppSelector, useAppDispatch } from '../../store/app/hooks';
 import { useRealm, useQuery, useObject } from '@realm/react';
-import { Reservations as ReservationsModel, Payments, BusinessItemsSale, UserBusinessArticles, BusinessUsers, UserBusinesses, UserSellsPoints } from '../../store/database/Models';
+import { Reservations as ReservationsModel, Payments, BusinessItemsSale, UserBusinessArticles, BusinessUsers, UserBusinesses, UserSellsPoints, ItemPrices } from '../../store/database/Models';
 import RNPrint from 'react-native-print';
 import QRCode from 'qrcode';
-import { NavProps } from '../../types/types';
+import { NavProps, TSale } from '../../types/types';
 import { strings } from '../../lang/lang';
-import { renderCurrency, renderDateTime, SocketApp } from '../../../GlobalVariables';
+import { renderCurrency, renderDateTime, SocketApp, randomString, renderDateUpToMilliseconds } from '../../../GlobalVariables';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import ModalApp from '../../components/app/ModalApp';
+import BottomSheet from '../../components/app/BottomSheet';
 import ButtonNormal from '../../components/app/ButtonNormal';
 import {
     TextNormalYambi, TextSmallYambiGray, TextNormalYambiHighColor,
@@ -109,6 +110,20 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
     const business = useObject(UserBusinesses, reservation?.business_id || '');
     const sales_point = useObject(UserSellsPoints, reservation?.sales_point_id || '');
 
+    const itemPrices = useQuery(ItemPrices, prices =>
+        prices.filtered('item_id == $0', reservation?.item_id || ''),
+        [reservation?.item_id]
+    );
+
+    const linkedSale = useObject(BusinessItemsSale, reservation?.sale_id || '');
+    const hasCreatedSale = !!(
+        reservation?.sale_id &&
+        reservation.sale_id.trim() !== "" &&
+        linkedSale !== null &&
+        linkedSale !== undefined &&
+        linkedSale.sale_active === 1
+    );
+
     // Header delete button
     useLayoutEffect(() => {
         if (!reservation || reservation.status === 3 || reservation.status === 4) {
@@ -188,11 +203,97 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
         }
     };
 
-    // ── Mark as Completed (becomes a sale) ──────────────────────────────────
+    // ── Convert Completed Reservation to a Sale ─────────────────────────────
+    const handleConvertToSale = () => {
+        const now = moment().toISOString();
+        const saleId = renderDateUpToMilliseconds() + randomString(5);
+        const costPriceStr = itemPrices?.[0]?.wholesale_cost_price || "0";
+        const sellingPriceStr = (total / (reservation.quantity || 1)).toString();
+        const operatorPhone = user_data?.phone_number || "";
+
+        const newSale: TSale = {
+            _id: saleId,
+            item_id: reservation.item_id,
+            business_id: reservation.business_id,
+            sales_point_id: reservation.sales_point_id,
+            sale_operator: operatorPhone,
+            number: reservation.quantity || 1,
+            description: "",
+            cost_price: costPriceStr,
+            selling_price: sellingPriceStr,
+            delivery_price: "",
+            delivery_address: "",
+            delivery_time: "",
+            delivery_status: 0,
+            discount_price: "",
+            type_sale: 0,
+            buyer_name: reservation.customer_name || "",
+            buyer_phone: reservation.customer_phone || "",
+            currency: reservation.currency,
+            agent_paid: operatorPhone,
+            country: sales_point?.country || "",
+            uploaded: 0,
+            sale_active: 1,
+            createdAt: now,
+            updatedAt: now,
+        };
+
+        realm.write(() => {
+            // 1. Create the sale
+            try {
+                realm.create('BusinessItemsSale', newSale);
+            } catch (e: any) {
+                console.error("SALE CREATE ERROR:", e?.message || e);
+            }
+
+            // 2. Update reservation status
+            try {
+                reservation.sale_id = saleId;
+                reservation.status = 3;
+                reservation.updatedAt = now;
+            } catch (e: any) {
+                console.error("RESERVATION UPDATE ERROR:", e?.message || e);
+            }
+
+            // 3. Link existing payments to this sale (do NOT create new ones)
+            try {
+                payments.forEach((pmt: any) => {
+                    pmt.sale_id = saleId;
+                    pmt.updatedAt = now;
+                });
+            } catch (e: any) {
+                console.error("PAYMENTS LINK ERROR:", e?.message || e);
+            }
+
+            // 4. Decrement stock
+            try {
+                if (article) {
+                    article.items_number_stock = Math.max(0, article.items_number_stock - (reservation.quantity || 1));
+                    article.updatedAt = now;
+                }
+            } catch (e: any) {
+                console.error("STOCK UPDATE ERROR:", e?.message || e);
+            }
+
+            // 5. Emit sockets (same as AddItemSale pattern)
+            SocketApp.emit("newSales", JSON.stringify({ phone_number: operatorPhone, items: [newSale] }));
+            SocketApp.emit("newReservations", JSON.stringify({ phone_number: operatorPhone, items: [reservation] }));
+            if (article) {
+                SocketApp.emit("newItems", JSON.stringify({ phone_number: operatorPhone, items: [article] }));
+            }
+        });
+
+        setSuccessMsg((strings as any).reservation_completed || "Vente enregistrée avec succès !");
+        setShowSuccess(true);
+        dispatch(setShowModalApp(true));
+    };
+
+    // ── Mark as Completed ──────────────────────────────────
     const handleComplete = () => {
         try {
             const now = moment().toISOString();
             let newPayment: any = null;
+
             realm.write(() => {
                 reservation.status = 3;
                 reservation.updatedAt = now;
@@ -217,7 +318,6 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                         createdAt: now,
                         updatedAt: now,
                     });
-                    // Update remaining amount
                     reservation.remaining_amount = '0';
                     reservation.deposit_amount = total.toString();
                 }
@@ -227,7 +327,7 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
             if (newPayment) {
                 SocketApp.emit("newPayments", JSON.stringify({ phone_number: user_data.phone_number, items: [newPayment] }));
             }
-            setSuccessMsg((strings as any).reservation_completed);
+            setSuccessMsg((strings as any).reservation_completed || "Reservation marked as completed!");
             setShowCompleteConfirm(false);
             setShowSuccess(true);
             dispatch(setShowModalApp(true));
@@ -285,7 +385,6 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
             setInstallmentAmount('');
             setInstallmentMethod(1);
             setShowAddInstallment(false);
-            dispatch(setShowModalApp(false));
         } catch (e) {
             console.error(e);
         }
@@ -492,11 +591,11 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                         <div class="section-title">${(strings as any).payments || "Payments"}</div>
                         <div class="item-list">
                             ${Array.from(payments).filter((p: any) => p.payment_status !== 4).map((pmt: any) => {
-                                const methodLabel = pmt.payment_status === 2
-                                    ? renderPaymentMethodLabel(pmt.payment_method)
-                                    : ((strings as any).payment_pending || "Payment pending");
-                                const agentName = getOperatorName(pmt.agent_paid);
-                                return `
+                const methodLabel = pmt.payment_status === 2
+                    ? renderPaymentMethodLabel(pmt.payment_method)
+                    : ((strings as any).payment_pending || "Payment pending");
+                const agentName = getOperatorName(pmt.agent_paid);
+                return `
                                 <div class="summary-row">
                                     <span>
                                         ${methodLabel} - ${renderDateTime(pmt.createdAt, 2, false)}<br/>
@@ -505,7 +604,7 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                                     <span>${formatAmount(parseFloat(pmt.amount))} ${renderCurrency(pmt.currency, false)}</span>
                                 </div>
                                 `;
-                            }).join('')}
+            }).join('')}
                             <div class="summary-row" style="border-top: 1px solid #000; margin-top: 4px; padding-top: 4px; font-weight: bold;">
                                 <span>${(strings as any).amount_paid || "Amount Paid"}:</span>
                                 <span>${formatAmount(deposit)} ${(strings as any).of || "of"} ${formatAmount(total)} ${cur} ${(strings as any).paid || "paid"}</span>
@@ -570,76 +669,78 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                 </ModalApp>
             )}
 
-            {/* ── Complete confirmation modal ── */}
-            {showCompleteConfirm && (
-                <ModalApp
-                    title={(strings as any).mark_completed}
-                    singleButton={false}
-                    textAction={strings.confirm}
-                    onAction={handleComplete}
-                    onCancel={() => { setShowCompleteConfirm(false); dispatch(setShowModalApp(false)); }}
-                    onClose={() => { setShowCompleteConfirm(false); dispatch(setShowModalApp(false)); }}
-                >
-                    <YambiText color="gray" text={`${(strings as any).remaining_reserved}: ${remaining.toFixed(2)} ${cur}`} />
-                </ModalApp>
-            )}
+            {/* ── Complete confirmation bottom sheet ── */}
+            <BottomSheet
+                visible={showCompleteConfirm}
+                onClose={() => setShowCompleteConfirm(false)}
+            // title={(strings as any).mark_completed}
+            >
+                <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+                    <YambiText color="gray" text={`${(strings as any).remaining_reserved}: ${remaining.toFixed(2)} ${cur}`} style={{ marginBottom: 16 }} />
+                    <ButtonNormal
+                        normal={true}
+                        title={(strings as any).mark_completed || "Mark as Completed"}
+                        onPress={handleComplete}
+                    />
+                </View>
+            </BottomSheet>
 
-            {/* ── Add installment modal ── */}
-            {showAddInstallment && (
-                <ModalApp
-                    title={(strings as any).add_installment}
-                    singleButton={false}
-                    textAction={strings.confirm}
-                    onAction={handleAddInstallment}
-                    onCancel={() => { setShowAddInstallment(false); dispatch(setShowModalApp(false)); }}
-                    onClose={() => { setShowAddInstallment(false); dispatch(setShowModalApp(false)); }}
-                >
-                    <View style={{ paddingHorizontal: 5 }}>
-                        <TextSmallYambiGray text={`${(strings as any).remaining_reserved}: ${remaining.toFixed(2)} ${cur}`} styles={{ marginBottom: 12 }} />
-                        <TextInput
-                            value={installmentAmount}
-                            onChangeText={setInstallmentAmount}
-                            keyboardType="decimal-pad"
-                            placeholder={`${strings.amount} (max ${remaining.toFixed(2)})`}
-                            placeholderTextColor={app_theme.colors.gray}
-                            style={{
-                                borderWidth: 1,
-                                borderColor: app_theme.colors.border,
-                                borderRadius: 10,
-                                padding: 12,
-                                color: app_theme.colors.text,
-                                marginBottom: 14,
-                                fontSize: 16,
-                            }}
-                        />
-                        <TextSmallYambiGray text={(strings as any).payment_method} styles={{ marginBottom: 8 }} />
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                            {([
-                                { id: 1, label: strings.cash || 'Cash', icon: 'dollar-sign' },
-                                { id: 2, label: strings.mobile_money || 'Mobile Money', icon: 'smartphone' },
-                                { id: 3, label: strings.card || 'Card', icon: 'credit-card' },
-                            ] as const).map(m => (
-                                <Pressable
-                                    key={m.id}
-                                    onPress={() => setInstallmentMethod(m.id as 1 | 2 | 3)}
-                                    style={{
-                                        flex: 1,
-                                        alignItems: 'center',
-                                        paddingVertical: 10,
-                                        borderRadius: 10,
-                                        borderWidth: 1.5,
-                                        borderColor: installmentMethod === m.id ? app_theme.colors.high_color : app_theme.colors.border,
-                                        backgroundColor: installmentMethod === m.id ? app_theme.colors.high_color + '18' : 'transparent',
-                                    }}
-                                >
-                                    <IconApp pack="FI" name={m.icon} size={16} color={installmentMethod === m.id ? app_theme.colors.high_color : app_theme.colors.gray} />
-                                    <TextSmallYambi text={m.label} styles={{ marginTop: 4, fontSize: 11, color: installmentMethod === m.id ? app_theme.colors.high_color : app_theme.colors.gray }} />
-                                </Pressable>
-                            ))}
-                        </View>
+            {/* ── Add installment bottom sheet ── */}
+            <BottomSheet
+                visible={showAddInstallment}
+                onClose={() => setShowAddInstallment(false)}
+            // title={(strings as any).add_installment}
+            >
+                <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+                    <TextSmallYambiGray text={`${(strings as any).remaining_reserved}: ${remaining.toFixed(2)} ${cur}`} styles={{ marginBottom: 12 }} />
+                    <TextInput
+                        value={installmentAmount}
+                        onChangeText={setInstallmentAmount}
+                        keyboardType="decimal-pad"
+                        placeholder={`${strings.amount} (max ${remaining.toFixed(2)})`}
+                        placeholderTextColor={app_theme.colors.gray}
+                        style={{
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.border,
+                            borderRadius: 10,
+                            padding: 12,
+                            color: app_theme.colors.text,
+                            marginBottom: 14,
+                            fontSize: 16,
+                        }}
+                    />
+                    <TextSmallYambiGray text={(strings as any).payment_method} styles={{ marginBottom: 8 }} />
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                        {([
+                            { id: 1, label: strings.cash || 'Cash', icon: 'dollar-sign' },
+                            { id: 2, label: strings.mobile_money || 'Mobile Money', icon: 'smartphone' },
+                            { id: 3, label: strings.card || 'Card', icon: 'credit-card' },
+                        ] as const).map(m => (
+                            <Pressable
+                                key={m.id}
+                                onPress={() => setInstallmentMethod(m.id as 1 | 2 | 3)}
+                                style={{
+                                    flex: 1,
+                                    alignItems: 'center',
+                                    paddingVertical: 10,
+                                    borderRadius: 10,
+                                    borderWidth: 1.5,
+                                    borderColor: installmentMethod === m.id ? app_theme.colors.high_color : app_theme.colors.border,
+                                    backgroundColor: installmentMethod === m.id ? app_theme.colors.high_color + '18' : 'transparent',
+                                }}
+                            >
+                                <IconApp pack="FI" name={m.icon} size={16} color={installmentMethod === m.id ? app_theme.colors.high_color : app_theme.colors.gray} />
+                                <TextSmallYambi text={m.label} styles={{ marginTop: 4, fontSize: 11, color: installmentMethod === m.id ? app_theme.colors.high_color : app_theme.colors.gray }} />
+                            </Pressable>
+                        ))}
                     </View>
-                </ModalApp>
-            )}
+                    <ButtonNormal
+                        normal={true}
+                        title={(strings as any).add_installment || "Add installment"}
+                        onPress={handleAddInstallment}
+                    />
+                </View>
+            </BottomSheet>
 
             {/* ── Success modal ── */}
             {showSuccess && (
@@ -652,61 +753,64 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                 </ModalApp>
             )}
 
-            <View style={{ flex: 1, backgroundColor: app_theme.colors.background, marginBottom: 50 }}>
-                {/* ── Status & Info header card ── */}
+            <View style={{ flex: 1, backgroundColor: app_theme.colors.background, paddingHorizontal: 16, paddingBottom: 40 }}>
+                {/* ── Status Hero Header (NewBusiness style) ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    padding: 20,
-                    margin: 15,
-                    borderRadius: 16,
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 3,
                     alignItems: 'center',
+                    marginVertical: 20,
                 }}>
                     <View style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        backgroundColor: sColor + '20',
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        backgroundColor: sColor + '15',
                         justifyContent: 'center',
                         alignItems: 'center',
                         marginBottom: 12,
                         borderWidth: 1,
                         borderColor: sColor + '40',
                     }}>
-                        <Feather name="bookmark" size={22} color={sColor} />
+                        <IconApp pack="FI" name="bookmark" size={28} color={sColor} />
                     </View>
-                    <YambiText style={{ marginBottom: 6, textAlign: 'center' }} bold size="big" text={statusLabel(reservation.status).toUpperCase()} color={reservation.status === 3 ? "success" : reservation.status === 4 ? "error" : "high"} />
-                    <YambiText style={{ marginVertical: 2, textAlign: 'center', fontSize: 12 }} size="small" color="gray" text={`${strings.Date || 'Date'}: ${renderDateTime(reservation.createdAt, 1, true)}`} />
+                    <YambiText
+                        style={{ marginBottom: 4, textAlign: 'center' }}
+                        bold
+                        size="big"
+                        text={statusLabel(reservation.status).toUpperCase()}
+                        color={reservation.status === 3 ? "success" : reservation.status === 4 ? "error" : "high"}
+                    />
+                    <YambiText style={{ textAlign: 'center', fontSize: 12 }} size="small" color="gray" text={`${strings.Date || 'Date'}: ${renderDateTime(reservation.createdAt, 1, true)}`} />
                 </View>
 
-                {/* ── Reservation Details Card ── */}
+                {/* ── Reservation Details Card (NewBusiness Card style) ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    margin: 15,
-                    marginTop: 0,
+                    backgroundColor: app_theme.colors.border + "15",
                     borderRadius: 16,
                     padding: 16,
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 3,
+                    marginBottom: 16,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
                 }}>
                     <View style={{
                         flexDirection: 'row',
-                        justifyContent: 'space-between',
                         alignItems: 'center',
+                        marginBottom: 16,
                         borderBottomWidth: 1,
-                        borderColor: app_theme.colors.background,
-                        paddingBottom: 10,
-                        marginBottom: 12
+                        borderColor: app_theme.colors.border,
+                        paddingBottom: 12
                     }}>
-                        <YambiText bold text={(strings as any).reservation_detail} />
-                        <Feather name="file-text" size={16} color={app_theme.colors.text} />
+                        <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            backgroundColor: app_theme.colors.high_color + "20",
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 10,
+                        }}>
+                            <IconApp pack="FI" name="file-text" size={18} color={app_theme.colors.high_color} />
+                        </View>
+                        <YambiText bold text={(strings as any).reservation_detail || "Reservation Detail"} style={{ fontSize: 16 }} />
                     </View>
 
                     <View style={{
@@ -722,19 +826,37 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                     </View>
                 </View>
 
-                {/* ── Amounts Summary Card ── */}
+                {/* ── Amounts Summary Card (NewBusiness Card style) ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    margin: 15,
-                    marginTop: 0,
-                    padding: 16,
+                    backgroundColor: app_theme.colors.border + "15",
                     borderRadius: 16,
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 3,
+                    padding: 16,
+                    marginBottom: 16,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
                 }}>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 12,
+                        borderBottomWidth: 1,
+                        borderColor: app_theme.colors.border,
+                        paddingBottom: 10
+                    }}>
+                        <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            backgroundColor: app_theme.colors.high_color + "20",
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 10,
+                        }}>
+                            <IconApp pack="FI" name="dollar-sign" size={18} color={app_theme.colors.high_color} />
+                        </View>
+                        <YambiText bold text={(strings as any).total_reserved || "Summary"} style={{ fontSize: 16 }} />
+                    </View>
+
                     <View style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
@@ -757,7 +879,7 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                         alignItems: 'center',
                         paddingVertical: 10,
                         borderTopWidth: 1,
-                        borderColor: app_theme.colors.background,
+                        borderColor: app_theme.colors.border,
                         marginTop: 10,
                     }}>
                         <YambiText bold text={(strings as any).remaining_balance} />
@@ -765,76 +887,87 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                     </View>
                 </View>
 
-                {/* ── Client Details Card ── */}
-                {(reservation.customer_name !== '' || reservation.customer_phone !== '') && (
+                {/* ── Client Details Card (NewBusiness Card style) ── */}
+                {(reservation.customer_name !== '' || reservation.customer_phone !== '') ? (
                     <View style={{
-                        backgroundColor: app_theme.colors.border,
-                        margin: 15,
-                        marginTop: 0,
-                        padding: 16,
+                        backgroundColor: app_theme.colors.border + "15",
                         borderRadius: 16,
-                        elevation: 2,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 3,
+                        padding: 16,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
                     }}>
                         <View style={{
                             flexDirection: 'row',
-                            justifyContent: 'space-between',
                             alignItems: 'center',
+                            marginBottom: 12,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
-                            paddingBottom: 10,
-                            marginBottom: 12
+                            borderColor: app_theme.colors.border,
+                            paddingBottom: 10
                         }}>
-                            <YambiText bold text={(strings as any).client_details} />
-                            <Feather name="user" size={16} color={app_theme.colors.text} />
+                            <View style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 8,
+                                backgroundColor: app_theme.colors.high_color + "20",
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginRight: 10,
+                            }}>
+                                <IconApp pack="FI" name="user" size={18} color={app_theme.colors.high_color} />
+                            </View>
+                            <YambiText bold text={(strings as any).client_details || "Client Details"} style={{ fontSize: 16 }} />
                         </View>
 
-                        {reservation.customer_name !== '' && (
+                        {reservation.customer_name !== '' ? (
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 }}>
                                 <YambiText text={(strings as any).client_name} size="small" color="gray" />
                                 <YambiText bold text={reservation.customer_name} />
                             </View>
-                        )}
-                        {reservation.customer_phone !== '' && (
+                        ) : null}
+                        {reservation.customer_phone !== '' ? (
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 }}>
                                 <YambiText text={(strings as any).client_phone} size="small" color="gray" />
                                 <Pressable onPress={() => handlePhonePress(reservation.customer_phone)}>
                                     <YambiText bold text={reservation.customer_phone} color="high" style={{ textDecorationLine: 'underline' }} />
                                 </Pressable>
                             </View>
-                        )}
+                        ) : null}
                     </View>
-                )}
+                ) : null}
 
                 {/* ── Payment History Card ── */}
                 {payments.length > 0 && (
                     <View style={{
-                        backgroundColor: app_theme.colors.border,
-                        margin: 15,
-                        marginTop: 0,
+                        backgroundColor: app_theme.colors.border + "15",
                         borderRadius: 16,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
                         overflow: 'hidden',
-                        elevation: 2,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 3,
                     }}>
                         <View style={{
                             padding: 16,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             flexWrap: 'wrap'
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Feather name="clock" size={16} color={app_theme.colors.text} style={{ marginRight: 8 }} />
-                                <YambiText bold text={(strings as any).payment_history} />
+                                <View style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 8,
+                                    backgroundColor: app_theme.colors.high_color + "20",
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 10,
+                                }}>
+                                    <IconApp pack="FI" name="clock" size={18} color={app_theme.colors.high_color} />
+                                </View>
+                                <YambiText bold text={(strings as any).payment_history || "Payment History"} style={{ fontSize: 16 }} />
                             </View>
                             <YambiText bold text={`${deposit.toFixed(2)} ${(strings as any).of} ${total.toFixed(2)} ${cur} ${(strings as any).paid}`} size="small" color={remaining === 0 ? "success" : "high"} />
                         </View>
@@ -856,36 +989,43 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
                 )}
 
                 {/* ── Action buttons ── */}
-                {isActive && (
-                    <View style={{ margin: 15, marginTop: 0, gap: 12 }}>
-                        {remaining > 0 && (
-                            <ButtonNormal
-                                title={(strings as any).add_installment || "Add Installment"}
-                                loadEnabled={true}
-                                onPress={() => { setShowAddInstallment(true); dispatch(setShowModalApp(true)); }}
-                                normal={true}
-                            />
-                        )}
-                        <ButtonNormal
-                            title={(strings as any).mark_completed || "Mark as Completed"}
-                            loadEnabled={true}
-                            onPress={() => { setShowCompleteConfirm(true); dispatch(setShowModalApp(true)); }}
-                            outline={true}
-                        />
-                    </View>
-                )}
-
-                {/* Print Invoice button when completed/fully paid */}
-                {!isActive && reservation && reservation.status === 3 && (
-                    <View style={{ margin: 15, marginTop: 0 }}>
+                <View style={{ gap: 12, marginTop: 8 }}>
+                    {!hasCreatedSale ? (
+                        <>
+                            {remaining > 0 && reservation?.status !== 3 && (
+                                <>
+                                    <ButtonNormal
+                                        title={(strings as any).add_installment || "Add Installment"}
+                                        loadEnabled={true}
+                                        onPress={() => setShowAddInstallment(true)}
+                                        normal={true}
+                                    />
+                                    <ButtonNormal
+                                        title={(strings as any).mark_completed || "Mark as Completed"}
+                                        loadEnabled={true}
+                                        onPress={() => setShowCompleteConfirm(true)}
+                                        outline={true}
+                                    />
+                                </>
+                            )}
+                            {(reservation?.status === 3 || remaining <= 0) && (
+                                <ButtonNormal
+                                    title={(strings as any).complete_as_sale || "Complete as a sale"}
+                                    loadEnabled={true}
+                                    onPress={handleConvertToSale}
+                                    normal={true}
+                                />
+                            )}
+                        </>
+                    ) : (
                         <ButtonNormal
                             title={strings.print || "Print"}
                             loadEnabled={true}
                             onPress={PrintInvoice}
                             normal={true}
                         />
-                    </View>
-                )}
+                    )}
+                </View>
             </View>
 
             {/* Alert Modal using ModalApp */}

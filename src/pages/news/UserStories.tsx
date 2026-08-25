@@ -1,17 +1,21 @@
-import { View, Text, Pressable, Image, Dimensions, StyleSheet, ScrollView, PanResponder, Animated } from "react-native";
-import { useEffect, useState, useRef } from 'react';
-import { NavProps, TStory } from "../../types/types";
+import { View, Text, Pressable, Image, Dimensions, StyleSheet, ScrollView, PanResponder, Animated, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { NavProps, TChat, TMessage, TStory } from "../../types/types";
 import { strings } from "../../lang/lang";
 import { IconApp } from "../../components/app/IconApp";
 import { YambiText } from "../../components/app/Text";
 import BottomSheet from "../../components/app/BottomSheet";
+import ViewersItem from "../../components/lists/stories/ViewersItem";
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { useObject, useQuery, useRealm } from "@realm/react";
-import { Stories, UserContacts } from "../../store/database/Models";
+import { Stories, UserChats, UserContacts } from "../../store/database/Models";
 import { Image as ExpoImage } from 'expo-image';
-import { media_url, renderDateTime, SocketApp } from "../../../GlobalVariables";
+import { media_url, randomString, renderDateTime, SocketApp } from "../../../GlobalVariables";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cleanExpiredLocalStories, isStoryExpired } from "../../utils/storyCleanup";
+import moment from "moment";
+import ModalApp from "../../components/app/ModalApp";
+import { setShowModalApp } from "../../store/reducers/appSlice";
 
 const STORY_DURATION = 5000; // 5 seconds per story
 
@@ -33,22 +37,128 @@ const UserStories = ({ navigation, route }: NavProps) => {
         return sts.filtered('phone_number == $0', phone_number).sorted('createdAt', false);
     }, [phone_number]);
 
+    const allStories = useQuery(Stories);
+
     const stories = rawStories.filter(st => !isStoryExpired(st));
+
+    // Compute ordered list of all users with active stories (unseen first, then newest to oldest)
+    const allUsersWithStories = useMemo(() => {
+        const assembledStories: any[] = [];
+
+        // 1. Logged-in user's active status (if present)
+        const myActiveStories = allStories.filter(st => st.phone_number === user_data.phone_number && !isStoryExpired(st));
+        if (myActiveStories.length > 0) {
+            const hasUnseen = myActiveStories.some(st => {
+                let viewersList: any[] = [];
+                try { viewersList = JSON.parse(st.viewers || '[]'); } catch (e) { }
+                return !viewersList.some((v: any) =>
+                    typeof v === 'string' ? v === user_data.phone_number : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+                );
+            });
+            assembledStories.push({
+                phone_number: user_data.phone_number,
+                lastDate: myActiveStories[myActiveStories.length - 1].createdAt,
+                hasUnseen: hasUnseen
+            });
+        }
+
+        // 2. Other users with active stories
+        const storiesByPhone: { [phone: string]: any[] } = {};
+        for (let i = 0; i < allStories.length; i++) {
+            const st = allStories[i];
+            if (st.phone_number && st.phone_number !== user_data.phone_number && !isStoryExpired(st)) {
+                if (!storiesByPhone[st.phone_number]) {
+                    storiesByPhone[st.phone_number] = [];
+                }
+                storiesByPhone[st.phone_number].push(st);
+            }
+        }
+
+        const otherUsers: any[] = [];
+        for (const pPhone in storiesByPhone) {
+            const uStories = storiesByPhone[pPhone];
+            if (uStories.length > 0) {
+                const hasUnseen = uStories.some(st => {
+                    let viewersList: any[] = [];
+                    try { viewersList = JSON.parse(st.viewers || '[]'); } catch (e) { }
+                    return !viewersList.some((v: any) =>
+                        typeof v === 'string' ? v === user_data.phone_number : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+                    );
+                });
+                otherUsers.push({
+                    phone_number: pPhone,
+                    lastDate: uStories[uStories.length - 1].createdAt,
+                    hasUnseen: hasUnseen
+                });
+            }
+        }
+
+        otherUsers.sort((a, b) => {
+            if (a.hasUnseen !== b.hasUnseen) {
+                return a.hasUnseen ? -1 : 1;
+            }
+            const timeA = new Date(a.lastDate).getTime();
+            const timeB = new Date(b.lastDate).getTime();
+            return timeB - timeA;
+        });
+
+        return assembledStories.concat(otherUsers);
+    }, [allStories, user_data.phone_number]);
+
+    const hasInitializedIndexRef = useRef<boolean>(false);
 
     useEffect(() => {
         cleanExpiredLocalStories(realm);
     }, [realm]);
 
+    // Calculate initial story index based on view history:
+    // 1. Show the one after the latest already seen.
+    // 2. If no story seen, start from first (0).
+    // 3. If all stories seen, start from first (0).
+    useEffect(() => {
+        if (stories && stories.length > 0 && !hasInitializedIndexRef.current) {
+            hasInitializedIndexRef.current = true;
+            let lastSeenIndex = -1;
+
+            for (let i = 0; i < stories.length; i++) {
+                let viewersList: any[] = [];
+                try {
+                    viewersList = JSON.parse(stories[i].viewers || '[]');
+                } catch (e) {
+                    viewersList = [];
+                }
+                const hasViewed = viewersList.some((v: any) =>
+                    typeof v === 'string'
+                        ? v === user_data.phone_number
+                        : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+                );
+                if (hasViewed) {
+                    lastSeenIndex = i;
+                }
+            }
+
+            if (lastSeenIndex === -1) {
+                setCurrentIndex(0);
+            } else if (lastSeenIndex >= stories.length - 1) {
+                setCurrentIndex(0);
+            } else {
+                setCurrentIndex(lastSeenIndex + 1);
+            }
+        }
+    }, [stories?.length, user_data.phone_number]);
+
     const [isPaused, setIsPaused] = useState<boolean>(false);
     const isPausedRef = useRef<boolean>(false);
     const pressStartTimeRef = useRef<number>(0);
     const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isSwipingRef = useRef<boolean>(false);
 
     useEffect(() => {
         isPausedRef.current = isPaused;
     }, [isPaused]);
 
     const handlePressIn = () => {
+        isSwipingRef.current = false;
         pressStartTimeRef.current = Date.now();
         if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
 
@@ -60,6 +170,11 @@ const UserStories = ({ navigation, route }: NavProps) => {
     const handlePressOutLeft = () => {
         if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
         const pressDuration = Date.now() - pressStartTimeRef.current;
+
+        if (isSwipingRef.current || showViewersSheet) {
+            isSwipingRef.current = false;
+            return;
+        }
 
         if (isPausedRef.current) {
             setIsPaused(false);
@@ -73,6 +188,11 @@ const UserStories = ({ navigation, route }: NavProps) => {
     const handlePressOutRight = () => {
         if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
         const pressDuration = Date.now() - pressStartTimeRef.current;
+
+        if (isSwipingRef.current || showViewersSheet) {
+            isSwipingRef.current = false;
+            return;
+        }
 
         if (isPausedRef.current) {
             setIsPaused(false);
@@ -135,7 +255,13 @@ const UserStories = ({ navigation, route }: NavProps) => {
         if (currentIndex < stories.length - 1) {
             setCurrentIndex(prev => prev + 1);
         } else {
-            navigation.goBack();
+            const userIdx = allUsersWithStories.findIndex(u => u.phone_number === phone_number);
+            if (userIdx !== -1 && userIdx < allUsersWithStories.length - 1) {
+                const nextUserPhone = allUsersWithStories[userIdx + 1].phone_number;
+                navigation.replace("UserStories", { phone_number: nextUserPhone });
+            } else {
+                navigation.goBack();
+            }
         }
     };
 
@@ -143,7 +269,13 @@ const UserStories = ({ navigation, route }: NavProps) => {
         if (currentIndex > 0) {
             setCurrentIndex(prev => prev - 1);
         } else {
-            setProgress(0);
+            const userIdx = allUsersWithStories.findIndex(u => u.phone_number === phone_number);
+            if (userIdx > 0) {
+                const prevUserPhone = allUsersWithStories[userIdx - 1].phone_number;
+                navigation.replace("UserStories", { phone_number: prevUserPhone });
+            } else {
+                setProgress(0);
+            }
         }
     };
 
@@ -207,15 +339,24 @@ const UserStories = ({ navigation, route }: NavProps) => {
         if (!currentStory || !user_data.phone_number || !currentStory._id) return;
         if (user_data.phone_number === currentStory.phone_number) return;
 
-        let viewersList: string[] = [];
+        let viewersList: any[] = [];
         try {
             viewersList = JSON.parse(currentStory.viewers || '[]');
         } catch (e) {
             viewersList = [];
         }
 
-        if (!viewersList.includes(user_data.phone_number)) {
-            viewersList.push(user_data.phone_number);
+        const hasViewed = viewersList.some((v: any) =>
+            typeof v === 'string' ? v === user_data.phone_number : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+        );
+
+        if (!hasViewed) {
+            const nowTime = new Date().toISOString();
+            const newViewer = {
+                phone_number: user_data.phone_number,
+                time: nowTime
+            };
+            viewersList.push(newViewer);
             const updatedViewers = JSON.stringify(viewersList);
 
             realm.write(() => {
@@ -229,31 +370,181 @@ const UserStories = ({ navigation, route }: NavProps) => {
 
             SocketApp.emit('OnViewStatus', {
                 story_id: currentStory._id,
-                viewer_phone: user_data.phone_number
+                viewer_phone: user_data.phone_number,
+                time: nowTime
             });
         }
     }, [currentIndex, currentStory?._id, currentStory?.phone_number, user_data.phone_number, realm]);
 
     const [showViewersSheet, setShowViewersSheet] = useState<boolean>(false);
+    const [replyText, setReplyText] = useState<string>('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+    const dispatch = useAppDispatch();
+
+    const handleSendStatusReply = () => {
+        if (!replyText.trim() || !currentStory) return;
+
+        const textToSend = replyText.trim();
+        const tokenn = randomString(32);
+        const time = new Date().toISOString();
+
+        const statusCaption = currentStory.caption || currentStory.main_text || '';
+
+        const msg: TMessage = {
+            sender: user_data.phone_number,
+            receiver: currentStory.phone_number,
+            main_text_message: textToSend,
+            caption: statusCaption,
+            message_type: 5,
+            reactions: '[]',
+            response_to: currentStory._id,
+            message_read: 0,
+            message_effect: 0,
+            read_once: 0,
+            flag: 0,
+            token: tokenn,
+            deleted: 0,
+            platform: Platform.OS,
+            createdAt: time,
+            receivedAt: '',
+            readAt: '',
+            playedAt: '',
+            cc: moment(time).format('DD/MM/YYYY'),
+            alignment: moment().utc().toISOString()
+        };
+
+        let chatt = realm.objectForPrimaryKey<UserChats>('UserChats', currentStory.phone_number);
+
+        let chat: TChat = {
+            _id: currentStory.phone_number,
+            phone_number: currentStory.phone_number,
+            user: user_data.phone_number,
+            type_chat: 0,
+            last_message: tokenn,
+            flag: 0,
+            chat_read: 1,
+            deleted: 0,
+            chat_effect: 0,
+            createdAt: time,
+            updatedAt: time,
+        };
+
+        if (chatt !== null && chatt !== undefined) {
+            chat = {
+                _id: chatt._id,
+                phone_number: chatt.phone_number,
+                user: chatt.user,
+                type_chat: chatt.type_chat,
+                last_message: tokenn,
+                flag: chatt.flag,
+                chat_read: 1,
+                deleted: 0,
+                chat_effect: chatt.chat_effect,
+                createdAt: time,
+                updatedAt: moment().format(),
+            };
+        }
+
+        realm.write(() => {
+            try {
+                realm.create('UsersMessages', msg);
+                realm.create('UserChats', chat, true);
+            } catch (error) { }
+        });
+
+        SocketApp.emit('newMessage', msg);
+
+        setReplyText('');
+        setIsPaused(false);
+    };
+
+    const handleDeleteStory = () => {
+        if (!currentStory) return;
+        const storyId = currentStory._id;
+        const onlyWith = currentStory.only_with || '[]';
+
+        // Emit socket event for backend to delete story and notify contacts
+        SocketApp.emit('DeleteStory', {
+            story_id: storyId,
+            phone_number: user_data.phone_number,
+            only_with: onlyWith
+        });
+
+        // Delete from local Realm immediately
+        realm.write(() => {
+            try {
+                const realmStory = realm.objectForPrimaryKey<Stories>('Stories', storyId);
+                if (realmStory) {
+                    realm.delete(realmStory);
+                }
+            } catch (e) { }
+        });
+
+        setShowDeleteConfirm(false);
+        setShowViewersSheet(false);
+        dispatch(setShowModalApp(false));
+
+        if (stories.length <= 1) {
+            navigation.goBack();
+        } else if (currentIndex >= stories.length - 1) {
+            setCurrentIndex(stories.length - 2);
+        }
+    };
 
     const translateY = useRef(new Animated.Value(0)).current;
+
+    const isMyStory = phone_number === user_data.phone_number;
 
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => false,
             onMoveShouldSetPanResponder: (_, gestureState) => {
-                return gestureState.dy > 15 && gestureState.dy > Math.abs(gestureState.dx);
+                const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
+                const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && Math.abs(gestureState.dy) > 10;
+                const isSwipeDown = gestureState.dy > 10;
+                const isSwipeUp = isMyStory && gestureState.dy < -10;
+                return isHorizontalSwipe || (isVerticalSwipe && (isSwipeDown || isSwipeUp));
             },
             onPanResponderGrant: () => {
+                isSwipingRef.current = true;
                 setIsPaused(true);
             },
             onPanResponderMove: (_, gestureState) => {
-                if (gestureState.dy > 0) {
-                    translateY.setValue(gestureState.dy);
+                isSwipingRef.current = true;
+                if (Math.abs(gestureState.dy) > Math.abs(gestureState.dx)) {
+                    if (gestureState.dy > 0) {
+                        translateY.setValue(gestureState.dy);
+                    } else if (isMyStory && gestureState.dy < -10) {
+                        setShowViewersSheet(true);
+                        setIsPaused(true);
+                    }
                 }
             },
             onPanResponderRelease: (_, gestureState) => {
-                if (gestureState.dy > 120 || gestureState.vy > 0.5) {
+                const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 35;
+                const isVerticalSwipe = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+
+                if (isHorizontalSwipe || Math.abs(gestureState.vx) > 0.3) {
+                    if (gestureState.dx < -30 || gestureState.vx < -0.3) {
+                        // Slide Left -> Go to Next User's Status
+                        const userIdx = allUsersWithStories.findIndex(u => u.phone_number === phone_number);
+                        if (userIdx !== -1 && userIdx < allUsersWithStories.length - 1) {
+                            const nextUserPhone = allUsersWithStories[userIdx + 1].phone_number;
+                            navigation.replace("UserStories", { phone_number: nextUserPhone });
+                        } else {
+                            navigation.goBack();
+                        }
+                    } else if (gestureState.dx > 30 || gestureState.vx > 0.3) {
+                        // Slide Right -> Go to Previous User's Status
+                        const userIdx = allUsersWithStories.findIndex(u => u.phone_number === phone_number);
+                        if (userIdx > 0) {
+                            const prevUserPhone = allUsersWithStories[userIdx - 1].phone_number;
+                            navigation.replace("UserStories", { phone_number: prevUserPhone });
+                        } else {
+                            navigation.goBack();
+                        }
+                    }
+                } else if (isVerticalSwipe && (gestureState.dy > 120 || gestureState.vy > 0.5)) {
                     Animated.timing(translateY, {
                         toValue: Dimensions.get('window').height,
                         duration: 150,
@@ -261,13 +552,23 @@ const UserStories = ({ navigation, route }: NavProps) => {
                     }).start(() => {
                         navigation.goBack();
                     });
+                } else if (isMyStory && isVerticalSwipe && (gestureState.dy < -20 || gestureState.vy < -0.2)) {
+                    setShowViewersSheet(true);
+                    setIsPaused(true);
+                    Animated.spring(translateY, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                        bounciness: 5,
+                    }).start();
                 } else {
                     Animated.spring(translateY, {
                         toValue: 0,
                         useNativeDriver: true,
                         bounciness: 5,
                     }).start(() => {
-                        setIsPaused(false);
+                        if (!showViewersSheet) {
+                            setIsPaused(false);
+                        }
                     });
                 }
             },
@@ -276,13 +577,15 @@ const UserStories = ({ navigation, route }: NavProps) => {
                     toValue: 0,
                     useNativeDriver: true,
                 }).start(() => {
-                    setIsPaused(false);
+                    if (!showViewersSheet) {
+                        setIsPaused(false);
+                    }
                 });
             }
         })
     ).current;
 
-    let currentViewers: string[] = [];
+    let currentViewers: any[] = [];
     try {
         currentViewers = JSON.parse(currentStory?.viewers || '[]');
     } catch (e) {
@@ -330,17 +633,53 @@ const UserStories = ({ navigation, route }: NavProps) => {
             )}
 
             {/* Bottom Viewers Button */}
-            <View style={[styles.bottomViewersContainer, { paddingBottom: insets.bottom + 16 }]} pointerEvents="box-none">
-                <Pressable
-                    onPress={() => {
-                        setIsPaused(true);
-                        setShowViewersSheet(true);
-                    }}
-                    style={styles.eyeBtn}>
-                    <IconApp pack="FI" name="eye" size={18} color="#FFFFFF" />
-                    <Text style={styles.eyeCountText}>{currentViewers.length}</Text>
-                </Pressable>
-            </View>
+            {phone_number === user_data.phone_number && (
+                <View style={[styles.bottomViewersContainer, { paddingBottom: insets.bottom + 16 }]} pointerEvents="box-none">
+                    <Pressable
+                        onPress={() => {
+                            setIsPaused(true);
+                            setShowViewersSheet(true);
+                        }}
+                        style={styles.eyeBtn}>
+                        <IconApp pack="FI" name="eye" size={18} color="#FFFFFF" />
+                        <Text style={styles.eyeCountText}>{currentViewers.length}</Text>
+                    </Pressable>
+                </View>
+            )}
+
+            {/* Status Reply Input for Other User's Status */}
+            {phone_number !== user_data.phone_number && (
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={[styles.replyContainer, { paddingBottom: insets.bottom + 12 }]}
+                    pointerEvents="box-none"
+                >
+                    <View style={styles.replyRow}>
+                        <TextInput
+                            style={styles.replyInput}
+                            placeholder={strings.type_message}
+                            placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                            value={replyText}
+                            onChangeText={setReplyText}
+                            onFocus={() => setIsPaused(true)}
+                            onBlur={() => {
+                                if (replyText.trim() === '') {
+                                    setIsPaused(false);
+                                }
+                            }}
+                        />
+                        {replyText.trim().length > 0 && (
+                            <Pressable
+                                onPress={handleSendStatusReply}
+                                style={styles.replySendBtn}
+                                hitSlop={10}
+                            >
+                                <IconApp pack="FI" name="send" size={18} color="#FFFFFF" />
+                            </Pressable>
+                        )}
+                    </View>
+                </KeyboardAvoidingView>
+            )}
 
             {/* Top Controls & Overlay */}
             <View style={[styles.topOverlay, { paddingTop: insets.top + 8, opacity: isPaused ? 0.2 : 1 }]}>
@@ -412,44 +751,74 @@ const UserStories = ({ navigation, route }: NavProps) => {
                     setShowViewersSheet(false);
                     setIsPaused(false);
                 }}
-                title={strings.views ? `${strings.views} (${currentViewers.length})` : `Status Viewers (${currentViewers.length})`}
             >
-                <ScrollView style={{ width: '100%', maxHeight: 380, paddingVertical: 8 }}>
+                <View style={{ width: '100%', paddingBottom: 20, paddingHorizontal: 20 }}>
+                    {/* Bottom sheet header with delete button */}
+                    <View style={styles.viewersSheetHeader}>
+                        <YambiText
+                            text={strings.views || 'Views'}
+                            bold
+                            style={{ fontSize: 16, color: theme.text }}
+                        />
+                        <Pressable
+                            onPress={() => {
+                                dispatch(setShowModalApp(true));
+                                setShowDeleteConfirm(true);
+                            }}
+                            hitSlop={10}
+                            style={styles.deleteStoryBtn}
+                        >
+                            <IconApp pack="FI" name="trash-2" size={20} color={theme.error} />
+                        </Pressable>
+                    </View>
+
                     {currentViewers.length === 0 ? (
                         <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 30 }}>
                             <IconApp pack="FI" name="eye-off" size={36} color={theme.gray} />
-                            <YambiText text="No views yet" style={{ marginTop: 10, color: theme.gray, fontSize: 14 }} />
+                            <YambiText text={strings.no_views_yet} style={{ marginTop: 10, color: theme.gray, fontSize: 14 }} />
                         </View>
                     ) : (
-                        currentViewers.map((viewerPhone, idx) => {
+                        currentViewers.map((viewerItem, idx) => {
+                            const viewerPhone = typeof viewerItem === 'string' ? viewerItem : (viewerItem.phone_number || viewerItem.phone);
+                            const viewTime = typeof viewerItem === 'object' ? (viewerItem.time || viewerItem.timestamp || viewerItem.createdAt) : undefined;
+
                             const viewerContact = contactsList.find((c: any) => c.phoneNumber === viewerPhone || c.phone_number === viewerPhone);
                             const viewerName = viewerContact ? (viewerContact.displayName || viewerPhone) : viewerPhone;
 
                             return (
-                                <View
+                                <ViewersItem
                                     key={viewerPhone + idx}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingVertical: 10,
-                                        borderBottomWidth: idx === currentViewers.length - 1 ? 0 : 1,
-                                        borderBottomColor: theme.border + '30'
-                                    }}>
-                                    <Image
-                                        source={require('./../../assets/profile_black.jpg')}
-                                        style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: theme.border }}
-                                    />
-                                    <View style={{ flex: 1, marginLeft: 12 }}>
-                                        <YambiText text={viewerName} bold style={{ fontSize: 14, color: theme.text }} />
-                                        <YambiText text={viewerPhone} style={{ fontSize: 12, color: theme.gray, marginTop: 1 }} />
-                                    </View>
-                                    <IconApp pack="MC" name="check-all" size={18} color={theme.primary_high_color || theme.high_color} />
-                                </View>
+                                    viewerPhone={viewerPhone}
+                                    viewerName={viewerName}
+                                    viewTime={viewTime}
+                                    isLast={idx === currentViewers.length - 1}
+                                />
                             );
                         })
                     )}
-                </ScrollView>
+                </View>
             </BottomSheet>
+
+            {/* Delete Story Confirm Modal */}
+            {showDeleteConfirm && (
+                <ModalApp
+                    title={strings.delete_story || 'Delete status'}
+                    singleButton={false}
+                    textAction={strings.delete || 'Delete'}
+                    textCancel={strings.close || 'Cancel'}
+                    close_button_color={theme.error}
+                    onAction={handleDeleteStory}
+                    onClose={() => {
+                        setShowDeleteConfirm(false);
+                        dispatch(setShowModalApp(false));
+                    }}
+                >
+                    <YambiText
+                        text={strings.delete_story_confirm || 'Are you sure you want to delete this status? It will be removed for everyone.'}
+                        style={{ fontSize: 14, color: theme.gray, textAlign: 'center' }}
+                    />
+                </ModalApp>
+            )}
         </Animated.View>
     );
 };
@@ -609,7 +978,52 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         paddingHorizontal: 16,
         paddingVertical: 10
-    }
+    },
+    replyContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 16,
+        zIndex: 20
+    },
+    replyRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        borderRadius: 24,
+        paddingHorizontal: 16,
+        paddingVertical: Platform.OS === 'ios' ? 10 : 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)'
+    },
+    replyInput: {
+        flex: 1,
+        color: '#FFFFFF',
+        fontSize: 14,
+        paddingVertical: 6
+    },
+    replySendBtn: {
+        marginLeft: 10,
+        backgroundColor: '#1D2A44',
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    viewersSheetHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        marginBottom: 4,
+    },
+    deleteStoryBtn: {
+        padding: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 });
 
 export default UserStories;

@@ -170,6 +170,7 @@ import Stories from './src/pages/news/Stories';
 import UserStories from './src/pages/news/UserStories';
 import useAudioPermission from './src/components/hooks/useAudioPermission';
 import SalesModern from './src/pages/business/SalesModern';
+import BusinessOverviewGraphs from './src/pages/business/BusinessOverviewGraphs';
 import HeaderAddBusinessUser from './src/components/headers/HeaderAddBusinessUser';
 import UpdateYambi from './src/pages/app/UpdateYambi';
 import NewBusinessItemSale from './src/pages/business/AddItemSale';
@@ -2433,7 +2434,14 @@ const Yambi = ({ navigation }: NavProps) => {
     useEffect(() => {
         const scheduleDailyLowStockReminder = async () => {
             try {
+                const activeBusinessIds = new Set(
+                    Array.from(activeBusinessUsers as any)
+                        .map((bu: any) => bu.business_id)
+                        .filter((id: string) => !!id)
+                );
+
                 const lowStockItems = Array.from(businessArticles as any).filter((item: any) => {
+                    if (!activeBusinessIds.has(item.business_id)) return false;
                     const quantity = Number(item.items_number_stock ?? 0);
                     const threshold = Number(item.alert_low_stock ?? 0);
                     return threshold > 0 && quantity > 0 && quantity <= threshold;
@@ -2494,7 +2502,7 @@ const Yambi = ({ navigation }: NavProps) => {
         };
 
         scheduleDailyLowStockReminder();
-    }, [businessArticles, businessesLocal, language_yambi]);
+    }, [activeBusinessUsers, businessArticles, businessesLocal, language_yambi]);
 
     // Midday reminders: registered as native OS daily alarms at 12:00 PM.
     // - weekday-no-sales-reminder: cancelled when a sale exists today; re-registered otherwise.
@@ -3157,6 +3165,20 @@ const Yambi = ({ navigation }: NavProps) => {
                                 headerTintColor: app_theme.colors.header_foreground_color,
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
                                 title: strings.sales,
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                }
+                            }} />
+
+                            <Stack.Screen name="BusinessOverviewGraphs" component={BusinessOverviewGraphs} options={{
+                                headerShadowVisible: false,
+                                headerShown: true, headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: (strings as any).overview || "Overview & Graphs",
                                 headerTitleStyle: {
                                     fontSize: app_description.title_font_size,
                                     fontWeight: app_description.title_font_weight as any,
@@ -4054,6 +4076,8 @@ const Yambi = ({ navigation }: NavProps) => {
                             <Stack.Screen name="UserStories" component={UserStories} options={({ navigation, route }) => ({
                                 headerShadowVisible: false,
                                 headerShown: true,
+                                // contentStyle: { backgroundColor: app_theme.colors.background },
+                                contentStyle: { backgroundColor: '#000000' },
                                 headerStyle: {
                                     backgroundColor: app_theme.colors.header_background_color
                                 },

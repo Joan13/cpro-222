@@ -5,6 +5,8 @@ import { IconApp } from '../../app/IconApp';
 import { TextNormalYambi, TextSmallYambiGray, TextNormalYambiHighColor, TextSmallYambi } from '../../app/Text';
 import { renderCurrency, renderDateTime } from '../../../../GlobalVariables';
 import { strings } from '../../../lang/lang';
+import { useObject } from '@realm/react';
+import { UserBusinessArticles } from '../../../store/database/Models';
 
 interface ReservationItemProps {
     item: any;
@@ -36,6 +38,10 @@ const statusLabel = (status: number): string => {
 
 const ReservationItem: React.FC<ReservationItemProps> = ({ item, onPress, isLast }) => {
     const app_theme = useAppSelector(state => state.app_theme);
+    const article = useObject(UserBusinessArticles, item.item_id || '');
+    const itemName = item.item_name || article?.item_name || '';
+    const qty = item.quantity || 1;
+
     const color = statusColor(item.status, app_theme);
     const cur = renderCurrency(item.currency, false);
     const total = parseFloat(item.total_amount) || 0;
@@ -45,7 +51,7 @@ const ReservationItem: React.FC<ReservationItemProps> = ({ item, onPress, isLast
     return (
         <Pressable
             onPress={onPress}
-            style={({pressed}) => ({
+            style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 backgroundColor: pressed ? app_theme.colors.border + 'AA' : app_theme.colors.background,
@@ -92,11 +98,20 @@ const ReservationItem: React.FC<ReservationItemProps> = ({ item, onPress, isLast
                     />
                 </View>
 
+                {/* Item Name */}
+                {itemName !== '' ? (
+                    <TextNormalYambi
+                        text={`${itemName}${qty > 1 ? ` (x${qty})` : ''}`}
+                        bold
+                        styles={{ marginBottom: 2 }}
+                        numberLines={1}
+                    />
+                ) : null}
+
                 {/* Customer */}
                 {(item.customer_name || item.customer_phone) ? (
-                    <TextNormalYambi
+                    <TextSmallYambiGray
                         text={item.customer_name || item.customer_phone}
-                        bold
                         styles={{ marginBottom: 3 }}
                         numberLines={1}
                     />
@@ -110,13 +125,13 @@ const ReservationItem: React.FC<ReservationItemProps> = ({ item, onPress, isLast
                     </View>
                     {deposit > 0 && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <IconApp pack="FI" name="check-circle" size={10} color={app_theme.colors.success} />
+                            <IconApp pack="IO" name="checkmark-circle" size={15} color={app_theme.colors.success} />
                             <TextSmallYambiGray text={` ${deposit.toFixed(2)} ${cur}`} styles={{ fontSize: 11, color: app_theme.colors.success }} />
                         </View>
                     )}
                     {remaining > 0 && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <IconApp pack="FI" name="clock" size={10} color="#F59E0B" />
+                            <IconApp pack="FI" name="clock" size={12} color="#F59E0B" />
                             <TextSmallYambiGray text={` ${remaining.toFixed(2)} ${cur}`} styles={{ fontSize: 11, color: '#F59E0B' }} />
                         </View>
                     )}

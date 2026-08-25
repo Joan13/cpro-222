@@ -14,6 +14,7 @@ import ModalApp from "../../components/app/ModalApp";
 import { setShowModalApp } from "../../store/reducers/appSlice";
 import { FlashList } from "@shopify/flash-list";
 import SalePaymentItem from "../../components/lists/business/SalePaymentItem";
+import { IconApp } from "../../components/app/IconApp";
 
 const EditSalePayments = ({ navigation, route }: NavProps) => {
 
@@ -166,18 +167,19 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
             flex: 1,
             backgroundColor: app_theme.colors.background,
         }}>
-            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                {/* Invoice Summary Card */}
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* ── Invoice Summary Card (NewBusiness Card Style) ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    margin: 15,
-                    padding: 18,
+                    backgroundColor: app_theme.colors.border + "15",
                     borderRadius: 16,
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 3,
+                    padding: 16,
+                    marginBottom: 16,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
                 }}>
                     <View style={{
                         flexDirection: 'row',
@@ -185,10 +187,23 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                         alignItems: 'center',
                         marginBottom: 16,
                         borderBottomWidth: 1,
-                        borderColor: app_theme.colors.background,
+                        borderColor: app_theme.colors.border,
                         paddingBottom: 12
                     }}>
-                        <YambiText bold text={item.item_name.toUpperCase()} />
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 8,
+                                backgroundColor: app_theme.colors.high_color + "20",
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginRight: 10,
+                            }}>
+                                <IconApp pack="FI" name="file-text" size={18} color={app_theme.colors.high_color} />
+                            </View>
+                            <YambiText bold text={item.item_name.toUpperCase()} style={{ fontSize: 16 }} />
+                        </View>
                         <View style={{
                             backgroundColor: badge.bg,
                             paddingHorizontal: 12,
@@ -221,7 +236,7 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                             justifyContent: 'space-between',
                             paddingVertical: 10,
                             borderTopWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             marginTop: 10,
                         }}>
                             <YambiText bold text={(strings as any).remaining_balance || "Remaining Balance"} />
@@ -230,32 +245,38 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                     </View>
                 </View>
 
-                {/* Payment History */}
+                {/* ── Payment History Card ── */}
                 {salePayments.length > 0 && (
                     <View style={{
-                        backgroundColor: app_theme.colors.border,
-                        margin: 15,
-                        marginTop: 0,
+                        backgroundColor: app_theme.colors.border + "15",
                         borderRadius: 16,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
                         overflow: 'hidden',
-                        elevation: 2,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 3,
                     }}>
                         <View style={{
                             padding: 16,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             flexWrap: 'wrap',
                         }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Feather name="clock" size={16} color={app_theme.colors.text} style={{ marginRight: 8 }} />
-                                <YambiText bold text={(strings as any).payment_history || "Payment History"} />
+                                <View style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 8,
+                                    backgroundColor: app_theme.colors.high_color + "20",
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 10,
+                                }}>
+                                    <IconApp pack="FI" name="clock" size={18} color={app_theme.colors.high_color} />
+                                </View>
+                                <YambiText bold text={(strings as any).payment_history || "Payment History"} style={{ fontSize: 16 }} />
                             </View>
                             <YambiText bold text={`${formatAmount(paymentDetails.paidAmount)} ${(strings as any).of || "of"} ${formatAmount(totalPrice)} ${renderCurrency(sale.currency, false)} ${(strings as any).paid || "paid"}`} size="small" color={paymentDetails.isPaid ? "success" : "high"} />
                         </View>
@@ -281,40 +302,44 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                     </View>
                 )}
 
-                {/* Add Payment Section or Fully Paid Banner */}
+                {/* ── Add Payment Section or Fully Paid Banner ── */}
                 {paymentDetails.isPaid ? (
                     <View style={{
                         backgroundColor: '#E8F5E9',
-                        margin: 15,
-                        marginTop: 0,
                         padding: 24,
                         borderRadius: 16,
                         alignItems: 'center',
                         borderWidth: 1,
-                        borderColor: '#C8E6C9'
+                        borderColor: '#C8E6C9',
+                        marginBottom: 16,
                     }}>
                         <Feather name="check-circle" size={48} color="#4CAF50" />
                         <YambiText bold text={(strings as any).invoice_fully_paid || "Invoice fully paid"} color="success" style={{ marginTop: 12 }} />
                         <YambiText text={(strings as any).sale_settled_full || "This sale has been settled in full. No further payments are required."} size="small" color="gray" style={{ marginTop: 4, textAlign: 'center', fontSize: 12 }} />
                     </View>
                 ) : (
-                    <View>
+                    <View style={{ gap: 16 }}>
                         {/* Option 1: Full Payment Card */}
                         <View style={{
-                            backgroundColor: app_theme.colors.border,
-                            margin: 15,
-                            marginTop: 0,
+                            backgroundColor: app_theme.colors.border + "15",
                             borderRadius: 16,
                             padding: 16,
-                            elevation: 1,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.border,
                         }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                <Feather name="check-square" size={18} color={app_theme.colors.text} style={{ marginRight: 8 }} />
-                                <YambiText bold text={(strings as any).full_payment || "Full Payment"} />
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                <View style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 8,
+                                    backgroundColor: app_theme.colors.high_color + "20",
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 10,
+                                }}>
+                                    <IconApp pack="FI" name="check-square" size={18} color={app_theme.colors.high_color} />
+                                </View>
+                                <YambiText bold text={(strings as any).full_payment || "Full Payment"} style={{ fontSize: 16 }} />
                             </View>
                             <YambiText style={{ marginBottom: 16 }} text={`${strings.mark_invoice_as_paid} (${formatAmount(paymentDetails.remainingAmount)} ${renderCurrency(sale.currency, false)})`} size="small" color="gray" />
                             <ButtonNormal
@@ -327,28 +352,32 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
 
                         {/* Option 2: Partial Payment Card */}
                         <View style={{
-                            backgroundColor: app_theme.colors.border,
-                            margin: 15,
-                            marginTop: 0,
+                            backgroundColor: app_theme.colors.border + "15",
                             borderRadius: 16,
                             padding: 16,
-                            elevation: 1,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 2,
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.border,
                         }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                <Feather name="layers" size={18} color={app_theme.colors.text} style={{ marginRight: 8 }} />
-                                <YambiText bold text={(strings as any).partial_payment || "Partial Payment"} />
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                <View style={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: 8,
+                                    backgroundColor: app_theme.colors.high_color + "20",
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    marginRight: 10,
+                                }}>
+                                    <IconApp pack="FI" name="layers" size={18} color={app_theme.colors.high_color} />
+                                </View>
+                                <YambiText bold text={(strings as any).partial_payment || "Partial Payment"} style={{ fontSize: 16 }} />
                             </View>
                             <YambiText style={{ marginBottom: 16 }} text={(strings as any).record_installment_payment || "Record a customer installment payment"} size="small" color="gray" />
 
                             {/* Payment Method Selector */}
-                            <YambiText bold text={(strings as any).payment_method || "Payment Method"} size="small" />
+                            <YambiText bold text={(strings as any).payment_method || "Payment Method"} size="small" style={{ marginBottom: 8 }} />
                             <View style={{
                                 flexDirection: 'row',
-                                marginTop: 10,
                                 marginBottom: 18,
                             }}>
                                 {paymentMethods.map(method => (
@@ -363,11 +392,10 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                                             paddingVertical: 12,
                                             paddingHorizontal: 4,
                                             marginHorizontal: 4,
-                                            borderRadius: 10,
+                                            borderRadius: 12,
                                             borderWidth: 2,
-                                            borderColor: selectedMethod === method.id ? app_theme.colors.high_color : app_theme.colors.background,
-                                            backgroundColor: selectedMethod === method.id ? app_theme.colors.background : 'transparent',
-                                            overflow: 'hidden',
+                                            borderColor: selectedMethod === method.id ? app_theme.colors.high_color : app_theme.colors.border,
+                                            backgroundColor: selectedMethod === method.id ? app_theme.colors.high_color + "15" : 'transparent',
                                         }}
                                     >
                                         <Feather name={method.icon} size={15} color={selectedMethod === method.id ? app_theme.colors.high_color : app_theme.colors.text} />
@@ -383,21 +411,21 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                             <View style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                borderWidth: 2,
-                                borderColor: isInputFocused ? app_theme.colors.high_color : app_theme.colors.background,
-                                borderRadius: 10,
+                                borderWidth: 1,
+                                borderColor: isInputFocused ? app_theme.colors.high_color : app_theme.colors.border,
+                                borderRadius: 12,
                                 marginTop: 8,
                                 backgroundColor: app_theme.colors.background,
                                 overflow: 'hidden',
                             }}>
                                 <View style={{
-                                    backgroundColor: app_theme.colors.border,
+                                    backgroundColor: app_theme.colors.border + "30",
                                     paddingHorizontal: 15,
                                     height: 50,
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     borderRightWidth: 1,
-                                    borderColor: app_theme.colors.background,
+                                    borderColor: app_theme.colors.border,
                                 }}>
                                     <YambiText bold text={renderCurrency(sale.currency, false)} />
                                 </View>
@@ -406,7 +434,7 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                                         flex: 1,
                                         paddingHorizontal: 15,
                                         height: 50,
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         fontWeight: 'bold',
                                         color: app_theme.colors.text,
                                     }}
@@ -426,15 +454,14 @@ const EditSalePayments = ({ navigation, route }: NavProps) => {
                                     title={(strings as any).partial_payment || "Partial Payment"}
                                     loadEnabled={true}
                                     onPress={() => addPayment(false)}
-                                    styles={{}}
                                     outline={true}
                                 />
                             </View>
                         </View>
+
+                        <View style={{ height: 20 }} />
                     </View>
                 )}
-
-                <View style={{ height: 40 }} />
             </ScrollView>
             {showErrorModal && (
                 <ModalApp

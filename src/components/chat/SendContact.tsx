@@ -331,3 +331,10 @@ const SendContact = ({ navigation, route }: NavProps) => {
 };
 
 export default SendContact;
+
+// If a user is viewing another user's status should be able to write a message to the user who posted. Add an input under the status caption.
+
+// This will be sent as a message : the written text will be stored in main_text_message. if the status has a caption it will be stored as the message caption. the status_id should be stored in response_to. message_type  should be 5.
+
+// And in [MessagesList.tsx](file;file:///home/joan/Documents/Data/Projects/ReactNative/cpro-222/src/components/lists/messages/MessagesList.tsx) when displaying the message, it will be taken as a normal message. Since it's a response to a status, the receiver of the message (the user who posted the status) will see in the response_to section the text "You . Status". under that, will be the status caption with numberLines 3.
+// Then down will be the main_text_message

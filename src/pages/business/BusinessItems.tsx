@@ -11,6 +11,7 @@ import { PieChart } from "react-native-gifted-charts";
 import { setBusinessItemsFilter, setShowModalApp } from "../../store/reducers/appSlice";
 import { YambiText } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
+import BottomSheet from "../../components/app/BottomSheet";
 import { FlashList } from "@shopify/flash-list";
 import BusinessItemsList from "../../components/lists/business/BusinessItemsList";
 import { randomString, renderDateUpToMilliseconds, SocketApp, copyToClipboard, remote_host, media_url, renderCurrency } from "../../../GlobalVariables";
@@ -179,6 +180,9 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
     const [accessibleItemIds, setAccessibleItemIds] = useState<string[]>([]);
     const [catalogReady, setCatalogReady] = useState(!from_deep_link_catalog);
     const [catalogError, setCatalogError] = useState(false);
+    const [isSaleCompleted, setIsSaleCompleted] = useState<boolean>(false);
+    const saleFadeAnim = useRef(new Animated.Value(1)).current;
+    const saleSuccessAnim = useRef(new Animated.Value(0)).current;
     const businessInfoHeight = useRef(new Animated.Value(0)).current;
 
     const realm = useRealm();
@@ -648,8 +652,11 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
         setNumberItemToSell("");
         setItemToSellPrice("");
         setWholesale(false);
+        setIsSaleCompleted(false);
+        saleFadeAnim.setValue(1);
+        saleSuccessAnim.setValue(0);
         dispatch(setShowModalApp(false));
-        setShowSaleFrame(false)
+        setShowSaleFrame(false);
     }
 
     const ConfirmSale = () => {
@@ -762,22 +769,32 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                     setItemToSellPrice("");
                     setWholesale(false);
 
-                    // console.log(app_description.close_sale_board_after_operation)
+                    setIsSaleCompleted(true);
+                    saleFadeAnim.setValue(1);
+                    saleSuccessAnim.setValue(0);
 
-                    if (app_description.close_sale_board_after_operation === 0) {
-                        dispatch(setShowModalApp(false));
-                        setShowSaleFrame(false);
-                        // setShowSaleSuccess(true);
-                    }
-
-                    if (app_description.after_sale === 0) {
-                        navigation.navigate('Sale', { sale: sale, item: itemToSell, prices: ItemPrices })
-                    }
+                    Animated.parallel([
+                        Animated.timing(saleFadeAnim, {
+                            toValue: 0,
+                            duration: 200,
+                            useNativeDriver: true,
+                        }),
+                        Animated.timing(saleSuccessAnim, {
+                            toValue: 1,
+                            duration: 300,
+                            useNativeDriver: true,
+                        }),
+                    ]).start();
 
                     setTimeout(() => {
-                        dispatch(setShowModalApp(true));
-                        setShowSaleSuccess(true);
-                    }, 100);
+                        if (app_description.after_sale === 0) {
+                            navigation.navigate('Sale', { sale: sale, item: itemToSell, prices: ItemPrices });
+                        }
+                        setShowSaleFrame(false);
+                        setIsSaleCompleted(false);
+                        saleFadeAnim.setValue(1);
+                        saleSuccessAnim.setValue(0);
+                    }, 3000);
                 }
             }
         } else {
@@ -1615,22 +1632,26 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                 </ModalApp>
             )}
 
-            {showSaleFrame ?
-                <ModalApp onCancel={CancelSale} onAction={ConfirmSale} onClose={CancelSale} singleButton={false} textAction={strings.confirm} title={strings.new_sale_operation}>
-                    <View style={{
-                        width: '100%',
-                    }}>
+            {showSaleFrame ? (
+                <BottomSheet
+                    visible={showSaleFrame}
+                    onClose={CancelSale}
+                // title={strings.new_sale_operation}
+                >
+                    <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
                         {/* Item Header */}
                         <View style={{
-                            backgroundColor: theme.border,
-                            borderRadius: 12,
+                            backgroundColor: theme.border + "15",
+                            borderRadius: 14,
                             padding: 15,
                             marginBottom: 15,
                             flexDirection: 'row',
                             alignItems: 'center',
+                            borderWidth: 1,
+                            borderColor: theme.border,
                         }}>
                             <View style={{ flex: 1 }}>
-                                <YambiText text={itemToSell.item_name} bold style={{ marginBottom: 8 }} />
+                                <YambiText text={itemToSell.item_name} bold style={{ marginBottom: 8, fontSize: 16 }} />
                                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
                                     <View style={{
                                         backgroundColor: theme.background,
@@ -1639,6 +1660,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                         borderRadius: 8,
                                         marginRight: 8,
                                         marginBottom: 4,
+                                        borderWidth: 1,
+                                        borderColor: theme.border,
                                     }}>
                                         <YambiText size="small" color="high" text={itemToSell.items_number_stock.toString() + " " + strings.in_store.toLowerCase()} />
                                     </View>
@@ -1649,6 +1672,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                             paddingVertical: 4,
                                             borderRadius: 8,
                                             marginBottom: 4,
+                                            borderWidth: 1,
+                                            borderColor: theme.border,
                                         }}>
                                             <YambiText size="small" color="high" text={itemToSell.items_number_warehouse.toString() + " " + strings.in_warehouse.toLowerCase()} />
                                         </View>
@@ -1659,12 +1684,14 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                             <Pressable
                                 onPress={SetCash}
                                 style={{
-                                    height: 36,
-                                    width: 36,
+                                    height: 38,
+                                    width: 38,
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     backgroundColor: theme.background,
-                                    borderRadius: 8,
+                                    borderRadius: 10,
+                                    borderWidth: 1,
+                                    borderColor: theme.border,
                                 }}>
                                 <IconApp color={theme.high_color} name="maximize-2" size={18} pack="FI" />
                             </Pressable>
@@ -1676,7 +1703,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginBottom: 10
+                                marginBottom: 8
                             }}>
                                 <YambiText size="small" color="gray" text={strings.price} />
 
@@ -1686,15 +1713,14 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                         style={{
                                             flexDirection: 'row',
                                             alignItems: 'center',
-                                            marginRight: 15,
+                                            marginRight: 10,
                                             backgroundColor: !type_sale ? theme.high_color + '20' : 'transparent',
                                             paddingHorizontal: 10,
                                             paddingVertical: 6,
                                             borderRadius: 8,
                                         }}>
-                                        {/* <SwitchApp value={!type_sale} small onPress={SetCash} /> */}
-                                        <IconApp color={theme.high_color} name="circle" size={18} pack="FA" />
-                                        <YambiText text={strings.cash} style={{ marginLeft: 6 }} />
+                                        <IconApp color={theme.high_color} name="circle" size={16} pack="FA" />
+                                        <YambiText text={strings.cash} style={{ marginLeft: 6 }} size="small" />
                                     </Pressable>
 
                                     <Pressable
@@ -1707,9 +1733,8 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                             paddingVertical: 6,
                                             borderRadius: 8,
                                         }}>
-                                        {/* <SwitchApp value={!wholesale} small onPress={Detail} /> */}
-                                        <IconApp color={theme.high_color} name={wholesale ? "circle" : "check-circle"} size={18} pack={wholesale ? "FI" : "FA"} />
-                                        <YambiText text={strings.detail} style={{ marginLeft: 6 }} />
+                                        <IconApp color={theme.high_color} name={wholesale ? "circle" : "checkmark-circle"} size={16} pack={wholesale ? "FI" : "IO"} />
+                                        <YambiText text={strings.detail} style={{ marginLeft: 6 }} size="small" />
                                     </Pressable>
                                 </View>
                             </View>
@@ -1719,10 +1744,12 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                 keyboardType="numeric"
                                 style={{
                                     color: theme.text,
-                                    backgroundColor: theme.border,
+                                    backgroundColor: theme.background,
+                                    borderColor: theme.border,
+                                    borderWidth: 1,
                                     paddingHorizontal: 15,
                                     paddingVertical: 12,
-                                    minHeight: 48,
+                                    height: 48,
                                     borderRadius: 12,
                                     fontSize: 16,
                                 }}
@@ -1732,15 +1759,16 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                         </View>
 
                         {/* Quantity Section */}
-                        <View>
+                        <View style={{ marginBottom: 20 }}>
                             <View style={{
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginBottom: 10
+                                marginBottom: 8
                             }}>
-                                {error_number() ?
-                                    <YambiText size="small" color="gray" text={strings.quantity} /> :
+                                {error_number() ? (
+                                    <YambiText size="small" color="gray" text={strings.quantity} />
+                                ) : (
                                     <View style={{
                                         flexDirection: 'row',
                                         alignItems: 'center',
@@ -1752,7 +1780,7 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                         <IconApp pack="FI" name="alert-circle" size={14} color={theme.error} />
                                         <YambiText size="small" color="error" text={strings.quantity_unavailable} style={{ marginLeft: 5 }} />
                                     </View>
-                                }
+                                )}
                             </View>
                             <TextInput
                                 placeholderTextColor={theme.gray}
@@ -1760,21 +1788,79 @@ const BusinessItemss = ({ navigation, route }: NavProps) => {
                                 keyboardType="numeric"
                                 style={{
                                     color: theme.text,
-                                    backgroundColor: theme.border,
+                                    backgroundColor: theme.background,
                                     paddingHorizontal: 15,
                                     paddingVertical: 12,
-                                    minHeight: 48,
+                                    height: 48,
                                     borderRadius: 12,
                                     fontSize: 16,
-                                    borderWidth: error_number() ? 0 : 2,
-                                    borderColor: error_number() ? 'transparent' : theme.error,
+                                    borderWidth: error_number() ? 1 : 2,
+                                    borderColor: error_number() ? theme.border : theme.error,
                                 }}
                                 value={numberItemToSell}
                                 onChangeText={text => setNumberItemToSell(text)}
                             />
                         </View>
+
+                        {/* Action Area: Sell Button & Animated Success Message Cross-fade */}
+                        <View style={{ minHeight: 48, justifyContent: 'center', position: 'relative' }}>
+                            <Animated.View
+                                pointerEvents={isSaleCompleted ? 'none' : 'auto'}
+                                style={{
+                                    opacity: saleFadeAnim,
+                                    transform: [{
+                                        scale: saleFadeAnim.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [0.95, 1]
+                                        })
+                                    }]
+                                }}
+                            >
+                                <ButtonNormal
+                                    title={strings.sell}
+                                    onPress={ConfirmSale}
+                                    disabled={!(numberItemToSell && numberItemToSell.trim() !== "" && parseInt(numberItemToSell.trim(), 10) > 0 && error_number())}
+                                    styles={{ height: 48, borderRadius: 24 }}
+                                    normal={true}
+                                />
+                            </Animated.View>
+
+                            {isSaleCompleted && (
+                                <Animated.View
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        opacity: saleSuccessAnim,
+                                        transform: [{
+                                            scale: saleSuccessAnim.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0.85, 1]
+                                            })
+                                        }],
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: theme.success + '20',
+                                        borderRadius: 24,
+                                        borderWidth: 1,
+                                        borderColor: theme.success + '60',
+                                    }}
+                                >
+                                    <IconApp pack="IO" name="checkmark-circle" size={24} color={theme.success} />
+                                    <YambiText
+                                        text={strings.sale_completed || "The sale has been completed"}
+                                        bold
+                                        style={{ marginLeft: 10, color: theme.success, fontSize: 15 }}
+                                    />
+                                </Animated.View>
+                            )}
+                        </View>
                     </View>
-                </ModalApp> : null}
+                </BottomSheet>
+            ) : null}
 
             <View style={{
                 borderBottomWidth: 1,

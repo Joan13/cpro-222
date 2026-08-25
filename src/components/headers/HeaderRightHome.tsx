@@ -467,281 +467,156 @@ const HeaderRightHome = () => {
         RootNavigation.navigate("SearchMarketplace");
     }
 
+    const iconPressableStyle = {
+        height: 32,
+        width: 32,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        position: 'relative' as const,
+    };
+
+    const renderCartBadge = () => {
+        if (!cart || cart.length === 0) return null;
+        return (
+            <View style={{
+                position: 'absolute',
+                top: -2,
+                right: -4,
+                backgroundColor: theme.colors.primary_high_color || theme.colors.badge_background_color,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                paddingHorizontal: 3,
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}>
+                <Text style={{
+                    color: theme.colors.primary_high_color_foreground || theme.colors.badge_color || '#FFFFFF',
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                }}>
+                    {cart.length}
+                </Text>
+            </View>
+        );
+    };
+
     return (
         <Animated.View style={{
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
-            // position: "absolute"
-            // height: 60
-            // backgroundColor: theme.colors.header_background_color
+            gap: 12,
         }}>
-            {/* <View style={{
-                width: 30,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginHorizontal: 5
-            }}>
-                <ActivityIndicator size={20} color={theme.colors.header_foreground_color} />
-            </View> */}
             {showInternetError ?
                 <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
                     <YambiText text={strings.connection_failed} size="normal" color="gray" />
                 </ModalApp> : null}
 
-            {/* {title === strings.chats ?
-                <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}>
-                    <Pressable style={{
-                        height: 30,
-                        width: 30,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginHorizontal: 15,
-                        marginRight: 0
-                    }}>
-                        <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
+            {loading_header && (
+                <Animated.View entering={FadeIn}>
+                    <Pressable onPress={RefreshData} style={iconPressableStyle}>
+                        <AppActivityIndicator size={20} showLabel={false} />
                     </Pressable>
-                </View> : null} */}
+                </Animated.View>
+            )}
 
-
-            <View style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
-
-                {loading_header && (
+            {title === strings.chats && (
+                <>
                     <Animated.View entering={FadeIn}>
-                        <Pressable onPress={RefreshData} style={{
-                            height: 30,
-                            width: 30,
-                            // backgroundColor: 'red',
-                            alignItems: 'center',//app_description.home_user_image_position === 'left' ? 'center' : 'flex-end',
-                            justifyContent: 'center',
-                            // marginRight: 20,
-                            marginLeft: 15,
-                        }}>
-                            <AppActivityIndicator size={20} showLabel={false} />
-                        </Pressable>
-                    </Animated.View>
-                )}
-
-                {title === strings.chats ?
-                    <Animated.View entering={FadeIn} style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Pressable
                             onPress={() => { RootNavigation.navigate("Stories") }}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginHorizontal: 6,
-                                position: 'relative'
-                            }}>
-                            <IconApp pack="MT" name="donut-large" size={20} color={theme.colors.header_foreground_color} />
+                            style={iconPressableStyle}>
+                            <IconApp pack="MT" name="motion-photos-on" size={23} color={theme.colors.header_foreground_color} />
                             {status_badge > 0 && (
                                 <View style={{
                                     position: 'absolute',
-                                    top: 1,
-                                    right: 1,
-                                    backgroundColor: theme.colors.primary_high_color || theme.colors.high_color || '#25D366',
-                                    height: 10,
-                                    width: 10,
-                                    borderRadius: 5,
-                                    borderWidth: 1.5,
-                                    borderColor: theme.colors.header_background_color || '#000000'
-                                }} />
+                                    top: -2,
+                                    right: -4,
+                                    backgroundColor: theme.colors.primary_high_color || theme.colors.badge_background_color,
+                                    minWidth: 16,
+                                    height: 16,
+                                    borderRadius: 8,
+                                    paddingHorizontal: 3,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}>
+                                    <YambiText text={status_badge.toString()} size={"xsmall"} color={theme.colors.primary_high_color_foreground} />
+                                </View>
                             )}
                         </Pressable>
-                        <Pressable
-                            onPress={() => { RootNavigation.navigate("Search") }}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginHorizontal: 12
-                            }}>
-                            <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
-                        </Pressable>
-                    </Animated.View> : null}
-
-                {title === strings.business || title === strings.expenses ?
+                    </Animated.View>
                     <Animated.View entering={FadeIn}>
                         <Pressable
-                            onPress={() => { RootNavigation.navigate("Calculator") }}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginHorizontal: 15,
-                                marginRight: title === strings.expenses ? 20 : 0
-                            }}>
-                            <IconApp pack="IO" name="calculator" size={20} color={theme.colors.header_foreground_color} />
-                        </Pressable>
-                    </Animated.View> : null}
-
-                {title === strings.business ?
-                    <>
-                        <Animated.View entering={FadeIn}>
-                            <Pressable
-                                onPress={() => { RootNavigation.navigate(title === strings.business ? "NewBusiness" : "AddNews") }}
-                                style={{
-                                    height: 30,
-                                    width: 30,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginHorizontal: 15,
-                                    marginRight: 20
-                                }}>
-                                <IconApp pack="FI" name="plus-circle" size={20} color={theme.colors.header_foreground_color} />
-                            </Pressable>
-                        </Animated.View>
-
-                        <Animated.View entering={FadeIn}>
-                            <Pressable
-                                onPress={() => { RootNavigation.navigate("Cart") }}
-                                style={{
-                                    height: 30,
-                                    width: 30,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginRight: 20,
-                                    marginLeft: 15,
-                                }}>
-                                <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.header_foreground_color} />
-
-                                {cart && cart.length !== 0 ?
-                                    <View style={{
-                                        backgroundColor: theme.colors.primary_high_color || theme.colors.badge_background_color,
-                                        minWidth: 15,
-                                        height: 15,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        borderRadius: 20,
-                                        marginTop: -25,
-                                        marginLeft: -5
-                                    }}>
-                                        <Text style={{
-                                            color: theme.colors.primary_high_color_foreground || theme.colors.badge_color || '#FFFFFF',
-                                            fontSize: 12
-                                        }}>
-                                            {cart ? cart.length : ""}
-                                        </Text>
-                                    </View> : null}
-                            </Pressable>
-                        </Animated.View>
-                    </> : null}
-
-                {title === strings.marketplace ?
-                    <Animated.View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginRight: 20 }} entering={FadeIn}>
-
-                        <Pressable onPress={GoSearchMarketplace} style={{
-                            height: 30,
-                            width: 30,
-                            flexDirection: 'row',
-                            // backgroundColor: 'red',
-                            alignItems: 'center',//app_description.home_user_image_position === 'left' ? 'center' : 'flex-end',
-                            justifyContent: 'center',
-                            // marginRight: 20,
-                            marginLeft: 15,
-                        }}>
+                            onPress={() => { RootNavigation.navigate("Search") }}
+                            style={iconPressableStyle}>
                             <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
                         </Pressable>
+                    </Animated.View>
+                    {chats.length !== 0 && (
+                        <Animated.View entering={FadeIn}>
+                            <Pressable
+                                onPress={() => { dispatch(setShowFavoriteChats(!show_favorite_chats)) }}
+                                style={iconPressableStyle}>
+                                <IconApp pack="OC" name={show_favorite_chats ? "star-fill" : "star"} size={20} color={theme.colors.header_foreground_color} />
+                            </Pressable>
+                        </Animated.View>
+                    )}
+                </>
+            )}
 
-                        <Pressable onPress={GoCart} style={{
-                            height: 30,
-                            width: 30,
-                            flexDirection: 'row',
-                            // backgroundColor: 'red',
-                            alignItems: 'center',//app_description.home_user_image_position === 'left' ? 'center' : 'flex-end',
-                            justifyContent: 'center',
-                            // marginRight: 20,
-                            marginLeft: 15,
-                        }}>
-                            <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.header_foreground_color} />
-
-                            {cart && cart.length !== 0 ?
-                                <View style={{
-                                    backgroundColor: theme.colors.primary_high_color || theme.colors.badge_background_color,
-                                    minWidth: 15,
-                                    height: 15,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    borderRadius: 20,
-                                    marginTop: -25,
-                                    marginLeft: -5
-                                }}>
-                                    <Text style={{
-                                        color: theme.colors.primary_high_color_foreground || theme.colors.badge_color || '#FFFFFF',
-                                        fontSize: 12
-                                    }}>
-                                        {cart ? cart.length : ""}
-                                    </Text>
-                                </View> : null}
-                        </Pressable>
-                    </Animated.View> : null}
-
-            </View>
-
-            {title === strings.chats && chats.length !== 0 ?
+            {(title === strings.business || title === strings.expenses) && (
                 <Animated.View entering={FadeIn}>
                     <Pressable
-                        onPress={() => { dispatch(setShowFavoriteChats(!show_favorite_chats)) }}
-                        style={{
-                            height: 30,
-                            width: 30,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginHorizontal: 15,
-                            marginRight: 20
-                        }}>
-                        <IconApp pack="OC" name={show_favorite_chats ? "star-fill" : "star"} size={20} color={theme.colors.header_foreground_color} />
+                        onPress={() => { RootNavigation.navigate("Calculator") }}
+                        style={iconPressableStyle}>
+                        <IconApp pack="IO" name="calculator" size={20} color={theme.colors.header_foreground_color} />
                     </Pressable>
                 </Animated.View>
-                : null}
+            )}
 
+            {title === strings.business && (
+                <>
+                    <Animated.View entering={FadeIn}>
+                        <Pressable
+                            onPress={() => { RootNavigation.navigate("NewBusiness") }}
+                            style={iconPressableStyle}>
+                            <IconApp pack="FI" name="plus" size={20} color={theme.colors.header_foreground_color} />
+                        </Pressable>
+                    </Animated.View>
+
+                    <Animated.View entering={FadeIn}>
+                        <Pressable
+                            onPress={GoCart}
+                            style={iconPressableStyle}>
+                            <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.header_foreground_color} />
+                            {renderCartBadge()}
+                        </Pressable>
+                    </Animated.View>
+                </>
+            )}
+
+            {title === strings.marketplace && (
+                <>
+                    <Animated.View entering={FadeIn}>
+                        <Pressable onPress={GoSearchMarketplace} style={iconPressableStyle}>
+                            <IconApp pack="FI" name="search" size={20} color={theme.colors.header_foreground_color} />
+                        </Pressable>
+                    </Animated.View>
+
+                    <Animated.View entering={FadeIn}>
+                        <Pressable onPress={GoCart} style={iconPressableStyle}>
+                            <IconApp pack="FI" name="shopping-cart" size={20} color={theme.colors.header_foreground_color} />
+                            {renderCartBadge()}
+                        </Pressable>
+                    </Animated.View>
+                </>
+            )}
 
             {app_description.home_user_image_position === 'right' ?
-                <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}
-                    style={{
-                        // backgroundColor: theme.colors.header_background_color
-                    }}
-                >
-                    {/* {user_data.user_profile !== "" ?
-                        <Animated.View
-                            style={{
-                                justifyContent: 'center',
-                                alignContent: 'center',
-                                alignItems: 'center'
-                            }}>
-                            <FastImage
-                                style={{
-                                    width: app_description.home_user_image_size,
-                                    height: app_description.home_user_image_size,
-                                    borderRadius: 50,
-                                    borderColor: theme.colors.border,
-                                    borderWidth: 1
-                                }}
-                                resizeMode={FastImage.resizeMode.contain}
-                                source={{
-                                    priority: FastImage.priority.high,
-                                    cache: 'immutable',
-                                    uri: media_url + "/profile_pictures/" + user_data.user_profile
-                                }} />
-                        </Animated.View>
-                        : */}
-
+                <Pressable onPress={() => RootNavigation.navigate('SettingsYambi')}>
                     <Animated.View style={{
-                        // borderWidth: 1, 
-                        // borderColor: theme.colors.border, 
                         overflow: 'hidden',
-                        borderRadius: 50
+                        borderRadius: 50,
                     }} sharedTransitionTag="homeViewAnimated">
                         {user_data.user_profile === "" ?
                             <Animated.Image

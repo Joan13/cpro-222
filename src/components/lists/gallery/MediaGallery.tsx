@@ -256,7 +256,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   );
 
   const renderFooter = useCallback(() => {
-    if (!loadingMore) return <View style={{ height: 20 }} />;
+    if (!loadingMore) return <View style={{ height: 40 }} />;
     return (
       <View style={styles.footerLoader}>
         <ActivityIndicator size="small" color={theme.colors.high_color} />
@@ -475,7 +475,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
           numColumns={numColumns}
           estimatedItemSize={itemSize}
           onEndReached={loadMoreAssets}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.3}
           ListFooterComponent={renderFooter}
           contentContainerStyle={{
             paddingHorizontal: sidePadding,
@@ -486,106 +486,110 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
       )}
 
       {/* Album Category Selection Bottom Sheet */}
-      <BottomSheet
-        visible={showAlbumSheet}
-        onClose={() => setShowAlbumSheet(false)}
-        title={strings.select_category_album}
-      >
-        <ScrollView style={{ maxHeight: 350 }}>
-          {/* Option for All Photos */}
-          <Pressable
-            onPress={() => {
-              setSelectedAlbumId(null);
-              setShowAlbumSheet(false);
-            }}
-            style={[
-              styles.sheetListItem,
-              {
-                backgroundColor:
-                  selectedAlbumId === null ? theme.colors.high_color + '15' : 'transparent',
-                borderColor: theme.colors.border,
-              },
-            ]}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <IconApp name="grid" pack="FI" size={20} color={theme.colors.high_color} styles={{ marginRight: 12 }} />
-              <YambiText text={strings.all_photos} bold style={{ color: theme.colors.text }} />
-            </View>
-            {selectedAlbumId === null ? (
-              <IconApp name="check" pack="FI" size={18} color={theme.colors.high_color} />
-            ) : null}
-          </Pressable>
+      {showAlbumSheet ? (
+        <BottomSheet
+          visible={showAlbumSheet}
+          onClose={() => setShowAlbumSheet(false)}
+        // title={strings.select_category_album}
+        >
+          <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+            {/* Option for All Photos */}
+            <Pressable
+              onPress={() => {
+                setSelectedAlbumId(null);
+                setShowAlbumSheet(false);
+              }}
+              style={[
+                styles.sheetListItem,
+                {
+                  backgroundColor:
+                    selectedAlbumId === null ? theme.colors.high_color + '15' : 'transparent',
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <IconApp name="grid" pack="FI" size={20} color={theme.colors.high_color} styles={{ marginRight: 12 }} />
+                <YambiText text={strings.all_photos} bold style={{ color: theme.colors.text }} />
+              </View>
+              {selectedAlbumId === null ? (
+                <IconApp name="check" pack="FI" size={18} color={theme.colors.high_color} />
+              ) : null}
+            </Pressable>
 
-          {/* List of device albums */}
-          {albums.map(album => {
-            const isSelected = selectedAlbumId === album.id;
-            return (
-              <Pressable
-                key={album.id}
-                onPress={() => {
-                  setSelectedAlbumId(album.id);
-                  setShowAlbumSheet(false);
-                }}
-                style={[
-                  styles.sheetListItem,
-                  {
-                    backgroundColor: isSelected ? theme.colors.high_color + '15' : 'transparent',
-                    borderColor: theme.colors.border,
-                  },
-                ]}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <IconApp name="folder" pack="FI" size={20} color={theme.colors.gray} styles={{ marginRight: 12 }} />
-                  <View>
-                    <YambiText text={album.title} bold style={{ color: theme.colors.text }} />
-                    <YambiText text={`${album.assetCount} photos`} size="xsmall" color="gray" />
+            {/* List of device albums */}
+            {albums.map(album => {
+              const isSelected = selectedAlbumId === album.id;
+              return (
+                <Pressable
+                  key={album.id}
+                  onPress={() => {
+                    setSelectedAlbumId(album.id);
+                    setShowAlbumSheet(false);
+                  }}
+                  style={[
+                    styles.sheetListItem,
+                    {
+                      backgroundColor: isSelected ? theme.colors.high_color + '15' : 'transparent',
+                      borderColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <IconApp name="folder" pack="FI" size={20} color={theme.colors.gray} styles={{ marginRight: 12 }} />
+                    <View>
+                      <YambiText text={album.title} bold style={{ color: theme.colors.text }} />
+                      <YambiText text={`${album.assetCount} photos`} size="xsmall" color="gray" />
+                    </View>
                   </View>
-                </View>
-                {isSelected ? (
-                  <IconApp name="check" pack="FI" size={18} color={theme.colors.high_color} />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </BottomSheet>
+                  {isSelected ? (
+                    <IconApp name="check" pack="FI" size={18} color={theme.colors.high_color} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        </BottomSheet>
+      ) : null}
 
       {/* Date Filter Selection Bottom Sheet */}
-      <BottomSheet
-        visible={showDateSheet}
-        onClose={() => setShowDateSheet(false)}
-        title={strings.filter_by_date}
-      >
-        <View style={{ paddingVertical: 4 }}>
-          {DATE_FILTERS.map(f => {
-            const isSelected = dateFilter === f.key;
-            return (
-              <Pressable
-                key={f.key}
-                onPress={() => {
-                  setDateFilter(f.key);
-                  setShowDateSheet(false);
-                }}
-                style={[
-                  styles.sheetListItem,
-                  {
-                    backgroundColor: isSelected ? theme.colors.high_color + '15' : 'transparent',
-                    borderColor: theme.colors.border,
-                  },
-                ]}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <IconApp name="calendar" pack="FI" size={20} color={theme.colors.high_color} styles={{ marginRight: 12 }} />
-                  <YambiText text={getDateFilterLabel(f.labelKey)} bold style={{ color: theme.colors.text }} />
-                </View>
-                {isSelected ? (
-                  <IconApp name="check" pack="FI" size={18} color={theme.colors.high_color} />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-      </BottomSheet>
+      {showDateSheet ? (
+        <BottomSheet
+          visible={showDateSheet}
+          onClose={() => setShowDateSheet(false)}
+          title={strings.filter_by_date}
+        >
+          <View style={{ paddingVertical: 4 }}>
+            {DATE_FILTERS.map(f => {
+              const isSelected = dateFilter === f.key;
+              return (
+                <Pressable
+                  key={f.key}
+                  onPress={() => {
+                    setDateFilter(f.key);
+                    setShowDateSheet(false);
+                  }}
+                  style={[
+                    styles.sheetListItem,
+                    {
+                      backgroundColor: isSelected ? theme.colors.high_color + '15' : 'transparent',
+                      borderColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <IconApp name="calendar" pack="FI" size={20} color={theme.colors.high_color} styles={{ marginRight: 12 }} />
+                    <YambiText text={getDateFilterLabel(f.labelKey)} bold style={{ color: theme.colors.text }} />
+                  </View>
+                  {isSelected ? (
+                    <IconApp name="check" pack="FI" size={18} color={theme.colors.high_color} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        </BottomSheet>
+      ) : null}
 
       {/* Floating Action / Confirmation Area over the photos */}
       {showConfirmButton && selectedAssets.length > 0 ? (

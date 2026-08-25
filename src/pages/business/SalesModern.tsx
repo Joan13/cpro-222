@@ -1,5 +1,5 @@
-import { Pressable, ScrollView, View, Animated } from 'react-native';
-import { useEffect, useState, useRef } from 'react';
+import { Pressable, ScrollView, View, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { setShowModalApp } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
@@ -11,13 +11,14 @@ import { getSalePaymentDetails } from '../../utils/paymentHelpers';
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiHighColor, TextNormalYambiSuccess, TextSmallYambi, TextSmallYambiError, TextSmallYambiGray, TextBigYambi, TextNormalYambiGray, YambiText } from '../../components/app/Text';
 import { global_currencies, renderCurrency, renderDateTime } from '../../../GlobalVariables';
 import ModalApp from '../../components/app/ModalApp';
+import BottomSheet from '../../components/app/BottomSheet';
+import ButtonNormal from '../../components/app/ButtonNormal';
 import DateRangePicker from "../../components/app/DateRangePicker";
 import moment from "moment";
 import { setRemoveBusinessBadge, setRemoveSalesPointBadge } from '../../store/reducers/persistedAppSlice';
 import { LegendList } from '@legendapp/list';
 import SalesList from '../../components/lists/business/SalesList';
 import { TItem, TItemPrices, TSale } from '../../types/types';
-import SalesCharts from './SalesCharts';
 import RNPrint from 'react-native-print';
 
 const SalesModern = ({ navigation, route }: NavProps) => {
@@ -45,6 +46,9 @@ const SalesModern = ({ navigation, route }: NavProps) => {
     const [sale_active_filter] = useState<number>(1);
     const [category_filter, setCategory_filter] = useState<number>(0);
     const [show_filters, setShow_filters] = useState<boolean>(false);
+    const [show_filters_sheet, setShow_filters_sheet] = useState<boolean>(false);
+    const [show_all_sellers, setShow_all_sellers] = useState<boolean>(false);
+    const [show_all_currencies, setShow_all_currencies] = useState<boolean>(false);
     const [showUserError, setShowUserError] = useState<boolean>(false);
     const filtersHeight = useRef(new Animated.Value(0)).current;
 
@@ -78,19 +82,26 @@ const SalesModern = ({ navigation, route }: NavProps) => {
             ).sorted('createdAt', true);
         }, [business_id, sales_point_id, sales_point]);
 
+    const concerned_business_id = business_id !== "" ? business_id : (business?._id || sales_point?.business_id || "");
+
     const expenses = useQuery(
         Expenses, exp => {
             return exp.filtered(
-                '(business_id == $0 || sales_point_id == $1) && expense_active == $2',
-                business_id !== '' ? business_id : (sales_point?.business_id || ''),
-                sales_point_id,
+                'business_id == $0 && expense_active == $1',
+                concerned_business_id,
                 1
             ).sorted('createdAt', true);
-        }, [business_id, sales_point_id, sales_point]);
+        }, [business_id, business, sales_point]);
 
 
     // Get unique sellers
     const uniqueSellers = Array.from(new Set(bs.map(sale => sale.sale_operator)));
+
+    // Get available currencies
+    const availableCurrencies = useMemo(() => {
+        const present = global_currencies.filter((cu: number) => bs.some(s => s.currency === cu));
+        return present.length > 0 ? present : global_currencies;
+    }, [bs]);
 
     const conditionShowSales = () => {
         if (oo !== null && oo !== undefined) {
@@ -101,7 +112,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
         return false;
     };
 
-    // Filter sales based on all criteria
+    // Filter sales based on all criteria (sorted newest to oldest)
     const filtered_sales = bs.filter(sale => {
         let dateMatch = true;
         let userMatch = true;
@@ -122,6 +133,10 @@ const SalesModern = ({ navigation, route }: NavProps) => {
         statusMatch = sale.sale_active === sale_active_filter && categoryMatch;
 
         return dateMatch && userMatch && currencyMatch && statusMatch;
+    }).sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime() || 0;
+        const timeB = new Date(b.createdAt).getTime() || 0;
+        return timeB - timeA;
     });
 
     // Animate filters expand/collapse
@@ -249,9 +264,10 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                 per_currency[cu].reservationRemaining += parseFloat(res.remaining_amount) || 0;
             });
 
-        // Expenses — apply date range and currency filters when active
+        // Expenses — filter by business_id == concerned_business_id
         expenses
             .filter(exp => {
+                if (concerned_business_id !== "" && exp.business_id !== concerned_business_id) return false;
                 if (currency_filter !== "" && exp.currency !== parseInt(currency_filter)) return false;
                 if (date_start !== "" && date_end !== "") {
                     const d = moment(exp.createdAt).format("YYYY-MM-DD");
@@ -282,6 +298,207 @@ const SalesModern = ({ navigation, route }: NavProps) => {
     const stats = getStats();
     const extendedStats = getExtendedStats();
 
+    const getCurrencyRevenueSummary = useMemo(() => {
+        const isDateFiltered = date_start !== "" && date_end !== "";
+        let currentStart = "";
+        let currentEnd = "";
+        let prevStart = "";
+        let prevEnd = "";
+
+        if (isDateFiltered) {
+            currentStart = date_start;
+            currentEnd = date_end;
+            const durationDays = Math.max(1, moment(date_end).diff(moment(date_start), 'days') + 1);
+            prevEnd = moment(date_start).subtract(1, 'days').format('YYYY-MM-DD');
+            prevStart = moment(date_start).subtract(durationDays, 'days').format('YYYY-MM-DD');
+        }
+
+        const summaryMap: {
+            [key: number]: {
+                currency: number;
+                currencyCode: string;
+                symbol: string;
+                currentRevenue: number;
+                currentCost: number;
+                currentProfit: number;
+                paidAmount: number;
+                debtAmount: number;
+                expenseAmount: number;
+                expenseCount: number;
+                reservationCount: number;
+                reservationTotal: number;
+                reservationDeposit: number;
+                reservationRemaining: number;
+                prevRevenue: number;
+                prevExpenseAmount: number;
+                salesCount: number;
+                itemsSold: number;
+                target?: number;
+            };
+        } = {};
+
+        const ensureCurrencyEntry = (cu: number) => {
+            if (!summaryMap[cu]) {
+                const code = renderCurrency(cu, false);
+                let symbol = code;
+                if (cu === 1) symbol = "FC";
+                else if (cu === 2) symbol = "$";
+                else if (cu === 3) symbol = "€";
+                else if (cu === 4) symbol = "FCFA";
+                else if (cu === 5) symbol = "FBU";
+                else if (cu === 6) symbol = "FRW";
+
+                summaryMap[cu] = {
+                    currency: cu,
+                    currencyCode: code,
+                    symbol: symbol,
+                    currentRevenue: 0,
+                    currentCost: 0,
+                    currentProfit: 0,
+                    paidAmount: 0,
+                    debtAmount: 0,
+                    expenseAmount: 0,
+                    expenseCount: 0,
+                    reservationCount: 0,
+                    reservationTotal: 0,
+                    reservationDeposit: 0,
+                    reservationRemaining: 0,
+                    prevRevenue: 0,
+                    prevExpenseAmount: 0,
+                    salesCount: 0,
+                    itemsSold: 0,
+                    target: (business as any)?.[`revenue_target_${cu}`] || (sales_point as any)?.[`revenue_target_${cu}`],
+                };
+            }
+        };
+
+        bs.forEach(sale => {
+            if (sale.sale_active !== 1) return;
+            const cu = sale.currency;
+
+            if (user_filter !== "" && !sale.sale_operator.includes(user_filter)) return;
+            if (currency_filter !== "" && sale.currency.toString() !== currency_filter.toString()) return;
+
+            const saleDate = moment(sale.createdAt).format("YYYY-MM-DD");
+            const sellingPrice = parseFloat(sale.selling_price) || 0;
+            const costPrice = parseFloat(sale.cost_price) || 0;
+            const qty = sale.number || 1;
+            const itemSellingTotal = sellingPrice * qty;
+            const itemCostTotal = costPrice * qty;
+            const itemProfit = itemSellingTotal - itemCostTotal;
+
+            const { paidAmount, remainingAmount } = getSalePaymentDetails(sale, realm);
+
+            if (!isDateFiltered) {
+                // Takes ALL sales
+                ensureCurrencyEntry(cu);
+                summaryMap[cu].currentRevenue += itemSellingTotal;
+                summaryMap[cu].currentCost += itemCostTotal;
+                summaryMap[cu].currentProfit += itemProfit;
+                summaryMap[cu].paidAmount += paidAmount;
+                if (remainingAmount > 0) {
+                    summaryMap[cu].debtAmount += remainingAmount;
+                }
+                summaryMap[cu].salesCount += 1;
+                summaryMap[cu].itemsSold += qty;
+            } else {
+                if (saleDate >= currentStart && saleDate <= currentEnd) {
+                    ensureCurrencyEntry(cu);
+                    summaryMap[cu].currentRevenue += itemSellingTotal;
+                    summaryMap[cu].currentCost += itemCostTotal;
+                    summaryMap[cu].currentProfit += itemProfit;
+                    summaryMap[cu].paidAmount += paidAmount;
+                    if (remainingAmount > 0) {
+                        summaryMap[cu].debtAmount += remainingAmount;
+                    }
+                    summaryMap[cu].salesCount += 1;
+                    summaryMap[cu].itemsSold += qty;
+                } else if (saleDate >= prevStart && saleDate <= prevEnd) {
+                    ensureCurrencyEntry(cu);
+                    summaryMap[cu].prevRevenue += itemSellingTotal;
+                }
+            }
+        });
+
+        expenses.forEach(exp => {
+            if (exp.expense_active !== 1) return;
+            if (concerned_business_id !== "" && exp.business_id !== concerned_business_id) return;
+            const cu = exp.currency;
+
+            if (currency_filter !== "" && exp.currency.toString() !== currency_filter.toString()) return;
+
+            const expDate = moment(exp.createdAt).format("YYYY-MM-DD");
+            const amount = (parseFloat(exp.amount) || 0) * (exp.quantity || 1);
+
+            if (!isDateFiltered) {
+                // Takes ALL expenses
+                ensureCurrencyEntry(cu);
+                summaryMap[cu].expenseAmount += amount;
+                summaryMap[cu].expenseCount += 1;
+            } else {
+                if (expDate >= currentStart && expDate <= currentEnd) {
+                    ensureCurrencyEntry(cu);
+                    summaryMap[cu].expenseAmount += amount;
+                    summaryMap[cu].expenseCount += 1;
+                } else if (expDate >= prevStart && expDate <= prevEnd) {
+                    ensureCurrencyEntry(cu);
+                    summaryMap[cu].prevExpenseAmount += amount;
+                }
+            }
+        });
+
+        reservations.forEach(res => {
+            if (res.status !== 1 && res.status !== 2) return;
+            if (concerned_business_id !== "" && res.business_id !== concerned_business_id) return;
+            const cu = res.currency;
+
+            if (currency_filter !== "" && res.currency.toString() !== currency_filter.toString()) return;
+
+            const resDate = moment(res.createdAt).format("YYYY-MM-DD");
+            const total = parseFloat(res.total_amount) || 0;
+            const deposit = parseFloat(res.deposit_amount) || 0;
+            const remaining = parseFloat(res.remaining_amount) || 0;
+
+            if (!isDateFiltered) {
+                ensureCurrencyEntry(cu);
+                summaryMap[cu].reservationCount += 1;
+                summaryMap[cu].reservationTotal += total;
+                summaryMap[cu].reservationDeposit += deposit;
+                summaryMap[cu].reservationRemaining += remaining;
+            } else {
+                if (resDate >= currentStart && resDate <= currentEnd) {
+                    ensureCurrencyEntry(cu);
+                    summaryMap[cu].reservationCount += 1;
+                    summaryMap[cu].reservationTotal += total;
+                    summaryMap[cu].reservationDeposit += deposit;
+                    summaryMap[cu].reservationRemaining += remaining;
+                }
+            }
+        });
+
+        if (Object.keys(summaryMap).length === 0) {
+            const defaultCu = (sales_point as any)?.currency || (business as any)?.currency || 2;
+            ensureCurrencyEntry(defaultCu);
+        }
+
+        return Object.values(summaryMap);
+    }, [bs, expenses, reservations, date_start, date_end, user_filter, currency_filter, business, sales_point, realm, concerned_business_id]);
+
+    const formatCurrencyValue = (currencyID: number, amount: number, symbol: string, decimals: boolean = true) => {
+        const hasFraction = amount % 1 !== 0;
+        const formattedNum = amount.toLocaleString(undefined, {
+            minimumFractionDigits: decimals && hasFraction ? 2 : 0,
+            maximumFractionDigits: 2,
+        });
+        if (currencyID === 2) {
+            return `$${formattedNum}`;
+        } else if (currencyID === 3) {
+            return `€${formattedNum}`;
+        } else {
+            return `${formattedNum} ${symbol}`;
+        }
+    };
+
 
     const activeFiltersCount = [
         date_start !== "" && date_end !== "",
@@ -289,6 +506,18 @@ const SalesModern = ({ navigation, route }: NavProps) => {
         currency_filter !== "",
         category_filter === 1,
     ].filter(Boolean).length;
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <ButtonNormal
+                    onPress={() => setShow_filters_sheet(true)}
+                    title={activeFiltersCount > 0 ? "(" + activeFiltersCount.toString() + ") " + strings.filter : strings.filter}
+                    styles={{ paddingHorizontal: 15 }}
+                />
+            ),
+        });
+    }, [navigation, activeFiltersCount, app_theme]);
 
     const conditionShowGlobal = (salesInCurrency: any[]) => {
         if (oo !== null && oo !== undefined) {
@@ -582,6 +811,302 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                 </ModalApp>
             )}
 
+            {/* Bottom Sheet Filters Modal */}
+            <BottomSheet
+                visible={show_filters_sheet}
+                onClose={() => setShow_filters_sheet(false)}
+            // title={strings.filter}
+            >
+                <View style={{ paddingBottom: 20, paddingHorizontal: 20 }}>
+                    {/* Clear selection link if active filters exist */}
+                    {activeFiltersCount > 0 && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+                            <Pressable
+                                onPress={() => {
+                                    setDate_start("");
+                                    setDate_end("");
+                                    setUser_filter("");
+                                    setCurrency_filter("");
+                                    setCategory_filter(0);
+                                }}
+                                style={{ paddingHorizontal: 10, paddingVertical: 4 }}>
+                                <TextSmallYambi text={strings.clear_selection || "Clear"} styles={{ color: app_theme.colors.error }} />
+                            </Pressable>
+                        </View>
+                    )}
+
+                    {/* 1. Date Filter Calendar directly in bottom sheet */}
+                    <View style={{
+                        backgroundColor: app_theme.colors.border + '30',
+                        borderRadius: 16,
+                        padding: 10,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingHorizontal: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <IconApp pack="FI" name="calendar" size={18} color={app_theme.colors.high_color} />
+                                <TextSmallYambiGray text={strings.filter_by_date} styles={{ marginLeft: 8 }} />
+                            </View>
+                            <TextNormalYambiHighColor text={
+                                date_start !== "" && date_end !== ""
+                                    ? `${renderDateTime(date_start, 3, true)} - ${renderDateTime(date_end, 3, true)}`
+                                    : strings.all
+                            } />
+                        </View>
+
+                        <DateRangePicker
+                            initialStartDate={date_start !== "" ? date_start : undefined}
+                            initialEndDate={date_end !== "" ? date_end : undefined}
+                            onSelectDateRange={(range) => {
+                                setDate_start(range.firstDate.toString());
+                                setDate_end(range.secondDate.toString());
+                            }}
+                            onClear={() => {
+                                setDate_start("");
+                                setDate_end("");
+                            }}
+                            ln={LLg()}
+                            blockSingleDateSelection={false}
+                            responseFormat="YYYY-MM-DD"
+                            selectedDateContainerStyle={{
+                                height: 35,
+                                width: 35,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: app_theme.colors.badge_background_color,
+                                borderRadius: 35,
+                                marginHorizontal: 5,
+                            }}
+                            selectedDateStyle={{
+                                color: app_theme.colors.badge_color
+                            }}
+                            confirmBtnTitle=""
+                            clearBtnTitle={strings.clear_selection}
+                        />
+                    </View>
+
+                    {/* 2. Seller Filter */}
+                    {!conditionShowSales() && (
+                        <View style={{
+                            backgroundColor: app_theme.colors.border + '30',
+                            borderRadius: 16,
+                            padding: 14,
+                            marginBottom: 16,
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.border,
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                <IconApp pack="FI" name="user" size={18} color={app_theme.colors.high_color} />
+                                <TextSmallYambiGray text={strings.filter_by_seller} styles={{ marginLeft: 8 }} />
+                            </View>
+
+                            <View style={{ gap: 6 }}>
+                                {/* "All" Option */}
+                                <Pressable
+                                    onPress={() => setUser_filter("")}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 12,
+                                        borderRadius: 10,
+                                        backgroundColor: user_filter === "" ? app_theme.colors.high_color + "20" : 'transparent',
+                                        borderWidth: 1,
+                                        borderColor: user_filter === "" ? app_theme.colors.high_color : 'transparent',
+                                    }}>
+                                    <TextNormalYambi text={strings.all} bold={user_filter === ""} styles={{ color: user_filter === "" ? app_theme.colors.high_color : app_theme.colors.text }} />
+                                    {user_filter === "" && (
+                                        <IconApp pack="IO" name="checkmark-circle" size={18} color={app_theme.colors.high_color} />
+                                    )}
+                                </Pressable>
+
+                                {/* List Sellers */}
+                                {(show_all_sellers ? uniqueSellers : uniqueSellers.slice(0, 3)).map((seller, index) => {
+                                    const isSelected = user_filter === seller;
+                                    return (
+                                        <Pressable
+                                            key={index}
+                                            onPress={() => setUser_filter(seller)}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                paddingVertical: 10,
+                                                paddingHorizontal: 12,
+                                                borderRadius: 10,
+                                                backgroundColor: isSelected ? app_theme.colors.high_color + "20" : 'transparent',
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? app_theme.colors.high_color : 'transparent',
+                                            }}>
+                                            <TextNormalYambi text={seller} bold={isSelected} styles={{ color: isSelected ? app_theme.colors.high_color : app_theme.colors.text }} />
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={18} color={app_theme.colors.high_color} />
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
+
+                                {/* "Show all" toggle button if > 3 sellers */}
+                                {uniqueSellers.length > 3 && (
+                                    <Pressable
+                                        onPress={() => setShow_all_sellers(!show_all_sellers)}
+                                        style={{
+                                            paddingVertical: 8,
+                                            alignItems: 'center',
+                                            marginTop: 2,
+                                        }}>
+                                        <TextSmallYambi text={show_all_sellers ? (strings as any).see_less : `${(strings as any).view_all} (${uniqueSellers.length})`} styles={{ color: app_theme.colors.high_color }} />
+                                    </Pressable>
+                                )}
+                            </View>
+                        </View>
+                    )}
+
+                    {/* 3. Currency Filter */}
+                    <View style={{
+                        backgroundColor: app_theme.colors.border + '30',
+                        borderRadius: 16,
+                        padding: 14,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <IconApp pack="FI" name="dollar-sign" size={18} color={app_theme.colors.high_color} />
+                            <TextSmallYambiGray text={strings.filter_by_currency} styles={{ marginLeft: 8 }} />
+                        </View>
+
+                        <View style={{ gap: 6 }}>
+                            {/* "All" Option */}
+                            <Pressable
+                                onPress={() => setCurrency_filter("")}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 10,
+                                    backgroundColor: currency_filter === "" ? app_theme.colors.high_color + "20" : 'transparent',
+                                    borderWidth: 1,
+                                    borderColor: currency_filter === "" ? app_theme.colors.high_color : 'transparent',
+                                }}>
+                                <TextNormalYambi text={strings.all} bold={currency_filter === ""} styles={{ color: currency_filter === "" ? app_theme.colors.high_color : app_theme.colors.text }} />
+                                {currency_filter === "" && (
+                                    <IconApp pack="IO" name="checkmark-circle" size={18} color={app_theme.colors.high_color} />
+                                )}
+                            </Pressable>
+
+                            {/* List Currencies */}
+                            {(show_all_currencies ? availableCurrencies : availableCurrencies.slice(0, 3)).map((cu: number) => {
+                                const isSelected = currency_filter === cu.toString();
+                                const salesInCurrency = filtered_sales.filter(s => s.currency === cu);
+                                return (
+                                    <Pressable
+                                        key={cu}
+                                        onPress={() => setCurrency_filter(cu.toString())}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 10,
+                                            backgroundColor: isSelected ? app_theme.colors.high_color + "20" : 'transparent',
+                                            borderWidth: 1,
+                                            borderColor: isSelected ? app_theme.colors.high_color : 'transparent',
+                                        }}>
+                                        <TextNormalYambi text={renderCurrency(cu, true)} bold={isSelected} styles={{ color: isSelected ? app_theme.colors.high_color : app_theme.colors.text }} />
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <TextSmallYambiGray text={`${salesInCurrency.length} ${strings.sales}`} styles={{ marginRight: 8 }} />
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={18} color={app_theme.colors.high_color} />
+                                            )}
+                                        </View>
+                                    </Pressable>
+                                );
+                            })}
+
+                            {/* "Show all" toggle button if > 3 currencies */}
+                            {availableCurrencies.length > 3 && (
+                                <Pressable
+                                    onPress={() => setShow_all_currencies(!show_all_currencies)}
+                                    style={{
+                                        paddingVertical: 8,
+                                        alignItems: 'center',
+                                        marginTop: 2,
+                                    }}>
+                                    <TextSmallYambi text={show_all_currencies ? (strings as any).see_less : `${(strings as any).view_all} (${availableCurrencies.length})`} styles={{ color: app_theme.colors.high_color }} />
+                                </Pressable>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* 4. Categories Filter Down at bottom */}
+                    <View style={{
+                        backgroundColor: app_theme.colors.border + '50',
+                        padding: 15,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: app_theme.colors.border,
+                        marginBottom: 20,
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                            <View style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 10,
+                                backgroundColor: app_theme.colors.high_color + '20',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12,
+                            }}>
+                                <IconApp pack="FI" name="layers" size={18} color={app_theme.colors.high_color} />
+                            </View>
+                            <TextSmallYambiGray text={strings.filter_by_category} />
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <Pressable
+                                onPress={() => setCategory_filter(0)}
+                                style={{
+                                    flex: 1,
+                                    alignItems: 'center',
+                                    paddingVertical: 12,
+                                    borderRadius: 12,
+                                    backgroundColor: category_filter === 0 ? app_theme.colors.high_color + '20' : app_theme.colors.background,
+                                    borderWidth: 1,
+                                    borderColor: category_filter === 0 ? app_theme.colors.high_color : app_theme.colors.border,
+                                }}>
+                                <TextNormalYambi text={strings.completed_sales} bold={category_filter === 0} styles={{ color: category_filter === 0 ? app_theme.colors.high_color : app_theme.colors.text }} />
+                            </Pressable>
+                            <Pressable
+                                onPress={() => setCategory_filter(1)}
+                                style={{
+                                    flex: 1,
+                                    alignItems: 'center',
+                                    paddingVertical: 12,
+                                    borderRadius: 12,
+                                    backgroundColor: category_filter === 1 ? app_theme.colors.high_color + '20' : app_theme.colors.background,
+                                    borderWidth: 1,
+                                    borderColor: category_filter === 1 ? app_theme.colors.high_color : app_theme.colors.border,
+                                }}>
+                                <TextNormalYambi text={strings.on_credit} bold={category_filter === 1} styles={{ color: category_filter === 1 ? app_theme.colors.high_color : app_theme.colors.text }} />
+                            </Pressable>
+                        </View>
+                    </View>
+
+                    {/* Validate filter button */}
+                    <ButtonNormal
+                        normal
+                        title={(strings as any).validate_filter}
+                        onPress={() => setShow_filters_sheet(false)}
+                    />
+                </View>
+            </BottomSheet>
+
             <LegendList
                 style={{ flex: 1 }}
                 data={filtered_sales as never}
@@ -590,245 +1115,302 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                 estimatedItemSize={140}
                 ListHeaderComponent={() => (
                     <View style={{ padding: 15 }}>
-                        {/* ── Overview strip ── */}
-                        <TextNormalYambi text={strings.business_overview} bold styles={{ marginBottom: 15, fontSize: 18 }} />
-
-                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-                            {/* Total transactions */}
-                            <View style={{
-                                flex: 1,
-                                borderRadius: 16,
-                                padding: 16,
-                                backgroundColor: app_theme.colors.border,
-                                borderLeftWidth: 4,
-                                borderLeftColor: '#6366F1',
-                                borderWidth: 1,
-                                borderColor: app_theme.colors.border,
-                            }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                                    <IconApp pack="FI" name="shopping-bag" size={14} color="#6366F1" />
-                                    <TextSmallYambiGray text={strings.total_sales} styles={{ marginLeft: 6, fontSize: 11 }} />
-                                </View>
-                                <TextBigYambi text={stats.total_sales_count.toString()} bold styles={{ fontSize: 30, color: '#6366F1', lineHeight: 34 }} />
-                                <TextSmallYambiGray text={strings.completed_sales} styles={{ fontSize: 11, marginTop: 2 }} />
-                            </View>
-
-                            {/* Total items */}
-                            <View style={{
-                                flex: 1,
-                                borderRadius: 16,
-                                padding: 16,
-                                backgroundColor: app_theme.colors.border,
-                                borderLeftWidth: 4,
-                                borderLeftColor: '#F59E0B',
-                                borderWidth: 1,
-                                borderColor: app_theme.colors.border,
-                            }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                                    <IconApp pack="FI" name="package" size={14} color="#F59E0B" />
-                                    <TextSmallYambiGray text={strings.items} styles={{ marginLeft: 6, fontSize: 11 }} />
-                                </View>
-                                <TextBigYambi text={stats.total_items_sold.toString()} bold styles={{ fontSize: 30, color: '#F59E0B', lineHeight: 34 }} />
-                                <TextSmallYambiGray text={strings.sold} styles={{ fontSize: 11, marginTop: 2 }} />
-                            </View>
-                        </View>
-
-                        <SalesCharts
-                            sales={Array.from(filtered_sales as any)}
-                            startDate={date_start !== "" ? date_start : undefined}
-                            endDate={date_end !== "" ? date_end : undefined}
-                            businessId={business_id !== "" ? business_id : undefined}
-                        />
-
-                        {/* Filters Toggle */}
-                        <Pressable
-                            onPress={() => setShow_filters(!show_filters)}
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                backgroundColor: app_theme.colors.border,
-                                padding: 15,
-                                borderRadius: 12,
-                                marginBottom: 15,
-                            }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <IconApp pack="FI" name="filter" size={18} color={app_theme.colors.high_color} />
-                                <TextNormalYambi text={strings.filter} bold styles={{ marginLeft: 10 }} />
-                                {activeFiltersCount > 0 && (
-                                    <View style={{
-                                        backgroundColor: app_theme.colors.high_color,
-                                        borderRadius: 10,
-                                        paddingHorizontal: 8,
-                                        paddingVertical: 2,
-                                        marginLeft: 10,
-                                    }}>
-                                        <TextSmallYambi text={activeFiltersCount.toString()} styles={{ color: app_theme.colors.badge_color, fontSize: 12 }} />
-                                    </View>
-                                )}
-                            </View>
-                            <IconApp pack="FI" name={show_filters ? "chevron-up" : "chevron-down"} size={20} color={app_theme.colors.text} />
-                        </Pressable>
-
-                        {/* Filters */}
-                        <Animated.View style={{
-                            maxHeight: filtersHeight.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, 400],
-                            }),
-                            opacity: filtersHeight,
-                            overflow: 'hidden',
+                        {/* ── Revenue Summary Block Grouped by Currency ── */}
+                        <View style={{
+                            backgroundColor: app_theme.colors.high_color + "14",
+                            borderRadius: 18,
+                            padding: 15,
+                            marginBottom: 16,
+                            borderWidth: 1,
+                            borderColor: app_theme.colors.high_color + "25",
                         }}>
-                            <View style={{ marginBottom: 15 }}>
-                                {/* Date Filter */}
-                                <Pressable
-                                    onPress={() => {
-                                        dispatch(setShowModalApp(true));
-                                        setDate_selection_modal(true);
-                                    }}
-                                    style={{
-                                        backgroundColor: app_theme.colors.background,
-                                        padding: 15,
-                                        borderRadius: 12,
-                                        marginBottom: 10,
-                                        borderWidth: 1,
-                                        borderColor: app_theme.colors.border,
+                            {/* Block Header */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                    <View style={{
+                                        height: 28,
+                                        width: 28,
+                                        borderRadius: 8,
+                                        backgroundColor: app_theme.colors.high_color + "25",
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: 8,
                                     }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <View style={{ flex: 1 }}>
-                                            <TextSmallYambiGray text={strings.filter_by_date} styles={{ marginBottom: 5 }} />
-                                            <TextNormalYambiHighColor text={
-                                                date_start !== "" && date_end !== ""
-                                                    ? `${renderDateTime(date_start, 3, true)} - ${renderDateTime(date_end, 3, true)}`
-                                                    : strings.all
-                                            } />
-                                        </View>
-                                        {date_start !== "" && date_end !== "" && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setDate_start("");
-                                                    setDate_end("");
-                                                }}
-                                                style={{ padding: 5 }}>
-                                                <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                            </Pressable>
+                                        <IconApp pack="FI" name="pie-chart" size={15} color={app_theme.colors.high_color} />
+                                    </View>
+                                    <YambiText text={(strings as any).revenue || "Revenue"} bold style={{ fontSize: 16, color: app_theme.colors.text }} />
+                                </View>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+                                    <View style={{ flexShrink: 1 }}>
+                                        {date_start !== "" && date_end !== "" ? (
+                                            <YambiText size="small" color="gray" text={`${date_start} → ${date_end}`} style={{ fontSize: 11 }} />
+                                        ) : (
+                                            <YambiText size="small" color="gray" text={(strings as any).all_time || strings.all} style={{ fontSize: 11 }} />
                                         )}
                                     </View>
-                                </Pressable>
 
-                                {/* Seller Filter - only show if not a level 3 operator */}
-                                {!conditionShowSales() && (
                                     <Pressable
-                                        onPress={() => {
-                                            dispatch(setShowModalApp(true));
-                                            setShow_users_filter(true);
-                                        }}
+                                        onPress={() => navigation.navigate("BusinessOverviewGraphs", {
+                                            business_id,
+                                            sales_point_id,
+                                            item_id,
+                                            date_start,
+                                            date_end,
+                                            user_filter,
+                                            currency_filter,
+                                            category_filter,
+                                        })}
                                         style={{
-                                            backgroundColor: app_theme.colors.background,
-                                            padding: 15,
-                                            borderRadius: 12,
-                                            marginBottom: 10,
-                                            borderWidth: 1,
-                                            borderColor: app_theme.colors.border,
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            backgroundColor: app_theme.colors.high_color + "25",
+                                            paddingHorizontal: 9,
+                                            paddingVertical: 5,
+                                            borderRadius: 10,
                                         }}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <View style={{ flex: 1 }}>
-                                                <TextSmallYambiGray text={strings.filter_by_seller} styles={{ marginBottom: 5 }} />
-                                                <TextNormalYambiHighColor text={user_filter !== "" ? user_filter : strings.all} />
-                                            </View>
-                                            {user_filter !== "" && (
-                                                <Pressable
-                                                    onPress={(e) => {
-                                                        e.stopPropagation();
-                                                        setUser_filter("");
-                                                    }}
-                                                    style={{ padding: 5 }}>
-                                                    <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                                </Pressable>
-                                            )}
-                                        </View>
+                                        <IconApp pack="FI" name="bar-chart-2" size={14} color={app_theme.colors.high_color} />
+                                        <YambiText text={(strings as any).more || "Plus"} bold style={{ marginLeft: 5, fontSize: 12, color: app_theme.colors.high_color }} />
+                                        <IconApp pack="FI" name="chevron-right" size={14} color={app_theme.colors.high_color} />
                                     </Pressable>
-                                )}
-
-                                {/* Currency Filter */}
-                                <Pressable
-                                    onPress={() => {
-                                        dispatch(setShowModalApp(true));
-                                        setShow_currency_filter(true);
-                                    }}
-                                    style={{
-                                        backgroundColor: app_theme.colors.background,
-                                        padding: 15,
-                                        borderRadius: 12,
-                                        borderWidth: 1,
-                                        borderColor: app_theme.colors.border,
-                                        marginBottom: 10,
-                                    }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <View style={{ flex: 1 }}>
-                                            <TextSmallYambiGray text={strings.filter_by_currency} styles={{ marginBottom: 5 }} />
-                                            <TextNormalYambiHighColor text={
-                                                currency_filter !== ""
-                                                    ? renderCurrency(parseInt(currency_filter), true)
-                                                    : strings.all
-                                            } />
-                                        </View>
-                                        {currency_filter !== "" && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setCurrency_filter("");
-                                                }}
-                                                style={{ padding: 5 }}>
-                                                <IconApp pack="FI" name="x" size={18} color={app_theme.colors.gray} />
-                                            </Pressable>
-                                        )}
-                                    </View>
-                                </Pressable>
-
-                                {/* Payment Type Filter */}
-                                <View style={{
-                                    backgroundColor: app_theme.colors.background,
-                                    padding: 15,
-                                    borderRadius: 12,
-                                    borderWidth: 1,
-                                    borderColor: app_theme.colors.border,
-                                }}>
-                                    <TextSmallYambiGray text={strings.filter_by_category} styles={{ marginBottom: 10 }} />
-                                    <View style={{ flexDirection: 'row' }}>
-                                        <Pressable
-                                            onPress={() => setCategory_filter(0)}
-                                            style={{
-                                                flex: 1,
-                                                alignItems: 'center',
-                                                paddingVertical: 10,
-                                                borderRadius: 10,
-                                                marginRight: 10,
-                                                backgroundColor: category_filter === 0 ? app_theme.colors.high_color + '20' : app_theme.colors.border,
-                                                borderWidth: 1,
-                                                borderColor: category_filter === 0 ? app_theme.colors.high_color : app_theme.colors.border,
-                                            }}>
-                                            <TextNormalYambi text={strings.completed_sales} styles={{ color: category_filter === 0 ? app_theme.colors.high_color : app_theme.colors.text }} />
-                                        </Pressable>
-                                        <Pressable
-                                            onPress={() => setCategory_filter(1)}
-                                            style={{
-                                                flex: 1,
-                                                alignItems: 'center',
-                                                paddingVertical: 10,
-                                                borderRadius: 10,
-                                                marginLeft: 10,
-                                                backgroundColor: category_filter === 1 ? app_theme.colors.high_color + '20' : app_theme.colors.border,
-                                                borderWidth: 1,
-                                                borderColor: category_filter === 1 ? app_theme.colors.high_color : app_theme.colors.border,
-                                            }}>
-                                            <TextNormalYambi text={strings.on_credit} styles={{ color: category_filter === 1 ? app_theme.colors.high_color : app_theme.colors.text }} />
-                                        </Pressable>
-                                    </View>
                                 </View>
                             </View>
-                        </Animated.View>
+
+                            {/* Currency Cards */}
+                            {getCurrencyRevenueSummary.map((item, idx) => {
+                                const isDateFiltered = date_start !== "" && date_end !== "";
+                                const hasTarget = item.target && item.target > 0;
+                                let percentStr = "";
+                                let isNegative = false;
+                                let progressRatio = 0;
+                                const diffAmount = item.currentRevenue - item.prevRevenue;
+                                const marginPct = item.currentRevenue > 0 ? (item.currentProfit / item.currentRevenue) * 100 : 0;
+                                const aov = item.salesCount > 0 ? item.currentRevenue / item.salesCount : 0;
+                                const netCash = (item.paidAmount + item.reservationDeposit) - item.expenseAmount;
+
+                                if (hasTarget) {
+                                    const rawPct = Math.min(Math.round((item.currentRevenue / item.target!) * 100), 100);
+                                    percentStr = `${rawPct}%`;
+                                    progressRatio = rawPct / 100;
+                                } else if (isDateFiltered) {
+                                    if (item.prevRevenue > 0) {
+                                        const pct = Math.round((diffAmount / item.prevRevenue) * 100);
+                                        percentStr = pct >= 0 ? `+${pct}%` : `${pct}%`;
+                                        isNegative = pct < 0;
+                                        progressRatio = Math.min(item.currentRevenue / Math.max(item.prevRevenue, item.currentRevenue, 1), 1);
+                                    } else if (item.currentRevenue > 0) {
+                                        percentStr = "+100%";
+                                        progressRatio = 1;
+                                    } else {
+                                        percentStr = "0%";
+                                        progressRatio = 0;
+                                    }
+                                } else {
+                                    percentStr = (strings as any).all || "All";
+                                    progressRatio = item.currentRevenue > 0 ? 1 : 0;
+                                }
+
+                                const badgeBg = isNegative
+                                    ? app_theme.colors.error + "20"
+                                    : app_theme.colors.high_color + "25";
+                                const badgeTextColor = isNegative
+                                    ? app_theme.colors.error
+                                    : app_theme.colors.high_color;
+
+                                return (
+                                    <View
+                                        key={item.currency}
+                                        style={{
+                                            marginTop: idx > 0 ? 14 : 0,
+                                            paddingTop: idx > 0 ? 14 : 0,
+                                            borderTopWidth: idx > 0 ? 1 : 0,
+                                            borderTopColor: app_theme.colors.high_color + "20",
+                                        }}>
+                                        {/* Currency Header: Code + Main Amount + Badge */}
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, flexShrink: 1, marginRight: 8 }}>
+                                                <YambiText text={`${item.currencyCode}: `} bold style={{ fontSize: 15, color: app_theme.colors.text }} />
+                                                <YambiText
+                                                    text={formatCurrencyValue(item.currency, item.currentRevenue, item.symbol)}
+                                                    bold
+                                                    style={{ fontSize: 17, color: app_theme.colors.high_color }}
+                                                />
+                                            </View>
+
+                                            {/* Percentage Badge */}
+                                            <View style={{
+                                                backgroundColor: badgeBg,
+                                                paddingHorizontal: 9,
+                                                paddingVertical: 3,
+                                                borderRadius: 12,
+                                                flexShrink: 0,
+                                            }}>
+                                                <YambiText
+                                                    text={percentStr}
+                                                    bold
+                                                    size="small"
+                                                    style={{ color: badgeTextColor, fontSize: 11 }}
+                                                />
+                                            </View>
+                                        </View>
+
+                                        {/* Progress Bar */}
+                                        <View style={{
+                                            height: 5,
+                                            width: '100%',
+                                            backgroundColor: app_theme.colors.high_color + "20",
+                                            borderRadius: 3,
+                                            overflow: 'hidden',
+                                            marginBottom: 8,
+                                        }}>
+                                            <View style={{
+                                                height: '100%',
+                                                width: `${Math.max(progressRatio * 100, 3)}%`,
+                                                backgroundColor: isNegative ? app_theme.colors.error : app_theme.colors.high_color,
+                                                borderRadius: 3,
+                                            }} />
+                                        </View>
+
+                                        {/* Precision Details Card Grid */}
+                                        <View style={{
+                                            backgroundColor: app_theme.colors.background + "90",
+                                            borderRadius: 12,
+                                            padding: 10,
+                                            borderWidth: 1,
+                                            borderColor: app_theme.colors.high_color + "20",
+                                            gap: 6,
+                                        }}>
+                                            {/* Metric Row 1: Profit & Average Order Value */}
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                    <IconApp pack="FI" name="trending-up" size={12} color={item.currentProfit >= 0 ? app_theme.colors.high_color : app_theme.colors.error} />
+                                                    <YambiText size="small" color="gray" text={` ${strings.total_profit}: `} style={{ fontSize: 11 }} />
+                                                    <YambiText
+                                                        size="small"
+                                                        bold
+                                                        text={`${formatCurrencyValue(item.currency, item.currentProfit, item.symbol)} (${marginPct.toFixed(1)}%)`}
+                                                        style={{ fontSize: 11, color: item.currentProfit >= 0 ? app_theme.colors.high_color : app_theme.colors.error }}
+                                                    />
+                                                </View>
+
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                    <IconApp pack="FI" name="credit-card" size={12} color={app_theme.colors.gray} />
+                                                    <YambiText size="small" color="gray" text={` ${(strings as any).avg_short || 'Moy.'}: `} style={{ fontSize: 11 }} />
+                                                    <YambiText size="small" bold text={formatCurrencyValue(item.currency, aov, item.symbol)} style={{ fontSize: 11, color: app_theme.colors.text }} />
+                                                </View>
+                                            </View>
+
+                                            {/* Metric Row 2: Transactions, Items & Cash vs Credit */}
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                    <IconApp pack="FI" name="shopping-bag" size={12} color={app_theme.colors.gray} />
+                                                    <YambiText
+                                                        size="small"
+                                                        color="gray"
+                                                        text={` ${item.salesCount} ${strings.sales} (${item.itemsSold} ${strings.items})`}
+                                                        style={{ fontSize: 11 }}
+                                                    />
+                                                </View>
+
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                    <YambiText size="small" color="gray" text={`${strings.cash}: `} style={{ fontSize: 11 }} />
+                                                    <YambiText size="small" bold text={formatCurrencyValue(item.currency, item.paidAmount, item.symbol)} style={{ fontSize: 11, color: app_theme.colors.text }} />
+                                                    {item.debtAmount > 0 && (
+                                                        <YambiText size="small" color="error" text={` • ${(strings as any).credit || 'Credit'}: ${formatCurrencyValue(item.currency, item.debtAmount, item.symbol)}`} style={{ fontSize: 11 }} />
+                                                    )}
+                                                </View>
+                                            </View>
+
+                                            {/* Metric Row 3: Expenses & Net Cash Flow */}
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                    <IconApp pack="FI" name="arrow-down-right" size={12} color={app_theme.colors.error} />
+                                                    <YambiText size="small" color="gray" text={` ${strings.expenses}: `} style={{ fontSize: 11 }} />
+                                                    <YambiText
+                                                        size="small"
+                                                        bold
+                                                        text={`-${formatCurrencyValue(item.currency, item.expenseAmount, item.symbol)} (${item.expenseCount})`}
+                                                        style={{ fontSize: 11, color: item.expenseAmount > 0 ? app_theme.colors.error : app_theme.colors.gray }}
+                                                    />
+                                                </View>
+
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                    <IconApp pack="IO" name="wallet-outline" size={12} color={app_theme.colors.high_color} />
+                                                    <YambiText size="small" color="gray" text={` ${(strings as any).net_cash}: `} style={{ fontSize: 11 }} />
+                                                    <YambiText
+                                                        size="small"
+                                                        bold
+                                                        text={formatCurrencyValue(item.currency, netCash, item.symbol)}
+                                                        style={{ fontSize: 11, color: netCash >= 0 ? app_theme.colors.high_color : app_theme.colors.error }}
+                                                    />
+                                                </View>
+                                            </View>
+
+                                            {/* Metric Row 4: Reservations (if present) */}
+                                            {item.reservationCount > 0 && (
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                        <IconApp pack="FI" name="calendar" size={12} color={app_theme.colors.high_color} />
+                                                        <YambiText size="small" color="gray" text={` ${(strings as any).reservations_short || 'Rés.'}: `} style={{ fontSize: 11 }} />
+                                                        <YambiText
+                                                            size="small"
+                                                            bold
+                                                            text={`${item.reservationCount} (${formatCurrencyValue(item.currency, item.reservationTotal, item.symbol)})`}
+                                                            style={{ fontSize: 11, color: app_theme.colors.text }}
+                                                        />
+                                                    </View>
+
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+                                                        <YambiText size="small" color="gray" text={`Dep.: `} style={{ fontSize: 11 }} />
+                                                        <YambiText
+                                                            size="small"
+                                                            bold
+                                                            text={formatCurrencyValue(item.currency, item.reservationDeposit, item.symbol)}
+                                                            style={{ fontSize: 11, color: app_theme.colors.high_color }}
+                                                        />
+                                                    </View>
+                                                </View>
+                                            )}
+
+                                            {/* Metric Row 5: Period Comparison & Diff or All Time Summary */}
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4, borderTopWidth: 1, borderTopColor: app_theme.colors.border + "40", flexWrap: 'wrap', gap: 4 }}>
+                                                {isDateFiltered ? (
+                                                    <>
+                                                        <YambiText
+                                                            size="small"
+                                                            color="gray"
+                                                            text={`${strings.prev_period}: ${formatCurrencyValue(item.currency, item.prevRevenue, item.symbol)}`}
+                                                            style={{ fontSize: 10 }}
+                                                        />
+                                                        <YambiText
+                                                            size="small"
+                                                            bold
+                                                            text={`${(strings as any).difference_short || 'Diff.'}: ${diffAmount >= 0 ? '+' : ''}${formatCurrencyValue(item.currency, diffAmount, item.symbol)}`}
+                                                            style={{ fontSize: 10, color: diffAmount >= 0 ? app_theme.colors.high_color : app_theme.colors.error }}
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <YambiText
+                                                            size="small"
+                                                            color="gray"
+                                                            text={`${(strings as any).all_time} ${strings.total_selling_price}`}
+                                                            style={{ fontSize: 10 }}
+                                                        />
+                                                        <YambiText
+                                                            size="small"
+                                                            bold
+                                                            text={formatCurrencyValue(item.currency, item.currentRevenue, item.symbol)}
+                                                            style={{ fontSize: 10, color: app_theme.colors.high_color }}
+                                                        />
+                                                    </>
+                                                )}
+                                            </View>
+                                        </View>
+                                    </View>
+                                );
+                            })}
+                        </View>
 
                         {/* View Sales by Item Link */}
                         {business !== null && (
@@ -894,200 +1476,31 @@ const SalesModern = ({ navigation, route }: NavProps) => {
                             </Pressable>
                         )}
 
-                        {/* ── Per-currency stats cards ── */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 10 }}>
-                            <TextNormalYambi text={`${strings.stats} (${filtered_sales.length})`} bold styles={{ fontSize: 18 }} />
-                            <Pressable
-                                onPress={() => {
-                                    dispatch(setShowModalApp(true));
-                                    setShow_print_options(true);
-                                }}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 8,
-                                    borderRadius: 8,
-                                    backgroundColor: app_theme.colors.border,
-                                    borderWidth: 1,
-                                    borderColor: app_theme.colors.border,
-                                }}
-                            >
-                                <IconApp pack="FI" name="printer" size={16} color={app_theme.colors.high_color} />
-                                <TextSmallYambi text={strings.print} styles={{ marginLeft: 6, color: app_theme.colors.high_color }} />
-                            </Pressable>
-                        </View>
-
-                        {Object.entries(extendedStats).map(([currency, ext]) => {
-                            const cu = parseInt(currency);
-                            const salesData = stats.currency_stats[cu];
-                            const salesInCurrency = bs.filter(s => s.currency === cu && s.sale_active === 1);
-                            if (!conditionShowGlobal(salesInCurrency)) return null;
-
-                            const profit = (salesData?.selling || 0) - (salesData?.cost || 0);
-                            const profitPct = (salesData?.selling || 0) > 0 ? (profit / (salesData?.selling || 1)) * 100 : 0;
-                            const netCashPositive = ext.netCash >= 0;
-                            const cur = renderCurrency(cu, false);
-
-                            const StatRow = ({ icon, label, value, color, bold = false }: { icon: string, label: string, value: string, color?: string, bold?: boolean }) => (
-                                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5 }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8, minWidth: 0 }}>
-                                        <IconApp pack="FI" name={icon} size={13} color={color || app_theme.colors.gray} />
-                                        <TextSmallYambiGray text={label} styles={{ marginLeft: 6, flexShrink: 1 }} numberLines={1} />
-                                    </View>
-                                    <TextNormalYambi text={value} bold={bold} styles={{ color: color || app_theme.colors.text, flexShrink: 1, textAlign: 'right' }} numberLines={1} />
-                                </View>
-                            );
-
-
-                            const SectionHeader = ({ icon, title, color }: { icon: string, title: string, color: string }) => (
-                                <View style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    marginTop: 14,
-                                    marginBottom: 6,
-                                    paddingBottom: 6,
-                                    borderBottomWidth: 1,
-                                    borderColor: color + '40',
-                                }}>
-                                    <View style={{
-                                        width: 26,
-                                        height: 26,
-                                        borderRadius: 8,
-                                        backgroundColor: color + '22',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: 8,
-                                    }}>
-                                        <IconApp pack="FI" name={icon} size={13} color={color} />
-                                    </View>
-                                    <TextNormalYambi text={title} bold styles={{ color, fontSize: 13 }} />
-                                </View>
-                            );
-
-                            return (
-                                <View key={currency} style={{
-                                    borderRadius: 18,
-                                    padding: 18,
-                                    marginBottom: 16,
-                                    backgroundColor: app_theme.colors.background,
-                                    borderWidth: 1,
-                                    borderColor: app_theme.colors.border,
-                                    overflow: 'hidden',
-                                    // Premium shadow
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowOpacity: 0.08,
-                                    shadowRadius: 12,
-                                    // elevation: 4,
-                                }}>
-                                    {/* Card header: currency badge */}
-                                    <View style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        marginBottom: 4,
-                                    }}>
-                                        <View style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            backgroundColor: app_theme.colors.high_color + '18',
-                                            paddingHorizontal: 12,
-                                            paddingVertical: 6,
-                                            borderRadius: 20,
-                                        }}>
-                                            <IconApp pack="FI" name="credit-card" size={14} color={app_theme.colors.high_color} />
-                                            <TextNormalYambi text={renderCurrency(cu, true)} bold styles={{ marginLeft: 6, color: app_theme.colors.high_color }} />
-                                        </View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, marginLeft: 8 }}>
-                                            <IconApp pack="FI" name="package" size={12} color={app_theme.colors.gray} />
-                                            <TextSmallYambiGray text={`${(salesData?.items || 0)} ${strings.items.toLowerCase()} · ${(salesData?.sales || 0)} ${strings.sales.toLowerCase()}`} styles={{ marginLeft: 5, fontSize: 11 }} numberLines={1} />
-                                        </View>
-                                    </View>
-
-                                    {/* ── Sales Section ── */}
-                                    <SectionHeader icon="trending-up" title={strings.sales} color="#6366F1" />
-                                    <StatRow icon="tag" label={strings.total_cost_price} value={`${(salesData?.cost || 0).toFixed(2)} ${cur}`} />
-                                    <StatRow icon="dollar-sign" label={strings.total_selling_price} value={`${(salesData?.selling || 0).toFixed(2)} ${cur}`} />
-                                    <StatRow
-                                        icon={profit >= 0 ? "trending-up" : "trending-down"}
-                                        label={strings.total_profit}
-                                        value={`${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${cur} (${profitPct.toFixed(1)}%)`}
-                                        color={profit >= 0 ? app_theme.colors.success : app_theme.colors.error}
-                                        bold
-                                    />
-
-                                    {/* ── Debts Section ── */}
-                                    {ext.debtCount > 0 && (
-                                        <>
-                                            <SectionHeader icon="alert-circle" title={(strings as any).debts || "Debts"} color="#EF4444" />
-                                            <StatRow icon="users" label={(strings as any).total_debts || "Outstanding debts"} value={`${ext.debtAmount.toFixed(2)} ${cur}`} color="#EF4444" bold />
-                                            <StatRow icon="file-text" label={strings.on_credit} value={`${ext.debtCount} ${strings.sales.toLowerCase()}`} />
-                                        </>
-                                    )}
-
-                                    {/* ── Reservations Section ── */}
-                                    {ext.reservationCount > 0 && (
-                                        <>
-                                            <SectionHeader icon="bookmark" title={(strings as any).reservations || "Reservations"} color="#8B5CF6" />
-                                            <StatRow icon="layers" label={(strings as any).total_reserved || "Total reserved"} value={`${ext.reservationTotal.toFixed(2)} ${cur}`} />
-                                            <StatRow icon="check-circle" label={(strings as any).deposit_paid || "Deposit paid"} value={`${ext.reservationDeposit.toFixed(2)} ${cur}`} color={app_theme.colors.success} />
-                                            <StatRow icon="clock" label={(strings as any).remaining_reserved || "Remaining to collect"} value={`${ext.reservationRemaining.toFixed(2)} ${cur}`} color="#F59E0B" bold />
-                                            <StatRow icon="grid" label={(strings as any).reservations || "Reservations"} value={`${ext.reservationCount}`} />
-                                        </>
-                                    )}
-
-                                    {/* ── Expenses Section ── */}
-                                    {ext.expenseCount > 0 && (
-                                        <>
-                                            <SectionHeader icon="minus-circle" title={(strings as any).expenses_summary || "Expenses"} color="#F97316" />
-                                            <StatRow icon="shopping-cart" label={(strings as any).expenses_summary || "Expenses"} value={`${ext.expenseAmount.toFixed(2)} ${cur}`} color="#F97316" bold />
-                                            <StatRow icon="list" label={strings.quantity} value={`${ext.expenseCount}`} />
-                                        </>
-                                    )}
-
-                                    {/* ── Net Cash ── */}
-                                    <View style={{
-                                        marginTop: 16,
-                                        borderRadius: 12,
-                                        padding: 14,
-                                        overflow: 'hidden',
-                                        backgroundColor: netCashPositive ? app_theme.colors.success + '14' : app_theme.colors.error + '14',
-                                        borderWidth: 1,
-                                        borderColor: netCashPositive ? app_theme.colors.success + '50' : app_theme.colors.error + '50',
-                                    }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                                            <IconApp pack="FI" name="briefcase" size={15} color={netCashPositive ? app_theme.colors.success : app_theme.colors.error} />
-                                            <TextNormalYambi text={(strings as any).total_cash || "Net cash"} bold styles={{ marginLeft: 7, color: netCashPositive ? app_theme.colors.success : app_theme.colors.error, flexShrink: 1 }} numberLines={1} />
-                                        </View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                            <TextSmallYambiGray text={(strings as any).cash_in || "Cash in"} styles={{ fontSize: 11, flex: 1 }} numberLines={1} />
-                                            <TextNormalYambi text={`${(ext.paidAmount + ext.reservationDeposit).toFixed(2)} ${cur}`} styles={{ color: app_theme.colors.success, flexShrink: 1, textAlign: 'right' }} bold numberLines={1} />
-                                        </View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                                            <TextSmallYambiGray text={(strings as any).cash_out || "Cash out"} styles={{ fontSize: 11, flex: 1 }} numberLines={1} />
-                                            <TextNormalYambi text={`${ext.expenseAmount.toFixed(2)} ${cur}`} styles={{ color: app_theme.colors.error, flexShrink: 1, textAlign: 'right' }} bold numberLines={1} />
-                                        </View>
-                                        <View style={{ borderTopWidth: 1, borderColor: netCashPositive ? app_theme.colors.success + '40' : app_theme.colors.error + '40', paddingTop: 10 }}>
-                                            <TextBigYambi text={`${ext.netCash >= 0 ? '+' : ''}${ext.netCash.toFixed(2)} ${cur}`} bold styles={{ fontSize: 20, color: netCashPositive ? app_theme.colors.success : app_theme.colors.error, textAlign: 'right', flexShrink: 1 }} numberLines={1} />
-                                        </View>
-                                    </View>
-                                </View>
-
-                            );
-                        })}
-
-                        {Object.keys(extendedStats).length === 0 && (
-                            <View style={{ alignItems: 'center', padding: 40 }}>
-                                <IconApp pack="FI" name="inbox" size={48} color={app_theme.colors.gray} />
-                                <TextNormalYambiGray text={strings.no_sales_available} styles={{ marginTop: 15, textAlign: 'center' }} />
-                            </View>
-                        )}
-
                         {/* Detailed sales: column headers; rows follow in LegendList */}
                         {filtered_sales.length > 0 && (
                             <>
-                                <TextNormalYambi text={strings.detailed_sales} bold styles={{ marginBottom: 15, fontSize: 18, marginTop: 10 }} />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15, marginTop: 10 }}>
+                                    <TextNormalYambi text={strings.detailed_sales} bold styles={{ fontSize: 18 }} />
+                                    <Pressable
+                                        onPress={() => {
+                                            dispatch(setShowModalApp(true));
+                                            setShow_print_options(true);
+                                        }}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            paddingHorizontal: 12,
+                                            paddingVertical: 8,
+                                            borderRadius: 8,
+                                            backgroundColor: app_theme.colors.border,
+                                            borderWidth: 1,
+                                            borderColor: app_theme.colors.border,
+                                        }}
+                                    >
+                                        <IconApp pack="FI" name="printer" size={16} color={app_theme.colors.high_color} />
+                                        <TextSmallYambi text={strings.print} styles={{ marginLeft: 6, color: app_theme.colors.high_color }} />
+                                    </Pressable>
+                                </View>
 
                                 <View style={{
                                     flexDirection: 'row',

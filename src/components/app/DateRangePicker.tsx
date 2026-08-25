@@ -9,6 +9,8 @@ export interface DateRange {
 }
 
 export interface DateRangePickerProps {
+  initialStartDate?: string;
+  initialEndDate?: string;
   onSelectDateRange: (range: DateRange) => void;
   onClear: () => void;
   ln?: string;
@@ -36,6 +38,8 @@ const getDatesInRange = (startStr: string, endStr: string): string[] => {
 };
 
 export default function DateRangePicker({
+  initialStartDate,
+  initialEndDate,
   onSelectDateRange,
   onClear,
   selectedDateContainerStyle,
@@ -44,8 +48,25 @@ export default function DateRangePicker({
 }: DateRangePickerProps) {
   const colors = useAppSelector((state) => state.app_theme.colors);
   
-  const [startDate, setStartDate] = useState<string | null>(null);
-  const [endDate, setEndDate] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(
+    initialStartDate ? initialStartDate : null
+  );
+  const [endDate, setEndDate] = useState<string | null>(
+    initialStartDate && initialEndDate && initialStartDate !== initialEndDate ? initialEndDate : null
+  );
+
+  React.useEffect(() => {
+    if (!initialStartDate) {
+      setStartDate(null);
+      setEndDate(null);
+    } else if (initialStartDate === initialEndDate) {
+      setStartDate(initialStartDate);
+      setEndDate(null);
+    } else {
+      setStartDate(initialStartDate);
+      setEndDate(initialEndDate || null);
+    }
+  }, [initialStartDate, initialEndDate]);
 
   const selectedBgColor = selectedDateContainerStyle?.backgroundColor || colors.badge_background_color || '#007AFF';
   const selectedTextColor = selectedDateStyle?.color || colors.badge_color || '#ffffff';
@@ -112,6 +133,7 @@ export default function DateRangePicker({
   return (
     <View style={styles.container}>
       <Calendar
+        current={startDate || undefined}
         markingType={'period'}
         markedDates={markedDates}
         onDayPress={onDayPress}

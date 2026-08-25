@@ -5,9 +5,9 @@ import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
 import ButtonNormal from "../../components/app/ButtonNormal";
 import { IconApp } from "../../components/app/IconApp";
-import { TextNormalYambi, TextNormalYambiGray, TextNormalYambiHighColor, TextNormalYambiInDesign, TextSmallYambiGray } from "../../components/app/Text";
+import { YambiText } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
-import { FlashList } from "@shopify/flash-list";
+import BottomSheet from "../../components/app/BottomSheet";
 import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice";
 import { remote_host, remote_host_server, renderCategoryName, media_url } from "../../../GlobalVariables";
 import axios from "axios";
@@ -50,11 +50,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
     const [subscription_active, setSubscription_active] = useState<number>(0);
     const [valid_until, setValid_until] = useState<Date>(new Date());
     const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-    // const category = useAppSelector(state=>state.app.category);
-    // const businesses = useAppSelector(state => state.businesses);
-    // const businesses = [];
     const dispatch = useAppDispatch();
-    // const navigation = useNavigation();
     const realm = useRealm();
 
     const { business } = route.params;
@@ -78,7 +74,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
         strings.business_services,
         strings.biotechnology,
         strings.telecommunications
-    ]
+    ];
 
     useEffect(() => {
         setName(business.business_name);
@@ -103,14 +99,12 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
     }, [business, isAdmin]);
 
     const EBusiness = () => {
-
         if (name === "" || category === null || address === "") {
             setShowError(true);
             dispatch(setShowModalApp(true));
         } else {
             setLoading(true);
             dispatch(setLoadingButton(true));
-            // const businessID = randomString(5).toUpperCase() + renderDateUpToMilliseconds();
 
             const businesss = {
                 _id: business._id,
@@ -141,9 +135,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                 subscription_active: isAdmin ? subscription_active : (business.subscription_active !== undefined ? business.subscription_active : 0),
                 createdAt: business.createdAt,
                 updatedAt: business.updatedAt
-            }
-
-            // console.log(json);
+            };
 
             axios.post(remote_host + "/yambi/API/edit_business", { business: businesss, flag: "1" })
                 .then(json => {
@@ -151,7 +143,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                         realm.write(() => {
                             try {
                                 realm.create('Businesses', businesss, true);
-                            } catch (error) { console.log(error) }
+                            } catch (error) { console.log(error); }
                         });
                     }
 
@@ -161,129 +153,15 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                     setTimeout(() => {
                         navigation.navigate("Home");
                     }, 300);
-                    // }
                 })
                 .catch(error => {
                     setShowInternetError(true);
                     dispatch(setShowModalApp(true));
                     setLoading(false);
                     dispatch(setLoadingButton(false));
-                })
+                });
         }
-    }
-
-    // const NewSellsPoint = (NewBusiness: TBusiness) => {
-    //     const sellsPointID = randomString(5).toUpperCase() + renderDateUpToMilliseconds();
-
-    //     const sells_point = {
-    //         _id: sellsPointID,
-    //         business_id: NewBusiness._id,
-    //         phone_number: user_data.phone_number,
-    //         sells_point_name: NewBusiness.business_name,
-    //         slogan: "",
-    //         description_service: NewBusiness.description_service,
-    //         category: NewBusiness.category,
-    //         keywords: "",
-    //         logo: "",
-    //         phones: phones,
-    //         emails: emails,
-    //         background: "",
-    //         sells_point_active: 0,
-    //         sells_point_address: NewBusiness.business_address,
-    //         sells_point_visible: 0,
-    //         website: "",
-    //         other_links: "",
-    //         yambi: ""
-    //     }
-
-    //     axios.post(remote_host + "/yambi/API/new_sells_point", { sells_point: sells_point })
-    //         .then(json => {
-    //             const sp = json.data.new_sells_point;
-    //             const new_sells_point: TSellsPoint = {
-    //                 _id: sellsPointID,
-    //                 business_id: sp.business_id,
-    //                 sells_point_name: sp.sells_point_name,
-    //                 phone_number: sp.phone_number,
-    //                 slogan: "",
-    //                 description_service: sp.description_service,
-    //                 category: sp.category,
-    //                 keywords: "",
-    //                 logo: "",
-    //                 phones: phones,
-    //                 emails: emails,
-    //                 background: "",
-    //                 notifications: 0,
-    //                 sells_point_active: 0,
-    //                 sells_point_address: sp.sells_point_address,
-    //                 sells_point_visible: 0,
-    //                 website: "",
-    //                 other_links: "",
-    //                 yambi: "",
-    //                 createdAt: sp.createdAt,
-    //                 updatedAt: sp.updatedAt
-    //             }
-
-    //             realm.write(() => {
-    //                 try {
-    //                     realm.create('SellsPoints', new_sells_point, true);
-    //                 } catch (error) { }
-    //             });
-
-    //             dispatch(setLoadingButton(false));
-
-    //             setName("");
-    //             setDescription("");
-    //             setCategory(null);
-    //             setAddress("");
-    //             setDefine_as_main_site(false);
-
-    //             setTimeout(() => {
-    //                 RootNavigation.navigate("Home");
-    //             }, 300);
-    //         })
-    //         .catch(error => {
-    //             setShowInternetError(true);
-    //             dispatch(setShowModalApp(true));
-    //             dispatch(setLoadingButton(false));
-    //         })
-    // }
-
-    // const EditWorkspace = () => {
-    //     Alert.alert("Information", "Impossible d'éditer les informations sur votre entreprise pour le moment");
-    // }
-
-    const Category = ({ item, index, selectCategory }: { item: string, index: number, selectCategory: (category: string) => void }) => {
-
-        const pressCategory = () => {
-            selectCategory(item);
-            dispatch(setShowModalApp(false));
-            setShowCategories(false);
-        };
-
-        return (
-            <Pressable style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
-                <TextNormalYambi text={index + 1 + "."} styles={{ width: 35 }} />
-                <TextNormalYambi text={item.toLocaleUpperCase()} numberLines={1} styles={{ flex: 1 }} />
-            </Pressable>
-        )
-    }
-
-    const Categories = () => {
-        return (
-            <View style={{
-                width: '100%',
-                height: 300,
-                paddingHorizontal: 15
-            }}>
-                <FlashList
-                    data={categories}
-                    estimatedItemSize={50}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={({ item, index }: { item: string, index: number }) => (<Category selectCategory={(item) => setCategory(index + 1)} item={item} index={index} />)}
-                />
-            </View>
-        )
-    }
+    };
 
     const ViewPhoto = () => {
         if (business.logo !== "") {
@@ -291,7 +169,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
         } else {
             navigation.navigate("ViewPhoto", { source: "" });
         }
-    }
+    };
 
     const handleEditorComplete = (processedPhotos: ProcessedPhoto[]) => {
         if (processedPhotos && processedPhotos.length > 0) {
@@ -301,7 +179,6 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
     };
 
     const pick_profile = () => {
-
         if (profile === "") {
             (navigation as any).navigate('Gallery', {
                 multiple: false,
@@ -316,10 +193,9 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
         } else {
             upload_profile_picture();
         }
-    }
+    };
 
     const upload_profile_picture = () => {
-
         setLoading_profile(true);
 
         const filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -339,11 +215,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
             .then(response => {
                 setLoading_profile(false);
 
-                console.log(response.data)
-
                 if (response.data.message === "1" && response.data.assemble === business._id) {
-                    //    dispatch(updateUserProfile(response.data.user_profile));
-
                     const bbb: TBusiness = {
                         _id: business._id,
                         phone_number: business.phone_number,
@@ -372,7 +244,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                         yambi: business.yambi,
                         createdAt: business.createdAt,
                         updatedAt: business.updatedAt
-                    }
+                    };
 
                     realm.write(() => {
                         try {
@@ -382,338 +254,606 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                 }
 
                 setProfile("");
-
-                // console.log(response.data)
-
             })
             .catch((error) => {
-                // Alert.alert(strings.error, strings.connection_failed);
-                // console.log(error)
                 setShowInternetError(true);
                 dispatch(setShowModalApp(true));
                 setLoading_profile(false);
-
             });
     };
 
     return (
-        <ScrollView style={{
-            backgroundColor: theme.background,
-            borderColor: theme.border, borderTopWidth: 1,
-            paddingHorizontal: 15
-        }}>
-            <View>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: "center" }}>
-
-                    <View style={{
-                        marginTop: 15, alignItems: 'flex-end',
+        <ScrollView
+            style={{
+                flex: 1,
+                backgroundColor: theme.background,
+            }}
+            contentContainerStyle={{
+                padding: 16,
+                paddingBottom: 40,
+            }}
+            showsVerticalScrollIndicator={false}
+        >
+            {/* Header / Profile Logo Section */}
+            <View style={{
+                backgroundColor: theme.border + "20",
+                borderRadius: 20,
+                padding: 20,
+                alignItems: 'center',
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+            }}>
+                <View style={{ position: 'relative', marginBottom: 12 }}>
+                    <Pressable onPress={ViewPhoto} style={{
+                        width: 120,
+                        height: 120,
+                        borderRadius: 60,
+                        borderWidth: 3,
+                        borderColor: theme.high_color,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        backgroundColor: theme.background,
                     }}>
-                        <Pressable onPress={ViewPhoto}>
-                            <View
-                                style={{ width: 150, height: 150, borderWidth: 1, borderColor: theme.border, borderRadius: 100, justifyContent: 'center', alignItems: 'center' }}>
-                                {business.logo === "" ?
-                                    <ExpoImage
-                                        style={{
-                                            width: 100,
-                                            height: 100
-                                        }}
-                                        contentFit="contain"
-                                        source={require("./../../assets/budget.png")} />
-                                    :
-                                    <ExpoImage
-                                        style={{
-                                            width: 150,
-                                            height: 150,
-                                            borderRadius: 150
-                                        }}
-                                        contentFit="contain"
-                                        source={media_url + "/business_logos/" + business.logo} />}
-                            </View>
-                        </Pressable>
+                        {business.logo === "" ? (
+                            <ExpoImage
+                                style={{ width: 75, height: 75 }}
+                                contentFit="contain"
+                                source={require("./../../assets/budget.png")}
+                            />
+                        ) : (
+                            <ExpoImage
+                                style={{ width: 120, height: 120, borderRadius: 60 }}
+                                contentFit="cover"
+                                source={media_url + "/business_logos/" + business.logo}
+                            />
+                        )}
+                    </Pressable>
 
-
-                        <Pressable onPress={pick_profile} style={{
-                            marginTop: -50,
+                    <Pressable
+                        onPress={pick_profile}
+                        style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            right: -4,
+                            backgroundColor: theme.high_color,
+                            paddingHorizontal: profile === "" ? 10 : 12,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            flexDirection: 'row',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            height: 50,
-                            minWidth: 50,
-                            borderRadius: 50,
-                            backgroundColor: theme.button_background_color,
-                            borderWidth: 1,
-                            borderColor: theme.background
-                        }}>
-                            {loading_profile ?
-                                <ActivityIndicator color={theme.button_foreground_color} size={20} /> :
-                                profile === "" ?
-                                    <IconApp pack='FI' name="camera" size={20} color={theme.button_foreground_color} />
-                                    :
-                                    <View style={{
-                                        flexDirection: 'row',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingHorizontal: 10
-                                    }}>
-                                        <TextNormalYambiInDesign text={strings.send} />
-                                        <IconApp pack='FI' name="send" size={15} color={theme.button_foreground_color} styles={{ marginLeft: 5 }} />
-                                    </View>}
-                        </Pressable>
-                    </View>
-                </View>
-            </View>
-
-            <View style={{ marginTop: 0, borderTopWidth: 0, borderColor: theme.gray }}>
-
-                <TextNormalYambi bold text={strings.business_information} styles={{ marginTop: 20 }} />
-
-                {showError ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
-                        <TextNormalYambiGray text={strings.fields_error_validation} />
-                    </ModalApp> : null}
-
-                {showInternetError ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
-                        <TextNormalYambiGray text={strings.connection_failed} />
-                    </ModalApp> : null}
-
-                <View style={{ backgroundColor: theme.background, marginBottom: 30, marginTop: 10 }}>
-                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
-                        <TextSmallYambiGray text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category} styles={{ marginBottom: 5 }} />
-                        <TextNormalYambiHighColor text={category === null ? strings.select_category : renderCategoryName(category)} styles={{ marginLeft: 2, marginTop: 5 }} />
+                            borderWidth: 2,
+                            borderColor: theme.background,
+                        }}
+                    >
+                        {loading_profile ? (
+                            <ActivityIndicator color="#FFFFFF" size={18} />
+                        ) : profile === "" ? (
+                            <IconApp pack='FI' name="camera" size={16} color="#FFFFFF" />
+                        ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <YambiText text={strings.send} color="design" />
+                                <IconApp pack='FI' name="send" size={14} color="#FFFFFF" styles={{ marginLeft: 6 }} />
+                            </View>
+                        )}
                     </Pressable>
                 </View>
 
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.business_name} styles={{ marginLeft: 2, marginBottom: 5 }} />
+                <YambiText bold text={business.business_name} size="big" style={{ textAlign: 'center' }} />
+                <YambiText size="small" color="gray" text={strings.id + ": " + business._id} style={{ marginTop: 2 }} />
+            </View>
+
+            {/* Error Modals */}
+            {showError ? (
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false); }} singleButton title={strings.error}>
+                    <YambiText color="gray" text={strings.fields_error_validation} />
+                </ModalApp>
+            ) : null}
+
+            {showInternetError ? (
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
+                    <YambiText color="gray" text={strings.connection_failed} />
+                </ModalApp>
+            ) : null}
+
+            {/* General Information Card */}
+            <View style={{
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+            }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: theme.high_color + "20",
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 10,
+                    }}>
+                        <IconApp pack="FI" name="briefcase" size={18} color={theme.high_color} />
+                    </View>
+                    <YambiText bold text={strings.business_information} style={{ fontSize: 16 }} />
+                </View>
+
+                {/* Category Selector Pressable */}
+                <Pressable
+                    onPress={() => setShowCategories(true)}
+                    style={{
+                        backgroundColor: theme.background,
+                        padding: 14,
+                        borderRadius: 12,
+                        marginBottom: 14,
+                        borderWidth: 1,
+                        borderColor: category !== null ? theme.high_color + "60" : theme.border,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                        <YambiText
+                            size="small"
+                            color="gray"
+                            text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category}
+                            style={{ marginBottom: 4 }}
+                        />
+                        <YambiText
+                            color="high"
+                            text={category === null ? strings.select_category : renderCategoryName(category)}
+                            style={{ fontSize: 15, fontWeight: '600' }}
+                        />
+                    </View>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: theme.high_color + "15",
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                    }}>
+                        <IconApp pack="FI" name="layers" size={16} color={theme.high_color} styles={{ marginRight: 6 }} />
+                        <IconApp pack="FI" name="chevron-down" size={16} color={theme.high_color} />
+                    </View>
+                </Pressable>
+
+                {/* Business Name Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.business_name} style={{ marginLeft: 2, marginBottom: 6 }} />
                     <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={100}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.business_name}
                         value={name}
                         onChangeText={text => setName(text)}
                     />
                 </View>
 
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.description} styles={{ marginLeft: 2, marginBottom: 5 }} />
+                {/* Description Field */}
+                <View>
+                    <YambiText size="small" color="gray" text={strings.description} style={{ marginLeft: 2, marginBottom: 6 }} />
                     <TextInput
-                        placeholderTextColor="gray"
+                        placeholderTextColor={theme.gray}
                         maxLength={700}
                         multiline={true}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, minHeight: 45, borderRadius: 5 }}
+                        style={{
+                            color: theme.text,
+                            backgroundColor: theme.background,
+                            paddingHorizontal: 14,
+                            paddingVertical: 10,
+                            minHeight: 80,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                            fontSize: 15,
+                            textAlignVertical: 'top',
+                        }}
                         value={description}
                         onChangeText={text => setDescription(text)}
                     />
                 </View>
+            </View>
 
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.address} styles={{ marginLeft: 2, marginBottom: 5 }} />
+            {/* Contact Information Card */}
+            <View style={{
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+            }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: theme.high_color + "20",
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 10,
+                    }}>
+                        <IconApp pack="FI" name="map-pin" size={18} color={theme.high_color} />
+                    </View>
+                    <YambiText bold text={strings.address} style={{ fontSize: 16 }} />
+                </View>
+
+                {/* Address Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.address} style={{ marginLeft: 2, marginBottom: 6 }} />
                     <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={70}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.address}
                         value={address}
                         onChangeText={text => setAddress(text)}
                     />
                 </View>
 
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.national_id} styles={{ marginLeft: 2, marginBottom: 5 }} />
+                {/* Phones Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.phones} style={{ marginLeft: 2, marginBottom: 6 }} />
                     <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={25}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={national_id}
-                        onChangeText={text => setNational_id(text)}
-                    />
-                </View>
-
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.identification_number} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={25}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={identification_number}
-                        onChangeText={text => setIdentification_number(text)}
-                    />
-                </View>
-
-
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.tax_number} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={25}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
-                        value={tax_number}
-                        onChangeText={text => setTax_number(text)}
-                    />
-                </View>
-
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.phones} styles={{ marginLeft: 2, marginBottom: 5 }} />
-                    <TextInput
-                        placeholderTextColor="gray"
-                        maxLength={45}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.phones}
                         value={phones}
                         onChangeText={text => setPhones(text)}
                     />
                 </View>
 
-                <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                    <TextSmallYambiGray text={strings.emails} styles={{ marginLeft: 2, marginBottom: 5 }} />
+                {/* Emails Field */}
+                <View>
+                    <YambiText size="small" color="gray" text={strings.emails} style={{ marginLeft: 2, marginBottom: 6 }} />
                     <TextInput
-                        placeholderTextColor="gray"
+                        placeholderTextColor={theme.gray}
                         maxLength={70}
-                        style={{ color: theme.text, backgroundColor: theme.border, paddingLeft: 15, height: 45, borderRadius: 5 }}
+                        style={{
+                            color: theme.text,
+                            backgroundColor: theme.background,
+                            paddingHorizontal: 14,
+                            height: 48,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                            fontSize: 15,
+                        }}
                         value={emails}
                         keyboardType="email-address"
                         onChangeText={text => setEmails(text)}
                     />
                 </View>
+            </View>
 
-                {/* Admin Controls */}
-                {isAdmin && (
-                    <>
-                        <View style={{
+            {/* Legal & Identification Card */}
+            <View style={{
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+            }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: theme.high_color + "20",
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 10,
+                    }}>
+                        <IconApp pack="FI" name="file-text" size={18} color={theme.high_color} />
+                    </View>
+                    <YambiText bold text={strings.tax_number} style={{ fontSize: 16 }} />
+                </View>
+
+                {/* National ID Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.national_id} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
                             backgroundColor: theme.background,
-                            marginBottom: 15,
-                            marginTop: 20,
-                            padding: 15,
+                            padding: 14,
                             borderRadius: 12,
-                            borderWidth: 2,
-                            borderColor: theme.high_color + '40'
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.national_id}
+                        value={national_id}
+                        onChangeText={text => setNational_id(text)}
+                    />
+                </View>
+
+                {/* Identification Number Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.identification_number} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.identification_number}
+                        value={identification_number}
+                        onChangeText={text => setIdentification_number(text)}
+                    />
+                </View>
+
+                {/* Tax Number Field */}
+                <View>
+                    <YambiText size="small" color="gray" text={strings.tax_number} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        maxLength={25}
+                        style={{
+                            color: theme.text,
+                            backgroundColor: theme.background,
+                            paddingHorizontal: 14,
+                            height: 48,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                            fontSize: 15,
+                        }}
+                        value={tax_number}
+                        onChangeText={text => setTax_number(text)}
+                    />
+                </View>
+            </View>
+
+            {/* Admin Subscription Controls */}
+            {isAdmin && (
+                <View style={{
+                    backgroundColor: theme.border + "15",
+                    borderRadius: 16,
+                    padding: 16,
+                    marginBottom: 20,
+                    borderWidth: 2,
+                    borderColor: theme.high_color + '40',
+                }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                        <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            backgroundColor: theme.high_color + "20",
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 10,
                         }}>
-                            <TextNormalYambi
-                                text={strings.admin_subscription_settings}
-                                bold
-                                styles={{ marginBottom: 15, color: theme.high_color }}
+                            <IconApp pack="FI" name="lock" size={18} color={theme.high_color} />
+                        </View>
+                        <YambiText
+                            text={strings.admin_subscription_settings}
+                            bold
+                            style={{ fontSize: 16, color: theme.high_color }}
+                        />
+                    </View>
+
+                    {/* Subscription Active Toggle */}
+                    <View style={{ marginBottom: 16 }}>
+                        <YambiText
+                            size="small"
+                            color="gray"
+                            text={strings.subscription_status}
+                            style={{ marginBottom: 8 }}
+                        />
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                            <Pressable
+                                onPress={() => setSubscription_active(0)}
+                                style={{
+                                    flex: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 12,
+                                    borderRadius: 10,
+                                    backgroundColor: subscription_active === 0 ? theme.high_color + '20' : theme.background,
+                                    borderWidth: 1.5,
+                                    borderColor: subscription_active === 0 ? theme.high_color : theme.border,
+                                }}
+                            >
+                                <IconApp
+                                    pack="FI"
+                                    name={subscription_active === 0 ? "check-circle" : "circle"}
+                                    size={18}
+                                    color={subscription_active === 0 ? theme.high_color : theme.gray}
+                                />
+                                <YambiText
+                                    text={strings.inactive}
+                                    style={{ marginLeft: 8, fontWeight: '600', color: subscription_active === 0 ? theme.high_color : theme.text }}
+                                />
+                            </Pressable>
+
+                            <Pressable
+                                onPress={() => setSubscription_active(1)}
+                                style={{
+                                    flex: 1,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 12,
+                                    borderRadius: 10,
+                                    backgroundColor: subscription_active === 1 ? theme.high_color + '20' : theme.background,
+                                    borderWidth: 1.5,
+                                    borderColor: subscription_active === 1 ? theme.high_color : theme.border,
+                                }}
+                            >
+                                <IconApp
+                                    pack="FI"
+                                    name={subscription_active === 1 ? "check-circle" : "circle"}
+                                    size={18}
+                                    color={subscription_active === 1 ? theme.high_color : theme.gray}
+                                />
+                                <YambiText
+                                    text={strings.active}
+                                    style={{ marginLeft: 8, fontWeight: '600', color: subscription_active === 1 ? theme.high_color : theme.text }}
+                                />
+                            </Pressable>
+                        </View>
+                    </View>
+
+                    {/* Valid Until Date Picker */}
+                    <View style={{ marginBottom: 4 }}>
+                        <YambiText
+                            size="small"
+                            color="gray"
+                            text={strings.valid_until}
+                            style={{ marginBottom: 8 }}
+                        />
+                        <Pressable
+                            onPress={() => setShowDatePicker(true)}
+                            style={{
+                                backgroundColor: theme.background,
+                                padding: 14,
+                                borderRadius: 10,
+                                borderWidth: 1,
+                                borderColor: theme.border,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                            }}
+                        >
+                            <YambiText
+                                text={moment(valid_until).format('YYYY-MM-DD HH:mm')}
+                                style={{ fontSize: 15 }}
                             />
+                            <IconApp pack="FI" name="calendar" size={18} color={theme.high_color} />
+                        </Pressable>
+                    </View>
+                </View>
+            )}
 
-                            {/* Subscription Active Toggle */}
-                            <View style={{ marginBottom: 20 }}>
-                                <TextSmallYambiGray
-                                    text={strings.subscription_status}
-                                    styles={{ marginBottom: 8 }}
-                                />
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Pressable
-                                        onPress={() => setSubscription_active(0)}
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            marginRight: 20,
-                                            padding: 10,
-                                            borderRadius: 8,
-                                            backgroundColor: subscription_active === 0 ? theme.high_color + '20' : theme.border,
-                                            borderWidth: 2,
-                                            borderColor: subscription_active === 0 ? theme.high_color : theme.border,
-                                        }}
-                                    >
-                                        <IconApp
-                                            pack="FI"
-                                            name={subscription_active === 0 ? "check-circle" : "circle"}
-                                            size={18}
-                                            color={subscription_active === 0 ? theme.high_color : theme.gray}
-                                        />
-                                        <TextNormalYambi
-                                            text={strings.inactive}
-                                            styles={{ marginLeft: 8, color: subscription_active === 0 ? theme.high_color : theme.text }}
-                                        />
-                                    </Pressable>
+            {/* DatePicker Component */}
+            {showDatePicker && (
+                <DateTimePicker
+                    value={valid_until}
+                    mode="datetime"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                        setShowDatePicker(Platform.OS === 'ios');
+                        if (selectedDate) {
+                            setValid_until(selectedDate);
+                        }
+                    }}
+                    minimumDate={new Date()}
+                />
+            )}
 
-                                    <Pressable
-                                        onPress={() => setSubscription_active(1)}
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            padding: 10,
-                                            borderRadius: 8,
-                                            backgroundColor: subscription_active === 1 ? theme.high_color + '20' : theme.border,
-                                            borderWidth: 2,
-                                            borderColor: subscription_active === 1 ? theme.high_color : theme.border,
-                                        }}
-                                    >
-                                        <IconApp
-                                            pack="FI"
-                                            name={subscription_active === 1 ? "check-circle" : "circle"}
-                                            size={18}
-                                            color={subscription_active === 1 ? theme.high_color : theme.gray}
-                                        />
-                                        <TextNormalYambi
-                                            text={strings.active}
-                                            styles={{ marginLeft: 8, color: subscription_active === 1 ? theme.high_color : theme.text }}
-                                        />
-                                    </Pressable>
-                                </View>
-                            </View>
-
-                            {/* Valid Until Date Picker */}
-                            <View style={{ marginBottom: 15 }}>
-                                <TextSmallYambiGray
-                                    text={strings.valid_until}
-                                    styles={{ marginBottom: 8 }}
-                                />
+            {/* BottomSheet for Category Selection */}
+            {showCategories ? (
+                <BottomSheet
+                    visible={showCategories}
+                    onClose={() => setShowCategories(false)}
+                // title={strings.select_category}
+                >
+                    <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                        {categories.map((catName, index) => {
+                            const catId = index + 1;
+                            const isSelected = category === catId;
+                            return (
                                 <Pressable
-                                    onPress={() => setShowDatePicker(true)}
+                                    key={index}
+                                    onPress={() => {
+                                        setCategory(catId);
+                                    }}
                                     style={{
-                                        backgroundColor: theme.border,
-                                        padding: 15,
-                                        borderRadius: 8,
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        justifyContent: 'space-between',
+                                        paddingVertical: 14,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 12,
+                                        marginVertical: 3,
+                                        backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                        borderWidth: 1,
+                                        borderColor: isSelected ? theme.high_color + "50" : 'transparent',
                                     }}
                                 >
-                                    <TextNormalYambi
-                                        text={moment(valid_until).format('YYYY-MM-DD HH:mm')}
+                                    <View style={{
+                                        width: 30,
+                                        height: 30,
+                                        borderRadius: 15,
+                                        backgroundColor: isSelected ? theme.button_background_color : theme.border,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        marginRight: 12,
+                                    }}>
+                                        <YambiText
+                                            text={`${catId}`}
+                                            bold
+                                            size="xsmall"
+                                            color={isSelected ? theme.button_foreground_color : theme.text}
+                                        />
+                                    </View>
+                                    <YambiText
+                                        text={catName}
+                                        bold={isSelected}
+                                        style={{
+                                            flex: 1,
+                                            fontSize: 15,
+                                            color: isSelected ? theme.high_color : theme.text,
+                                        }}
                                     />
-                                    <IconApp pack="FI" name="calendar" size={18} color={theme.text} />
+                                    {isSelected ? (
+                                        <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                    ) : null}
                                 </Pressable>
-                            </View>
-                        </View>
-                    </>
-                )}
+                            );
+                        })}
+                    </View>
+                </BottomSheet>
+            ) : null}
 
-                {showCategories ?
-                    <ModalApp paddings={false} onClose={() => { dispatch(setShowModalApp(false)); setShowCategories(false) }} singleButton title={strings.select_category}>
-                        <Categories />
-                    </ModalApp> : null}
+            {/* Save Button */}
+            <ButtonNormal
+                title={strings.edit_business}
+                loading={loading}
+                onPress={EBusiness}
+                styles={{ marginVertical: 10, borderRadius: 14, height: 50 }}
+                normal={true}
+            />
 
-                {showDatePicker && (
-                    <DateTimePicker
-                        value={valid_until}
-                        mode="datetime"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={(event, selectedDate) => {
-                            setShowDatePicker(Platform.OS === 'ios');
-                            if (selectedDate) {
-                                setValid_until(selectedDate);
-                            }
-                        }}
-                        minimumDate={new Date()}
-                    />
-                )}
-
-                {/* <Pressable
-                    onPress={() => setDefine_as_main_site(!define_as_main_site)}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginTop: 10,
-                        marginLeft: 2
-                    }}>
-                    {define_as_main_site ?
-                        <IconApp pack="FI" name="check-circle" size={15} color={theme.high_color} /> :
-                        <IconApp pack="FI" name="circle" size={15} color={theme.gray} />}
-                    <TextNormalYambi text={strings.define_as_main_site} styles={{ marginLeft: 8 }} />
-                </Pressable> */}
-
-                <ButtonNormal title={strings.edit_business} loading={loading} onPress={EBusiness} styles={{ paddingHorizontal: 20, marginVertical: 20, marginBottom: 50 }} normal={true} />
-
-            </View>
+            {/* Photo Editor Modal */}
             {showEditor && selectedAssets.length > 0 ? (
                 <PhotoEditor
                     assets={selectedAssets}
@@ -723,8 +863,7 @@ const EditBusiness = ({ navigation, route }: NavProps) => {
                 />
             ) : null}
         </ScrollView>
-    )
-}
+    );
+};
 
 export default EditBusiness;
-

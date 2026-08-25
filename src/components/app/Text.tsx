@@ -1,4 +1,4 @@
-import { Text, TextStyle } from "react-native"
+import { Text, TextStyle, Linking } from "react-native"
 import { useAppSelector } from "../../store/app/hooks";
 import { TTheme } from "../../types/types";
 
@@ -10,7 +10,95 @@ export interface IYambiText {
     size?: "xsmall" | "small" | "normal" | "big";
     color?: keyof TTheme['colors'] | "default" | "gray" | "high" | "high2" | "high3" | "design" | "error" | "success" | "badge" | "white" | (string & {});
     lineThrough?: boolean;
+    clickableLinks?: boolean;
+    clickable_links?: boolean;
+    linkColor?: string;
+    onLinkPress?: (url: string) => void;
 }
+
+export const renderTextWithLinks = (
+    text: string,
+    baseStyle: TextStyle,
+    linkColor: string,
+    onLinkPress?: (url: string) => void
+) => {
+    if (!text || typeof text !== 'string') return text;
+    
+    // Regex matching HTTP/HTTPS/WWW, emails, and bare domains (e.g. website.com, domain.co.uk, yambi.app)
+    const urlRegex = /(?:https?:\/\/|www\.)[^\s<]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.(?:com|org|net|io|app|ai|co|info|biz|dev|me|tech|site|online|xyz|store|shop|blog|cd|fr|de|uk|ca|au|in|jp|cn|us|eu|[a-zA-Z]{2,})(?:\/[^\s]*)?/gi;
+    
+    const parts: { text: string; isUrl: boolean }[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = urlRegex.exec(text)) !== null) {
+        const matchIndex = match.index;
+        let url = match[0];
+        
+        let trailingPunctuation = '';
+        while (url.length > 0 && /[.,;!?)]$/.test(url)) {
+            trailingPunctuation = url.slice(-1) + trailingPunctuation;
+            url = url.slice(0, -1);
+        }
+
+        if (matchIndex > lastIndex) {
+            parts.push({ text: text.slice(lastIndex, matchIndex), isUrl: false });
+        }
+
+        if (url.length > 0) {
+            parts.push({ text: url, isUrl: true });
+        }
+        
+        if (trailingPunctuation.length > 0) {
+            parts.push({ text: trailingPunctuation, isUrl: false });
+        }
+
+        lastIndex = urlRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        parts.push({ text: text.slice(lastIndex), isUrl: false });
+    }
+
+    if (parts.length === 0 || !parts.some(p => p.isUrl)) {
+        return text;
+    }
+
+    return parts.map((part, index) => {
+        if (part.isUrl) {
+            return (
+                <Text
+                    key={index}
+                    style={[
+                        baseStyle,
+                        {
+                            color: linkColor,
+                            textDecorationLine: 'underline',
+                        }
+                    ]}
+                    onPress={(e) => {
+                        e.stopPropagation();
+                        let targetUrl = part.text;
+                        if (targetUrl.includes('@') && !targetUrl.toLowerCase().startsWith('mailto:')) {
+                            targetUrl = 'mailto:' + targetUrl;
+                        } else if (!/^https?:\/\//i.test(targetUrl) && !targetUrl.toLowerCase().startsWith('mailto:')) {
+                            targetUrl = 'https://' + targetUrl;
+                        }
+                        if (onLinkPress) {
+                            onLinkPress(targetUrl);
+                        } else {
+                            Linking.openURL(targetUrl).catch(err => {
+                                console.error("Failed to open URL:", err);
+                            });
+                        }
+                    }}>
+                    {part.text}
+                </Text>
+            );
+        }
+        return part.text;
+    });
+};
 
 export const YambiText: React.FC<IYambiText> = ({
     text,
@@ -19,11 +107,17 @@ export const YambiText: React.FC<IYambiText> = ({
     style,
     size = "normal",
     color = "default",
-    lineThrough
+    lineThrough,
+    clickableLinks = true,
+    clickable_links,
+    linkColor,
+    onLinkPress
 }) => {
 
     const theme = useAppSelector(state => state.app_theme);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
+
+    const isClickableLinks = clickable_links !== undefined ? clickable_links : clickableLinks;
 
     const fontSize = {
         xsmall: 12,
@@ -54,20 +148,26 @@ export const YambiText: React.FC<IYambiText> = ({
         }
     }
 
+    const baseTextStyle: TextStyle = {
+        color: textColor,
+        fontSize,
+        fontWeight: bold ? app_description.general_font_weight as any : 'normal',
+        textDecorationLine: lineThrough ? 'line-through' : (style?.textDecorationLine || 'none')
+    };
+
+    const effectiveLinkColor = linkColor || theme.colors.high_color;
+
     return (
         <Text
             numberOfLines={numberLines}
             style={[
                 style,
-                {
-                    color: textColor,
-                    fontSize,
-                    fontWeight: bold ? app_description.general_font_weight as any : 'normal',
-                    textDecorationLine: lineThrough ? 'line-through' : (style?.textDecorationLine || 'none')
-                }
+                baseTextStyle
             ]}
         >
-            {text}
+            {isClickableLinks
+                ? renderTextWithLinks(text, baseTextStyle, effectiveLinkColor, onLinkPress)
+                : text}
         </Text>
     );
 };

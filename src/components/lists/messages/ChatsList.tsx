@@ -182,7 +182,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
         if (message === null) return;
 
-        if (message.message_type === 0) {
+        if (message.message_type === 0 || message.message_type === 5) {
             return (
                 <View style={{
                     flexDirection: 'row',
@@ -193,7 +193,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                 }}>
                     {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
                     {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : null}
-                    <YambiText text={message.deleted === 0 ? message.main_text_message : strings.message_deleted} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 10 }} />
+                    <YambiText text={message.deleted === 0 ? message.main_text_message : strings.message_deleted} size="small" color="gray" numberLines={1} clickable_links={false} style={{ flex: 1, marginRight: 10 }} />
                 </View>
             );
         } else if (message.message_type === 1) {

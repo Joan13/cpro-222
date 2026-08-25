@@ -250,7 +250,9 @@ Notifications.addNotificationResponseReceivedListener(async (response) => {
 
 
 
+// Now let's get back to [SalesModern.tsx](file;file:///home/joan/Documents/Data/Projects/ReactNative/cpro-222/src/pages/business/SalesModern.tsx) 
+//  In the revenue overview, add a button that should lead to the page [BusinessOverviewGraphs.tsx](file;file:///home/joan/Documents/Data/Projects/ReactNative/cpro-222/src/pages/business/BusinessOverviewGraphs.tsx) that should display the same numbers but without extended, with all the option names visible and taking more space.
 
-// In the photo editor there is a bug. When two photos are selected the design becomes weird because of the new view of the selected photos. Can you enhance the design to make things more realistic ? like a slider to go to the other picture if many pictures have been selected. Meaning that each photo editor will be a page of a paginated flashlist where each page represent a photo to be edited.
+// In that page, should also be the graphs. Move the graphs from [SalesModern.tsx](file;file:///home/joan/Documents/Data/Projects/ReactNative/cpro-222/src/pages/business/SalesModern.tsx)  to [BusinessOverviewGraphs.tsx](file;file:///home/joan/Documents/Data/Projects/ReactNative/cpro-222/src/pages/business/BusinessOverviewGraphs.tsx) 
 
-// Change the select button in Photo editor to "Finish"
+// Remove also the statistics from [SalesModern.tsx](file;file:///home/joan/Documents/Data/Projects/ReactNative/cpro-222/src/pages/business/SalesModern.tsx) under the graphs

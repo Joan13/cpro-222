@@ -44,7 +44,7 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
 
     const collectStories = () => {
         cleanExpiredLocalStories(realm);
-        const assembledStories = [];
+        const assembledStories: any[] = [];
         let unseenCount = 0;
 
         for (let p in contacts) {
@@ -57,27 +57,42 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
             }
 
             if (userStoriesList.length !== 0) {
-                const storyObject = {
-                    user: contacts[p],
-                    stories: userStoriesList,
-                    lastDate: userStoriesList[userStoriesList.length - 1].createdAt
-                };
-
-                assembledStories.push(storyObject);
-
                 const hasUnseen = userStoriesList.some(st => {
-                    let viewersList: string[] = [];
+                    let viewersList: any[] = [];
                     try {
                         viewersList = JSON.parse(st.viewers || '[]');
                     } catch (e) { }
-                    return !viewersList.includes(user_data.phone_number);
+                    return !viewersList.some((v: any) =>
+                        typeof v === 'string' ? v === user_data.phone_number : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+                    );
                 });
 
                 if (hasUnseen) {
                     unseenCount++;
                 }
+
+                const storyObject = {
+                    user: contacts[p],
+                    stories: userStoriesList,
+                    lastDate: userStoriesList[userStoriesList.length - 1].createdAt,
+                    hasUnseen: hasUnseen
+                };
+
+                assembledStories.push(storyObject);
             }
         }
+
+        // Sort stories:
+        // 1. Users with unseen stories appear first, users with all seen stories move to the bottom.
+        // 2. Within each group, sort from newest to oldest.
+        assembledStories.sort((a, b) => {
+            if (a.hasUnseen !== b.hasUnseen) {
+                return a.hasUnseen ? -1 : 1;
+            }
+            const timeA = new Date(a.lastDate).getTime();
+            const timeB = new Date(b.lastDate).getTime();
+            return timeB - timeA;
+        });
 
         setUserStories(assembledStories);
         dispatch(setStatusBadge(unseenCount));
@@ -152,14 +167,29 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
             }
         };
 
+        const handleStoryDeleted = (data: any) => {
+            if (data && data.story_id) {
+                realm.write(() => {
+                    try {
+                        const realmStory = realm.objectForPrimaryKey<Stories>('Stories', data.story_id);
+                        if (realmStory) {
+                            realm.delete(realmStory);
+                        }
+                    } catch (e) { }
+                });
+            }
+        };
+
         SocketApp.on('MyStories', handleMyStories);
         SocketApp.on('Stories', handleOtherStories);
         SocketApp.on('StatusViewed', handleStatusViewed);
+        SocketApp.on('StoryDeleted', handleStoryDeleted);
 
         return () => {
             SocketApp.off('MyStories', handleMyStories);
             SocketApp.off('Stories', handleOtherStories);
             SocketApp.off('StatusViewed', handleStatusViewed);
+            SocketApp.off('StoryDeleted', handleStoryDeleted);
         };
     }, [contacts, user_data.phone_number, realm]);
 
@@ -198,7 +228,7 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                         flex: 1
                     }}>
                     <View style={{
-                        borderColor: active_my_stories.length > 0 ? theme.high_color : theme.border,
+                        borderColor: active_my_stories.length > 0 ? theme.button_background_color : theme.border,
                         borderWidth: 2,
                         borderRadius: 50,
                         padding: 2,
@@ -239,7 +269,7 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                     <View style={{ flex: 1, marginLeft: 14 }}>
                         <YambiText text={strings.my_status || "My status"} bold numberLines={1} style={{ fontSize: 16, fontWeight: 'bold', color: theme.text }} />
                         <YambiText
-                            text={active_my_stories.length !== 0 ? renderDateTime(active_my_stories[active_my_stories.length - 1].createdAt, 1, false) : strings.tap_to_add_status}
+                            text={active_my_stories.length !== 0 ? renderDateTime(active_my_stories[active_my_stories.length - 1].createdAt, 1, false) : strings.add_status}
                             style={{ fontSize: 13, color: theme.gray, marginTop: 2 }}
                         />
                     </View>
@@ -291,7 +321,8 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
 
             <FlashList
                 data={userStories as never}
-                estimatedItemSize={1500}
+                numColumns={2}
+                estimatedItemSize={210}
                 ListHeaderComponent={
                     <View>
                         <UserStoryComponent />
@@ -337,7 +368,8 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                     <StoriesList index={index} item={item} GoStory={() => GoStory(item.user.phone_number)} />
                 )}
                 contentContainerStyle={{
-                    paddingHorizontal: 15
+                    paddingHorizontal: 8,
+                    paddingBottom: 50
                 }}
             />
         </View>

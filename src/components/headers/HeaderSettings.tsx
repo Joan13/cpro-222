@@ -44,7 +44,7 @@ const HeaderSettings = ({ navigation }: { navigation: any }) => {
                 flex: 1,
                 textAlign: 'center',
                 // fontWeight: 'bold'
-            }}>
+            }} numberOfLines={1}>
                 {strings.account_settings}
             </Text>
 

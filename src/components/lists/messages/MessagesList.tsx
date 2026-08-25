@@ -13,7 +13,7 @@ import PictureMessageItem from '../../chat/message/PictureMessageItem';
 import DocumentMessageItem from '../../chat/message/DocumentMessageItem';
 import ContactMessageItem from '../../chat/message/ContactMessageItem';
 import { displayDate } from '../../../../GlobalVariables';
-import { TextSmallYambiGray, TextSmallYambiHighColor } from '../../app/Text';
+import { TextSmallYambiGray, TextSmallYambiHighColor, YambiText } from '../../app/Text';
 import { IconApp } from '../../app/IconApp';
 import Animated, { FadeIn, FadeInDown, FadeInUp, Layout, useAnimatedStyle, useSharedValue, withTiming, withSpring, runOnJS, interpolate, Extrapolation } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -413,11 +413,11 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                     backgroundColor: item.receiver === user_data.phone_number ? app_theme.colors.chat_received : app_theme.colors.chat_sent
                                 }}>
                                     {item.response_to !== "" ?
-                                        message !== null ?
+                                        (message !== null || item.message_type === 5) ?
                                             <View>
                                                 <Pressable
                                                     onPress={() => {
-                                                        if (scrollToMessage && item.response_to) {
+                                                        if (scrollToMessage && item.response_to && item.message_type !== 5) {
                                                             scrollToMessage(item.response_to);
                                                         }
                                                     }}
@@ -433,55 +433,79 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                         marginTop: 6
                                                     }}
                                                 >
-                                                    <Text style={{
-                                                        color: '#f59f00',
-                                                        fontSize: app_description.small_general_font_size,
-                                                        fontWeight: app_description.small_general_font_weight as any
-                                                    }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
-                                                     {message.message_type === 4 ? (
-                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                                                             <IconApp pack="FA" name="user" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                             <Text style={{
-                                                                 color: app_theme.colors.text,
-                                                                 fontSize: app_description.small_general_font_size,
-                                                                 fontWeight: app_description.small_general_font_weight as any
-                                                             }}>{(strings as any).contact || "Contact"}</Text>
-                                                         </View>
-                                                     ) : message.message_type === 3 ? (
-                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                                                             <IconApp pack="FI" name="file-text" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                             <Text style={{
-                                                                 color: app_theme.colors.text,
-                                                                 fontSize: app_description.small_general_font_size,
-                                                                 fontWeight: app_description.small_general_font_weight as any
-                                                             }}>{strings.document_file || "Document"}</Text>
-                                                         </View>
-                                                     ) : message.message_type === 2 ? (
-                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                                                             <IconApp pack="FI" name="image" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                             <Text style={{
-                                                                 color: app_theme.colors.text,
-                                                                 fontSize: app_description.small_general_font_size,
-                                                                 fontWeight: app_description.small_general_font_weight as any
-                                                             }}>{strings.picture}</Text>
-                                                         </View>
-                                                     ) : message.message_type === 1 ? (
-                                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                                                             <IconApp pack="MC" name="microphone" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                             <Text style={{
-                                                                 color: app_theme.colors.text,
-                                                                 fontSize: app_description.small_general_font_size,
-                                                                 fontWeight: app_description.small_general_font_weight as any
-                                                             }}>{strings.voice_note}</Text>
-                                                         </View>
-                                                     ) : (
-                                                         <Text numberOfLines={5} style={{
-                                                             color: app_theme.colors.text,
-                                                             fontSize: app_description.small_general_font_size,
-                                                             fontWeight: app_description.small_general_font_weight as any,
-                                                             marginTop: 2
-                                                         }}>{message.main_text_message}</Text>
-                                                     )}
+                                                    {item.message_type === 5 ? (
+                                                        <>
+                                                            <Text style={{
+                                                                color: '#f59f00',
+                                                                fontSize: app_description.small_general_font_size,
+                                                                fontWeight: app_description.small_general_font_weight as any
+                                                            }}>
+                                                                {item.receiver === user_data.phone_number
+                                                                    ? "You . Status"
+                                                                    : `${ShowUserName(user, user)} . Status`}
+                                                            </Text>
+                                                            <Text numberOfLines={3} style={{
+                                                                color: app_theme.colors.text,
+                                                                fontSize: app_description.small_general_font_size,
+                                                                fontWeight: app_description.small_general_font_weight as any,
+                                                                marginTop: 2
+                                                            }}>
+                                                                {item.caption || (strings as any).status || "Status"}
+                                                            </Text>
+                                                        </>
+                                                    ) : message !== null ? (
+                                                        <>
+                                                            <Text style={{
+                                                                color: '#f59f00',
+                                                                fontSize: app_description.small_general_font_size,
+                                                                fontWeight: app_description.small_general_font_weight as any
+                                                            }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
+                                                            {message.message_type === 4 ? (
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                                    <IconApp pack="FA" name="user" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                                    <Text style={{
+                                                                        color: app_theme.colors.text,
+                                                                        fontSize: app_description.small_general_font_size,
+                                                                        fontWeight: app_description.small_general_font_weight as any
+                                                                    }}>{(strings as any).contact || "Contact"}</Text>
+                                                                </View>
+                                                            ) : message.message_type === 3 ? (
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                                    <IconApp pack="FI" name="file-text" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                                    <Text style={{
+                                                                        color: app_theme.colors.text,
+                                                                        fontSize: app_description.small_general_font_size,
+                                                                        fontWeight: app_description.small_general_font_weight as any
+                                                                    }}>{strings.document_file || "Document"}</Text>
+                                                                </View>
+                                                            ) : message.message_type === 2 ? (
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                                    <IconApp pack="FI" name="image" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                                    <Text style={{
+                                                                        color: app_theme.colors.text,
+                                                                        fontSize: app_description.small_general_font_size,
+                                                                        fontWeight: app_description.small_general_font_weight as any
+                                                                    }}>{strings.picture}</Text>
+                                                                </View>
+                                                            ) : message.message_type === 1 ? (
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                                                                    <IconApp pack="MC" name="microphone" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                                                                    <Text style={{
+                                                                        color: app_theme.colors.text,
+                                                                        fontSize: app_description.small_general_font_size,
+                                                                        fontWeight: app_description.small_general_font_weight as any
+                                                                    }}>{strings.voice_note}</Text>
+                                                                </View>
+                                                            ) : (
+                                                                <Text numberOfLines={5} style={{
+                                                                    color: app_theme.colors.text,
+                                                                    fontSize: app_description.small_general_font_size,
+                                                                    fontWeight: app_description.small_general_font_weight as any,
+                                                                    marginTop: 2
+                                                                }}>{message.main_text_message}</Text>
+                                                            )}
+                                                        </>
+                                                    ) : null}
                                                 </Pressable>
                                             </View>
                                             : null : null}
@@ -529,15 +553,20 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                     </View>
                                                     : null}
 
-                                                {item.message_type === 0 ? <Text style={{
-                                                    color: item.sender === user_data.phone_number ? app_theme.colors.chat_sent_foreground : app_theme.colors.chat_received_foreground,
-                                                    flex: 1,
-                                                    marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
-                                                    marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
-                                                    fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                                    fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size
-
-                                                }}>{item.main_text_message.trim()}</Text> : null}
+                                                {item.message_type === 0 || item.message_type === 5 ? (
+                                                    <YambiText
+                                                        text={item.main_text_message.trim()}
+                                                        linkColor={app_theme.colors.high_color}
+                                                        style={{
+                                                            color: item.sender === user_data.phone_number ? app_theme.colors.chat_sent_foreground : app_theme.colors.chat_received_foreground,
+                                                            flex: 1,
+                                                            marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
+                                                            marginBottom: (item.caption === "" || item.message_type === 5) ? item.main_text_message.length < 35 ? -12 : 0 : 0,
+                                                            fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
+                                                            fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size
+                                                        }}
+                                                    />
+                                                ) : null}
                                                 {/* <Text>{item.alignment}</Text> */}
 
                                                 {/* <Text>{item.sender} {item.receiver}</Text> */}
@@ -550,22 +579,24 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
 
                                                 {item.message_type === 4 ? <ContactMessageItem message={item} /> : null}
 
-                                                {item.caption !== "" && item.message_type !== 4 && item.message_type !== 3 ?
-                                                    <Text style={{
-                                                        // marginRight:40,
-                                                        color: item.message_type === 0 ? app_theme.colors.gray : app_theme.colors.text,
-                                                        // maxWidth: '50%',
-                                                        flex: 1,
-                                                        marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 90 : 65 : lang === "en" ? 70 : 45 : 10,
-                                                        marginBottom: item.main_text_message.length < 35 ? -12 : 0,
-                                                        marginTop: item.message_type === 0 ? 10 : 0,
-                                                        paddingTop: 10,
-                                                        borderColor: app_theme.colors.border,
-                                                        borderTopWidth: item.message_type === 0 ? 1 : 0,
-                                                        fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                                        fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
-
-                                                    }}>{item.caption.trim()}</Text> : null}
+                                                {item.caption !== "" && item.message_type !== 4 && item.message_type !== 3 && item.message_type !== 5 ? (
+                                                    <YambiText
+                                                        text={item.caption.trim()}
+                                                        linkColor={app_theme.colors.high_color}
+                                                        style={{
+                                                            color: item.message_type === 0 ? app_theme.colors.gray : app_theme.colors.text,
+                                                            flex: 1,
+                                                            marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 90 : 65 : lang === "en" ? 70 : 45 : 10,
+                                                            marginBottom: item.main_text_message.length < 35 ? -12 : 0,
+                                                            marginTop: item.message_type === 0 ? 10 : 0,
+                                                            paddingTop: 10,
+                                                            borderColor: app_theme.colors.border,
+                                                            borderTopWidth: item.message_type === 0 ? 1 : 0,
+                                                            fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
+                                                            fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
+                                                        }}
+                                                    />
+                                                ) : null}
                                             </>}
 
                                         <View style={{

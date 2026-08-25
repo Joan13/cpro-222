@@ -1,4 +1,4 @@
-import { Pressable, View, Platform, ScrollView, Animated, RefreshControl, Alert } from "react-native";
+import { Pressable, View, Platform, ScrollView, RefreshControl, Alert } from "react-native";
 import { TBusiness, TBusinessSubscription, TSellsPoint } from "../../../types/types";
 import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -10,6 +10,7 @@ import { copyToClipboard, getDateFormat, getHourFormat, remote_host_server, rend
 import { strings } from "../../../lang/lang";
 import * as RootNavigation from './../../../services/Navigation_ref';
 import ModalApp from "../../app/ModalApp";
+import BottomSheet from "../../app/BottomSheet";
 import { setShowModalApp } from "../../../store/reducers/appSlice";
 import { Image as ExpoImage } from 'expo-image';
 import * as DropdownMenu from 'zeego/dropdown-menu';
@@ -52,7 +53,6 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
     const [showBusinessInfo, setShowBusinessInfo] = useState(false);
     const [showLowStock, setShowLowStock] = useState(false);
     const [showOutOfStock, setShowOutOfStock] = useState(false);
-    const businessInfoHeight = useRef(new Animated.Value(0)).current;
     const lang = useAppSelector(state => state.persisted_app.langApp);
     const dispatch = useAppDispatch();
     const [isFollowing, setIsFollowing] = useState<boolean>(false);
@@ -193,14 +193,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
 
 
 
-    // Animate business info expand/collapse
-    useEffect(() => {
-        Animated.timing(businessInfoHeight, {
-            toValue: showBusinessInfo ? 1 : 0,
-            duration: 300,
-            useNativeDriver: false,
-        }).start();
-    }, [showBusinessInfo]);
+
 
     // Check follow status and get subscriber count when component mounts or business changes
     useEffect(() => {
@@ -446,12 +439,16 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     <YambiText color="gray" text={strings.business_level_error} />
                 </ModalApp> : null}
 
-            {showSwitchBusiness ?
-                <ModalApp
-                    onClose={() => { dispatch(setShowModalApp(false)); setShowSwitchBusiness(false) }}
-                    singleButton
-                    title={strings.switch_business}>
-                    <ScrollView style={{ maxHeight: 400 }}>
+            {showSwitchBusiness ? (
+                <BottomSheet
+                    visible={showSwitchBusiness}
+                    onClose={() => {
+                        dispatch(setShowModalApp(false));
+                        setShowSwitchBusiness(false);
+                    }}
+                // title={strings.switch_business}
+                >
+                    <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
                         {businesses.map((business, index) => (
                             <Pressable
                                 key={business._id}
@@ -463,11 +460,11 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                 style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    paddingVertical: 15,
-                                    paddingHorizontal: 10,
+                                    paddingVertical: 14,
+                                    paddingHorizontal: 12,
                                     backgroundColor: index === currentBusinessIndex ? app_theme.colors.high_color + "20" : 'transparent',
-                                    borderRadius: 8,
-                                    marginVertical: 5,
+                                    borderRadius: 12,
+                                    marginVertical: 4,
                                 }}>
                                 <View style={{
                                     width: 40,
@@ -479,36 +476,44 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                     alignItems: 'center',
                                     marginRight: 15,
                                 }}>
-                                    {business.logo === "" ?
+                                    {business.logo === "" ? (
                                         <IconApp pack="MT" name="business-center" size={20} color={app_theme.colors.text} />
-                                        :
+                                    ) : (
                                         <ExpoImage
                                             style={{ width: 40, height: 40, borderRadius: 20 }}
                                             contentFit="cover"
-                                            source={media_url + "/business_logos/" + business.logo} />}
+                                            source={media_url + "/business_logos/" + business.logo}
+                                        />
+                                    )}
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <YambiText text={business.business_name} bold />
                                     <YambiText size="small" color="gray" text={business._id} />
                                 </View>
-                                {index === currentBusinessIndex ?
-                                    <IconApp pack="IO" name="checkmark-circle" size={20} color={app_theme.colors.high_color} /> : null}
+                                {index === currentBusinessIndex ? (
+                                    <IconApp pack="IO" name="checkmark-circle" size={20} color={app_theme.colors.high_color} />
+                                ) : null}
                             </Pressable>
                         ))}
-                    </ScrollView>
-                </ModalApp> : null}
+                    </View>
+                </BottomSheet>
+            ) : null}
 
-            {showPOSSelector ?
-                <ModalApp paddings={false}
-                    onClose={() => { dispatch(setShowModalApp(false)); setShowPOSSelector(false) }}
-                    singleButton
-                    title={strings.select_pos_to_sell}>
-                    <ScrollView style={{ maxHeight: 400, paddingHorizontal: 15 }}>
-                        {sells_points.length === 0 ?
+            {showPOSSelector ? (
+                <BottomSheet
+                    visible={showPOSSelector}
+                    onClose={() => {
+                        dispatch(setShowModalApp(false));
+                        setShowPOSSelector(false);
+                    }}
+                // title={strings.select_pos_to_sell}
+                >
+                    <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                        {sells_points.length === 0 ? (
                             <View style={{ padding: 20, alignItems: 'center' }}>
                                 <YambiText color="gray" text={strings.no_workspace} style={{ textAlign: 'center' }} />
                             </View>
-                            :
+                        ) : (
                             sells_points.map((pos) => {
                                 const isLocked = (isAdmin || isAppAdmin) ? false : !accessibleSalesPointIds.includes(pos._id);
                                 return (
@@ -528,9 +533,9 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             paddingVertical: 15,
-                                            paddingHorizontal: 10,
-                                            borderRadius: 8,
-                                            marginVertical: 5,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 12,
+                                            marginVertical: 4,
                                             backgroundColor: app_theme.colors.border,
                                             opacity: isLocked ? 0.65 : 1,
                                         }}>
@@ -544,21 +549,27 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             : <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />}
                                     </Pressable>
                                 );
-                            })}
-                    </ScrollView>
-                </ModalApp> : null}
+                            })
+                        )}
+                    </View>
+                </BottomSheet>
+            ) : null}
 
-            {showPOSList ?
-                <ModalApp paddings={false}
-                    onClose={() => { dispatch(setShowModalApp(false)); setShowPOSList(false) }}
-                    singleButton
-                    title={strings.sells_points}>
-                    <ScrollView style={{ maxHeight: 400, paddingHorizontal: 15 }}>
-                        {sells_points.length === 0 ?
+            {showPOSList ? (
+                <BottomSheet
+                    visible={showPOSList}
+                    onClose={() => {
+                        dispatch(setShowModalApp(false));
+                        setShowPOSList(false);
+                    }}
+                >
+                    <View style={{ paddingBottom: 20, paddingHorizontal: 20 }}>
+                        <YambiText text={strings.sells_points} bold size="big" style={{ marginBottom: 15 }} />
+                        {sells_points.length === 0 ? (
                             <View style={{ padding: 20, alignItems: 'center' }}>
                                 <YambiText color="gray" text={strings.no_workspace} style={{ textAlign: 'center' }} />
                             </View>
-                            :
+                        ) : (
                             sells_points.map((pos) => {
                                 const canAccessPOS = isAdmin || isAppAdmin || (oo !== null && oo !== undefined && (
                                     oo.user_active === 1 && oo.level === 1 ||
@@ -585,9 +596,9 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                             paddingVertical: 15,
-                                            paddingHorizontal: 10,
-                                            borderRadius: 8,
-                                            marginVertical: 5,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 12,
+                                            marginVertical: 4,
                                             backgroundColor: app_theme.colors.border,
                                             opacity: isLocked ? 0.65 : 1,
                                         }}>
@@ -601,9 +612,79 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             : <IconApp pack="FI" name="chevron-right" size={20} color={app_theme.colors.text} />}
                                     </Pressable>
                                 );
-                            })}
-                    </ScrollView>
-                </ModalApp> : null}
+                            })
+                        )}
+                    </View>
+                </BottomSheet>
+            ) : null}
+
+            {showBusinessInfo ? (
+                <BottomSheet
+                    visible={showBusinessInfo}
+                    onClose={() => setShowBusinessInfo(false)}
+                >
+                    <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                        {item.description_service && item.description_service.trim() !== '' ? (
+                            <View style={{ marginBottom: 12 }}>
+                                <YambiText size="small" color="gray" text={strings.description} style={{ marginBottom: 5 }} />
+                                <YambiText text={item.description_service} style={{ lineHeight: 20 }} />
+                            </View>
+                        ) : null}
+                        {item.phone_number && item.phone_number.trim() !== '' ? (
+                            <View style={{ marginBottom: 12 }}>
+                                <YambiText size="small" color="gray" text={strings.phone} style={{ marginBottom: 5 }} />
+                                <Pressable onPress={() => copyToClipboard(item.phone_number)}>
+                                    <YambiText text={item.phone_number} />
+                                </Pressable>
+                            </View>
+                        ) : null}
+                        {item.emails && item.emails.trim() !== '' ? (
+                            <View style={{ marginBottom: 12 }}>
+                                <YambiText size="small" color="gray" text={strings.emails} style={{ marginBottom: 5 }} />
+                                <Pressable onPress={() => copyToClipboard(item.emails)}>
+                                    <YambiText text={item.emails} />
+                                </Pressable>
+                            </View>
+                        ) : null}
+                        {item.tax_number && item.tax_number.trim() !== '' ? (
+                            <View style={{ marginBottom: 12 }}>
+                                <YambiText size="small" color="gray" text={strings.tax_number} style={{ marginBottom: 5 }} />
+                                <Pressable onPress={() => copyToClipboard(item.tax_number)}>
+                                    <YambiText text={item.tax_number} />
+                                </Pressable>
+                            </View>
+                        ) : null}
+                        {item.business_address && item.business_address.trim() !== '' ? (
+                            <View style={{ marginBottom: 12 }}>
+                                <YambiText size="small" color="gray" text={strings.address} style={{ marginBottom: 5 }} />
+                                <YambiText text={item.business_address} />
+                            </View>
+                        ) : null}
+
+                        <Pressable
+                            onPress={() => {
+                                setShowBusinessInfo(false);
+                                if (conditionEditBusiness()) {
+                                    RootNavigation.navigate("EditBusiness", { business: item });
+                                }
+                            }}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingHorizontal: 12,
+                                paddingVertical: 10,
+                                borderRadius: 12,
+                                marginTop: 10,
+                                borderWidth: 1,
+                                borderColor: app_theme.colors.high_color,
+                            }}>
+                            <IconApp pack="FI" name="edit" size={16} color={app_theme.colors.high_color} />
+                            <YambiText size="small" color="high" text={strings.add_business_information} style={{ marginLeft: 8 }} />
+                        </Pressable>
+                    </View>
+                </BottomSheet>
+            ) : null}
 
             <View style={{ padding: 15 }}>
                 {/* Header Section */}
@@ -735,7 +816,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                                             size="small"
                                             style={{ marginRight: 4 }}
                                         />
-                                            <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
+                                        <YambiText size="small" color="gray" text={subscriberCount < 2 ? strings.follower.toLowerCase() : strings.followers.toLowerCase()} />
                                         <IconApp pack="FI" name="chevron-right" size={12} color={app_theme.colors.gray} styles={{ marginLeft: 4 }} />
                                     </Pressable>
                                 )}
@@ -910,7 +991,7 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                     </View>
 
                     <Pressable
-                        onPress={() => setShowBusinessInfo(!showBusinessInfo)}
+                        onPress={() => setShowBusinessInfo(true)}
                         style={{
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -921,77 +1002,9 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
                             marginTop: 15,
                             backgroundColor: app_theme.colors.border
                         }}>
-                        <IconApp pack="FI" name={showBusinessInfo ? "chevron-up" : "info"} size={16} color={app_theme.colors.high_color} />
-                        <YambiText size="small" color="high" text={showBusinessInfo ? strings.hide : strings.business_info} style={{ marginLeft: 8 }} />
+                        <IconApp pack="FI" name="info" size={16} color={app_theme.colors.high_color} />
+                        <YambiText size="small" color="high" text={strings.business_info} style={{ marginLeft: 8 }} />
                     </Pressable>
-
-                    <Animated.View style={{
-                        maxHeight: businessInfoHeight.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, 500],
-                        }),
-                        opacity: businessInfoHeight,
-                        overflow: 'hidden',
-                    }}>
-                        <View style={{
-                            paddingTop: 15,
-                            borderTopWidth: 0,
-                            borderTopColor: app_theme.colors.border,
-                        }}>
-                            {item.description_service && item.description_service.trim() !== '' ?
-                                <View style={{ marginBottom: 12 }}>
-                                    <YambiText size="small" color="gray" text={strings.description} style={{ marginBottom: 5 }} />
-                                    <YambiText text={item.description_service} style={{ lineHeight: 20 }} />
-                                </View> : null}
-                            {item.phone_number && item.phone_number.trim() !== '' ?
-                                <View style={{ marginBottom: 12 }}>
-                                    <YambiText size="small" color="gray" text={strings.phone} style={{ marginBottom: 5 }} />
-                                    <Pressable onPress={() => copyToClipboard(item.phone_number)}>
-                                        <YambiText text={item.phone_number} />
-                                    </Pressable>
-                                </View> : null}
-                            {item.emails && item.emails.trim() !== '' ?
-                                <View style={{ marginBottom: 12 }}>
-                                    <YambiText size="small" color="gray" text={strings.emails} style={{ marginBottom: 5 }} />
-                                    <Pressable onPress={() => copyToClipboard(item.emails)}>
-                                        <YambiText text={item.emails} />
-                                    </Pressable>
-                                </View> : null}
-                            {item.tax_number && item.tax_number.trim() !== '' ?
-                                <View style={{ marginBottom: 12 }}>
-                                    <YambiText size="small" color="gray" text={strings.tax_number} style={{ marginBottom: 5 }} />
-                                    <Pressable onPress={() => copyToClipboard(item.tax_number)}>
-                                        <YambiText text={item.tax_number} />
-                                    </Pressable>
-                                </View> : null}
-                            {item.business_address && item.business_address.trim() !== '' ?
-                                <View style={{ marginBottom: 12 }}>
-                                    <YambiText size="small" color="gray" text={strings.address} style={{ marginBottom: 5 }} />
-                                    <YambiText text={item.business_address} />
-                                </View> : null}
-
-                            <Pressable
-                                onPress={() => {
-                                    if (conditionEditBusiness()) {
-                                        RootNavigation.navigate("EditBusiness", { business: item });
-                                    }
-                                }}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 10,
-                                    borderRadius: 12,
-                                    marginTop: 10,
-                                    borderWidth: 1,
-                                    borderColor: app_theme.colors.high_color,
-                                }}>
-                                <IconApp pack="FI" name="edit" size={16} color={app_theme.colors.high_color} />
-                                <YambiText size="small" color="high" text={strings.add_business_information} style={{ marginLeft: 8 }} />
-                            </Pressable>
-                        </View>
-                    </Animated.View>
                 </View>
 
                 {/* Out of Stock Alert */}

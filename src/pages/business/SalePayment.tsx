@@ -177,24 +177,24 @@ const SalePayment = ({ navigation, route }: NavProps) => {
 
     return (
         <View style={{ flex: 1, backgroundColor: app_theme.colors.background }}>
-
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
-                {/* Status Card */}
+            <ScrollView
+                style={{ width: '100%' }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* ── Status Hero Header (NewBusiness style) ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    borderRadius: 16,
-                    padding: 24,
                     alignItems: 'center',
-                    marginBottom: 16,
+                    marginVertical: 20,
                 }}>
                     <View style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 28,
-                        backgroundColor: payment.payment_status === 4 ? app_theme.colors.background : isPaid ? '#E8F5E9' : '#FFF3E0',
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        backgroundColor: payment.payment_status === 4 ? app_theme.colors.border : isPaid ? '#E8F5E9' : '#FFF3E0',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        marginBottom: 16,
+                        marginBottom: 12
                     }}>
                         <Feather name={payment.payment_status === 4 ? "slash" : isPaid ? "check" : "clock"} size={28} color={statusColor} />
                     </View>
@@ -202,7 +202,7 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                         text={`${formatAmountStr(parseFloat(payment.amount))} ${renderCurrency(payment.currency, false)}`}
                         size="big"
                         bold
-                        style={{ fontSize: 24, marginBottom: 8 }}
+                        style={{ fontSize: 24, textAlign: 'center', marginBottom: 4 }}
                     />
                     <YambiText
                         text={
@@ -224,21 +224,45 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                     />
                 </View>
 
-                {/* Details list */}
+                {/* ── Details Card (NewBusiness Card style) ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
+                    backgroundColor: app_theme.colors.border + "15",
                     borderRadius: 16,
                     padding: 16,
-                    marginBottom: 50
+                    marginBottom: 20,
+                    borderWidth: 1,
+                    borderColor: app_theme.colors.border,
                 }}>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 16,
+                        borderBottomWidth: 1,
+                        borderColor: app_theme.colors.border,
+                        paddingBottom: 12
+                    }}>
+                        <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            backgroundColor: app_theme.colors.high_color + "20",
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 10,
+                        }}>
+                            <Feather name="credit-card" size={18} color={app_theme.colors.high_color} />
+                        </View>
+                        <YambiText bold text={(strings as any).payment_details || "Payment Details"} style={{ fontSize: 16 }} />
+                    </View>
+
                     {/* Business Name */}
                     {business?.business_name && (
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             alignItems: 'flex-start',
                         }}>
                             <YambiText text={strings.business || "Business"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -251,9 +275,9 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             alignItems: 'flex-start',
                         }}>
                             <YambiText text={strings.sales_point || "Point of sale"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -266,9 +290,9 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             alignItems: 'flex-start',
                         }}>
                             <YambiText text={strings.address || "Address"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -281,9 +305,9 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             borderBottomWidth: 1,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             alignItems: 'flex-start',
                         }}>
                             <YambiText text={strings.item || "Item"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -295,9 +319,9 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                     <View style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        paddingVertical: 12,
+                        paddingVertical: 10,
                         borderBottomWidth: 1,
-                        borderColor: app_theme.colors.background,
+                        borderColor: app_theme.colors.border,
                         alignItems: 'flex-start',
                     }}>
                         <YambiText text={(strings as any).payment_method || "Payment Method"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -308,9 +332,9 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                     <View style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        paddingVertical: 12,
+                        paddingVertical: 10,
                         borderBottomWidth: 1,
-                        borderColor: app_theme.colors.background,
+                        borderColor: app_theme.colors.border,
                         alignItems: 'flex-start',
                     }}>
                         <YambiText text={strings.Date || "Date"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -321,9 +345,9 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                     <View style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        paddingVertical: 12,
+                        paddingVertical: 10,
                         borderBottomWidth: (payment.agent_paid || (payment.payment_status === 4 && deletedByPhone)) ? 1 : 0,
-                        borderColor: app_theme.colors.background,
+                        borderColor: app_theme.colors.border,
                         alignItems: 'flex-start',
                     }}>
                         <YambiText text={(strings as any).payment_id || "Payment ID"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -331,13 +355,13 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                     </View>
 
                     {/* Collector Agent */}
-                    {payment.agent_paid && (
+                    {payment.agent_paid ? (
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             borderBottomWidth: (payment.payment_status === 4 && deletedByPhone) ? 1 : 0,
-                            borderColor: app_theme.colors.background,
+                            borderColor: app_theme.colors.border,
                             alignItems: 'flex-start',
                         }}>
                             <YambiText text={(strings as any).collector || "Collector"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -367,14 +391,14 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                                 )}
                             </View>
                         </View>
-                    )}
+                    ) : null}
 
                     {/* Cancelled by Agent */}
                     {payment.payment_status === 4 && deletedByPhone ? (
                         <View style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            paddingVertical: 12,
+                            paddingVertical: 10,
                             alignItems: 'flex-start',
                         }}>
                             <YambiText text={(strings as any).deleted_by || "Cancelled by"} color="gray" size="small" style={{ marginRight: 16 }} />
@@ -407,6 +431,27 @@ const SalePayment = ({ navigation, route }: NavProps) => {
                     ) : null}
                 </View>
             </ScrollView>
+
+            {payment.payment_status !== 4 && (
+                <View style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    marginBottom: 20,
+                    backgroundColor: app_theme.colors.background,
+                    borderTopWidth: 1,
+                    borderColor: app_theme.colors.border,
+                }}>
+                    <ButtonNormal
+                        title={(strings as any).cancel_payment || "Cancel payment"}
+                        loadEnabled={true}
+                        onPress={() => {
+                            setShowDeleteConfirmModal(true);
+                            dispatch(setShowModalApp(true));
+                        }}
+                        outline={true}
+                    />
+                </View>
+            )}
 
             {showDeleteConfirmModal && (
                 <ModalApp

@@ -172,6 +172,12 @@ const Sales = ({ navigation, route }: NavProps) => {
             }
         });
 
+        fs = fs.sort((a, b) => {
+            const timeA = new Date(a.createdAt).getTime() || 0;
+            const timeB = new Date(b.createdAt).getTime() || 0;
+            return timeB - timeA;
+        });
+
         setFiltered_sales(fs);
     }
 

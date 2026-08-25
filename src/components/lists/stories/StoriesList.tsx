@@ -1,5 +1,5 @@
-import { Text, View, Image, Pressable, ScrollView } from "react-native";
-import { useAppDispatch, useAppSelector } from "../../../store/app/hooks";
+import { Text, View, Image, Pressable, StyleSheet } from "react-native";
+import { useAppSelector } from "../../../store/app/hooks";
 import { memo, useState } from "react";
 import { YambiText } from "../../app/Text";
 import { strings } from "../../../lang/lang";
@@ -7,8 +7,23 @@ import { IconApp } from "../../app/IconApp";
 import { renderDateTime, media_url } from "../../../../GlobalVariables";
 import { Image as ExpoImage } from 'expo-image';
 import BottomSheet from "../../app/BottomSheet";
+import ViewersItem from "./ViewersItem";
 
-const StoriesList = ({ item, index, GoStory }: { item: any, index: number, GoStory: () => void }) => {
+export interface StoriesListProps {
+    item: any;
+    index: number;
+    GoStory: () => void;
+    horizontal?: boolean;
+    variant?: 'card' | 'horizontal';
+}
+
+const StoriesList = ({
+    item,
+    index,
+    GoStory,
+    horizontal = false,
+    variant = 'card',
+}: StoriesListProps) => {
 
     const app_theme = useAppSelector(state => state.app_theme);
     const contacts = useAppSelector(state => state.app.raw_contacts);
@@ -26,17 +41,46 @@ const StoriesList = ({ item, index, GoStory }: { item: any, index: number, GoSto
 
     // Check if any status in item.stories is unseen by current user
     const hasUnseenStory = Array.isArray(item.stories) && item.stories.some((st: any) => {
-        let viewersList: string[] = [];
+        let viewersList: any[] = [];
         try {
             viewersList = JSON.parse(st.viewers || '[]');
         } catch (e) {
             viewersList = [];
         }
-        return !viewersList.includes(user_data.phone_number);
+        return !viewersList.some((v: any) =>
+            typeof v === 'string' ? v === user_data.phone_number : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+        );
     });
 
+    // Last story of the user (photo or text)
+    const lastStory = Array.isArray(item.stories) && item.stories.length > 0
+        ? item.stories[item.stories.length - 1]
+        : null;
+
+    const isPhotoStatus = lastStory?.main_text !== "" && lastStory?.main_text !== undefined;
+
+    let storyStyles: {
+        backgroundColor?: string;
+        foregroundColor?: string;
+        fontWeight?: any;
+        fontStyle?: any;
+        textAlign?: any;
+    } = {};
+
+    try {
+        if (lastStory?.styles) {
+            storyStyles = JSON.parse(lastStory.styles);
+        }
+    } catch (e) { }
+
+    const statusBgColor = storyStyles.backgroundColor || app_theme.colors.high_color || '#1D2A44';
+    const statusFgColor = storyStyles.foregroundColor || '#FFFFFF';
+    const statusFontWeight = storyStyles.fontWeight || 'bold';
+    const statusFontStyle = storyStyles.fontStyle || 'normal';
+    const statusTextAlign = storyStyles.textAlign || 'center';
+
     // Collect all unique viewers for item.stories
-    const viewersList: string[] = [];
+    const viewersList: any[] = [];
     const viewersMap: { [key: string]: boolean } = {};
 
     if (Array.isArray(item.stories)) {
@@ -44,10 +88,11 @@ const StoriesList = ({ item, index, GoStory }: { item: any, index: number, GoSto
             try {
                 const parsed = JSON.parse(st.viewers || '[]');
                 if (Array.isArray(parsed)) {
-                    parsed.forEach((phone: string) => {
+                    parsed.forEach((v: any) => {
+                        const phone = typeof v === 'string' ? v : (v.phone_number || v.phone);
                         if (phone && !viewersMap[phone]) {
                             viewersMap[phone] = true;
-                            viewersList.push(phone);
+                            viewersList.push(v);
                         }
                     });
                 }
@@ -55,150 +100,252 @@ const StoriesList = ({ item, index, GoStory }: { item: any, index: number, GoSto
         });
     }
 
-    const totalViewers = viewersList.length;
+    if (horizontal || variant === 'horizontal') {
+        const isMyUser = item.user?.phone_number === user_data.phone_number || item.user?.phoneNumber === user_data.phone_number;
+        const isRingActive = hasUnseenStory || isMyUser;
 
-    return (
-        <Pressable
-            onPress={GoStory}
-            style={{
-                marginVertical: 6,
-                backgroundColor: app_theme.colors.card || app_theme.colors.background,
-                paddingVertical: 12,
-                paddingHorizontal: 14,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: app_theme.colors.border + '40',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 3,
-                elevation: 1.5
-            }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {/* Avatar with unread status ring */}
-                <View style={{
-                    borderColor: hasUnseenStory ? (app_theme.colors.primary_high_color || app_theme.colors.high_color) : (app_theme.colors.gray + '50'),
-                    borderWidth: hasUnseenStory ? 2.5 : 1.5,
-                    borderRadius: 50,
-                    padding: 2,
-                    height: 52,
-                    width: 52,
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}>
-                    {item.user.user_profile === "" ? (
+        return (
+            <Pressable
+                onPress={GoStory}
+                style={styles.horizontalContainer}
+            >
+                <View
+                    style={[
+                        styles.horizontalAvatarRing,
+                        {
+                            borderColor: isRingActive
+                                ? (app_theme.colors.header_background_color || app_theme.colors.primary_high_color || app_theme.colors.high_color)
+                                : (app_theme.colors.border || 'rgba(150, 150, 150, 0.3)'),
+                            borderWidth: isRingActive ? 2.5 : 1.5,
+                        }
+                    ]}
+                >
+                    {item.user?.user_profile === "" || !item.user?.user_profile ? (
                         <Image
                             source={require('./../../../assets/profile_black.jpg')}
-                            style={{ width: 44, height: 44, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
+                            style={styles.horizontalAvatarImg}
                         />
                     ) : (
                         <ExpoImage
-                            style={{ height: 44, width: 44, borderRadius: 50 }}
+                            style={styles.horizontalAvatarImg}
                             contentFit="cover"
                             source={media_url + "/profile_pictures/" + item.user.user_profile}
                         />
                     )}
-
-                    {/* Status count badge */}
-                    <View style={{
-                        backgroundColor: app_theme.colors.primary_high_color || app_theme.colors.high_color,
-                        height: 18,
-                        minWidth: 18,
-                        paddingHorizontal: 4,
-                        borderRadius: 10,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        position: 'absolute',
-                        top: -2,
-                        right: -2
-                    }}>
-                        <YambiText text={String(item.stories ? item.stories.length : 1)} size="xsmall" style={{ fontSize: 10, fontWeight: 'bold', color: app_theme.colors.primary_high_color_foreground || '#FFFFFF' }} />
-                    </View>
                 </View>
 
-                {/* User details */}
-                <View style={{ flex: 1, marginLeft: 14 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <YambiText text={ShowUserName(item.user.user_names, item.user.phone_number)} numberLines={1} bold style={{ fontSize: 16, color: app_theme.colors.text }} />
-                        {item.user.user_verified === 1 ? (
-                            <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.primary_high_color || app_theme.colors.high_color} styles={{ marginLeft: 5 }} />
-                        ) : null}
-                    </View>
-                    <YambiText text={renderDateTime(item.lastDate, 1, false)} style={{ fontSize: 13, color: app_theme.colors.gray, marginTop: 2 }} />
-                </View>
-
-                {/* Viewers action button */}
-                <Pressable
-                    onPress={(e) => {
-                        e.stopPropagation();
-                        setShowViewersSheet(true);
-                    }}
+                <YambiText
+                    text={ShowUserName(item.user?.user_names || '', item.user?.phone_number || '')}
+                    size="xsmall"
                     style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: (app_theme.colors.primary_high_color || app_theme.colors.high_color) + '18',
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 20,
-                        marginLeft: 8
-                    }}>
-                    <IconApp pack="FI" name="eye" size={16} color={app_theme.colors.primary_high_color || app_theme.colors.high_color} />
-                    <YambiText
-                        text={String(totalViewers)}
-                        style={{
-                            fontSize: 12,
-                            fontWeight: 'bold',
-                            color: app_theme.colors.primary_high_color || app_theme.colors.high_color,
-                            marginLeft: 5
-                        }}
+                        marginTop: 4,
+                        textAlign: 'center',
+                        fontSize: 11,
+                        color: app_theme.colors.text,
+                    }}
+                    numberLines={1}
+                />
+            </Pressable>
+        );
+    }
+
+    return (
+        <Pressable
+            onPress={GoStory}
+            style={styles.cardContainer}
+        >
+            {/* Card Background Content (Photo or Text Status) */}
+            {isPhotoStatus ? (
+                <View style={StyleSheet.absoluteFillObject}>
+                    <ExpoImage
+                        source={{ uri: media_url + "/photo_status/" + lastStory.main_text }}
+                        style={StyleSheet.absoluteFillObject}
+                        contentFit="cover"
                     />
-                </Pressable>
+                    {/* Dark gradient overlay for text legibility */}
+                    <View style={styles.darkOverlay} />
+                    {lastStory.caption ? (
+                        <View style={styles.captionContainer}>
+                            <Text numberOfLines={2} style={styles.captionText}>
+                                {lastStory.caption}
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
+            ) : (
+                <View style={[styles.textContainer, { backgroundColor: statusBgColor }]}>
+                    <Text
+                        numberOfLines={4}
+                        style={[
+                            styles.textStatusTitle,
+                            {
+                                color: statusFgColor,
+                                fontWeight: statusFontWeight,
+                                fontStyle: statusFontStyle,
+                                textAlign: statusTextAlign,
+                            }
+                        ]}
+                    >
+                        {lastStory?.caption || lastStory?.main_text || ''}
+                    </Text>
+                    <View style={styles.darkOverlay} />
+                </View>
+            )}
+
+            {/* Top Right Publisher Profile Avatar */}
+            <View
+                style={[
+                    styles.avatarRing,
+                    {
+                        borderColor: hasUnseenStory
+                            ? (app_theme.colors.primary_high_color || app_theme.colors.high_color)
+                            : 'rgba(255, 255, 255, 0.7)',
+                        borderWidth: hasUnseenStory ? 2.5 : 1.5,
+                    }
+                ]}
+            >
+                {item.user.user_profile === "" || !item.user.user_profile ? (
+                    <Image
+                        source={require('./../../../assets/profile_black.jpg')}
+                        style={styles.avatarImg}
+                    />
+                ) : (
+                    <ExpoImage
+                        style={styles.avatarImg}
+                        contentFit="cover"
+                        source={media_url + "/profile_pictures/" + item.user.user_profile}
+                    />
+                )}
+            </View>
+
+            {/* Bottom Publisher Name */}
+            <View style={styles.bottomInfoRow}>
+                <YambiText
+                    text={ShowUserName(item.user.user_names, item.user.phone_number)}
+                    bold
+                    size="small"
+                    color="#FFFFFF"
+                    style={{ color: '#FFFFFF' }}
+                    numberLines={1}
+                />
             </View>
 
             {/* Viewers BottomSheet */}
             <BottomSheet
                 visible={showViewersSheet}
                 onClose={() => setShowViewersSheet(false)}
-                title={strings.views ? `${strings.views} (${totalViewers})` : `Status Viewers (${totalViewers})`}
             >
-                <ScrollView style={{ width: '100%', maxHeight: 380, paddingVertical: 8 }}>
+                <View style={{ width: '100%', paddingBottom: 20, paddingHorizontal: 20 }}>
                     {viewersList.length === 0 ? (
                         <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 30 }}>
                             <IconApp pack="FI" name="eye-off" size={36} color={app_theme.colors.gray} />
-                            <YambiText text="No views yet" style={{ marginTop: 10, color: app_theme.colors.gray, fontSize: 14 }} />
+                            <YambiText text={strings.no_views_yet} style={{ marginTop: 10, color: app_theme.colors.gray, fontSize: 14 }} />
                         </View>
                     ) : (
-                        viewersList.map((viewerPhone, idx) => {
+                        viewersList.map((viewerItem, idx) => {
+                            const viewerPhone = typeof viewerItem === 'string' ? viewerItem : (viewerItem.phone_number || viewerItem.phone);
+                            const viewTime = typeof viewerItem === 'object' ? (viewerItem.time || viewerItem.timestamp || viewerItem.createdAt) : undefined;
+
                             const viewerContact = contacts.find((c: any) => c.phoneNumber === viewerPhone || c.phone_number === viewerPhone);
                             const viewerName = viewerContact ? (viewerContact.displayName || viewerPhone) : viewerPhone;
 
                             return (
-                                <View
+                                <ViewersItem
                                     key={viewerPhone + idx}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingVertical: 10,
-                                        borderBottomWidth: idx === viewersList.length - 1 ? 0 : 1,
-                                        borderBottomColor: app_theme.colors.border + '30'
-                                    }}>
-                                    <Image
-                                        source={require('./../../../assets/profile_black.jpg')}
-                                        style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: app_theme.colors.border }}
-                                    />
-                                    <View style={{ flex: 1, marginLeft: 12 }}>
-                                        <YambiText text={viewerName} bold style={{ fontSize: 14, color: app_theme.colors.text }} />
-                                        <YambiText text={viewerPhone} style={{ fontSize: 12, color: app_theme.colors.gray, marginTop: 1 }} />
-                                    </View>
-                                    <IconApp pack="MC" name="check-all" size={18} color={app_theme.colors.primary_high_color || app_theme.colors.high_color} />
-                                </View>
+                                    viewerPhone={viewerPhone}
+                                    viewerName={viewerName}
+                                    viewTime={viewTime}
+                                    isLast={idx === viewersList.length - 1}
+                                />
                             );
                         })
                     )}
-                </ScrollView>
+                </View>
             </BottomSheet>
         </Pressable>
     );
 };
+
+const styles = StyleSheet.create({
+    cardContainer: {
+        flex: 1,
+        height: 210,
+        margin: 6,
+        borderRadius: 16,
+        overflow: 'hidden',
+        position: 'relative',
+        backgroundColor: '#1D2A44',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    },
+    captionContainer: {
+        position: 'absolute',
+        bottom: 32,
+        left: 10,
+        right: 10,
+    },
+    captionText: {
+        color: '#FFFFFF',
+        fontSize: 11,
+        opacity: 0.9,
+    },
+    textContainer: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 12,
+    },
+    textStatusTitle: {
+        fontSize: 14,
+        marginHorizontal: 8,
+    },
+    avatarRing: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        borderRadius: 22,
+        padding: 1.5,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        zIndex: 10,
+    },
+    avatarImg: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+    },
+    bottomInfoRow: {
+        position: 'absolute',
+        bottom: 10,
+        left: 10,
+        right: 10,
+        zIndex: 10,
+    },
+    horizontalContainer: {
+        alignItems: 'center',
+        marginRight: 14,
+        width: 68,
+    },
+    horizontalAvatarRing: {
+        width: 62,
+        height: 62,
+        borderRadius: 31,
+        padding: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    horizontalAvatarImg: {
+        width: 54,
+        height: 54,
+        borderRadius: 27,
+    },
+});
 
 export default memo(StoriesList);

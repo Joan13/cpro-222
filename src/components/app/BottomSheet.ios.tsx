@@ -1,6 +1,12 @@
 import React from 'react';
 import { View, Pressable, ViewStyle, StyleSheet } from 'react-native';
-import { Host, BottomSheet as ExpoBottomSheet, RNHostView } from '@expo/ui/swift-ui';
+import {
+    Host,
+    BottomSheet as ExpoBottomSheet,
+    RNHostView,
+    ScrollView as NativeScrollView,
+    VStack,
+} from '@expo/ui/swift-ui';
 import { IconApp } from './IconApp';
 import { YambiText } from './Text';
 import { useAppSelector } from '../../store/app/hooks';
@@ -31,24 +37,62 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
         onIsPresentedChange={(isPresented) => {
           if (!isPresented) onClose();
         }}
-        fitToContents
+        fitToContents={false}
       >
-        <RNHostView matchContents>
-          <View style={[{ padding: 16, width: '100%', backgroundColor: theme.card || theme.background }, containerStyle]}>
-            {title ? (
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <YambiText text={title} style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }} />
-                <Pressable onPress={onClose} hitSlop={8}>
-                  <IconApp pack="FI" name="x" size={20} color={theme.gray} />
-                </Pressable>
+        {/*
+         * NativeScrollView is @expo/ui/swift-ui's own SwiftUI ScrollView.
+         * It properly participates in SwiftUI's sheet gesture coordination:
+         *   - When sheet is at medium/partial detent → dragging expands the sheet
+         *   - When sheet is at large (full screen) → dragging scrolls the content
+         *
+         * Each child is wrapped in its own RNHostView so React Native content
+         * can be rendered inside the native SwiftUI scroll container items.
+         */}
+        <NativeScrollView axes="vertical" showsIndicators={true}>
+          <VStack>
+            {title && (
+              <RNHostView matchContents>
+                <View style={[styles.titleRow, { backgroundColor: theme.card || theme.background, paddingHorizontal: 16 }]}>
+                  <YambiText
+                    text={title}
+                    style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }}
+                  />
+                  <Pressable onPress={onClose} hitSlop={12}>
+                    <IconApp pack="FI" name="x" size={20} color={theme.gray} />
+                  </Pressable>
+                </View>
+              </RNHostView>
+            )}
+            <RNHostView matchContents>
+              <View
+                style={[
+                  {
+                    width: '100%',
+                    paddingHorizontal: 16,
+                    paddingBottom: 32,
+                    backgroundColor: theme.card || theme.background,
+                  },
+                  containerStyle,
+                ]}
+              >
+                {children}
               </View>
-            ) : null}
-            {children}
-          </View>
-        </RNHostView>
+            </RNHostView>
+          </VStack>
+        </NativeScrollView>
       </ExpoBottomSheet>
     </Host>
   );
 };
+
+const styles = StyleSheet.create({
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    width: '100%',
+  },
+});
 
 export default BottomSheet;

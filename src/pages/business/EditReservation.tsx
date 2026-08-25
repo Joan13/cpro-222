@@ -24,6 +24,8 @@ const EditReservation = ({ navigation, route }: NavProps) => {
     const dispatch = useAppDispatch();
     const realm = useRealm();
 
+    const theme = app_theme.colors;
+
     // Query Reservation
     const reservation = realm.objectForPrimaryKey<any>('Reservations', reservationId);
 
@@ -88,7 +90,7 @@ const EditReservation = ({ navigation, route }: NavProps) => {
 
     if (!reservation) {
         return (
-            <View style={{ flex: 1, backgroundColor: app_theme.colors.background, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }}>
                 <TextNormalYambiGray text="Reservation not found" />
             </View>
         );
@@ -145,116 +147,113 @@ const EditReservation = ({ navigation, route }: NavProps) => {
     };
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: app_theme.colors.background }} showsVerticalScrollIndicator={false}>
-            <View style={{ paddingVertical: 10, marginBottom: 40 }}>
-                {/* ── Reservation Details Form Card ── */}
+        <ScrollView style={{ flex: 1, backgroundColor: theme.background }} showsVerticalScrollIndicator={false}>
+            <View style={{ paddingVertical: 14, marginBottom: 40 }}>
+                {/* ── CARD 1: Client & Order Details ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    margin: 15,
+                    backgroundColor: theme.border + "15",
+                    marginHorizontal: 16,
+                    marginBottom: 20,
                     padding: 16,
                     borderRadius: 16,
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 3,
+                    borderWidth: 1,
+                    borderColor: theme.border,
                 }}>
-                    <View style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        borderBottomWidth: 1,
-                        borderColor: app_theme.colors.background,
-                        paddingBottom: 10,
-                        marginBottom: 16
-                    }}>
-                        <YambiText bold text="Client & Order Details" />
-                        <Feather name="user" size={16} color={app_theme.colors.text} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                        <View style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            backgroundColor: theme.high_color + "20",
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 10,
+                        }}>
+                            <IconApp pack="FI" name="user" size={18} color={theme.high_color} />
+                        </View>
+                        <YambiText bold text="Client & Order Details" style={{ fontSize: 16 }} />
                     </View>
 
+                    {/* Client Name Field */}
                     <View style={{ marginBottom: 14 }}>
-                        <YambiText bold text={(strings as any).client_name || 'Client Name'} size="small" />
+                        <YambiText size="small" color="gray" text={(strings as any).client_name || 'Client Name'} style={{ marginLeft: 2, marginBottom: 6 }} />
                         <TextInput
                             value={customerName}
                             onChangeText={setCustomerName}
+                            placeholderTextColor={theme.gray}
                             style={{
-                                borderWidth: 2,
-                                borderColor: app_theme.colors.background,
-                                borderRadius: 10,
-                                paddingHorizontal: 15,
-                                height: 50,
+                                backgroundColor: theme.background,
+                                padding: 14,
+                                borderRadius: 12,
+                                color: theme.text,
                                 fontSize: 15,
-                                color: app_theme.colors.text,
-                                backgroundColor: app_theme.colors.background,
-                                marginTop: 8,
+                                borderWidth: 1,
+                                borderColor: theme.border,
                             }}
                             placeholder="John Doe"
-                            placeholderTextColor={app_theme.colors.gray}
                         />
                     </View>
 
+                    {/* Client Phone Field */}
                     <View style={{ marginBottom: 14 }}>
-                        <YambiText bold text={(strings as any).client_phone || 'Client Phone'} size="small" />
+                        <YambiText size="small" color="gray" text={(strings as any).client_phone || 'Client Phone'} style={{ marginLeft: 2, marginBottom: 6 }} />
                         <TextInput
                             value={customerPhone}
                             onChangeText={setCustomerPhone}
                             keyboardType="phone-pad"
+                            placeholderTextColor={theme.gray}
                             style={{
-                                borderWidth: 2,
-                                borderColor: app_theme.colors.background,
-                                borderRadius: 10,
-                                paddingHorizontal: 15,
-                                height: 50,
+                                backgroundColor: theme.background,
+                                padding: 14,
+                                borderRadius: 12,
+                                color: theme.text,
                                 fontSize: 15,
-                                color: app_theme.colors.text,
-                                backgroundColor: app_theme.colors.background,
-                                marginTop: 8,
+                                borderWidth: 1,
+                                borderColor: theme.border,
                             }}
                             placeholder="+1234567890"
-                            placeholderTextColor={app_theme.colors.gray}
                         />
                     </View>
 
+                    {/* Quantity & Total Amount Row */}
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                         <View style={{ flex: 1 }}>
-                            <YambiText bold text={strings.quantity} size="small" />
+                            <YambiText size="small" color="gray" text={strings.quantity} style={{ marginLeft: 2, marginBottom: 6 }} />
                             <TextInput
                                 value={quantity}
                                 onChangeText={setQuantity}
                                 keyboardType="numeric"
                                 editable={!hasInstallments}
+                                placeholderTextColor={theme.gray}
                                 style={{
-                                    borderWidth: 2,
-                                    borderColor: app_theme.colors.background,
-                                    borderRadius: 10,
-                                    paddingHorizontal: 15,
-                                    height: 50,
+                                    backgroundColor: theme.background,
+                                    padding: 14,
+                                    borderRadius: 12,
+                                    color: theme.text,
                                     fontSize: 15,
-                                    color: app_theme.colors.text,
-                                    backgroundColor: app_theme.colors.background,
-                                    marginTop: 8,
+                                    borderWidth: 1,
+                                    borderColor: theme.border,
                                     opacity: hasInstallments ? 0.65 : 1,
                                 }}
                             />
                         </View>
 
                         <View style={{ flex: 2 }}>
-                            <YambiText bold text={`${(strings as any).total_reserved || 'Total Amount'} (${cur})`} size="small" />
+                            <YambiText size="small" color="gray" text={`${(strings as any).total_reserved || 'Total Amount'} (${cur})`} style={{ marginLeft: 2, marginBottom: 6 }} />
                             <TextInput
                                 value={totalAmount}
                                 onChangeText={setTotalAmount}
                                 keyboardType="decimal-pad"
                                 editable={!hasInstallments}
+                                placeholderTextColor={theme.gray}
                                 style={{
-                                    borderWidth: 2,
-                                    borderColor: app_theme.colors.background,
-                                    borderRadius: 10,
-                                    paddingHorizontal: 15,
-                                    height: 50,
+                                    backgroundColor: theme.background,
+                                    padding: 14,
+                                    borderRadius: 12,
+                                    color: theme.text,
                                     fontSize: 15,
-                                    color: app_theme.colors.text,
-                                    backgroundColor: app_theme.colors.background,
-                                    marginTop: 8,
+                                    borderWidth: 1,
+                                    borderColor: theme.border,
                                     opacity: hasInstallments ? 0.65 : 1,
                                 }}
                             />
@@ -262,35 +261,42 @@ const EditReservation = ({ navigation, route }: NavProps) => {
                     </View>
                 </View>
 
-                {/* ── Installments List Card ── */}
+                {/* ── CARD 2: Installments List Card ── */}
                 <View style={{
-                    backgroundColor: app_theme.colors.border,
-                    margin: 15,
-                    marginTop: 0,
+                    backgroundColor: theme.border + "15",
+                    marginHorizontal: 16,
+                    marginBottom: 20,
                     borderRadius: 16,
                     overflow: 'hidden',
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 3,
+                    borderWidth: 1,
+                    borderColor: theme.border,
                 }}>
                     <View style={{
                         padding: 16,
                         borderBottomWidth: 1,
-                        borderColor: app_theme.colors.background,
+                        borderColor: theme.border,
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                     }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Feather name="credit-card" size={16} color={app_theme.colors.text} style={{ marginRight: 8 }} />
-                            <YambiText bold text={(strings as any).installments || 'Installments'} />
+                            <View style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 8,
+                                backgroundColor: theme.high_color + "20",
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginRight: 10,
+                            }}>
+                                <IconApp pack="FI" name="credit-card" size={18} color={theme.high_color} />
+                            </View>
+                            <YambiText bold text={(strings as any).installments || 'Installments'} style={{ fontSize: 16 }} />
                         </View>
                     </View>
 
                     {payments.length === 0 ? (
-                        <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
                             <YambiText text="No payments registered" color="gray" />
                         </View>
                     ) : (
@@ -310,16 +316,29 @@ const EditReservation = ({ navigation, route }: NavProps) => {
                     )}
                 </View>
 
-                {/* Save button using ButtonNormal */}
+                {/* Save button matching NewBusiness.tsx */}
                 {isChanged && (
-                    <View style={{ marginHorizontal: 15, marginTop: 10, marginBottom: 20 }}>
-                        <ButtonNormal
-                            title={strings.save || "Save"}
-                            loadEnabled={true}
-                            onPress={handleSave}
-                            normal={true}
-                        />
-                    </View>
+                    <ButtonNormal
+                        title={strings.save || "Save"}
+                        loadEnabled={true}
+                        onPress={handleSave}
+                        iconPack="FI"
+                        iconName="check"
+                        iconSize={16}
+                        styles={{
+                            marginHorizontal: 16,
+                            height: 48,
+                            borderRadius: 24,
+                            shadowColor: theme.high_color,
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 8,
+                            elevation: 4,
+                            marginTop: 4,
+                            marginBottom: 30
+                        }}
+                        normal={true}
+                    />
                 )}
             </View>
 

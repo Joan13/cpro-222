@@ -1,13 +1,13 @@
-import { Text, Pressable, View, Alert, ScrollView, TextInput } from "react-native";
+import { Pressable, View, ScrollView, TextInput } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
 import ButtonNormal from "../../components/app/ButtonNormal";
 import { IconApp } from "../../components/app/IconApp";
-import { TextBigYambi, TextNormalYambi, TextNormalYambiGray, TextNormalYambiHighColor, TextSmallYambiGray } from "../../components/app/Text";
+import { YambiText } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
-import { FlashList } from "@shopify/flash-list";
+import BottomSheet from "../../components/app/BottomSheet";
 import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice";
 import { randomString, remote_host, renderCategoryName, renderDateUpToMilliseconds } from "../../../GlobalVariables";
 import axios from "axios";
@@ -17,69 +17,10 @@ import * as RootNavigation from './../../services/Navigation_ref';
 import moment from "moment";
 import SwitchApp from "../../components/app/SwitchApp";
 
-const FormInput = ({
-    label,
-    value,
-    onChangeText,
-    placeholder,
-    maxLength,
-    multiline = false,
-    keyboardType = "default",
-    theme
-}: {
-    label: string;
-    value: string;
-    onChangeText: (text: string) => void;
-    placeholder?: string;
-    maxLength?: number;
-    multiline?: boolean;
-    keyboardType?: any;
-    theme: any;
-}) => {
-    return (
-        <View style={{ marginBottom: 16 }}>
-            <Text style={{
-                fontSize: 13,
-                fontWeight: '600',
-                color: theme.gray,
-                marginBottom: 6,
-                marginLeft: 2
-            }}>
-                {label}
-            </Text>
-            <TextInput
-                placeholder={placeholder}
-                placeholderTextColor={theme.gray}
-                maxLength={maxLength}
-                multiline={multiline}
-                keyboardType={keyboardType}
-                style={{
-                    color: theme.text,
-                    backgroundColor: theme.background,
-                    borderColor: theme.border,
-                    borderWidth: 1,
-                    paddingHorizontal: 16,
-                    paddingVertical: multiline ? 12 : 10,
-                    height: multiline ? undefined : 46,
-                    minHeight: multiline ? 80 : undefined,
-                    borderRadius: 12,
-                    fontSize: 15,
-                    textAlignVertical: multiline ? 'top' : 'center'
-                }}
-                value={value}
-                onChangeText={onChangeText}
-            />
-        </View>
-    );
-};
-
 const NewBusinesses = () => {
-
     const theme = useAppSelector(state => state.app_theme.colors);
-    const loading_app = useAppSelector(state => state.app.loading);
     const user_data = useAppSelector(state => state.user_data);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-    const [category, setCategory] = useState<number>(null);
+    const [category, setCategory] = useState<number | null>(null);
     const [name, setName] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [address, setAddress] = useState<string>("");
@@ -93,9 +34,7 @@ const NewBusinesses = () => {
     const [tax_number, setTax_number] = useState<string>("");
     const [phones, setPhones] = useState<string>("");
     const [emails, setEmails] = useState<string>("");
-    // const category = useAppSelector(state=>state.app.category);
-    // const businesses = useAppSelector(state => state.businesses);
-    const businesses = [];
+
     const dispatch = useAppDispatch();
     const navigation = useNavigation();
     const realm = useRealm();
@@ -119,14 +58,9 @@ const NewBusinesses = () => {
         strings.business_services,
         strings.biotechnology,
         strings.telecommunications
-    ]
-
-    // useEffect(() => {
-    //     // console.log(businesses.length);
-    // }, []);
+    ];
 
     const NewBusiness = () => {
-
         if (name === "" || category === null || address === "") {
             setShowError(true);
             dispatch(setShowModalApp(true));
@@ -160,7 +94,7 @@ const NewBusinesses = () => {
                 website: "",
                 other_links: "",
                 yambi: ""
-            }
+            };
 
             axios.post(remote_host + "/yambi/API/new_business", { business: business })
                 .then(json => {
@@ -194,7 +128,7 @@ const NewBusinesses = () => {
                         valid_until: "",
                         createdAt: bb.createdAt,
                         updatedAt: bb.updatedAt
-                    }
+                    };
 
                     const business_user: TBusinessUser = {
                         _id: bu._id,
@@ -207,7 +141,7 @@ const NewBusinesses = () => {
                         user_active: 1,
                         createdAt: moment(new Date()).format(),
                         updatedAt: moment(new Date()).format()
-                    }
+                    };
 
                     realm.write(() => {
                         try {
@@ -244,9 +178,9 @@ const NewBusinesses = () => {
                     dispatch(setShowModalApp(true));
                     setLoading(false);
                     dispatch(setLoadingButton(false));
-                })
+                });
         }
-    }
+    };
 
     const NewSellsPoint = (NewBusiness: TBusiness) => {
         const sellsPointID = randomString(5).toUpperCase() + renderDateUpToMilliseconds();
@@ -271,7 +205,7 @@ const NewBusinesses = () => {
             website: "",
             other_links: "",
             yambi: ""
-        }
+        };
 
         axios.post(remote_host + "/yambi/API/new_sells_point", { sells_point: sells_point })
             .then(json => {
@@ -300,7 +234,7 @@ const NewBusinesses = () => {
                     tva: "16",
                     createdAt: sp.createdAt,
                     updatedAt: sp.updatedAt
-                }
+                };
 
                 realm.write(() => {
                     try {
@@ -326,44 +260,8 @@ const NewBusinesses = () => {
                 dispatch(setShowModalApp(true));
                 setLoading(false);
                 dispatch(setLoadingButton(false));
-            })
-    }
-
-    const EditWorkspace = () => {
-        Alert.alert(strings.information, strings.impossible_edit);
-    }
-
-    const Category = ({ item, index, selectCategory }: { item: string, index: number, selectCategory: (category: string) => void }) => {
-
-        const pressCategory = () => {
-            selectCategory(item);
-            dispatch(setShowModalApp(false));
-            setShowCategories(false);
-        };
-
-        return (
-            <Pressable style={{ flex: 1, flexDirection: 'row', paddingHorizontal: 3, height: 50, alignItems: 'center', borderBottomWidth: 1, borderColor: theme.border }} onPress={pressCategory}>
-                <TextNormalYambi text={index + 1 + "."} styles={{ width: 35 }} />
-                <TextNormalYambi text={item.toUpperCase()} styles={{ flex: 1 }} />
-            </Pressable>
-        )
-    }
-
-    const Categories = () => {
-        return (
-            <View style={{
-                width: '100%',
-                height: 300
-            }}>
-                <FlashList
-                    data={categories}
-                    estimatedItemSize={50}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={({ item, index }: { item: string, index: number }) => (<Category selectCategory={(item) => setCategory(index + 1)} item={item} index={index} />)}
-                />
-            </View>
-        )
-    }
+            });
+    };
 
     return (
         <ScrollView
@@ -379,7 +277,7 @@ const NewBusinesses = () => {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
         >
-            {/* Modern visual header */}
+            {/* Header Title Section */}
             <View style={{
                 alignItems: 'center',
                 marginVertical: 24,
@@ -388,256 +286,403 @@ const NewBusinesses = () => {
                     width: 60,
                     height: 60,
                     borderRadius: 30,
-                    backgroundColor: (theme.high_color || '#1E68FF') + '15',
+                    backgroundColor: theme.high_color + "15",
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginBottom: 12
                 }}>
-                    <IconApp pack="FI" name="briefcase" size={28} color={theme.high_color || '#1E68FF'} />
+                    <IconApp pack="FI" name="briefcase" size={28} color={theme.high_color} />
                 </View>
-                <Text style={{
-                    fontSize: 22,
-                    fontWeight: '800',
-                    color: theme.text,
-                    textAlign: 'center',
-                }}>
-                    {strings.new_business}
-                </Text>
+                <YambiText
+                    text={strings.new_business}
+                    bold
+                    size="big"
+                    style={{ fontSize: 22, textAlign: 'center' }}
+                />
             </View>
 
-            {showError ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false) }} singleButton title={strings.error}>
-                    <TextNormalYambiGray text={strings.fields_error_validation} />
-                </ModalApp> : null}
+            {/* Error Modals */}
+            {showError ? (
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowError(false); }} singleButton title={strings.error}>
+                    <YambiText color="gray" text={strings.fields_error_validation} />
+                </ModalApp>
+            ) : null}
 
-            {showInternetError ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false) }} singleButton title={strings.error}>
-                    <TextNormalYambiGray text={strings.connection_failed} />
-                </ModalApp> : null}
+            {showInternetError ? (
+                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowInternetError(false); }} singleButton title={strings.error}>
+                    <YambiText color="gray" text={strings.connection_failed} />
+                </ModalApp>
+            ) : null}
 
-            {/* CARD 1: Basic Information */}
+            {/* CARD 1: General Information */}
             <View style={{
-                backgroundColor: theme.card,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: theme.border,
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
                 padding: 16,
                 marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.03,
-                shadowRadius: 6,
-                // elevation: 1
+                borderWidth: 1,
+                borderColor: theme.border,
             }}>
-                <Text style={{
-                    fontSize: 15,
-                    fontWeight: '700',
-                    color: theme.text,
-                    marginBottom: 16
-                }}>
-                    {strings.business_information}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: theme.high_color + "20",
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 10,
+                    }}>
+                        <IconApp pack="FI" name="briefcase" size={18} color={theme.high_color} />
+                    </View>
+                    <YambiText bold text={strings.business_information} style={{ fontSize: 16 }} />
+                </View>
 
                 {/* Category Selector Pressable */}
-                <Text style={{
-                    fontSize: 13,
-                    fontWeight: '600',
-                    color: theme.gray,
-                    marginBottom: 6,
-                    marginLeft: 2
-                }}>
-                    {strings.category}
-                </Text>
                 <Pressable
-                    onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}
-                    style={({ pressed }) => ({
+                    onPress={() => setShowCategories(true)}
+                    style={{
                         backgroundColor: theme.background,
-                        borderColor: theme.border,
-                        borderWidth: 1,
+                        padding: 14,
                         borderRadius: 12,
-                        paddingHorizontal: 14,
-                        paddingVertical: 12,
+                        marginBottom: 14,
+                        borderWidth: 1,
+                        borderColor: category !== null ? theme.high_color + "60" : theme.border,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        marginBottom: 16,
-                        opacity: pressed ? 0.8 : 1,
-                        height: 46
-                    })}
+                    }}
                 >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
-                        <IconApp pack="FI" name="grid" size={16} color={theme.high_color || '#1E68FF'} styles={{ marginRight: 8 }} />
-                        <Text style={{
-                            fontSize: 15,
-                            fontWeight: '600',
-                            color: category === null ? theme.gray : theme.text,
-                            flex: 1
-                        }} numberOfLines={1}>
-                            {category === null ? strings.select_category : renderCategoryName(category)}
-                        </Text>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                        <YambiText
+                            size="small"
+                            color="gray"
+                            text={category !== null ? strings.category + " (" + strings.select_category + ")" : strings.category}
+                            style={{ marginBottom: 4 }}
+                        />
+                        <YambiText
+                            color="high"
+                            text={category === null ? strings.select_category : renderCategoryName(category)}
+                            style={{ fontSize: 15, fontWeight: '600' }}
+                        />
                     </View>
-                    <IconApp pack="FI" name="chevron-down" size={18} color={theme.gray} />
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: theme.high_color + "15",
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                    }}>
+                        <IconApp pack="FI" name="layers" size={16} color={theme.high_color} styles={{ marginRight: 6 }} />
+                        <IconApp pack="FI" name="chevron-down" size={16} color={theme.high_color} />
+                    </View>
                 </Pressable>
 
-                {/* Business Name Input */}
-                <FormInput
-                    label={strings.business_name}
-                    value={name}
-                    onChangeText={setName}
-                    placeholder={strings.enter_business_name}
-                    maxLength={100}
-                    theme={theme}
-                />
+                {/* Business Name Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.business_name} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.enter_business_name}
+                        value={name}
+                        onChangeText={setName}
+                        maxLength={100}
+                    />
+                </View>
 
-                {/* Description Input */}
-                <FormInput
-                    label={strings.description}
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder={strings.describe_business_services}
-                    maxLength={700}
-                    multiline
-                    theme={theme}
-                />
+                {/* Description Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.description} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        multiline
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                            minHeight: 80,
+                            textAlignVertical: 'top',
+                        }}
+                        placeholder={strings.describe_business_services}
+                        value={description}
+                        onChangeText={setDescription}
+                        maxLength={700}
+                    />
+                </View>
 
-                {/* Address Input */}
-                <FormInput
-                    label={strings.address}
-                    value={address}
-                    onChangeText={setAddress}
-                    placeholder={strings.physical_address}
-                    maxLength={70}
-                    theme={theme}
-                />
+                {/* Address Field */}
+                <View style={{ marginBottom: 4 }}>
+                    <YambiText size="small" color="gray" text={strings.address} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.physical_address}
+                        value={address}
+                        onChangeText={setAddress}
+                        maxLength={70}
+                    />
+                </View>
             </View>
 
-            {/* CARD 2: Tax & Identification Numbers */}
+            {/* CARD 2: Legal & Registration */}
             <View style={{
-                backgroundColor: theme.card,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: theme.border,
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
                 padding: 16,
                 marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.03,
-                shadowRadius: 6,
-                // elevation: 1
+                borderWidth: 1,
+                borderColor: theme.border,
             }}>
-                <Text style={{
-                    fontSize: 15,
-                    fontWeight: '700',
-                    color: theme.text,
-                    marginBottom: 16
-                }}>
-                    {strings.legal_registration_optional}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: theme.high_color + "20",
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 10,
+                    }}>
+                        <IconApp pack="FI" name="file-text" size={18} color={theme.high_color} />
+                    </View>
+                    <YambiText bold text={strings.legal_registration_optional} style={{ fontSize: 16 }} />
+                </View>
 
-                <FormInput
-                    label={strings.national_id}
-                    value={national_id}
-                    onChangeText={setNational_id}
-                    placeholder={strings.national_id}
-                    maxLength={25}
-                    theme={theme}
-                />
+                {/* National ID Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.national_id} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.national_id}
+                        value={national_id}
+                        onChangeText={setNational_id}
+                        maxLength={25}
+                    />
+                </View>
 
-                <FormInput
-                    label={strings.identification_number}
-                    value={identification_number}
-                    onChangeText={setIdentification_number}
-                    placeholder={strings.identification_number}
-                    maxLength={25}
-                    theme={theme}
-                />
+                {/* Identification Number Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.identification_number} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.identification_number}
+                        value={identification_number}
+                        onChangeText={setIdentification_number}
+                        maxLength={25}
+                    />
+                </View>
 
-                <FormInput
-                    label={strings.tax_number}
-                    value={tax_number}
-                    onChangeText={setTax_number}
-                    placeholder={strings.tax_number}
-                    maxLength={25}
-                    theme={theme}
-                />
+                {/* Tax Number Field */}
+                <View style={{ marginBottom: 4 }}>
+                    <YambiText size="small" color="gray" text={strings.tax_number} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.tax_number}
+                        value={tax_number}
+                        onChangeText={setTax_number}
+                        maxLength={25}
+                    />
+                </View>
             </View>
 
             {/* CARD 3: Contact Channels */}
             <View style={{
-                backgroundColor: theme.card,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: theme.border,
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
                 padding: 16,
                 marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.03,
-                shadowRadius: 6,
-                // elevation: 1
-            }}>
-                <Text style={{
-                    fontSize: 15,
-                    fontWeight: '700',
-                    color: theme.text,
-                    marginBottom: 16
-                }}>
-                    {strings.contact_information_optional}
-                </Text>
-
-                <FormInput
-                    label={strings.phones}
-                    value={phones}
-                    onChangeText={setPhones}
-                    placeholder={strings.placeholder_phone}
-                    maxLength={45}
-                    theme={theme}
-                />
-
-                <FormInput
-                    label={strings.emails}
-                    value={emails}
-                    onChangeText={setEmails}
-                    placeholder={strings.placeholder_email}
-                    maxLength={70}
-                    keyboardType="email-address"
-                    theme={theme}
-                />
-            </View>
-
-            {/* Define as main site Switch Card */}
-            <View style={{
-                backgroundColor: theme.card,
-                borderRadius: 20,
                 borderWidth: 1,
                 borderColor: theme.border,
+            }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <View style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        backgroundColor: theme.high_color + "20",
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginRight: 10,
+                    }}>
+                        <IconApp pack="FI" name="phone-call" size={18} color={theme.high_color} />
+                    </View>
+                    <YambiText bold text={strings.contact_information_optional} style={{ fontSize: 16 }} />
+                </View>
+
+                {/* Phones Field */}
+                <View style={{ marginBottom: 14 }}>
+                    <YambiText size="small" color="gray" text={strings.phones} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.placeholder_phone}
+                        value={phones}
+                        onChangeText={setPhones}
+                        maxLength={45}
+                    />
+                </View>
+
+                {/* Emails Field */}
+                <View style={{ marginBottom: 4 }}>
+                    <YambiText size="small" color="gray" text={strings.emails} style={{ marginLeft: 2, marginBottom: 6 }} />
+                    <TextInput
+                        placeholderTextColor={theme.gray}
+                        keyboardType="email-address"
+                        style={{
+                            backgroundColor: theme.background,
+                            padding: 14,
+                            borderRadius: 12,
+                            color: theme.text,
+                            fontSize: 15,
+                            borderWidth: 1,
+                            borderColor: theme.border,
+                        }}
+                        placeholder={strings.placeholder_email}
+                        value={emails}
+                        onChangeText={setEmails}
+                        maxLength={70}
+                    />
+                </View>
+            </View>
+
+            {/* CARD 4: Options / Main Site Toggle */}
+            <View style={{
+                backgroundColor: theme.border + "15",
+                borderRadius: 16,
                 padding: 16,
                 marginBottom: 24,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.03,
-                shadowRadius: 6,
-                // elevation: 1
+                borderWidth: 1,
+                borderColor: theme.border,
             }}>
                 <View style={{ flex: 1, marginRight: 16 }}>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: theme.text, marginBottom: 2 }}>
-                        {strings.define_as_main_site}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: theme.gray, lineHeight: 16 }}>
-                        {strings.define_as_main_site_description}
-                    </Text>
+                    <YambiText bold text={strings.define_as_main_site} style={{ fontSize: 15, marginBottom: 2 }} />
+                    <YambiText size="small" color="gray" text={strings.define_as_main_site_description} style={{ lineHeight: 16 }} />
                 </View>
                 <SwitchApp value={define_as_main_site} onPress={() => setDefine_as_main_site(!define_as_main_site)} small />
             </View>
 
-            {/* Categories Selection Modal */}
-            {showCategories ?
-                <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowCategories(false) }} singleButton title={strings.select_category}>
-                    <Categories />
-                </ModalApp> : null}
+            {/* BottomSheet for Category Selection */}
+            {showCategories ? (
+                <BottomSheet
+                    visible={showCategories}
+                    onClose={() => setShowCategories(false)}
+                >
+                    <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                        {categories.map((catName, index) => {
+                            const catId = index + 1;
+                            const isSelected = category === catId;
+                            return (
+                                <Pressable
+                                    key={index}
+                                    onPress={() => {
+                                        setCategory(catId);
+                                    }}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingVertical: 14,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 12,
+                                        marginVertical: 3,
+                                        backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                        borderWidth: 1,
+                                        borderColor: isSelected ? theme.high_color + "50" : 'transparent',
+                                    }}
+                                >
+                                    <View style={{
+                                        width: 30,
+                                        height: 30,
+                                        borderRadius: 15,
+                                        backgroundColor: isSelected ? theme.button_background_color : theme.border,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        marginRight: 12,
+                                    }}>
+                                        <YambiText
+                                            text={`${catId}`}
+                                            bold
+                                            size="xsmall"
+                                            color={isSelected ? theme.button_foreground_color : theme.text}
+                                        />
+                                    </View>
+                                    <YambiText
+                                        text={catName}
+                                        bold={isSelected}
+                                        style={{
+                                            flex: 1,
+                                            fontSize: 15,
+                                            color: isSelected ? theme.high_color : theme.text,
+                                        }}
+                                    />
+                                    {isSelected ? (
+                                        <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                    ) : null}
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+                </BottomSheet>
+            ) : null}
 
             {/* Create Business Button */}
             <ButtonNormal
@@ -661,7 +706,7 @@ const NewBusinesses = () => {
                 normal={true}
             />
         </ScrollView>
-    )
-}
+    );
+};
 
 export default NewBusinesses;

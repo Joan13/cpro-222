@@ -5,7 +5,7 @@ import { strings } from "../../lang/lang";
 import { YambiText, TextNormalYambiGray } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
 import { setShowModalApp } from "../../store/reducers/appSlice";
-import { remote_host } from "../../../GlobalVariables";
+import { remote_host, SocketApp } from "../../../GlobalVariables";
 import axios from "axios";
 import { NavProps, TStory } from "../../types/types";
 import { useQuery, useRealm } from "@realm/react";
@@ -200,6 +200,7 @@ const NewStory = ({ navigation, route }: NavProps) => {
                     if (res.data && res.data.message === "1" && res.data.story) {
                         try {
                             realm.create('Stories', res.data.story, true);
+                            SocketApp.emit('OnNewStory', res.data.story);
                         } catch (e) { }
                     }
                 });
@@ -253,6 +254,7 @@ const NewStory = ({ navigation, route }: NavProps) => {
                             realm.create('Stories', story, true);
                         } catch (e) { }
                     });
+                    SocketApp.emit('OnNewStory', story);
                     navigation.goBack();
                 } else {
                     setShowInternetError(true);
