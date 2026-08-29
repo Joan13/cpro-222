@@ -32,72 +32,60 @@ export class CallSignaling {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:invite to callee ${payload.calleeId}`, fullPayload);
     SocketApp.emit('call:invite', fullPayload);
-    SocketApp.emit(`call:invite:${payload.calleeId}`, fullPayload);
   }
 
   public sendRinging(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:ringing`, fullPayload);
     SocketApp.emit('call:ringing', fullPayload);
-    SocketApp.emit(`call:ringing:${payload.callerId}`, fullPayload);
   }
 
   public sendAccept(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:accept`, fullPayload);
     SocketApp.emit('call:accept', fullPayload);
-    SocketApp.emit(`call:accept:${payload.callerId}`, fullPayload);
   }
 
   public sendReject(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:reject`, fullPayload);
     SocketApp.emit('call:reject', fullPayload);
-    SocketApp.emit(`call:reject:${payload.callerId}`, fullPayload);
   }
 
   public sendCancel(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:cancel`, fullPayload);
     SocketApp.emit('call:cancel', fullPayload);
-    SocketApp.emit(`call:cancel:${payload.calleeId}`, fullPayload);
   }
 
   public sendOffer(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:offer`, fullPayload);
     SocketApp.emit('call:offer', fullPayload);
-    SocketApp.emit(`call:offer:${payload.calleeId}`, fullPayload);
   }
 
   public sendAnswer(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:answer`, fullPayload);
     SocketApp.emit('call:answer', fullPayload);
-    SocketApp.emit(`call:answer:${payload.callerId}`, fullPayload);
   }
 
   public sendIceCandidate(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:ice-candidate`, fullPayload);
     SocketApp.emit('call:ice-candidate', fullPayload);
-    const target = payload.callerId === this.userPhoneNumber ? payload.calleeId : payload.callerId;
-    SocketApp.emit(`call:ice-candidate:${target}`, fullPayload);
   }
 
   public sendBusy(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:busy`, fullPayload);
     SocketApp.emit('call:busy', fullPayload);
-    SocketApp.emit(`call:busy:${payload.callerId}`, fullPayload);
   }
 
   public sendEnd(payload: CallSignalPayload) {
     const fullPayload = { ...payload, senderId: this.userPhoneNumber };
     console.log(`[CallSignaling] Emitting call:end`, fullPayload);
     SocketApp.emit('call:end', fullPayload);
-    const target = payload.callerId === this.userPhoneNumber ? payload.calleeId : payload.callerId;
-    SocketApp.emit(`call:end:${target}`, fullPayload);
   }
 
   public registerListeners(handlers: {
@@ -200,7 +188,7 @@ export class CallSignaling {
       }
     };
 
-    // Generic socket events
+    // Socket call events
     SocketApp.on('call:invite', handleInvite);
     SocketApp.on('call:ringing', handleRinging);
     SocketApp.on('call:accept', handleAccept);
@@ -211,20 +199,6 @@ export class CallSignaling {
     SocketApp.on('call:ice-candidate', handleIceCandidate);
     SocketApp.on('call:busy', handleBusy);
     SocketApp.on('call:end', handleEnd);
-
-    // Specific targeted socket events for user phone number
-    if (this.userPhoneNumber) {
-      SocketApp.on(`call:invite:${this.userPhoneNumber}`, handleInvite);
-      SocketApp.on(`call:ringing:${this.userPhoneNumber}`, handleRinging);
-      SocketApp.on(`call:accept:${this.userPhoneNumber}`, handleAccept);
-      SocketApp.on(`call:reject:${this.userPhoneNumber}`, handleReject);
-      SocketApp.on(`call:cancel:${this.userPhoneNumber}`, handleCancel);
-      SocketApp.on(`call:offer:${this.userPhoneNumber}`, handleOffer);
-      SocketApp.on(`call:answer:${this.userPhoneNumber}`, handleAnswer);
-      SocketApp.on(`call:ice-candidate:${this.userPhoneNumber}`, handleIceCandidate);
-      SocketApp.on(`call:busy:${this.userPhoneNumber}`, handleBusy);
-      SocketApp.on(`call:end:${this.userPhoneNumber}`, handleEnd);
-    }
 
     this.listenersAttached = true;
   }
@@ -241,19 +215,6 @@ export class CallSignaling {
     SocketApp.off('call:ice-candidate');
     SocketApp.off('call:busy');
     SocketApp.off('call:end');
-
-    if (this.userPhoneNumber) {
-      SocketApp.off(`call:invite:${this.userPhoneNumber}`);
-      SocketApp.off(`call:ringing:${this.userPhoneNumber}`);
-      SocketApp.off(`call:accept:${this.userPhoneNumber}`);
-      SocketApp.off(`call:reject:${this.userPhoneNumber}`);
-      SocketApp.off(`call:cancel:${this.userPhoneNumber}`);
-      SocketApp.off(`call:offer:${this.userPhoneNumber}`);
-      SocketApp.off(`call:answer:${this.userPhoneNumber}`);
-      SocketApp.off(`call:ice-candidate:${this.userPhoneNumber}`);
-      SocketApp.off(`call:busy:${this.userPhoneNumber}`);
-      SocketApp.off(`call:end:${this.userPhoneNumber}`);
-    }
 
     this.listenersAttached = false;
   }

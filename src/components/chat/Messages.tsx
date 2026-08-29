@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Alert, Linking } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useRealm } from '@realm/react';
@@ -31,6 +31,59 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
     const [stickyDate, setStickyDate] = useState('');
     const [showJumpToBottom, setShowJumpToBottom] = useState(false);
     const realm = useRealm();
+
+    const persisted_contacts = useAppSelector(state => state.persisted_app.raw_contacts);
+    const app_contacts = useAppSelector(state => state.app.raw_contacts);
+    const raw_contacts = useMemo(() => persisted_contacts || app_contacts || [], [persisted_contacts, app_contacts]);
+
+    const isSavedInPhonebook = useMemo(() => {
+        if (!user || user === user_data.phone_number) return true;
+        const cleanUser = user.replace(/[^0-9]/g, '');
+        if (!cleanUser) return false;
+        return raw_contacts.some((c: any) => {
+            if (!c.phoneNumber) return false;
+            const cleanPhone = c.phoneNumber.replace(/[^0-9]/g, '');
+            return cleanPhone === cleanUser || (cleanPhone.length >= 6 && cleanUser.endsWith(cleanPhone)) || (cleanUser.length >= 6 && cleanPhone.endsWith(cleanUser));
+        });
+    }, [user, user_data.phone_number, raw_contacts]);
+
+    const handleAddToContacts = useCallback(() => {
+        Linking.openURL(`tel:${user}`);
+    }, [user]);
+
+    const handleBlockUser = useCallback(() => {
+        Alert.alert(
+            strings.block_user || "Block User",
+            `Are you sure you want to block ${user}?`,
+            [
+                { text: strings.cancel || "Cancel", style: "cancel" },
+                {
+                    text: strings.block || "Block",
+                    style: "destructive",
+                    onPress: () => {
+                        SocketApp.emit('blockUser', { user });
+                    }
+                }
+            ]
+        );
+    }, [user]);
+
+    const handleReportUser = useCallback(() => {
+        Alert.alert(
+            strings.report || "Report User",
+            `Report ${user} for abuse or spam?`,
+            [
+                { text: strings.cancel || "Cancel", style: "cancel" },
+                {
+                    text: strings.report || "Report",
+                    style: "destructive",
+                    onPress: () => {
+                        SocketApp.emit('reportUser', { user });
+                    }
+                }
+            ]
+        );
+    }, [user]);
 
     /**
      * REALM QUERY
@@ -184,7 +237,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
             const timer = setTimeout(() => {
                 try {
                     flashListRef.current?.scrollToEnd({ animated: true });
-                } catch (e) {}
+                } catch (e) { }
                 dispatch(setScrollToEnd(false));
             }, 100);
             return () => clearTimeout(timer);
@@ -319,7 +372,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                             borderWidth: 1,
                             borderRadius: 16,
                             marginTop: 40,
-                            marginBottom: 25,
+                            marginBottom: 16,
                             shadowColor: '#000',
                             shadowOffset: {
                                 width: 0,
@@ -359,9 +412,126 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                         </Text>
                     </Pressable>
                 </Animated.View>
+
+                {/* {!isSavedInPhonebook && user !== user_data.phone_number ? (
+                    <Animated.View entering={FadeInUp.delay(200)}>
+                        <View
+                            style={{
+                                marginHorizontal: 20,
+                                marginBottom: 20,
+                                padding: 16,
+                                backgroundColor: app_theme.colors.card || app_theme.colors.background,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: app_theme.colors.border,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.08,
+                                shadowRadius: 4,
+                                elevation: 2,
+                                alignItems: 'center',
+                            }}
+                        >
+                            <YambiText
+                                text={strings.unsaved_number_notice || "This sender is not in your contact list"}
+                                size="normal"
+                                color="high"
+                                bold
+                                style={{ textAlign: 'center', marginBottom: 14 }}
+                            />
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    gap: 8,
+                                }}
+                            >
+                                <Pressable
+                                    onPress={handleAddToContacts}
+                                    style={({ pressed }) => ({
+                                        flex: 1,
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 4,
+                                        borderRadius: 12,
+                                        backgroundColor: app_theme.colors.card || app_theme.colors.background,
+                                        borderWidth: 1,
+                                        borderColor: app_theme.colors.border,
+                                        opacity: pressed ? 0.7 : 1,
+                                    })}
+                                >
+                                    <IconApp pack="MC" name="account-plus-outline" size={22} color={app_theme.colors.high_color} />
+                                    <YambiText
+                                        text={strings.add_to_contacts}
+                                        size="small"
+                                        color="default"
+                                        style={{ marginTop: 4, textAlign: 'center', fontSize: 11 }}
+                                        numberLines={1}
+                                    />
+                                </Pressable>
+
+                                <Pressable
+                                    onPress={handleBlockUser}
+                                    style={({ pressed }) => ({
+                                        flex: 1,
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 4,
+                                        borderRadius: 12,
+                                        backgroundColor: app_theme.colors.card || app_theme.colors.background,
+                                        borderWidth: 1,
+                                        borderColor: app_theme.colors.border,
+                                        opacity: pressed ? 0.7 : 1,
+                                    })}
+                                >
+                                    <IconApp pack="MC" name="account-cancel-outline" size={22} color={app_theme.colors.error || '#ff4d4f'} />
+                                    <YambiText
+                                        text={strings.block}
+                                        size="small"
+                                        color="default"
+                                        style={{ marginTop: 4, textAlign: 'center', fontSize: 11 }}
+                                        numberLines={1}
+                                    />
+                                </Pressable>
+
+                                <Pressable
+                                    onPress={handleReportUser}
+                                    style={({ pressed }) => ({
+                                        flex: 1,
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 4,
+                                        borderRadius: 12,
+                                        backgroundColor: app_theme.colors.card || app_theme.colors.background,
+                                        borderWidth: 1,
+                                        borderColor: app_theme.colors.border,
+                                        opacity: pressed ? 0.7 : 1,
+                                    })}
+                                >
+                                    <IconApp pack="MC" name="alert-circle-outline" size={22} color={'#faad14'} />
+                                    <YambiText
+                                        text={strings.report}
+                                        size="small"
+                                        color="default"
+                                        style={{ marginTop: 4, textAlign: 'center', fontSize: 11 }}
+                                        numberLines={1}
+                                    />
+                                </Pressable>
+                            </View>
+                        </View>
+                    </Animated.View>
+                ) : null} */}
             </Animated.View>
         );
-    }, []);
+    }, [isSavedInPhonebook, user, user_data.phone_number, app_theme, app_description, handleAddToContacts, handleBlockUser, handleReportUser]);
 
     return (
 

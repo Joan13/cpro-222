@@ -1,4 +1,4 @@
-import { View, Text, Image, Pressable } from 'react-native';
+import { View, Image, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppDispatch, useAppSelector } from '../../../store/app/hooks';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
@@ -12,6 +12,8 @@ import VoiceMessageItem from '../../chat/message/VoiceMessageItem';
 import PictureMessageItem from '../../chat/message/PictureMessageItem';
 import DocumentMessageItem from '../../chat/message/DocumentMessageItem';
 import ContactMessageItem from '../../chat/message/ContactMessageItem';
+import BusinessItemMessage from '../../chat/message/BusinessItemMessage';
+import * as RootNavigation from '../../../services/Navigation_ref';
 import { displayDate } from '../../../../GlobalVariables';
 import { TextSmallYambiGray, TextSmallYambiHighColor, YambiText } from '../../app/Text';
 import { IconApp } from '../../app/IconApp';
@@ -400,7 +402,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                 <View style={{
                                     paddingHorizontal: item.response_to === "" ? 12 : 0,
                                     paddingVertical: 4,
-                                    width: item.message_type === 1 || item.message_type === 2 ? 260 : 'auto',
+                                    width: item.message_type === 1 || item.message_type === 2 || item.message_type === 6 ? 260 : 'auto',
                                     maxWidth: item.message_type === 1 ? 260 : '85%',
                                     borderRadius: 10,
                                     shadowColor: '#000',
@@ -435,74 +437,96 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                 >
                                                     {item.message_type === 5 ? (
                                                         <>
-                                                            <Text style={{
-                                                                color: '#f59f00',
-                                                                fontSize: app_description.small_general_font_size,
-                                                                fontWeight: app_description.small_general_font_weight as any
-                                                            }}>
-                                                                {item.receiver === user_data.phone_number
+                                                            <YambiText
+                                                                size="small"
+                                                                color="#f59f00"
+                                                                text={item.receiver === user_data.phone_number
                                                                     ? "You . Status"
                                                                     : `${ShowUserName(user, user)} . Status`}
-                                                            </Text>
-                                                            <Text numberOfLines={3} style={{
-                                                                color: app_theme.colors.text,
-                                                                fontSize: app_description.small_general_font_size,
-                                                                fontWeight: app_description.small_general_font_weight as any,
-                                                                marginTop: 2
-                                                            }}>
-                                                                {item.caption || (strings as any).status || "Status"}
-                                                            </Text>
+                                                                style={{
+                                                                    fontWeight: app_description.small_general_font_weight as any
+                                                                }}
+                                                            />
+                                                            <YambiText
+                                                                size="small"
+                                                                color="default"
+                                                                numberLines={3}
+                                                                text={item.caption || (strings as any).status || "Status"}
+                                                                style={{
+                                                                    fontWeight: app_description.small_general_font_weight as any,
+                                                                    marginTop: 2
+                                                                }}
+                                                            />
                                                         </>
                                                     ) : message !== null ? (
                                                         <>
-                                                            <Text style={{
-                                                                color: '#f59f00',
-                                                                fontSize: app_description.small_general_font_size,
-                                                                fontWeight: app_description.small_general_font_weight as any
-                                                            }}>{message.sender === user ? ShowUserName(user, user) : strings.you}</Text>
+                                                            <YambiText
+                                                                size="small"
+                                                                color="#f59f00"
+                                                                text={message.sender === user ? ShowUserName(user, user) : strings.you}
+                                                                style={{
+                                                                    fontWeight: app_description.small_general_font_weight as any
+                                                                }}
+                                                            />
                                                             {message.message_type === 4 ? (
                                                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
                                                                     <IconApp pack="FA" name="user" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                                    <Text style={{
-                                                                        color: app_theme.colors.text,
-                                                                        fontSize: app_description.small_general_font_size,
-                                                                        fontWeight: app_description.small_general_font_weight as any
-                                                                    }}>{(strings as any).contact || "Contact"}</Text>
+                                                                    <YambiText
+                                                                        size="small"
+                                                                        color="default"
+                                                                        text={(strings as any).contact || "Contact"}
+                                                                        style={{
+                                                                            fontWeight: app_description.small_general_font_weight as any
+                                                                        }}
+                                                                    />
                                                                 </View>
                                                             ) : message.message_type === 3 ? (
                                                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
                                                                     <IconApp pack="FI" name="file-text" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                                    <Text style={{
-                                                                        color: app_theme.colors.text,
-                                                                        fontSize: app_description.small_general_font_size,
-                                                                        fontWeight: app_description.small_general_font_weight as any
-                                                                    }}>{strings.document_file || "Document"}</Text>
+                                                                    <YambiText
+                                                                        size="small"
+                                                                        color="default"
+                                                                        text={strings.document_file || "Document"}
+                                                                        style={{
+                                                                            fontWeight: app_description.small_general_font_weight as any
+                                                                        }}
+                                                                    />
                                                                 </View>
                                                             ) : message.message_type === 2 ? (
                                                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
                                                                     <IconApp pack="FI" name="image" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                                    <Text style={{
-                                                                        color: app_theme.colors.text,
-                                                                        fontSize: app_description.small_general_font_size,
-                                                                        fontWeight: app_description.small_general_font_weight as any
-                                                                    }}>{strings.picture}</Text>
+                                                                    <YambiText
+                                                                        size="small"
+                                                                        color="default"
+                                                                        text={strings.picture}
+                                                                        style={{
+                                                                            fontWeight: app_description.small_general_font_weight as any
+                                                                        }}
+                                                                    />
                                                                 </View>
                                                             ) : message.message_type === 1 ? (
                                                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
                                                                     <IconApp pack="MC" name="microphone" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
-                                                                    <Text style={{
-                                                                        color: app_theme.colors.text,
-                                                                        fontSize: app_description.small_general_font_size,
-                                                                        fontWeight: app_description.small_general_font_weight as any
-                                                                    }}>{strings.voice_note}</Text>
+                                                                    <YambiText
+                                                                        size="small"
+                                                                        color="default"
+                                                                        text={strings.voice_note}
+                                                                        style={{
+                                                                            fontWeight: app_description.small_general_font_weight as any
+                                                                        }}
+                                                                    />
                                                                 </View>
                                                             ) : (
-                                                                <Text numberOfLines={5} style={{
-                                                                    color: app_theme.colors.text,
-                                                                    fontSize: app_description.small_general_font_size,
-                                                                    fontWeight: app_description.small_general_font_weight as any,
-                                                                    marginTop: 2
-                                                                }}>{message.main_text_message}</Text>
+                                                                <YambiText
+                                                                    size="small"
+                                                                    color="default"
+                                                                    numberLines={5}
+                                                                    text={message.main_text_message}
+                                                                    style={{
+                                                                        fontWeight: app_description.small_general_font_weight as any,
+                                                                        marginTop: 2
+                                                                    }}
+                                                                />
                                                             )}
                                                         </>
                                                     ) : null}
@@ -513,17 +537,19 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                         marginHorizontal: item.response_to === "" ? 0 : 10
                                     }}>
                                         {item.deleted === 1 ?
-                                            <Text style={{
-                                                color: app_theme.colors.gray,
-                                                flex: 1,
-                                                marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 100 : 90 : lang === "en" ? 80 : 55 : 10,
-                                                marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
-                                                fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                                fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
-                                            }}>
+                                            <YambiText
+                                                color="gray"
+                                                style={{
+                                                    flex: 1,
+                                                    marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 100 : 90 : lang === "en" ? 80 : 55 : 10,
+                                                    marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
+                                                    fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
+                                                    fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size,
+                                                }}
+                                            >
                                                 <IconApp pack="FI" name="minus-circle" size={17} color={app_theme.colors.gray} />
                                                 {"  " + strings.message_deleted}
-                                            </Text>
+                                            </YambiText>
                                             :
                                             <>
                                                 {item.flag !== 0 ?
@@ -555,10 +581,11 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
 
                                                 {item.message_type === 0 || item.message_type === 5 ? (
                                                     <YambiText
+                                                        formatYambiText={true}
                                                         text={item.main_text_message.trim()}
+                                                        color={item.sender === user_data.phone_number ? app_theme.colors.chat_sent_foreground : app_theme.colors.chat_received_foreground}
                                                         linkColor={app_theme.colors.high_color}
                                                         style={{
-                                                            color: item.sender === user_data.phone_number ? app_theme.colors.chat_sent_foreground : app_theme.colors.chat_received_foreground,
                                                             flex: 1,
                                                             marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
                                                             marginBottom: (item.caption === "" || item.message_type === 5) ? item.main_text_message.length < 35 ? -12 : 0 : 0,
@@ -579,12 +606,15 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
 
                                                 {item.message_type === 4 ? <ContactMessageItem message={item} /> : null}
 
+                                                {item.message_type === 6 ? <BusinessItemMessage message={item} /> : null}
+
                                                 {item.caption !== "" && item.message_type !== 4 && item.message_type !== 3 && item.message_type !== 5 ? (
                                                     <YambiText
+                                                        formatYambiText={true}
                                                         text={item.caption.trim()}
+                                                        color={item.message_type === 0 ? "gray" : "default"}
                                                         linkColor={app_theme.colors.high_color}
                                                         style={{
-                                                            color: item.message_type === 0 ? app_theme.colors.gray : app_theme.colors.text,
                                                             flex: 1,
                                                             marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 90 : 65 : lang === "en" ? 70 : 45 : 10,
                                                             marginBottom: item.main_text_message.length < 35 ? -12 : 0,
@@ -606,15 +636,16 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                             // paddingLeft: 10,
                                             // backgroundColor: 'yellow'
                                         }}>
-                                            <Text style={{
-                                                marginTop: 0,
-                                                marginLeft: 10,
-                                                color: app_theme.colors.gray,
-                                                fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
-                                                fontSize: app_description.small_general_font_size,
-                                                // marginLeft: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? 65 : 45 : 10,
-
-                                            }}>{moment(item.createdAt).format('LT')}</Text>
+                                            <YambiText
+                                                size="small"
+                                                color="gray"
+                                                text={moment(item.createdAt).format('LT')}
+                                                style={{
+                                                    marginTop: 0,
+                                                    marginLeft: 10,
+                                                    fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
+                                                }}
+                                            />
 
                                             <View style={{
                                                 flexDirection: 'row',

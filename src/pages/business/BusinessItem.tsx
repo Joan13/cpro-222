@@ -690,7 +690,7 @@ const BusinessItemInner = ({ navigation, cartItem, fromBusinessInventory }: Busi
                                                             return (
                                                                 <Pressable
                                                                     key={`${raw}-${idx}`}
-                                                                    onPress={() => navigation.navigate('Inbox', { user: phoneKey })}
+                                                                    onPress={() => navigation.navigate('Inbox', { user: phoneKey, response_to: item._id, message_type: 6 })}
                                                                     style={{
                                                                         flexDirection: 'row',
                                                                         alignItems: 'center',

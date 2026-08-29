@@ -38,7 +38,7 @@ const HeaderRightHome = () => {
 
     const chats = useQuery(
         UserChats, chts => {
-            return chts.filtered('flag==1');
+            return chts.filtered('favorite == 1');
         }, []);
 
     // console.log(chats)

@@ -193,7 +193,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                 }}>
                     {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
                     {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : null}
-                    <YambiText text={message.deleted === 0 ? message.main_text_message : strings.message_deleted} size="small" color="gray" numberLines={1} clickable_links={false} style={{ flex: 1, marginRight: 10 }} />
+                    <YambiText formatYambiText={true} text={message.deleted === 0 ? message.main_text_message : strings.message_deleted} size="small" color="gray" numberLines={1} clickable_links={false} style={{ flex: 1, marginRight: 10 }} />
                 </View>
             );
         } else if (message.message_type === 1) {
@@ -250,6 +250,20 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
                     {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FA" name="user" size={15} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
                     <YambiText text={message.deleted !== 0 ? strings.message_deleted : ((strings as any).contact || "Contact")} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 5 }} />
+                </View>
+            );
+        } else if (message.message_type === 6) {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
+                    {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : <IconApp pack="FI" name="shopping-bag" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />}
+                    <YambiText text={message.deleted !== 0 ? strings.message_deleted : (message.main_text_message || strings.item || "Item")} size="small" color="gray" numberLines={1} style={{ flex: 1, marginRight: 5 }} />
                 </View>
             );
         } else {
@@ -332,12 +346,14 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                 type_chat: chat.type_chat,
                 last_message: chat.last_message,
                 user: chat.user,
-                flag: chat.flag === 2 ? 0 : 2, // Toggle pin (2 = pinned, 0 = unpinned)
+                flag: chat.flag,
+                pinned: chat.pinned === 1 ? 0 : 1,
+                favorite: chat.favorite ?? 0,
                 chat_read: chat.chat_read,
                 deleted: chat.deleted,
                 chat_effect: chat.chat_effect,
                 createdAt: chat.createdAt,
-                updatedAt: moment().format(),
+                updatedAt: chat.updatedAt,
             };
 
             realm.write(() => {
@@ -356,12 +372,14 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                 type_chat: chat.type_chat,
                 last_message: chat.last_message,
                 user: chat.user,
-                flag: chat.flag === 1 ? 0 : 1, // Toggle favorite (1 = favorite, 0 = remove)
+                flag: chat.flag,
+                pinned: chat.pinned ?? 0,
+                favorite: chat.favorite === 1 ? 0 : 1,
                 chat_read: chat.chat_read,
                 deleted: chat.deleted,
                 chat_effect: chat.chat_effect,
                 createdAt: chat.createdAt,
-                updatedAt: moment().format(),
+                updatedAt: chat.updatedAt,
             };
 
             realm.write(() => {
@@ -381,6 +399,8 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                 last_message: "", // Reset last message to fresh
                 user: chat.user,
                 flag: chat.flag,
+                pinned: chat.pinned ?? 0,
+                favorite: chat.favorite ?? 0,
                 chat_read: chat.chat_read,
                 deleted: 1, // Mark as deleted
                 chat_effect: chat.chat_effect,
@@ -492,8 +512,10 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
                                 {render_last_message()}
 
-                                {item.flag !== 0 ?
-                                    <IconApp pack="MC" name={item.flag === 2 ? "pin" : "star"} size={15} color={app_theme.colors.gray} /> : null}
+                                {item.pinned === 1 ?
+                                    <IconApp pack="MC" name="pin" size={15} color={app_theme.colors.gray} styles={{ marginRight: item.favorite === 1 ? 3 : 0 }} /> : null}
+                                {item.favorite === 1 ?
+                                    <IconApp pack="MC" name="star" size={15} color={app_theme.colors.gray} /> : null}
 
                                 {chat && chat.chat_read === 0 ?
                                     unread.length !== 0 ?
@@ -525,9 +547,9 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                         key="pin"
                         onSelect={handlePinChat}>
                         <ContextMenu.ItemTitle>
-                            {chat && chat.flag === 2 ? strings.unpin_chat : strings.pin_chat}
+                            {chat && chat.pinned === 1 ? strings.unpin_chat : strings.pin_chat}
                         </ContextMenu.ItemTitle>
-                        <ContextMenu.ItemIcon ios={{ name: chat && chat.flag === 2 ? 'pin.slash' : 'pin' }} />
+                        <ContextMenu.ItemIcon ios={{ name: chat && chat.pinned === 1 ? 'pin.slash' : 'pin' }} />
                     </ContextMenu.Item>
 
                     {/* Add to Favorites/Remove from Favorites */}
@@ -535,9 +557,9 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                         key="favorite"
                         onSelect={handleAddToFavorites}>
                         <ContextMenu.ItemTitle>
-                            {chat && chat.flag === 1 ? strings.remove_from_favorites : strings.add_to_favorites}
+                            {chat && chat.favorite === 1 ? strings.remove_from_favorites : strings.add_to_favorites}
                         </ContextMenu.ItemTitle>
-                        <ContextMenu.ItemIcon ios={{ name: chat && chat.flag === 1 ? 'star.fill' : 'star' }} />
+                        <ContextMenu.ItemIcon ios={{ name: chat && chat.favorite === 1 ? 'star.fill' : 'star' }} />
                     </ContextMenu.Item>
 
                     {/* Delete Chat */}

@@ -312,6 +312,8 @@ export type TChat = {
     type_chat: number,
     last_message: string,
     flag: number,
+    favorite?: number,
+    pinned?: number,
     chat_read: number,
     deleted: number,
     chat_effect: number,
@@ -768,7 +770,7 @@ export type TInventoryMovement = {
 
 export type RootStackParamList = {
     Home: undefined;
-    Inbox: { user: string; highlight_message_token?: string };
+    Inbox: { user: string; highlight_message_token?: string; response_to?: string; message_type?: number };
     AudioCallScreen: undefined;
     VideoCallScreen: undefined;
     Search: undefined;

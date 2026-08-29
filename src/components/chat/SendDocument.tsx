@@ -10,6 +10,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import * as DocumentPicker from 'expo-document-picker';
 import { NavProps, TChat, TMessage } from '../../types/types';
+import { UserChats } from '../../store/database/Models';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { useRealm } from '@realm/react';
 import moment from 'moment';
@@ -150,17 +151,20 @@ const SendDocument = ({ navigation, route }: NavProps) => {
                 alignment: moment().utc().toISOString()
             };
 
+            const existingChat = realm.objectForPrimaryKey<UserChats>('UserChats', user);
             const chat: TChat = {
                 _id: user,
                 phone_number: user,
-                type_chat: 0,
+                type_chat: existingChat ? existingChat.type_chat : 0,
                 last_message: token,
                 user: user_data.phone_number,
-                flag: 0,
+                flag: existingChat ? existingChat.flag : 0,
+                favorite: existingChat ? (existingChat.favorite ?? 0) : 0,
+                pinned: existingChat ? (existingChat.pinned ?? 0) : 0,
                 chat_read: 0,
                 deleted: 0,
-                chat_effect: 0,
-                createdAt: time,
+                chat_effect: existingChat ? existingChat.chat_effect : 0,
+                createdAt: existingChat ? existingChat.createdAt : time,
                 updatedAt: time,
             };
 

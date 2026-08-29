@@ -66,6 +66,7 @@ import Languages from './src/pages/app/Languages';
 import AudioCallScreen from './src/pages/call/AudioCallScreen';
 import VideoCallScreen from './src/pages/call/VideoCallScreen';
 import IncomingCallOverlay from './src/components/call/IncomingCallOverlay';
+import ActiveCallFloatingPIP from './src/components/call/ActiveCallFloatingPIP';
 import { callManager } from './src/services/call/CallManager';
 import AboutYambi from './src/pages/app/AboutYambi';
 import MakeDonation from './src/pages/app/MakeDonation';
@@ -199,14 +200,64 @@ import EditReservation from './src/pages/business/EditReservation';
 
 // Configure how notifications are displayed when the app is in the foreground
 Notifications.setNotificationHandler({
-    handleNotification: async (): Promise<NotificationBehavior> => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
+    handleNotification: async (notification): Promise<NotificationBehavior> => {
+        const data = notification.request.content.data;
+        const isForeground = AppState.currentState === 'active';
+
+        if (data?.type === 'CALL_INVITE' && isForeground) {
+            return {
+                shouldShowAlert: false,
+                shouldPlaySound: false,
+                shouldSetBadge: false,
+                shouldShowBanner: false,
+                shouldShowList: false,
+            };
+        }
+
+        return {
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+            shouldShowBanner: true,
+            shouldShowList: true,
+        };
+    },
 });
+
+// Configure Android High-Priority Ongoing Call Channel
+if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('incoming_calls', {
+        name: 'Incoming Calls',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#34C759',
+        sound: 'default',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+    });
+}
+
+export const setupIncomingCallNotificationCategory = () => {
+    Notifications.setNotificationCategoryAsync('incoming_call_category', [
+        {
+            identifier: 'accept_call',
+            buttonTitle: strings.accept || 'Accept',
+            options: {
+                opensAppToForeground: true,
+            },
+        },
+        {
+            identifier: 'decline_call',
+            buttonTitle: strings.decline || 'Decline',
+            options: {
+                opensAppToForeground: false,
+                isDestructive: true,
+            },
+        },
+    ]).catch((err) => console.log('Error setting notification category:', err));
+};
+
+setupIncomingCallNotificationCategory();
 
 export const displayNotification = async (notification: any) => {
     const state = store.getState();
@@ -219,6 +270,40 @@ export const displayNotification = async (notification: any) => {
     }
 
     const data = notification?.data ?? {};
+    if (data.type === 'CALL_INVITE') {
+        // Only show system notification if app is in background/closed
+        if (AppState.currentState === 'active') {
+            return;
+        }
+
+        setupIncomingCallNotificationCategory();
+
+        const notificationId = `call_invite_${data.callId || Date.now()}`;
+        const title = data.callerName ? `${data.callerName}` : (strings.incoming_call || 'Incoming Call');
+        const body = data.callType === 'video'
+            ? (strings.incoming_video_call || strings.video_call || 'Incoming Video Call')
+            : (strings.incoming_audio_call || strings.audio_call || 'Incoming Audio Call');
+
+        await Notifications.scheduleNotificationAsync({
+            identifier: notificationId,
+            content: {
+                title,
+                body,
+                data: {
+                    ...data,
+                    notificationId,
+                },
+                sound: 'default',
+                priority: Notifications.AndroidNotificationPriority.MAX,
+                categoryIdentifier: 'incoming_call_category',
+                autoDismiss: false,
+                sticky: true,
+            },
+            trigger: null,
+        });
+        return;
+    }
+
     const title =
         data.title ??
         notification?.notification?.title ??
@@ -447,6 +532,16 @@ const Yambi = ({ navigation }: NavProps) => {
     useEffect(() => {
         dispatch(setTabVisibleMarketplace(true));
     }, []);
+
+    useEffect(() => {
+        if (user_data && user_data.phone_number) {
+            callManager.init(
+                user_data.phone_number,
+                user_data.user_names || user_data.phone_number,
+                user_data.user_profile || ''
+            );
+        }
+    }, [user_data?.phone_number, user_data?.user_names, user_data?.user_profile]);
 
     const all_contacts = useQuery(
         UserContacts, ccs => {
@@ -2288,7 +2383,34 @@ const Yambi = ({ navigation }: NavProps) => {
         //     console.log('Notification received in foreground:', notification);
         //     });
 
-        const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+        // Check for cold-start initial call notification response
+        Notifications.getLastNotificationResponseAsync().then(async (initialResponse) => {
+            if (initialResponse) {
+                const notificationData = initialResponse.notification.request.content.data;
+                const actionIdentifier = initialResponse.actionIdentifier;
+
+                if (notificationData?.type === 'CALL_INVITE') {
+                    console.log('[App.tsx] Cold start call notification response detected:', notificationData, actionIdentifier);
+                    callManager.handleIncomingInviteFromNotification(notificationData);
+
+                    if (actionIdentifier === 'accept_call') {
+                        await callManager.acceptCall();
+                        const targetScreen = notificationData?.callType === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
+                        setTimeout(() => {
+                            if (navigationRef.current) {
+                                RootNavigation.navigate(targetScreen, {});
+                            }
+                        }, 600);
+                    } else if (actionIdentifier === 'decline_call') {
+                        callManager.rejectCall();
+                    } else {
+                        // Tapped notification body on cold start: IncomingCallOverlay renders in app automatically
+                    }
+                }
+            }
+        }).catch((err) => console.log('Error checking cold start call notification:', err));
+
+        const responseListener = Notifications.addNotificationResponseReceivedListener(async (response) => {
             const notificationData = response.notification.request.content.data;
             const screen = notificationData?.screen;
             const actionIdentifier = response.actionIdentifier;
@@ -2296,6 +2418,34 @@ const Yambi = ({ navigation }: NavProps) => {
             // Quick Reply and Mark as Read actions are handled at the top level in index.tsx
             // so they work immediately without waiting for the React tree to mount
             if (actionIdentifier === 'reply' || actionIdentifier === 'mark_as_read') {
+                return;
+            }
+
+            // Handle incoming call notification tap or Accept/Decline action buttons
+            if (notificationData?.type === 'CALL_INVITE' || screen === 'AudioCallScreen' || screen === 'VideoCallScreen') {
+                const notificationId = response.notification.request.identifier;
+
+                callManager.handleIncomingInviteFromNotification(notificationData);
+
+                if (actionIdentifier === 'accept_call') {
+                    if (notificationId) {
+                        Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+                    }
+                    await callManager.acceptCall();
+                    if (notificationData?.callType === 'audio' || notificationData?.type === 'audio') {
+                        RootNavigation.navigate('AudioCallScreen', {});
+                    } else {
+                        RootNavigation.navigate('VideoCallScreen', {});
+                    }
+                } else if (actionIdentifier === 'decline_call') {
+                    if (notificationId) {
+                        Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+                    }
+                    callManager.rejectCall();
+                } else {
+                    // Notification body tapped: Simply open app & show IncomingCallOverlay for user action
+                    // Do NOT call acceptCall() yet! The notification remains pinned until Accept or Decline is clicked.
+                }
                 return;
             }
 
@@ -4266,6 +4416,7 @@ const Yambi = ({ navigation }: NavProps) => {
                             <Stack.Screen name="SplashStartYambi" options={{ headerShown: false }} component={SplashYambiStart} />
                         </Stack.Navigator>
                         <IncomingCallOverlay navigation={navigationRef} />
+                        <ActiveCallFloatingPIP navigation={navigationRef} />
                     </NavigationContainer>
                 </AudioPlayerProvider>
             </KeyboardRootView>

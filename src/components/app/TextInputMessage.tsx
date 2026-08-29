@@ -1,4 +1,5 @@
 import { TextInput, BackHandler, Keyboard } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { TChat, TDraft, TSelection } from '../../types/types';
 import { setMessageInbox, setResponseTo, setShowCustomKeyboard, setEmoji } from '../../store/reducers/appSlice';
@@ -24,12 +25,20 @@ const TextInputComponent = ({ user }: { user: string }) => {
     const inputRef = useRef<TextInput>(null);
     const isRestoringDraftRef = useRef(false);
 
+    const route = useRoute<any>();
+    const routeResponseTo = route?.params?.response_to;
+
     // Populate or reset draft when opening a chat for user
     useEffect(() => {
         if (!user) return;
         isRestoringDraftRef.current = true;
         const currentDraft = chatDrafts[user];
-        if (currentDraft) {
+        if (routeResponseTo) {
+            dispatch(setResponseTo(routeResponseTo));
+            if (currentDraft?.message) {
+                dispatch(setMessageInbox(currentDraft.message));
+            }
+        } else if (currentDraft) {
             dispatch(setMessageInbox(currentDraft.message || ''));
             dispatch(setResponseTo(currentDraft.responseTo || ''));
         } else {
@@ -40,7 +49,7 @@ const TextInputComponent = ({ user }: { user: string }) => {
             isRestoringDraftRef.current = false;
         }, 150);
         return () => clearTimeout(timer);
-    }, [user]);
+    }, [user, routeResponseTo]);
 
     const draftTimerRef = useRef<NodeJS.Timeout | null>(null);
 

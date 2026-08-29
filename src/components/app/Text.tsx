@@ -1,9 +1,12 @@
-import { Text, TextStyle, Linking } from "react-native"
+import React from "react";
+import { Text, TextStyle, Linking, View, Platform } from "react-native";
 import { useAppSelector } from "../../store/app/hooks";
 import { TTheme } from "../../types/types";
+import { parseBlocks, InlineToken } from "../../utils/yambiTextParser";
 
 export interface IYambiText {
-    text: string;
+    text?: string;
+    children?: React.ReactNode;
     bold?: boolean;
     numberLines?: number;
     style?: TextStyle;
@@ -14,6 +17,8 @@ export interface IYambiText {
     clickable_links?: boolean;
     linkColor?: string;
     onLinkPress?: (url: string) => void;
+    formatYambiText?: boolean;
+    formatWhatsApp?: boolean;
 }
 
 export const renderTextWithLinks = (
@@ -23,10 +28,10 @@ export const renderTextWithLinks = (
     onLinkPress?: (url: string) => void
 ) => {
     if (!text || typeof text !== 'string') return text;
-    
+
     // Regex matching HTTP/HTTPS/WWW, emails, and bare domains (e.g. website.com, domain.co.uk, yambi.app)
     const urlRegex = /(?:https?:\/\/|www\.)[^\s<]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.(?:com|org|net|io|app|ai|co|info|biz|dev|me|tech|site|online|xyz|store|shop|blog|cd|fr|de|uk|ca|au|in|jp|cn|us|eu|[a-zA-Z]{2,})(?:\/[^\s]*)?/gi;
-    
+
     const parts: { text: string; isUrl: boolean }[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
@@ -34,7 +39,7 @@ export const renderTextWithLinks = (
     while ((match = urlRegex.exec(text)) !== null) {
         const matchIndex = match.index;
         let url = match[0];
-        
+
         let trailingPunctuation = '';
         while (url.length > 0 && /[.,;!?)]$/.test(url)) {
             trailingPunctuation = url.slice(-1) + trailingPunctuation;
@@ -48,7 +53,7 @@ export const renderTextWithLinks = (
         if (url.length > 0) {
             parts.push({ text: url, isUrl: true });
         }
-        
+
         if (trailingPunctuation.length > 0) {
             parts.push({ text: trailingPunctuation, isUrl: false });
         }
@@ -61,7 +66,7 @@ export const renderTextWithLinks = (
     }
 
     if (parts.length === 0 || !parts.some(p => p.isUrl)) {
-        return text;
+        return <Text style={baseStyle}>{text}</Text>;
     }
 
     return parts.map((part, index) => {
@@ -96,12 +101,58 @@ export const renderTextWithLinks = (
                 </Text>
             );
         }
-        return part.text;
+        return <Text key={index} style={baseStyle}>{part.text}</Text>;
+    });
+};
+
+const renderInlineTokens = (
+    tokens: InlineToken[],
+    baseStyle: TextStyle,
+    app_description: any,
+    theme: any,
+    isClickableLinks: boolean,
+    effectiveLinkColor: string,
+    onLinkPress?: (url: string) => void
+) => {
+    return tokens.map((token, index) => {
+        const tokenStyle: TextStyle = { ...baseStyle };
+
+        if (token.style.bold) {
+            tokenStyle.fontWeight = 'bold';
+        }
+        if (token.style.italic) {
+            tokenStyle.fontStyle = 'italic';
+        }
+        if (token.style.strikethrough) {
+            tokenStyle.textDecorationLine =
+                tokenStyle.textDecorationLine === 'underline'
+                    ? 'underline line-through'
+                    : 'line-through';
+        }
+        if (token.style.code) {
+            tokenStyle.fontFamily = Platform.OS === 'ios' ? 'Courier' : 'monospace';
+            tokenStyle.backgroundColor = theme?.dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
+        }
+
+        if (isClickableLinks) {
+            return (
+                <React.Fragment key={index}>
+                    {renderTextWithLinks(token.text, tokenStyle, effectiveLinkColor, onLinkPress)}
+                </React.Fragment>
+            );
+        }
+
+        return (
+            <Text key={index} style={tokenStyle}>
+                {token.text}
+            </Text>
+        );
     });
 };
 
 export const YambiText: React.FC<IYambiText> = ({
     text,
+    children,
     bold,
     numberLines,
     style,
@@ -111,13 +162,15 @@ export const YambiText: React.FC<IYambiText> = ({
     clickableLinks = true,
     clickable_links,
     linkColor,
-    onLinkPress
+    onLinkPress,
+    formatYambiText = true,
+    formatWhatsApp,
 }) => {
-
     const theme = useAppSelector(state => state.app_theme);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
 
     const isClickableLinks = clickable_links !== undefined ? clickable_links : clickableLinks;
+    const isFormatEnabled = formatYambiText && (formatWhatsApp === undefined || formatWhatsApp);
 
     const fontSize = {
         xsmall: 12,
@@ -151,359 +204,232 @@ export const YambiText: React.FC<IYambiText> = ({
     const baseTextStyle: TextStyle = {
         color: textColor,
         fontSize,
-        fontWeight: bold ? app_description.general_font_weight as any : 'normal',
+        fontWeight: bold ? (app_description.general_font_weight as any) : 'normal',
         textDecorationLine: lineThrough ? 'line-through' : (style?.textDecorationLine || 'none')
     };
 
     const effectiveLinkColor = linkColor || theme.colors.high_color;
 
+    const rawText = text !== undefined ? text : (typeof children === 'string' ? children : undefined);
+    const shouldFormat = isFormatEnabled && typeof rawText === 'string';
+
+    if (!shouldFormat) {
+        return (
+            <Text
+                numberOfLines={numberLines}
+                style={[
+                    style,
+                    baseTextStyle
+                ]}
+            >
+                {typeof rawText === 'string' && isClickableLinks
+                    ? renderTextWithLinks(rawText, baseTextStyle, effectiveLinkColor, onLinkPress)
+                    : (rawText !== undefined ? rawText : children)}
+            </Text>
+        );
+    }
+
+    const blocks = parseBlocks(rawText!);
+    const hasBlockElements = blocks.some(b => b.type !== 'paragraph');
+
+    if (!hasBlockElements) {
+        return (
+            <Text
+                numberOfLines={numberLines}
+                style={[
+                    style,
+                    baseTextStyle
+                ]}
+            >
+                {blocks.map((block, bIdx) => (
+                    <React.Fragment key={bIdx}>
+                        {bIdx > 0 ? '\n' : ''}
+                        {block.inlines ? renderInlineTokens(block.inlines, baseTextStyle, app_description, theme, isClickableLinks, effectiveLinkColor, onLinkPress) : null}
+                    </React.Fragment>
+                ))}
+            </Text>
+        );
+    }
+
     return (
-        <Text
-            numberOfLines={numberLines}
-            style={[
-                style,
-                baseTextStyle
-            ]}
-        >
-            {isClickableLinks
-                ? renderTextWithLinks(text, baseTextStyle, effectiveLinkColor, onLinkPress)
-                : text}
-        </Text>
+        <View style={style}>
+            {blocks.map((block, bIdx) => {
+                if (block.type === 'code_block') {
+                    return (
+                        <View key={bIdx} style={{
+                            backgroundColor: theme.dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                            borderRadius: 6,
+                            padding: 8,
+                            marginVertical: 4,
+                            borderWidth: 1,
+                            borderColor: theme.colors.border,
+                        }}>
+                            {block.language ? (
+                                <Text style={{
+                                    fontSize: 10,
+                                    color: theme.colors.gray,
+                                    fontWeight: 'bold',
+                                    marginBottom: 4,
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {block.language}
+                                </Text>
+                            ) : null}
+                            <Text style={{
+                                fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+                                fontSize: fontSize,
+                                color: textColor,
+                            }}>
+                                {block.codeText}
+                            </Text>
+                        </View>
+                    );
+                }
+
+                if (block.type === 'quote') {
+                    return (
+                        <View key={bIdx} style={{
+                            borderLeftWidth: 3.5,
+                            borderLeftColor: theme.colors.high_color,
+                            paddingLeft: 10,
+                            paddingVertical: 2,
+                            marginVertical: 4,
+                            backgroundColor: theme.colors.border + '20',
+                            borderRadius: 4,
+                        }}>
+                            <Text style={baseTextStyle}>
+                                {block.inlines ? renderInlineTokens(block.inlines, baseTextStyle, app_description, theme, isClickableLinks, effectiveLinkColor, onLinkPress) : null}
+                            </Text>
+                        </View>
+                    );
+                }
+
+                if (block.type === 'bullet_list') {
+                    return (
+                        <View key={bIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginVertical: 2 }}>
+                            <Text style={[baseTextStyle, { marginRight: 6, fontWeight: 'bold' }]}>•</Text>
+                            <Text style={[{ flex: 1 }, baseTextStyle]}>
+                                {block.inlines ? renderInlineTokens(block.inlines, baseTextStyle, app_description, theme, isClickableLinks, effectiveLinkColor, onLinkPress) : null}
+                            </Text>
+                        </View>
+                    );
+                }
+
+                if (block.type === 'numbered_list') {
+                    return (
+                        <View key={bIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginVertical: 2 }}>
+                            <Text style={[baseTextStyle, { marginRight: 6, fontWeight: 'bold' }]}>
+                                {block.number}.
+                            </Text>
+                            <Text style={[{ flex: 1 }, baseTextStyle]}>
+                                {block.inlines ? renderInlineTokens(block.inlines, baseTextStyle, app_description, theme, isClickableLinks, effectiveLinkColor, onLinkPress) : null}
+                            </Text>
+                        </View>
+                    );
+                }
+
+                return (
+                    <Text key={bIdx} style={baseTextStyle}>
+                        {block.inlines ? renderInlineTokens(block.inlines, baseTextStyle, app_description, theme, isClickableLinks, effectiveLinkColor, onLinkPress) : null}
+                    </Text>
+                );
+            })}
+        </View>
     );
 };
 
 
 export interface IText {
-    text: string;
+    text?: string;
+    children?: React.ReactNode;
     bold?: boolean;
     styles?: TextStyle;
     numberLines?: number;
 }
 
-export const TextNormalYambi: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+export const TextNormalYambi: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="default" />
+);
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+export const TextBigYambi: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="big" color="default" />
+);
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.text,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextBigYambi: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.text,
-                fontSize: app_description.big_general_font_size,
-                fontWeight: bold ? app_description.big_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambi: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.text,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
+export const TextSmallYambi: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="default" />
+);
 
 
 // Gray color
 
-export const TextNormalYambiGray: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+export const TextNormalYambiGray: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="gray" />
+);
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+export const TextBigYambiGray: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="big" color="gray" />
+);
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.gray,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
+export const TextSmallYambiGray: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="gray" />
+);
 
-export const TextBigYambiGray: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+// High color
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+export const TextNormalYambiHighColor: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="high" />
+);
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.gray,
-                fontSize: app_description.big_general_font_size,
-                fontWeight: bold ? app_description.big_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
+export const TextNormalYambiHighColor2: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="high2" />
+);
 
-export const TextSmallYambiGray: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+export const TextNormalYambiHighColor3: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="high3" />
+);
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+export const TextSmallYambiHighColor2: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="high2" />
+);
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.gray,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
+export const TextSmallYambiHighColor3: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="high3" />
+);
 
-// // High color
+export const TextBigYambiHighColor: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="big" color="high" />
+);
 
-export const TextNormalYambiHighColor: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+export const TextSmallYambiHighColor: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="high" />
+);
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+// InDesign Color
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
+export const TextNormalYambiInDesign: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="design" />
+);
 
-export const TextNormalYambiHighColor2: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+export const TextBigYambiInDesign: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="big" color="design" />
+);
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+export const TextSmallYambiInDesign: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="design" />
+);
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color2,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
+export const TextSmallYambiError: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="error" />
+);
 
-export const TextNormalYambiHighColor3: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
+export const TextNormalYambiError: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="error" />
+);
 
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
+export const TextSmallYambiSuccess: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="small" color="success" />
+);
 
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color3,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambiHighColor2: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color2,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambiHighColor3: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color3,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextBigYambiHighColor: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color,
-                fontSize: app_description.big_general_font_size,
-                fontWeight: bold ? app_description.big_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambiHighColor: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.high_color,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-// // InDesign Color
-
-export const TextNormalYambiInDesign: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.button_foreground_color,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextBigYambiInDesign: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.button_foreground_color,
-                fontSize: app_description.big_general_font_size,
-                fontWeight: bold ? app_description.big_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambiInDesign: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.button_foreground_color,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambiError: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.error,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextNormalYambiError: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.error,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextSmallYambiSuccess: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.success,
-                fontSize: app_description.small_general_font_size,
-                fontWeight: bold ? app_description.small_general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
-export const TextNormalYambiSuccess: React.FC<IText> = ({ text, bold, styles, numberLines }) => {
-
-    const theme = useAppSelector(state => state.app_theme);
-    const app_description = useAppSelector(state => state.persisted_app.app_description);
-
-    return (
-        <Text
-            numberOfLines={numberLines}
-            style={[styles, {
-                color: theme.colors.success,
-                fontSize: app_description.general_font_size,
-                fontWeight: bold ? app_description.general_font_weight as any : 'normal'
-            }]}>{text}</Text>
-    )
-}
-
+export const TextNormalYambiSuccess: React.FC<IText> = ({ text, children, bold, styles, numberLines }) => (
+    <YambiText text={text} children={children} bold={bold} style={styles} numberLines={numberLines} size="normal" color="success" />
+);

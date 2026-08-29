@@ -4,9 +4,12 @@ import { MediaStream } from 'react-native-webrtc';
 import { PermissionsAndroid, Platform } from 'react-native';
 import store from '../../store/app/store';
 import { setCallState } from '../../store/reducers/appSlice';
+import { strings } from '../../lang/lang';
+import * as Notifications from 'expo-notifications';
 
 export type CallState =
   | 'IDLE'
+  | 'OUTGOING_CALLING'
   | 'OUTGOING_RINGING'
   | 'INCOMING_RINGING'
   | 'CONNECTING'
@@ -51,6 +54,7 @@ class CallManager {
   private ringTimeoutTimer: any = null;
 
   public init(userPhoneNumber: string, userName: string = '', userAvatar: string = '') {
+    if (!userPhoneNumber) return;
     this.currentUserPhoneNumber = userPhoneNumber;
     this.currentUserName = userName || userPhoneNumber;
     this.currentUserAvatar = userAvatar;
@@ -68,6 +72,19 @@ class CallManager {
       onBusy: this.handleCallBusy.bind(this),
       onEnd: this.handleCallEnded.bind(this),
     });
+  }
+
+  public ensureInitialized() {
+    if (!this.currentUserPhoneNumber) {
+      try {
+        const user = store.getState().user_data;
+        if (user && user.phone_number) {
+          this.init(user.phone_number, user.user_names || user.phone_number, user.user_profile || '');
+        }
+      } catch (e) {
+        console.error('[CallManager] Error ensuring initialization:', e);
+      }
+    }
   }
 
   public subscribe(listener: CallStateListener): () => void {
@@ -120,6 +137,7 @@ class CallManager {
     calleeName: string = '',
     calleeAvatar: string = ''
   ): Promise<boolean> {
+    this.ensureInitialized();
     const isReduxCallActive = store.getState().app.call_active;
     if (this.isStartingCall || isReduxCallActive || (this.currentCall && this.currentCall.status !== 'IDLE' && this.currentCall.status !== 'ENDED')) {
       console.warn('[CallManager] Cannot start new call: Another call is already active or starting');
@@ -127,13 +145,6 @@ class CallManager {
     }
 
     this.isStartingCall = true;
-
-    const hasPermissions = await this.requestCallPermissions(type);
-    if (!hasPermissions) {
-      console.warn('[CallManager] Call cancelled: Required media permissions not granted');
-      this.isStartingCall = false;
-      return false;
-    }
 
     const callId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
@@ -147,7 +158,7 @@ class CallManager {
       calleeAvatar,
       type,
       isCaller: true,
-      status: 'OUTGOING_RINGING',
+      status: 'OUTGOING_CALLING',
       durationSeconds: 0,
       isMuted: false,
       isSpeaker: type === 'video',
@@ -158,6 +169,17 @@ class CallManager {
 
     this.notifyListeners();
 
+    const hasPermissions = await this.requestCallPermissions(type);
+    if (!hasPermissions) {
+      console.warn('[CallManager] Call cancelled: Required media permissions not granted');
+      this.currentCall.status = 'FAILED';
+      this.currentCall.errorMessage = 'Permissions not granted';
+      this.notifyListeners();
+      setTimeout(() => this.cleanupCallState(), 2000);
+      this.isStartingCall = false;
+      return false;
+    }
+
     try {
       // Get local stream
       const localStream = await webRTCManager.getLocalStream(type);
@@ -165,6 +187,9 @@ class CallManager {
         this.currentCall.localStream = localStream;
         this.notifyListeners();
       }
+
+      this.setupWebRTCListeners();
+      webRTCManager.createPeerConnection();
 
       // Send signaling invite
       const invitePayload: CallInvitePayload = {
@@ -178,6 +203,14 @@ class CallManager {
       };
 
       callSignaling.sendInvite(invitePayload);
+
+      // Transition from OUTGOING_CALLING ("Calling...") to OUTGOING_RINGING ("Ringing...")
+      setTimeout(() => {
+        if (this.currentCall && this.currentCall.callId === callId && this.currentCall.status === 'OUTGOING_CALLING') {
+          this.currentCall.status = 'OUTGOING_RINGING';
+          this.notifyListeners();
+        }
+      }, 1000);
 
       // Start 45s ringing timeout
       this.clearRingTimeout();
@@ -202,7 +235,47 @@ class CallManager {
     }
   }
 
+  public handleIncomingInviteFromNotification(payload: any) {
+    if (!payload || !payload.callId) return;
+
+    if (!this.currentUserPhoneNumber && store) {
+      const state = store.getState();
+      const userPhone = state.user_data?.phone_number;
+      const userName = state.user_data?.user_names || userPhone;
+      if (userPhone) {
+        this.init(userPhone, userName, '');
+      }
+    }
+
+    if (!this.currentCall || this.currentCall.status === 'IDLE' || this.currentCall.status === 'ENDED') {
+      this.currentCall = {
+        callId: payload.callId,
+        callerId: payload.callerId,
+        calleeId: payload.calleeId || this.currentUserPhoneNumber,
+        callerName: payload.callerName || payload.callerId,
+        callerAvatar: payload.callerAvatar,
+        calleeName: this.currentUserName,
+        calleeAvatar: this.currentUserAvatar,
+        type: payload.callType || 'audio',
+        isCaller: false,
+        status: 'INCOMING_RINGING',
+        durationSeconds: 0,
+        isMuted: false,
+        isSpeaker: (payload.callType || payload.type) === 'video',
+        isCameraOff: false,
+        localStream: null,
+        remoteStream: null,
+      };
+      this.notifyListeners();
+    }
+  }
+
   private handleIncomingInvite(payload: CallInvitePayload) {
+    if (this.currentCall && this.currentCall.callId === payload.callId) {
+      console.log(`[CallManager] Duplicate incoming invite received for active call ${payload.callId}, ignoring.`);
+      return;
+    }
+
     if (this.currentCall && this.currentCall.status !== 'IDLE' && this.currentCall.status !== 'ENDED') {
       console.log(`[CallManager] Incoming call from ${payload.callerId} rejected: User is busy`);
       callSignaling.sendBusy({
@@ -319,6 +392,10 @@ class CallManager {
     if (!this.currentCall || this.currentCall.callId !== payload.callId || !this.currentCall.isCaller) {
       return;
     }
+    if (this.currentCall.status !== 'OUTGOING_RINGING') {
+      console.log(`[CallManager] Ignoring duplicate call:accept in status: ${this.currentCall.status}`);
+      return;
+    }
 
     console.log('[CallManager] Callee accepted call. Initiating WebRTC offer...');
     this.clearRingTimeout();
@@ -327,7 +404,9 @@ class CallManager {
 
     try {
       this.setupWebRTCListeners();
-      webRTCManager.createPeerConnection();
+      if (!webRTCManager.getPeerConnectionInstance()) {
+        webRTCManager.createPeerConnection();
+      }
 
       const offer = await webRTCManager.createOffer();
       callSignaling.sendOffer({
@@ -342,11 +421,23 @@ class CallManager {
     }
   }
 
+  private isProcessingOffer: boolean = false;
+
   private async handleCallOffer(payload: CallSignalPayload) {
     if (!this.currentCall || this.currentCall.callId !== payload.callId || this.currentCall.isCaller) {
       return;
     }
+    if (this.isProcessingOffer) {
+      console.log('[CallManager] Already processing SDP offer, ignoring concurrent offer event.');
+      return;
+    }
+    const pc = webRTCManager.getPeerConnectionInstance();
+    if (pc && pc.signalingState !== 'stable' && pc.signalingState !== 'have-remote-offer') {
+      console.log(`[CallManager] Ignoring duplicate call:offer in signaling state: ${pc.signalingState}`);
+      return;
+    }
 
+    this.isProcessingOffer = true;
     console.log('[CallManager] Received SDP offer. Generating SDP answer...');
     try {
       const answer = await webRTCManager.handleOfferAndCreateAnswer(payload.offer);
@@ -356,9 +447,16 @@ class CallManager {
         calleeId: this.currentCall.calleeId,
         answer,
       });
-    } catch (error) {
-      console.error('[CallManager] Error creating SDP answer:', error);
-      this.endCall('FAILED');
+    } catch (error: any) {
+      const state = webRTCManager.getPeerConnectionInstance()?.signalingState;
+      if (state === 'stable') {
+        console.warn('[CallManager] Handled duplicate SDP offer error while connection state is already stable.');
+      } else {
+        console.error('[CallManager] Error creating SDP answer:', error);
+        this.endCall('FAILED');
+      }
+    } finally {
+      this.isProcessingOffer = false;
     }
   }
 
@@ -366,12 +464,23 @@ class CallManager {
     if (!this.currentCall || this.currentCall.callId !== payload.callId || !this.currentCall.isCaller) {
       return;
     }
+    const pc = webRTCManager.getPeerConnectionInstance();
+    if (pc && pc.signalingState !== 'have-local-offer') {
+      console.log(`[CallManager] Ignoring call:answer because signaling state is ${pc.signalingState}`);
+      return;
+    }
 
     console.log('[CallManager] Received SDP answer from callee.');
     try {
       await webRTCManager.handleAnswer(payload.answer);
-    } catch (error) {
-      console.error('[CallManager] Error handling SDP answer:', error);
+    } catch (error: any) {
+      const state = webRTCManager.getPeerConnectionInstance()?.signalingState;
+      if (state === 'stable') {
+        console.warn('[CallManager] Handled duplicate SDP answer error while connection state is already stable.');
+      } else {
+        console.error('[CallManager] Error handling SDP answer:', error);
+        this.endCall('FAILED');
+      }
     }
   }
 
@@ -416,7 +525,7 @@ class CallManager {
           this.notifyListeners();
         } else if (state === 'failed') {
           this.currentCall.status = 'FAILED';
-          this.currentCall.errorMessage = 'PeerConnection failed (P2P direct connection could not be established)';
+          this.currentCall.errorMessage = strings.call_failed || 'Call Failed';
           this.notifyListeners();
           setTimeout(() => this.cleanupCallState(), 4000);
         }
@@ -438,7 +547,7 @@ class CallManager {
           }
         } else if (state === 'failed') {
           this.currentCall.status = 'FAILED';
-          this.currentCall.errorMessage = 'Direct P2P connection failed over STUN.';
+          this.currentCall.errorMessage = strings.call_failed || 'Call Failed';
           this.notifyListeners();
           setTimeout(() => this.cleanupCallState(), 4000);
         }
@@ -570,9 +679,10 @@ class CallManager {
     console.log('[CallManager] Cleaning up call state and WebRTC connections');
     this.stopDurationCounter();
     this.clearRingTimeout();
-    webRTCManager.closePeerConnection();
+    webRTCManager.cleanupAll();
     this.currentCall = null;
     this.notifyListeners();
+    Notifications.dismissAllNotificationsAsync().catch(() => {});
   }
 }
 

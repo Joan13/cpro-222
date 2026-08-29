@@ -14,6 +14,7 @@ import ModalApp from '../../components/app/ModalApp';
 import Animated from 'react-native-reanimated';
 import SwitchApp from '../../components/app/SwitchApp';
 import { UserChats, UserContacts, UsersMessages } from '../../store/database/Models';
+import { callManager } from '../../services/call/CallManager';
 
 // import React, { useState } from 'react';
 // import { View, Text, StyleSheet, Image, StatusBar, Pressable, SafeAreaView, Pressable } from 'react-native';
@@ -57,6 +58,8 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
           last_message: "",
           user: moi.phone_number,
           flag: 0,
+          favorite: 0,
+          pinned: 0,
           chat_read: 1,
           deleted: 0,
           chat_effect: 0,
@@ -211,14 +214,40 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
      //     return { transform: [{ scale }] };
      //   })
 
-     const SetFlag = (flag: number) => {
+     const TogglePinned = () => {
           const chattt: TChat = {
                _id: chat._id,
                phone_number: chat.phone_number,
                type_chat: chat.type_chat,
                last_message: chat.last_message,
                user: chat.user,
-               flag: chat.flag === flag ? 0 : flag,
+               flag: chat.flag,
+               pinned: chat.pinned === 1 ? 0 : 1,
+               favorite: chat.favorite ?? 0,
+               chat_read: chat.chat_read,
+               deleted: chat.deleted,
+               chat_effect: chat.chat_effect,
+               createdAt: chat.createdAt,
+               updatedAt: chat.updatedAt,
+          }
+
+          realm.write(() => {
+               try {
+                    realm.create('UserChats', chattt, true);
+               } catch (error) { }
+          });
+     }
+
+     const ToggleFavorite = () => {
+          const chattt: TChat = {
+               _id: chat._id,
+               phone_number: chat.phone_number,
+               type_chat: chat.type_chat,
+               last_message: chat.last_message,
+               user: chat.user,
+               flag: chat.flag,
+               pinned: chat.pinned ?? 0,
+               favorite: chat.favorite === 1 ? 0 : 1,
                chat_read: chat.chat_read,
                deleted: chat.deleted,
                chat_effect: chat.chat_effect,
@@ -248,6 +277,20 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
      const GoInbox = () => {
           dispatch(setMessageSelected(""));
           navigation.navigate("Inbox", { user: user_data.phone_number });
+     };
+
+     const handleStartAudioCall = () => {
+          const contact = raw_contacts.find((c: any) => c.phoneNumber === user_data.phone_number);
+          const name = contact ? contact.displayName : (user_data.user_names || formattedPhoneNumber);
+          callManager.startCall(user_data.phone_number, 'audio', name, user_data.user_profile || '');
+          navigation.navigate('AudioCallScreen');
+     };
+
+     const handleStartVideoCall = () => {
+          const contact = raw_contacts.find((c: any) => c.phoneNumber === user_data.phone_number);
+          const name = contact ? contact.displayName : (user_data.user_names || formattedPhoneNumber);
+          callManager.startCall(user_data.phone_number, 'video', name, user_data.user_profile || '');
+          navigation.navigate('VideoCallScreen');
      };
 
      return (
@@ -457,6 +500,42 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                    </Pressable>
 
                                    <Pressable
+                                        onPress={handleStartAudioCall}
+                                        style={{ alignItems: 'center' }}
+                                   >
+                                        <View style={{
+                                             width: 40,
+                                             height: 40,
+                                             borderRadius: 20,
+                                             backgroundColor: theme.colors.high_color + '20',
+                                             justifyContent: 'center',
+                                             alignItems: 'center',
+                                             marginBottom: 6,
+                                        }}>
+                                             <IconApp pack="MC" name="phone" size={20} color={theme.colors.high_color} />
+                                        </View>
+                                        <YambiText text={strings.audio || "Audio"} size="small" color="high" />
+                                   </Pressable>
+
+                                   <Pressable
+                                        onPress={handleStartVideoCall}
+                                        style={{ alignItems: 'center' }}
+                                   >
+                                        <View style={{
+                                             width: 40,
+                                             height: 40,
+                                             borderRadius: 20,
+                                             backgroundColor: theme.colors.high_color + '20',
+                                             justifyContent: 'center',
+                                             alignItems: 'center',
+                                             marginBottom: 6,
+                                        }}>
+                                             <IconApp pack="MC" name="video" size={20} color={theme.colors.high_color} />
+                                        </View>
+                                        <YambiText text={strings.video || "Video"} size="small" color="high" />
+                                   </Pressable>
+
+                                   <Pressable
                                         onPress={() => copyToClipboard(user_data.phone_number)}
                                         style={{ alignItems: 'center' }}
                                    >
@@ -471,7 +550,7 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                         }}>
                                              <IconApp pack="MC" name="content-copy" size={20} color={theme.colors.high_color} />
                                         </View>
-                                        <YambiText text={strings.copy_number} size="small" color="high" />
+                                        <YambiText text={strings.copy || "Copy"} size="small" color="high" />
                                    </Pressable>
 
                                    {!userrr && (
@@ -569,9 +648,9 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                         }}>
                                              <IconApp styles={{}} name="pin" pack='MC' size={20} color={theme.colors.gray} />
                                              <View style={{ marginLeft: 16, flex: 1 }}>
-                                                  <YambiText text={chat.flag === 2 ? strings.unpin_chat : strings.pin_chat} size="normal" color="default" />
+                                                  <YambiText text={chat?.pinned === 1 ? strings.unpin_chat : strings.pin_chat} size="normal" color="default" />
                                              </View>
-                                             <SwitchApp disabled={messages.length === 0} value={chat.flag === 2} onPress={() => SetFlag(2)} />
+                                             <SwitchApp disabled={messages.length === 0} value={chat?.pinned === 1} onPress={TogglePinned} />
                                         </View>
 
                                         {/* Favorites */}
@@ -583,15 +662,15 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                         }}>
                                              <IconApp styles={{}} name="star" pack='FI' size={20} color={theme.colors.gray} />
                                              <View style={{ marginLeft: 16, flex: 1 }}>
-                                                  <YambiText text={chat.flag === 1 ? strings.remove_from_favorites : strings.add_to_favorites} size="normal" color="default" />
+                                                  <YambiText text={chat?.favorite === 1 ? strings.remove_from_favorites : strings.add_to_favorites} size="normal" color="default" />
                                              </View>
-                                             <SwitchApp disabled={messages.length === 0} value={chat.flag === 1} onPress={() => SetFlag(1)} />
+                                             <SwitchApp disabled={messages.length === 0} value={chat?.favorite === 1} onPress={ToggleFavorite} />
                                         </View>
                                    </View>
                               </View>
                          </View>
 
-                         <View style={{ height: 30 }} />
+                         <View style={{ height: 50 }} />
                     </Animated.ScrollView>
                </View>
           </View>

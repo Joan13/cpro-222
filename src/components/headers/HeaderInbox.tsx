@@ -13,6 +13,7 @@ import { renderDateTime, SocketApp, media_url, remote_host, formatPhoneInternati
 import Clipboard from '@react-native-clipboard/clipboard';
 import { Image as ExpoImage } from 'expo-image';
 import axios from 'axios';
+import { YambiText } from '../app/Text';
 
 // const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -241,7 +242,7 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
             onPress={ViewPhoto}>
             {!userr.user_profile ? <Image
               source={require('./../../assets/profile_black.jpg')}
-              style={{ width: 40, height: 40, marginRight: 10, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
+              style={{ width: 45, height: 45, marginRight: 10, borderRadius: 50, borderWidth: 1, borderColor: border_color }}
             />
               :
               <ExpoImage
@@ -257,24 +258,31 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
 
           <Pressable onPress={GoUserProfileInfo}
             style={{
-              flex: 1,
+              // flex: 1,
               marginRight: 2,
               justifyContent: 'center'
             }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text numberOfLines={1}
+              {/* <Text numberOfLines={1}
                 style={{
                   fontSize: app_description.inbox_title_size,
                   fontWeight: app_description.inbox_title_font_weight as any,
                   color: app_theme.colors.header_foreground_color
                 }}>{ShowUserName(userr.phone_number)}
-              </Text>
+              </Text> */}
+
+              <YambiText
+                numberLines={1}
+                bold
+                color='header_foreground_color'
+                text={ShowUserName(userr.phone_number)}
+              />
 
               {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={18} color={app_theme.colors.primary_high_color} styles={{ marginLeft: 3, marginTop: 2 }} /> : null}
             </View>
 
             {last_activity_status !== "" ?
-              <Text style={{
+              <Text numberOfLines={1} style={{
                 fontSize: app_description.small_general_font_size,
                 fontWeight: app_description.small_general_font_weight as any,
                 color: app_theme.colors.primary_high_color

@@ -20,10 +20,41 @@ export interface RTCIceServer {
 export const getIceServers = (): RTCIceServer[] => {
   return [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun3.l.google.com:19302' },
-    { urls: 'stun:stun4.l.google.com:19302' },
+    { urls: 'stun:10.0.2.2:3478' },
+    {
+      urls: 'turn:10.0.2.2:3478',
+      username: 'yambi',
+      credential: 'yambipassword',
+    },
+    {
+      urls: 'turn:10.0.2.2:3478?transport=tcp',
+      username: 'yambi',
+      credential: 'yambipassword',
+    },
+    { urls: 'stun:192.168.247.41:3478' },
+    {
+      urls: 'turn:192.168.247.41:3478',
+      username: 'yambi',
+      credential: 'yambipassword',
+    },
+    {
+      urls: 'turn:192.168.247.41:3478?transport=tcp',
+      username: 'yambi',
+      credential: 'yambipassword',
+    },
+    { urls: 'stun:37.27.44.221:80' },
+    {
+      urls: [
+        'turn:37.27.44.221:80',
+        'turn:37.27.44.221:443',
+        'turn:37.27.44.221:443?transport=tcp',
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp',
+      ],
+      username: 'openrelayproject',
+      credential: 'openrelayproject',
+    },
   ];
 };
 
@@ -151,50 +182,68 @@ export class WebRTCManager {
     return this.peerConnection;
   }
 
-  public async createOffer(): Promise<RTCSessionDescription> {
-    if (!this.peerConnection) {
-      throw new Error('[WebRTCManager] PeerConnection not initialized when creating offer');
+  private iceCandidateQueue: RTCIceCandidate[] = [];
+
+  private async processBufferedIceCandidates(pc: RTCPeerConnection) {
+    if (this.iceCandidateQueue.length > 0) {
+      console.log(`[WebRTCManager] Processing ${this.iceCandidateQueue.length} buffered ICE candidates...`);
+      const candidatesToProcess = [...this.iceCandidateQueue];
+      this.iceCandidateQueue = [];
+      for (const candidate of candidatesToProcess) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+          console.error('[WebRTCManager] Error adding queued ICE candidate:', e);
+        }
+      }
     }
+  }
+
+  public async createOffer(): Promise<RTCSessionDescription> {
+    const pc = this.peerConnection || this.createPeerConnection();
     console.log('[WebRTCManager] Creating SDP Offer...');
-    const offer = await this.peerConnection.createOffer({
+    const offer = await pc.createOffer({
       offerToReceiveAudio: true,
       offerToReceiveVideo: true,
     });
-    await this.peerConnection.setLocalDescription(offer);
+    await pc.setLocalDescription(offer);
     console.log('[WebRTCManager] SDP Offer created & set as local description');
     return offer;
   }
 
   public async handleOfferAndCreateAnswer(offerSdp: RTCSessionDescription): Promise<RTCSessionDescription> {
-    if (!this.peerConnection) {
-      this.createPeerConnection();
-    }
+    const pc = this.peerConnection || this.createPeerConnection();
     console.log('[WebRTCManager] Setting remote description (Offer)...');
-    await this.peerConnection!.setRemoteDescription(new RTCSessionDescription(offerSdp));
+    await pc.setRemoteDescription(new RTCSessionDescription(offerSdp));
+    await this.processBufferedIceCandidates(pc);
     console.log('[WebRTCManager] Creating SDP Answer...');
-    const answer = await this.peerConnection!.createAnswer();
-    await this.peerConnection!.setLocalDescription(answer);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
     console.log('[WebRTCManager] SDP Answer created & set as local description');
     return answer;
   }
 
   public async handleAnswer(answerSdp: RTCSessionDescription): Promise<void> {
-    if (!this.peerConnection) {
+    const pc = this.peerConnection;
+    if (!pc) {
       console.error('[WebRTCManager] PeerConnection not found when handling answer');
       return;
     }
     console.log('[WebRTCManager] Setting remote description (Answer)...');
-    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answerSdp));
+    await pc.setRemoteDescription(new RTCSessionDescription(answerSdp));
+    await this.processBufferedIceCandidates(pc);
   }
 
   public async addIceCandidate(candidate: RTCIceCandidate): Promise<void> {
-    if (!this.peerConnection) {
-      console.warn('[WebRTCManager] PeerConnection not initialized when adding ICE candidate');
+    const pc = this.peerConnection;
+    if (!pc || !pc.remoteDescription) {
+      console.log('[WebRTCManager] PeerConnection or remoteDescription not ready. Queuing ICE candidate.');
+      this.iceCandidateQueue.push(candidate);
       return;
     }
     try {
       console.log('[WebRTCManager] Adding remote ICE candidate');
-      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
     } catch (error) {
       console.error('[WebRTCManager] Error adding ICE candidate:', error);
     }
@@ -231,6 +280,10 @@ export class WebRTCManager {
     });
   }
 
+  public getPeerConnectionInstance(): RTCPeerConnection | null {
+    return this.peerConnection;
+  }
+
   public getLocalStreamInstance(): MediaStream | null {
     return this.localStream;
   }
@@ -240,28 +293,39 @@ export class WebRTCManager {
   }
 
   public closePeerConnection(): void {
-    console.log('[WebRTCManager] Cleaning up WebRTC PeerConnection & media tracks...');
-    if (this.localStream) {
-      this.localStream.getTracks().forEach((track) => {
-        track.stop();
-        console.log(`[WebRTCManager] Stopped local track: ${track.kind}`);
-      });
-      this.localStream = null;
-    }
-
-    if (this.remoteStream) {
-      this.remoteStream.getTracks().forEach((track) => {
-        track.stop();
-        console.log(`[WebRTCManager] Stopped remote track: ${track.kind}`);
-      });
-      this.remoteStream = null;
-    }
-
+    console.log('[WebRTCManager] Cleaning up WebRTC PeerConnection...');
     if (this.peerConnection) {
-      this.peerConnection.close();
+      try {
+        this.peerConnection.close();
+      } catch (e) {}
       this.peerConnection = null;
     }
 
+    if (this.remoteStream) {
+      try {
+        this.remoteStream.getTracks().forEach((track) => track.stop());
+      } catch (e) {}
+      this.remoteStream = null;
+    }
+  }
+
+  public stopLocalStream(): void {
+    console.log('[WebRTCManager] Stopping local media stream & tracks...');
+    if (this.localStream) {
+      try {
+        this.localStream.getTracks().forEach((track) => {
+          track.stop();
+          console.log(`[WebRTCManager] Stopped local track: ${track.kind}`);
+        });
+      } catch (e) {}
+      this.localStream = null;
+    }
+  }
+
+  public cleanupAll(): void {
+    this.stopLocalStream();
+    this.closePeerConnection();
+    this.iceCandidateQueue = [];
     this.onIceCandidateCallback = null;
     this.onRemoteStreamCallback = null;
     this.onConnectionStateChangeCallback = null;

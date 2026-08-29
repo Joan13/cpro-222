@@ -107,6 +107,8 @@ export class UserChats extends Realm.Object<UserChats> {
     type_chat!: number;
     last_message!: string;
     flag!: number;
+    favorite!: number;
+    pinned!: number;
     chat_read!: number;
     deleted!: number;
     chat_effect!: number;
@@ -122,6 +124,8 @@ export class UserChats extends Realm.Object<UserChats> {
             type_chat: 'int',
             last_message: 'string',
             flag: 'int',
+            favorite: { type: 'int', default: 0 },
+            pinned: { type: 'int', default: 0 },
             chat_read: 'int',
             deleted: 'int',
             chat_effect: 'int',

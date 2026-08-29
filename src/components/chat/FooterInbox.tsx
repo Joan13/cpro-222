@@ -307,6 +307,18 @@ const FooterChat = ({ user }: { user: string }) => {
         </View>
 
       );
+    } else if (message.message_type === 6) {
+      return (
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center'
+        }}>
+          <IconApp pack="FI" name="shopping-bag" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
+          <YambiText text={strings.item || "Item"} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
+        </View>
+
+      );
     } else {
       return (
         <View style={{
@@ -817,6 +829,8 @@ const FooterChat = ({ user }: { user: string }) => {
         type_chat: 0,
         last_message: tokenn,
         flag: 0,
+        favorite: 0,
+        pinned: 0,
         chat_read: 1,
         deleted: 0,
         chat_effect: 0,
@@ -832,6 +846,8 @@ const FooterChat = ({ user }: { user: string }) => {
           type_chat: chatt.type_chat,
           last_message: msg.token,
           flag: chatt.flag,
+          favorite: chatt.favorite ?? 0,
+          pinned: chatt.pinned ?? 0,
           chat_read: 1,
           deleted: 0,
           chat_effect: chatt.chat_effect,
@@ -867,7 +883,7 @@ const FooterChat = ({ user }: { user: string }) => {
 
       // console.log("Message sent")
 
-      if (type === 0) {
+      if (type === 0 || type === 6) {
         SocketApp.emit('newMessage', msg);
       }
     }
@@ -1138,7 +1154,38 @@ const FooterChat = ({ user }: { user: string }) => {
               {renderResponseTo()}
             </View>
           </View>
-          : null : null}
+          :
+          <View style={{}}>
+            <View style={{
+              borderLeftColor: app_theme.colors.high_color,
+              borderLeftWidth: 5,
+              borderRadius: 3,
+              paddingHorizontal: 8,
+              paddingVertical: 5,
+              backgroundColor: app_theme.colors.border,
+              margin: 4,
+              marginHorizontal: 10,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  numberOfLines={1} style={{
+                    flex: 1,
+                    color: '#f59f00',
+                    fontSize: app_description.small_general_font_size,
+                    fontWeight: app_description.small_general_font_weight as any
+                  }}>{strings.item || "Item"}</Text>
+                <Pressable onPress={() => dispatch(setResponseTo(""))}
+                  style={{ padding: 0 }}>
+                  <Feather name='x' color={app_theme.colors.gray} size={13} />
+                </Pressable>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                <IconApp pack="FI" name="shopping-bag" size={14} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
+                <YambiText text={(strings as any).item_inquiry || strings.item || "Item"} size="normal" color="default" numberLines={1} style={{ marginRight: 10 }} />
+              </View>
+            </View>
+          </View>
+          : null}
 
       <View style={{ flexDirection: 'row', }}>
 
@@ -1470,7 +1517,7 @@ const FooterChat = ({ user }: { user: string }) => {
           {message_inbox !== "" ?
             <Animated.View entering={FadeIn} exiting={FadeOut}>
               <Pressable
-                onPress={() => sendMessage(message_inbox, 0, "")}
+                onPress={() => sendMessage(message_inbox, (response_to !== "" && message === null) ? 6 : 0, "")}
                 style={{
                   height: 48,
                   width: 48,

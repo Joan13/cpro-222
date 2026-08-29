@@ -226,6 +226,8 @@ const ForwardMessage = ({ route, navigation }: NavProps) => {
                         last_message: token,
                         user: user_data.phone_number,
                         flag: (this_chat && this_chat.isValid()) ? this_chat.flag : 0,
+                        favorite: (this_chat && this_chat.isValid()) ? (this_chat.favorite ?? 0) : 0,
+                        pinned: (this_chat && this_chat.isValid()) ? (this_chat.pinned ?? 0) : 0,
                         chat_read: (this_chat && this_chat.isValid()) ? this_chat.chat_read : 1,
                         deleted: 0,
                         chat_effect: (this_chat && this_chat.isValid()) ? this_chat.chat_effect : 0,

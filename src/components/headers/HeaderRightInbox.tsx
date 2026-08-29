@@ -1,5 +1,5 @@
-import { View, Pressable, Linking } from 'react-native';
-import { memo, useState } from 'react';
+import { View, Pressable, Linking, Alert } from 'react-native';
+import { memo, useState, useMemo } from 'react';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { strings } from '../../lang/lang';
@@ -37,6 +37,20 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
   const userrr = useObject(UserContacts, user || "");
   const this_chat = useObject(UserChats, user || "");
   const realm = useRealm();
+
+  const persisted_contacts = useAppSelector(state => state.persisted_app.raw_contacts);
+  const raw_contacts = useMemo(() => persisted_contacts || contacts || [], [persisted_contacts, contacts]);
+
+  const isSavedInPhonebook = useMemo(() => {
+    if (!user || user === user_data.phone_number) return true;
+    const cleanUser = user.replace(/[^0-9]/g, '');
+    if (!cleanUser) return false;
+    return raw_contacts.some((c: any) => {
+      if (!c.phoneNumber) return false;
+      const cleanPhone = c.phoneNumber.replace(/[^0-9]/g, '');
+      return cleanPhone === cleanUser || (cleanPhone.length >= 6 && cleanUser.endsWith(cleanPhone)) || (cleanUser.length >= 6 && cleanPhone.endsWith(cleanUser));
+    });
+  }, [user, user_data.phone_number, raw_contacts]);
 
   const selectedTokens = message_selected ? message_selected.split(',').filter(Boolean) : [];
   const selectedCount = selectedTokens.length;
@@ -139,6 +153,8 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
           last_message: last_message.token,
           user: user_data.phone_number,
           flag: this_chat !== undefined ? this_chat.flag : 0,
+          favorite: this_chat !== undefined ? (this_chat.favorite ?? 0) : 0,
+          pinned: this_chat !== undefined ? (this_chat.pinned ?? 0) : 0,
           chat_read: 1,
           deleted: 0,
           chat_effect: this_chat !== undefined ? this_chat.chat_effect : 0,
@@ -207,7 +223,7 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
             gap: 4,
           }}>
 
-          {/* <Pressable
+          <Pressable
             disabled={call_active}
             onPress={() => {
               if (call_active) return;
@@ -245,14 +261,14 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
               opacity: call_active ? 0.35 : 1,
             }}>
             <IconApp pack='MC' name="video" size={20} color={app_theme.colors.header_foreground_color} />
-          </Pressable> */}
+          </Pressable>
 
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            {!userrr ?
+            {!isSavedInPhonebook && user !== user_data.phone_number ?
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
                   <Pressable
@@ -271,6 +287,30 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
                   <DropdownMenu.Item key={'1'} onSelect={() => Linking.openURL("tel:" + user)}>
                     <DropdownMenu.ItemTitle>{strings.add_to_contacts}</DropdownMenu.ItemTitle>
                   </DropdownMenu.Item>
+                  {/* <DropdownMenu.Item key={'2'} onSelect={() => {
+                    Alert.alert(
+                      strings.block_user || "Block User",
+                      `Are you sure you want to block ${user}?`,
+                      [
+                        { text: strings.cancel || "Cancel", style: "cancel" },
+                        { text: strings.block || "Block", style: "destructive", onPress: () => SocketApp.emit('blockUser', { user }) }
+                      ]
+                    );
+                  }}>
+                    <DropdownMenu.ItemTitle>{strings.block}</DropdownMenu.ItemTitle>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item key={'3'} onSelect={() => {
+                    Alert.alert(
+                      strings.report || "Report User",
+                      `Report ${user} for abuse or spam?`,
+                      [
+                        { text: strings.cancel || "Cancel", style: "cancel" },
+                        { text: strings.report || "Report", style: "destructive", onPress: () => SocketApp.emit('reportUser', { user }) }
+                      ]
+                    );
+                  }}>
+                    <DropdownMenu.ItemTitle>{strings.report}</DropdownMenu.ItemTitle>
+                  </DropdownMenu.Item> */}
                 </DropdownMenu.Content>
               </DropdownMenu.Root> : null}
           </View>
