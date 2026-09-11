@@ -307,6 +307,16 @@ const FooterChat = ({ user }: { user: string }) => {
         </View>
 
       );
+    } else if (message.message_type === 5) {
+      return (
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+        }}>
+          <YambiText text={message.main_text_message} size="normal" color="default" numberLines={1} style={{ marginRight: 10, flex: 1 }} />
+        </View>
+      );
     } else if (message.message_type === 6) {
       return (
         <View style={{

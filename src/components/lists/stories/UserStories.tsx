@@ -88,7 +88,7 @@ const UserStories = ({ item, index, GoStory }: { item: TStory, index: number, Go
                 <View>
                     <View style={{ marginBottom: 3, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                         <TextNormalYambi text={ShowUserName(item.user.user_names, item.user.phone_number)} numberLines={1} />
-                        {item.user.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                        {item.user.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                     </View>
                     <TextSmallYambiGray text={renderDateTime(item.lastDate, 1, false)} styles={{ marginBottom: 3 }} />
                 </View>

@@ -1,4 +1,4 @@
-import { Pressable, View, Image, ScrollView } from "react-native";
+import { Pressable, View, Image, ScrollView, Text } from "react-native";
 import { useEffect, useState } from 'react';
 import { NavProps } from "../../types/types";
 import { strings } from "../../lang/lang";
@@ -16,6 +16,7 @@ import { renderDateTime, media_url, SocketApp } from "../../../GlobalVariables";
 import { Image as ExpoImage } from 'expo-image';
 import { IconApp } from "../../components/app/IconApp";
 import { cleanExpiredLocalStories, isStoryExpired } from "../../utils/storyCleanup";
+import { isPhotoStory, parseStoryStyles } from "../../utils/storyUtils";
 import LottieView from 'lottie-react-native';
 
 const StoriesComponent = ({ navigation, route }: NavProps) => {
@@ -207,6 +208,14 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
     }
 
     const UserStoryComponent = () => {
+        const lastMyStory = active_my_stories.length > 0 ? active_my_stories[active_my_stories.length - 1] : null;
+        const isMyPhotoStatus = isPhotoStory(lastMyStory);
+        const myStoryStyles = parseStoryStyles(lastMyStory);
+        const myStatusBgColor = myStoryStyles.backgroundColor || theme.high_color || '#1D2A44';
+        const myStatusFgColor = myStoryStyles.foregroundColor || '#FFFFFF';
+        const myStatusFontWeight = myStoryStyles.fontWeight || 'bold';
+        const myStatusFontStyle = myStoryStyles.fontStyle || 'normal';
+
         return (
             <View
                 style={{
@@ -237,7 +246,39 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                         justifyContent: 'center',
                         alignItems: 'center'
                     }}>
-                        {user_data.user_profile === "" ? (
+                        {active_my_stories.length > 0 && lastMyStory ? (
+                            isMyPhotoStatus ? (
+                                <ExpoImage
+                                    style={{ height: 44, width: 44, borderRadius: 50 }}
+                                    contentFit="cover"
+                                    source={{ uri: media_url + "/photo_status/" + lastMyStory.main_text }}
+                                />
+                            ) : (
+                                <View style={{
+                                    height: 44,
+                                    width: 44,
+                                    borderRadius: 50,
+                                    backgroundColor: myStatusBgColor,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    padding: 2,
+                                    overflow: 'hidden'
+                                }}>
+                                    <Text
+                                        numberOfLines={2}
+                                        style={{
+                                            color: myStatusFgColor,
+                                            fontSize: 8,
+                                            textAlign: 'center',
+                                            fontWeight: myStatusFontWeight,
+                                            fontStyle: myStatusFontStyle,
+                                        }}
+                                    >
+                                        {lastMyStory?.caption || lastMyStory?.main_text || ''}
+                                    </Text>
+                                </View>
+                            )
+                        ) : user_data.user_profile === "" ? (
                             <Image
                                 source={require('./../../assets/profile_black.jpg')}
                                 style={{ width: 44, height: 44, borderRadius: 50, borderWidth: 1, borderColor: theme.border }}
@@ -249,7 +290,24 @@ const StoriesComponent = ({ navigation, route }: NavProps) => {
                                 source={media_url + "/profile_pictures/" + user_data.user_profile}
                             />
                         )}
-                        {active_my_stories.length !== 0 && (
+
+                        {active_my_stories.length === 0 ? (
+                            <View style={{
+                                backgroundColor: theme.button_background_color,
+                                height: 18,
+                                width: 18,
+                                borderRadius: 9,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                position: 'absolute',
+                                bottom: -2,
+                                right: -2,
+                                borderWidth: 1.5,
+                                borderColor: theme.background
+                            }}>
+                                <IconApp pack="FI" name="plus" size={10} color={theme.button_foreground_color} />
+                            </View>
+                        ) : (
                             <View style={{
                                 backgroundColor: theme.button_background_color,
                                 height: 18,

@@ -13,6 +13,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { media_url, randomString, renderDateTime, SocketApp } from "../../../GlobalVariables";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cleanExpiredLocalStories, isStoryExpired } from "../../utils/storyCleanup";
+import { isPhotoStory, parseStoryStyles } from "../../utils/storyUtils";
 import moment from "moment";
 import ModalApp from "../../components/app/ModalApp";
 import { setShowModalApp } from "../../store/reducers/appSlice";
@@ -27,11 +28,7 @@ const UserStories = ({ navigation, route }: NavProps) => {
 
     const realm = useRealm();
 
-    const { phone_number } = route.params;
-    const [currentIndex, setCurrentIndex] = useState<number>(0);
-    const [progress, setProgress] = useState<number>(0);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const { phone_number, story_id } = route.params;
 
     const rawStories = useQuery(Stories, sts => {
         return sts.filtered('phone_number == $0', phone_number).sorted('createdAt', false);
@@ -40,6 +37,32 @@ const UserStories = ({ navigation, route }: NavProps) => {
     const allStories = useQuery(Stories);
 
     const stories = rawStories.filter(st => !isStoryExpired(st));
+
+    const initialStorySetRef = useRef<boolean>(false);
+    const [currentIndex, setCurrentIndex] = useState<number>(() => {
+        if (story_id && rawStories) {
+            const valid = rawStories.filter(st => !isStoryExpired(st));
+            const idx = valid.findIndex(st => st._id === story_id);
+            if (idx !== -1) {
+                return idx;
+            }
+        }
+        return 0;
+    });
+
+    useEffect(() => {
+        if (!initialStorySetRef.current && story_id && stories.length > 0) {
+            const idx = stories.findIndex(st => st._id === story_id);
+            if (idx !== -1) {
+                setCurrentIndex(idx);
+            }
+            initialStorySetRef.current = true;
+        }
+    }, [story_id, stories]);
+
+    const [progress, setProgress] = useState<number>(0);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Compute ordered list of all users with active stories (unseen first, then newest to oldest)
     const allUsersWithStories = useMemo(() => {
@@ -313,21 +336,8 @@ const UserStories = ({ navigation, route }: NavProps) => {
     }
 
     const currentStory: TStory = stories[currentIndex];
-    const isPhotoStatus = currentStory?.main_text !== "" && currentStory?.main_text !== undefined;
-
-    let storyStyles: {
-        backgroundColor?: string;
-        foregroundColor?: string;
-        fontWeight?: any;
-        fontStyle?: any;
-        textAlign?: any;
-    } = {};
-
-    try {
-        if (currentStory?.styles) {
-            storyStyles = JSON.parse(currentStory.styles);
-        }
-    } catch (e) { }
+    const isPhotoStatus = isPhotoStory(currentStory);
+    const storyStyles = parseStoryStyles(currentStory);
 
     const statusBgColor = storyStyles.backgroundColor || theme.high_color || '#1D2A44';
     const statusFgColor = storyStyles.foregroundColor || '#FFFFFF';
@@ -388,7 +398,10 @@ const UserStories = ({ navigation, route }: NavProps) => {
         const tokenn = randomString(32);
         const time = new Date().toISOString();
 
-        const statusCaption = currentStory.caption || currentStory.main_text || '';
+        const isPhoto = isPhotoStory(currentStory);
+        const statusCaption = isPhoto
+            ? (currentStory.caption || 'Photo')
+            : (currentStory.caption || currentStory.main_text || '');
 
         const msg: TMessage = {
             sender: user_data.phone_number,
@@ -399,7 +412,7 @@ const UserStories = ({ navigation, route }: NavProps) => {
             reactions: '[]',
             response_to: currentStory._id,
             message_read: 0,
-            message_effect: 0,
+            message_effect: isPhoto ? 1 : 0,
             read_once: 0,
             flag: 0,
             token: tokenn,

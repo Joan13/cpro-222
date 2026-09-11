@@ -134,7 +134,7 @@ const SubscriberItem = ({ item }: SubscriberItemProps) => {
                         text={ShowUserName(item.phone_number)}
                     />
                     {localUser?.user_verified === 1 ?
-                        <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                        <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                 </View>
                 <TextSmallYambiGray 
                     numberLines={1} 

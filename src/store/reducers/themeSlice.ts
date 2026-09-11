@@ -27,7 +27,7 @@ export const themeSlice = createSlice({
                 other: action.payload.colors.other,
                 high_color: action.payload.colors.high_color,
                 primary_high_color: action.payload.colors.primary_high_color,
-                primary_high_color_foreground: action.payload.colors.primary_high_color_foreground || '#FFFFFF',
+                primary_high_color_foreground: action.payload.colors.primary_high_color_foreground,
                 high_color2: action.payload.colors.high_color2,
                 high_color3: action.payload.colors.high_color3,
                 chat_sent: action.payload.colors.chat_sent,

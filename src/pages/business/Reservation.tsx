@@ -4,7 +4,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { useAppSelector, useAppDispatch } from '../../store/app/hooks';
 import { useRealm, useQuery, useObject } from '@realm/react';
 import { Reservations as ReservationsModel, Payments, BusinessItemsSale, UserBusinessArticles, BusinessUsers, UserBusinesses, UserSellsPoints, ItemPrices } from '../../store/database/Models';
-import RNPrint from 'react-native-print';
+import * as Print from 'expo-print';
 import QRCode from 'qrcode';
 import { NavProps, TSale } from '../../types/types';
 import { strings } from '../../lang/lang';
@@ -437,7 +437,7 @@ const ReservationDetail = ({ navigation, route }: NavProps) => {
         const tht = total / (1 + tva_rate);
         const tva = total - tht;
 
-        await RNPrint.print({
+        await Print.printAsync({
             html: `
                 <!DOCTYPE html>
                 <html>

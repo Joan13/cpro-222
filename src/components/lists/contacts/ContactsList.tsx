@@ -200,7 +200,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                             bold={true}
                         />
                         {item.user_verified === 1 ?
-                            <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                            <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                     </View>
                     {!isUnsaved ? <YambiText text={formatPhoneInternational(item)} size="small" color="gray" numberLines={1} /> : null}
                     {show_information() ?
@@ -270,7 +270,7 @@ const Item = ({ item, index, selectContact, type, isAdmin }: { item: TUser, inde
                             bold={true}
                         />
                         {item.user_verified === 1 ?
-                            <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                            <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                     </View>
                     {!isUnsaved ? <YambiText text={formatPhoneInternational(item)} size="small" color="gray" numberLines={1} /> : null}
                     {show_information() ?

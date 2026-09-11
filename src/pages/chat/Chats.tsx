@@ -13,6 +13,7 @@ import { TextSmallYambiGray, YambiText } from '../../components/app/Text';
 import { strings } from '../../lang/lang';
 import ButtonNormal from '../../components/app/ButtonNormal';
 import { setMessageSelected, setTitle } from '../../store/reducers/appSlice';
+import { setStatusBadge } from '../../store/reducers/persistedAppSlice';
 import { IconApp } from '../../components/app/IconApp';
 import ImagePicker from '../../utils/imagePicker';
 import axios from 'axios';
@@ -21,6 +22,7 @@ import { updateUser, updateUserProfile } from '../../store/reducers/userSlice';
 import { Image as ExpoImage } from 'expo-image';
 import { cleanExpiredLocalStories, isStoryExpired } from '../../utils/storyCleanup';
 import StoriesList from '../../components/lists/stories/StoriesList';
+import { isPhotoStory, parseStoryStyles } from '../../utils/storyUtils';
 
 interface IChecklistItem {
     title: string;
@@ -227,12 +229,22 @@ const Chats = ({ navigation, route }: NavProps) => {
         });
 
         setUserStories(assembledStories);
+        const unseenCount = assembledStories.filter(st => st.hasUnseen).length;
+        dispatch(setStatusBadge(unseenCount));
     }, [raw_stories, contacts, realmContacts, user_data.phone_number, realm]);
 
     const renderHeaderStoriesBar = () => {
         if (active_my_stories.length === 0 && userStories.length === 0) {
             return null;
         }
+
+        const lastMyStory = active_my_stories.length > 0 ? active_my_stories[active_my_stories.length - 1] : null;
+        const isMyPhotoStatus = isPhotoStory(lastMyStory);
+        const myStoryStyles = parseStoryStyles(lastMyStory);
+        const myStatusBgColor = myStoryStyles.backgroundColor || app_theme.colors.high_color || '#1D2A44';
+        const myStatusFgColor = myStoryStyles.foregroundColor || '#FFFFFF';
+        const myStatusFontWeight = myStoryStyles.fontWeight || 'bold';
+        const myStatusFontStyle = myStoryStyles.fontStyle || 'normal';
 
         return (
             <View style={{
@@ -259,34 +271,68 @@ const Chats = ({ navigation, route }: NavProps) => {
                         }}
                         style={{
                             alignItems: 'center',
-                            marginRight: 14,
-                            width: 68,
+                            marginRight: 16,
+                            width: 88,
                         }}
                     >
                         <View style={{ position: 'relative' }}>
                             <View
                                 style={{
-                                    width: 62,
-                                    height: 62,
-                                    borderRadius: 31,
+                                    width: 80,
+                                    height: 80,
+                                    borderRadius: 40,
                                     padding: 2,
                                     borderWidth: active_my_stories.length > 0 ? 2.5 : 1.5,
                                     borderColor: active_my_stories.length > 0
-                                        ? (app_theme.colors.header_background_color || app_theme.colors.primary_high_color || app_theme.colors.high_color)
+                                        ? app_theme.colors.high_color
                                         : (app_theme.colors.border || 'rgba(150, 150, 150, 0.3)'),
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     backgroundColor: app_theme.colors.background,
                                 }}
                             >
-                                {user_data.user_profile === "" || !user_data.user_profile ? (
+                                {active_my_stories.length > 0 && lastMyStory ? (
+                                    isMyPhotoStatus ? (
+                                        <ExpoImage
+                                            style={{ width: 70, height: 70, borderRadius: 35 }}
+                                            contentFit="cover"
+                                            source={{ uri: media_url + "/photo_status/" + lastMyStory.main_text }}
+                                        />
+                                    ) : (
+                                        <View
+                                            style={{
+                                                width: 70,
+                                                height: 70,
+                                                borderRadius: 35,
+                                                backgroundColor: myStatusBgColor,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                padding: 4,
+                                                overflow: 'hidden',
+                                            }}
+                                        >
+                                            <Text
+                                                numberOfLines={2}
+                                                style={{
+                                                    color: myStatusFgColor,
+                                                    fontWeight: myStatusFontWeight,
+                                                    fontStyle: myStatusFontStyle,
+                                                    fontSize: 11,
+                                                    textAlign: 'center',
+                                                }}
+                                            >
+                                                {lastMyStory?.caption || lastMyStory?.main_text || ''}
+                                            </Text>
+                                        </View>
+                                    )
+                                ) : user_data.user_profile === "" || !user_data.user_profile ? (
                                     <Image
                                         source={require('./../../assets/profile_black.jpg')}
-                                        style={{ width: 54, height: 54, borderRadius: 27 }}
+                                        style={{ width: 70, height: 70, borderRadius: 35 }}
                                     />
                                 ) : (
                                     <ExpoImage
-                                        style={{ width: 54, height: 54, borderRadius: 27 }}
+                                        style={{ width: 70, height: 70, borderRadius: 35 }}
                                         contentFit="cover"
                                         source={{ uri: media_url + "/profile_pictures/" + user_data.user_profile }}
                                     />
@@ -297,16 +343,16 @@ const Chats = ({ navigation, route }: NavProps) => {
                                     position: 'absolute',
                                     bottom: 0,
                                     right: 0,
-                                    backgroundColor: app_theme.colors.header_background_color || app_theme.colors.primary_high_color || app_theme.colors.high_color || '#1E68FF',
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: 10,
+                                    backgroundColor: app_theme.colors.button_background_color,
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: 12,
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     borderWidth: 2,
                                     borderColor: app_theme.colors.background
                                 }}>
-                                    <IconApp pack="FI" name="plus" size={12} color="#FFFFFF" />
+                                    <IconApp pack="FI" name="plus" size={14} color={app_theme.colors.button_foreground_color} />
                                 </View>
                             )}
                         </View>

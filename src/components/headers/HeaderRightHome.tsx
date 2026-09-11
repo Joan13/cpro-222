@@ -14,7 +14,9 @@ import axios from "axios";
 import { useQuery, useRealm } from "@realm/react";
 import { TBusiness, TBusinessSubscription, TBusinessUser, TItem, TItemPrices, TSale, TSellsPoint } from "../../types/types";
 import * as RootNavigation from './../../services/Navigation_ref';
-import { UserChats, Payments } from "../../store/database/Models";
+import { UserChats, Payments, Stories } from "../../store/database/Models";
+import { isStoryExpired } from "../../utils/storyCleanup";
+import { sweepInactiveBusinessData } from "../../utils/realmSweeper";
 import AppActivityIndicator from "../app/AppActivityIndicator";
 
 const HeaderRightHome = () => {
@@ -30,6 +32,26 @@ const HeaderRightHome = () => {
     const [showInternetError, setShowInternetError] = useState(false);
     const dispatch = useDispatch();
     const realm = useRealm();
+
+    const rawStories = useQuery(Stories);
+    const unvisitedStories = rawStories.filter(st => {
+        if (!st.phone_number || st.phone_number === user_data.phone_number || isStoryExpired(st)) {
+            return false;
+        }
+        let viewersList: any[] = [];
+        try {
+            viewersList = JSON.parse(st.viewers || '[]');
+        } catch (e) {
+            viewersList = [];
+        }
+        return !viewersList.some((v: any) =>
+            typeof v === 'string'
+                ? v === user_data.phone_number
+                : (v.phone_number === user_data.phone_number || v.phone === user_data.phone_number)
+        );
+    });
+    const unvisitedContactsCount = new Set(unvisitedStories.map(st => st.phone_number)).size;
+    const displayStatusBadge = unvisitedContactsCount > 0 ? unvisitedContactsCount : status_badge;
 
     const itemss = [];
     const itemssPrices = [];
@@ -445,8 +467,9 @@ const HeaderRightHome = () => {
                         } catch (error) {
 
                         }
-                    }
 
+                        sweepInactiveBusinessData(realm, user_data.phone_number);
+                    }
 
                     setLoading(false);
                 })
@@ -527,7 +550,7 @@ const HeaderRightHome = () => {
                             onPress={() => { RootNavigation.navigate("Stories") }}
                             style={iconPressableStyle}>
                             <IconApp pack="MT" name="motion-photos-on" size={23} color={theme.colors.header_foreground_color} />
-                            {status_badge > 0 && (
+                            {displayStatusBadge > 0 && (
                                 <View style={{
                                     position: 'absolute',
                                     top: -2,
@@ -540,7 +563,7 @@ const HeaderRightHome = () => {
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                 }}>
-                                    <YambiText text={status_badge.toString()} size={"xsmall"} color={theme.colors.primary_high_color_foreground} />
+                                    <YambiText text={displayStatusBadge.toString()} size={"xsmall"} color={theme.colors.primary_high_color_foreground} />
                                 </View>
                             )}
                         </Pressable>

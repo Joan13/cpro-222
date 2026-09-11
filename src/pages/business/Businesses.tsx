@@ -17,6 +17,7 @@ import Animated, { FadeInUp, BounceIn } from "react-native-reanimated";
 import { remote_host } from "../../../GlobalVariables";
 import axios from "axios";
 import BusinessesListModern from "../../components/lists/business/BusinessesListModern";
+import { sweepInactiveBusinessData } from "../../utils/realmSweeper";
 // import { FlashList } from "@shopify/flash-list"
 
 const Businesses = ({}: NavProps) => {
@@ -431,6 +432,8 @@ const Businesses = ({}: NavProps) => {
                         } catch (error) {
 
                         }
+
+                        sweepInactiveBusinessData(realm, user_data.phone_number);
                     }
 
                     setRefreshing(false);
@@ -450,10 +453,22 @@ const Businesses = ({}: NavProps) => {
     const businesses = useQuery(UserBusinesses);
     const businessUsers = useQuery(BusinessUsers);
 
+    useEffect(() => {
+        if (user_data?.phone_number) {
+            sweepInactiveBusinessData(realm, user_data.phone_number);
+        }
+    }, [user_data?.phone_number, realm]);
+
     const activeBusinesses = useMemo(() => {
+        if (!user_data?.phone_number) return [];
+        const userPhone = user_data.phone_number.trim();
+
         const activeMemberships = new Set(
             businessUsers
-                .filter((bu) => bu.user === user_data.phone_number && bu.user_active === 1)
+                .filter((bu) => {
+                    const matchUser = (bu.user && bu.user.trim() === userPhone) || (bu.phone_number && bu.phone_number.trim() === userPhone);
+                    return matchUser && bu.user_active === 1;
+                })
                 .map((bu) => bu.business_id)
         );
 

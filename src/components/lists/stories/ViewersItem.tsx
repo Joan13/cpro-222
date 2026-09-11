@@ -108,7 +108,7 @@ const ViewersItem: React.FC<ViewersItemProps> = ({
                     pack="MC"
                     name="message-text-outline"
                     size={22}
-                    color={theme.primary_high_color || theme.high_color}
+                    color={theme.high_color}
                 />
             </Pressable>
         </View>

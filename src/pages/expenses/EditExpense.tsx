@@ -6,6 +6,7 @@ import ButtonNormal from "../../components/app/ButtonNormal";
 import { IconApp } from "../../components/app/IconApp";
 import { YambiText } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
+import BottomSheet from "../../components/app/BottomSheet";
 import SwitchApp from "../../components/app/SwitchApp";
 import { LegendList } from '@legendapp/list';
 import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice";
@@ -185,7 +186,6 @@ const EditExpense = ({ route, navigation }: NavProps) => {
     const RenderCurrency = ({ item, index, selectCurrency }: { item: number, index: number, selectCurrency: (currency: number) => void }) => {
         const pressCurrency = () => {
             selectCurrency(item);
-            dispatch(setShowModalApp(false));
             setShowCurrencies(false);
         };
 
@@ -213,7 +213,6 @@ const EditExpense = ({ route, navigation }: NavProps) => {
     const RenderCategory = ({ item, index, selectCategory }: { item: any, index: number, selectCategory: (category: number) => void }) => {
         const pressCategory = () => {
             selectCategory(item.id);
-            dispatch(setShowModalApp(false));
             setShowCategories(false);
         };
 
@@ -243,7 +242,6 @@ const EditExpense = ({ route, navigation }: NavProps) => {
     const RenderWallet = ({ item, index, selectWallet }: { item: number, index: number, selectWallet: (wallet: number) => void }) => {
         const pressWallet = () => {
             selectWallet(item);
-            dispatch(setShowModalApp(false));
             setShowWallets(false);
         };
 
@@ -273,7 +271,6 @@ const EditExpense = ({ route, navigation }: NavProps) => {
             selectBusiness(item._id);
             // Clear sales point if business changes
             setSales_point_id("");
-            dispatch(setShowModalApp(false));
             setShowBusinesses(false);
         };
 
@@ -301,7 +298,6 @@ const EditExpense = ({ route, navigation }: NavProps) => {
         const pressSalesPoint = () => {
             // Automatically set business_id when sales point is selected
             selectSalesPoint(item._id, item.business_id);
-            dispatch(setShowModalApp(false));
             setShowSalesPoints(false);
         };
 
@@ -351,107 +347,280 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                             <YambiText text={strings.fields_error_validation || "Please fill in all required fields"} size="normal" color="gray" />
                         </ModalApp> : null}
 
-                    {showCurrencies ?
-                        <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowCurrencies(false) }} paddings={false} singleButton title={strings.currency}>
-                            <LegendList
-                                data={global_currencies as never}
-                                showsVerticalScrollIndicator={true}
-                                renderItem={({ item, index }: { item: number, index: number }) => (
-                                    <RenderCurrency selectCurrency={(item) => setCurrency(item)} item={item} index={index} />
-                                )}
-                            />
-                        </ModalApp> : null}
+                    {showCurrencies ? (
+                        <BottomSheet
+                            visible={showCurrencies}
+                            onClose={() => setShowCurrencies(false)}
+                        >
+                            <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                                {(global_currencies as number[]).map((curr, index) => {
+                                    const isSelected = currency === curr;
+                                    return (
+                                        <Pressable
+                                            key={curr}
+                                            onPress={() => {
+                                                setCurrency(curr);
+                                                setShowCurrencies(false);
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 14,
+                                                borderRadius: 12,
+                                                marginVertical: 3,
+                                                backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? theme.high_color + "50" : 'transparent',
+                                            }}
+                                        >
+                                            <YambiText text={`${index + 1}.`} style={{ width: 30 }} color="gray" />
+                                            <YambiText
+                                                text={renderCurrency(curr, true)}
+                                                bold={isSelected}
+                                                style={{ flex: 1, fontSize: 15, color: isSelected ? theme.high_color : theme.text }}
+                                            />
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
+                            </View>
+                        </BottomSheet>
+                    ) : null}
 
-                    {showCategories ?
-                        <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowCategories(false) }} paddings={false} singleButton title={strings.category || "Category"}>
-                            <LegendList
-                                data={expenses_categories as never}
-                                showsVerticalScrollIndicator={true}
-                                renderItem={({ item, index }: { item: any, index: number }) => (
-                                    <RenderCategory selectCategory={(item) => setCategory(item)} item={item} index={index} />
-                                )}
-                            />
-                        </ModalApp> : null}
+                    {showCategories ? (
+                        <BottomSheet
+                            visible={showCategories}
+                            onClose={() => setShowCategories(false)}
+                        >
+                            <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                                {(expenses_categories as any[]).map((cat) => {
+                                    const isSelected = category === cat.id;
+                                    return (
+                                        <Pressable
+                                            key={cat.id}
+                                            onPress={() => {
+                                                setCategory(cat.id);
+                                                setShowCategories(false);
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 14,
+                                                borderRadius: 12,
+                                                marginVertical: 3,
+                                                backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? theme.high_color + "50" : 'transparent',
+                                            }}
+                                        >
+                                            <View style={{ flex: 1 }}>
+                                                <YambiText
+                                                    text={cat.name}
+                                                    bold={isSelected}
+                                                    style={{ fontSize: 15, color: isSelected ? theme.high_color : theme.text, marginBottom: 2 }}
+                                                />
+                                                <YambiText text={cat.items} size="small" color="gray" />
+                                            </View>
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
+                            </View>
+                        </BottomSheet>
+                    ) : null}
 
-                    {showWallets ?
-                        <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowWallets(false) }} paddings={false} singleButton title={strings.wallet || "Wallet"}>
-                            <LegendList
-                                data={wallets as never}
-                                showsVerticalScrollIndicator={true}
-                                renderItem={({ item, index }: { item: number, index: number }) => (
-                                    <RenderWallet selectWallet={(item) => setWallet(item)} item={item} index={index} />
-                                )}
-                            />
-                        </ModalApp> : null}
+                    {showWallets ? (
+                        <BottomSheet
+                            visible={showWallets}
+                            onClose={() => setShowWallets(false)}
+                        >
+                            <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
+                                {wallets.map((w) => {
+                                    const isSelected = wallet === w;
+                                    return (
+                                        <Pressable
+                                            key={w}
+                                            onPress={() => {
+                                                setWallet(w);
+                                                setShowWallets(false);
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 14,
+                                                borderRadius: 12,
+                                                marginVertical: 3,
+                                                backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? theme.high_color + "50" : 'transparent',
+                                            }}
+                                        >
+                                            <YambiText
+                                                text={strings.wallet + " " + w + (w === 1 ? " (" + strings.primary + ")" : "")}
+                                                bold={isSelected}
+                                                style={{ flex: 1, fontSize: 15, color: isSelected ? theme.high_color : theme.text }}
+                                            />
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
+                            </View>
+                        </BottomSheet>
+                    ) : null}
 
-                    {showBusinesses ?
-                        <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowBusinesses(false) }} paddings={false} singleButton title={strings.business || "Business"}>
-                            <View style={{ width: '100%' }}>
+                    {showBusinesses ? (
+                        <BottomSheet
+                            visible={showBusinesses}
+                            onClose={() => setShowBusinesses(false)}
+                        >
+                            <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
                                 <Pressable
                                     onPress={() => {
                                         setBusiness_id("");
                                         setSales_point_id("");
-                                        dispatch(setShowModalApp(false));
                                         setShowBusinesses(false);
                                     }}
                                     style={{
-                                        backgroundColor: theme.background,
-                                        flex: 1,
                                         flexDirection: 'row',
-                                        borderRadius: 8,
-                                        paddingHorizontal: 15,
-                                        height: 50,
                                         alignItems: 'center',
-                                        borderBottomWidth: 1,
-                                        borderColor: theme.border,
-                                        marginBottom: 8
+                                        paddingVertical: 14,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 12,
+                                        marginVertical: 3,
+                                        backgroundColor: !business_id ? theme.high_color + "18" : 'transparent',
+                                        borderWidth: 1,
+                                        borderColor: !business_id ? theme.high_color + "50" : 'transparent',
                                     }}
                                 >
-                                    <YambiText text={strings.none || "None"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                                </Pressable>
-                                <LegendList
-                                    data={userBusinesses as never}
-                                    showsVerticalScrollIndicator={true}
-                                    renderItem={({ item, index }: { item: any, index: number }) => (
-                                        <RenderBusiness selectBusiness={(item) => { setBusiness_id(item); setSales_point_id(""); }} item={item} index={index} />
+                                    <YambiText
+                                        text={strings.none || "None"}
+                                        bold={!business_id}
+                                        style={{ flex: 1, fontSize: 15, fontStyle: 'italic', color: !business_id ? theme.high_color : theme.text }}
+                                    />
+                                    {!business_id && (
+                                        <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
                                     )}
-                                />
+                                </Pressable>
+                                {userBusinesses.map((b: any) => {
+                                    const isSelected = business_id === b._id;
+                                    return (
+                                        <Pressable
+                                            key={b._id}
+                                            onPress={() => {
+                                                setBusiness_id(b._id);
+                                                setSales_point_id("");
+                                                setShowBusinesses(false);
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 14,
+                                                borderRadius: 12,
+                                                marginVertical: 3,
+                                                backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? theme.high_color + "50" : 'transparent',
+                                            }}
+                                        >
+                                            <YambiText
+                                                text={b.business_name}
+                                                bold={isSelected}
+                                                style={{ flex: 1, fontSize: 15, color: isSelected ? theme.high_color : theme.text }}
+                                            />
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
                             </View>
-                        </ModalApp> : null}
+                        </BottomSheet>
+                    ) : null}
 
-                    {showSalesPoints ?
-                        <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowSalesPoints(false) }} paddings={false} singleButton title={strings.sales_point || "Sales Point"}>
-                            <View style={{ width: '100%' }}>
+                    {showSalesPoints ? (
+                        <BottomSheet
+                            visible={showSalesPoints}
+                            onClose={() => setShowSalesPoints(false)}
+                        >
+                            <View style={{ paddingBottom: 10, paddingHorizontal: 20 }}>
                                 <Pressable
                                     onPress={() => {
                                         setSales_point_id("");
-                                        dispatch(setShowModalApp(false));
                                         setShowSalesPoints(false);
                                     }}
                                     style={{
-                                        backgroundColor: theme.background,
-                                        flex: 1,
                                         flexDirection: 'row',
-                                        borderRadius: 8,
-                                        paddingHorizontal: 15,
-                                        height: 50,
                                         alignItems: 'center',
-                                        borderBottomWidth: 1,
-                                        borderColor: theme.border,
-                                        marginBottom: 8
+                                        paddingVertical: 14,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 12,
+                                        marginVertical: 3,
+                                        backgroundColor: !sales_point_id ? theme.high_color + "18" : 'transparent',
+                                        borderWidth: 1,
+                                        borderColor: !sales_point_id ? theme.high_color + "50" : 'transparent',
                                     }}
                                 >
-                                    <YambiText text={strings.none || "None"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                                </Pressable>
-                                <LegendList
-                                    data={allSalesPoints as never}
-                                    showsVerticalScrollIndicator={true}
-                                    renderItem={({ item, index }: { item: any, index: number }) => (
-                                        <RenderSalesPoint selectSalesPoint={(sales_point_id, business_id) => { setSales_point_id(sales_point_id); setBusiness_id(business_id); }} item={item} index={index} />
+                                    <YambiText
+                                        text={strings.none || "None"}
+                                        bold={!sales_point_id}
+                                        style={{ flex: 1, fontSize: 15, fontStyle: 'italic', color: !sales_point_id ? theme.high_color : theme.text }}
+                                    />
+                                    {!sales_point_id && (
+                                        <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
                                     )}
-                                />
+                                </Pressable>
+                                {allSalesPoints.map((sp: any) => {
+                                    const isSelected = sales_point_id === sp._id;
+                                    const business = userBusinesses.find((b: any) => b._id === sp.business_id);
+                                    return (
+                                        <Pressable
+                                            key={sp._id}
+                                            onPress={() => {
+                                                setSales_point_id(sp._id);
+                                                setBusiness_id(sp.business_id);
+                                                setShowSalesPoints(false);
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 14,
+                                                borderRadius: 12,
+                                                marginVertical: 3,
+                                                backgroundColor: isSelected ? theme.high_color + "18" : 'transparent',
+                                                borderWidth: 1,
+                                                borderColor: isSelected ? theme.high_color + "50" : 'transparent',
+                                            }}
+                                        >
+                                            <View style={{ flex: 1 }}>
+                                                <YambiText
+                                                    text={sp.sells_point_name}
+                                                    bold={isSelected}
+                                                    style={{ fontSize: 15, color: isSelected ? theme.high_color : theme.text, marginBottom: 2 }}
+                                                />
+                                                {business && (
+                                                    <YambiText text={business.business_name} size="xsmall" color="gray" style={{ fontSize: 11 }} />
+                                                )}
+                                            </View>
+                                            {isSelected && (
+                                                <IconApp pack="IO" name="checkmark-circle" size={22} color={theme.high_color} />
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
                             </View>
-                        </ModalApp> : null}
+                        </BottomSheet>
+                    ) : null}
 
                     {/* Title - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
@@ -496,7 +665,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
 
                     {/* Currency - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                        <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCurrencies(true) }}>
+                        <Pressable onPress={() => setShowCurrencies(true)}>
                             <YambiText text={strings.currency + " *"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                             <View style={{
                                 backgroundColor: theme.border,
@@ -512,7 +681,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
 
                     {/* Category - Required */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                        <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowCategories(true) }}>
+                        <Pressable onPress={() => setShowCategories(true)}>
                             <YambiText text={strings.category + " *"} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                             <View style={{
                                 backgroundColor: theme.border,
@@ -533,7 +702,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
 
                     {/* Wallet */}
                     <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                        <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowWallets(true) }}>
+                        <Pressable onPress={() => setShowWallets(true)}>
                             <YambiText text={strings.wallet} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                             <View style={{
                                 backgroundColor: theme.border,
@@ -556,7 +725,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                     {userBusinesses.length > 0 && (
                         <>
                             <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                                <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowBusinesses(true) }}>
+                                <Pressable onPress={() => setShowBusinesses(true)}>
                                     <YambiText text={strings.business} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                                     <View style={{
                                         backgroundColor: theme.border,
@@ -578,7 +747,7 @@ const EditExpense = ({ route, navigation }: NavProps) => {
                             {/* Sales Point (show all user's sales points) */}
                             {allSalesPoints.length > 0 && (
                                 <View style={{ backgroundColor: theme.background, marginBottom: 15 }}>
-                                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowSalesPoints(true) }}>
+                                    <Pressable onPress={() => setShowSalesPoints(true)}>
                                         <YambiText text={strings.sales_point} size="small" color="gray" style={{ marginLeft: 2, marginBottom: 5 }} />
                                         <View style={{
                                             backgroundColor: theme.border,

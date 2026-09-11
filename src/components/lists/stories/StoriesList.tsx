@@ -8,6 +8,7 @@ import { renderDateTime, media_url } from "../../../../GlobalVariables";
 import { Image as ExpoImage } from 'expo-image';
 import BottomSheet from "../../app/BottomSheet";
 import ViewersItem from "./ViewersItem";
+import { isPhotoStory, parseStoryStyles } from "../../../utils/storyUtils";
 
 export interface StoriesListProps {
     item: any;
@@ -57,21 +58,8 @@ const StoriesList = ({
         ? item.stories[item.stories.length - 1]
         : null;
 
-    const isPhotoStatus = lastStory?.main_text !== "" && lastStory?.main_text !== undefined;
-
-    let storyStyles: {
-        backgroundColor?: string;
-        foregroundColor?: string;
-        fontWeight?: any;
-        fontStyle?: any;
-        textAlign?: any;
-    } = {};
-
-    try {
-        if (lastStory?.styles) {
-            storyStyles = JSON.parse(lastStory.styles);
-        }
-    } catch (e) { }
+    const isPhotoStatus = isPhotoStory(lastStory);
+    const storyStyles = parseStoryStyles(lastStory);
 
     const statusBgColor = storyStyles.backgroundColor || app_theme.colors.high_color || '#1D2A44';
     const statusFgColor = storyStyles.foregroundColor || '#FFFFFF';
@@ -114,13 +102,47 @@ const StoriesList = ({
                         styles.horizontalAvatarRing,
                         {
                             borderColor: isRingActive
-                                ? (app_theme.colors.header_background_color || app_theme.colors.primary_high_color || app_theme.colors.high_color)
+                                ? app_theme.colors.high_color
                                 : (app_theme.colors.border || 'rgba(150, 150, 150, 0.3)'),
                             borderWidth: isRingActive ? 2.5 : 1.5,
                         }
                     ]}
                 >
-                    {item.user?.user_profile === "" || !item.user?.user_profile ? (
+                    {lastStory ? (
+                        isPhotoStatus ? (
+                            <ExpoImage
+                                style={styles.horizontalAvatarImg}
+                                contentFit="cover"
+                                source={{ uri: media_url + "/photo_status/" + lastStory.main_text }}
+                            />
+                        ) : (
+                            <View
+                                style={[
+                                    styles.horizontalAvatarImg,
+                                    {
+                                        backgroundColor: statusBgColor,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        padding: 3,
+                                        overflow: 'hidden',
+                                    }
+                                ]}
+                            >
+                                <Text
+                                    numberOfLines={2}
+                                    style={{
+                                        color: statusFgColor,
+                                        fontWeight: statusFontWeight,
+                                        fontStyle: statusFontStyle,
+                                        fontSize: 11,
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    {lastStory?.caption || lastStory?.main_text || ''}
+                                </Text>
+                            </View>
+                        )
+                    ) : item.user?.user_profile === "" || !item.user?.user_profile ? (
                         <Image
                             source={require('./../../../assets/profile_black.jpg')}
                             style={styles.horizontalAvatarImg}
@@ -129,7 +151,7 @@ const StoriesList = ({
                         <ExpoImage
                             style={styles.horizontalAvatarImg}
                             contentFit="cover"
-                            source={media_url + "/profile_pictures/" + item.user.user_profile}
+                            source={{ uri: media_url + "/profile_pictures/" + item.user.user_profile }}
                         />
                     )}
                 </View>
@@ -198,7 +220,7 @@ const StoriesList = ({
                     styles.avatarRing,
                     {
                         borderColor: hasUnseenStory
-                            ? (app_theme.colors.primary_high_color || app_theme.colors.high_color)
+                            ? app_theme.colors.high_color
                             : 'rgba(255, 255, 255, 0.7)',
                         borderWidth: hasUnseenStory ? 2.5 : 1.5,
                     }
@@ -329,22 +351,22 @@ const styles = StyleSheet.create({
     },
     horizontalContainer: {
         alignItems: 'center',
-        marginRight: 14,
-        width: 68,
+        marginRight: 16,
+        width: 88,
     },
     horizontalAvatarRing: {
-        width: 62,
-        height: 62,
-        borderRadius: 31,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
         padding: 2,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'transparent',
     },
     horizontalAvatarImg: {
-        width: 54,
-        height: 54,
-        borderRadius: 27,
+        width: 70,
+        height: 70,
+        borderRadius: 35,
     },
 });
 

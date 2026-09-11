@@ -53,11 +53,16 @@ const GalleryItemComponent: React.FC<GalleryItemProps> = ({
       ]}
     >
       <Image
-        source={{ uri: asset.uri }}
+        source={{
+          uri: asset.uri,
+          width: Math.round(size * 1.5),
+          height: Math.round(size * 1.5),
+        }}
         style={[styles.image, { borderRadius: borderRadius }]}
         contentFit="cover"
-        transition={150}
+        transition={100}
         cachePolicy="memory-disk"
+        recyclingKey={asset.id}
       />
 
       {isSelected && <View style={[styles.selectedOverlay, { borderRadius: borderRadius }]} />}

@@ -24,9 +24,12 @@ import {
   CompanyUsers,
   Payments,
   Reservations,
+  CallHistory,
 } from '../store/database/Models';
 import { remote_host, randomString, renderDateUpToMilliseconds } from '../../GlobalVariables';
 import { TChat, TMessage } from '../types/types';
+import store from '../store/app/store';
+import { setCallsBadge } from '../store/reducers/persistedAppSlice';
 
 // Singleton Realm instance shared across all background/notification handlers.
 // This avoids opening/closing multiple instances which conflicts with the
@@ -56,8 +59,9 @@ export const realmConfig = {
     CompanyUsers,
     Payments,
     Reservations,
+    CallHistory,
   ],
-  schemaVersion: 26,
+  schemaVersion: 27,
 };
 
 export const openRealmInstance = async () => {
@@ -339,5 +343,57 @@ export const handleMarkAsReadAction = async (receivedMessageToken: string) => {
       });
   } catch (error) {
     console.error("Error in handleMarkAsReadAction:", error);
+  }
+};
+
+export const recordCallHistory = async (callData: any) => {
+  if (!callData || !callData.callId) return;
+  try {
+    const realm = await openRealmInstance();
+    const isCaller = callData.isCaller;
+    let direction: 'outgoing' | 'incoming' | 'missed' = 'outgoing';
+    if (!isCaller) {
+      if (callData.durationSeconds > 0 || callData.status === 'CONNECTED') {
+        direction = 'incoming';
+      } else {
+        direction = 'missed';
+      }
+    } else {
+      direction = 'outgoing';
+    }
+
+    const historyId = `hist_${callData.callId}`;
+
+    await safeRealmWrite(realm, () => {
+      realm.create(
+        'CallHistory',
+        {
+          _id: historyId,
+          callId: callData.callId,
+          callerId: callData.callerId,
+          calleeId: callData.calleeId,
+          callerName: callData.callerName || callData.callerId,
+          callerAvatar: callData.callerAvatar || '',
+          calleeName: callData.calleeName || callData.calleeId,
+          calleeAvatar: callData.calleeAvatar || '',
+          type: callData.type || 'audio',
+          direction: direction,
+          status: callData.status,
+          durationSeconds: callData.durationSeconds || 0,
+          createdAt: new Date().toISOString(),
+          timestamp: Date.now(),
+        },
+        Realm.UpdateMode.Modified
+      );
+    });
+
+    if (direction === 'missed') {
+      const currentBadge = store.getState().persisted_app?.calls_badge || 0;
+      store.dispatch(setCallsBadge(currentBadge + 1));
+    }
+
+    console.log(`[CallHistory] Recorded history for call ${callData.callId} (${direction}, ${callData.durationSeconds}s)`);
+  } catch (err) {
+    console.error('[CallHistory] Error recording call history:', err);
   }
 };

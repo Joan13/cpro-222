@@ -114,7 +114,7 @@ const StoryMainItem = ({ item, index }: { item: TStory, index: number }) => {
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TextNormalYambi text={ShowUserName(user.user_names, user.phone_number)} numberLines={1} />
-                    {user.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
+                    {user.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 5 }} /> : null}
                 </View>
                 <View style={{
                     flexDirection: 'row', alignItems: 'center', marginBottom: item.caption === "" ? 5 : 0

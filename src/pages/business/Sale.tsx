@@ -18,7 +18,7 @@ import { FlashList } from "@shopify/flash-list";
 import SalePaymentItem from "../../components/lists/business/SalePaymentItem";
 import BusinessesList from "../../components/lists/business/BusinessesList";
 import { renderCurrency, renderDateTime, SocketApp } from "../../../GlobalVariables";
-import RNPrint from 'react-native-print';
+import * as Print from 'expo-print';
 import QRCode from 'qrcode';
 import moment from "moment";
 
@@ -114,7 +114,7 @@ const Sale = ({ navigation, route }: NavProps) => {
     const PrintInvoice = async () => {
         const publicUrl = `https://app.yambi.net/business/${business._id}`;
         const qrSvg = generateQrSvg(publicUrl);
-        await RNPrint.print({
+        await Print.printAsync({
             html: `
                 <!DOCTYPE html>
                 <html>

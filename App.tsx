@@ -36,6 +36,7 @@ import { NavProps, RootStackParamList, TBusinessBadge, TChat, TContact, TItem, T
 
 // import changeNavigationBarColor from 'react-native-navigation-bar-color';
 import SplashYambiStart from './src/pages/splash/MainSplash';
+import { sweepInactiveBusinessData } from './src/utils/realmSweeper';
 import Signup from './src/pages/signup/Signup';
 import Themes, { themes, isThemeAligned } from './src/pages/app/Themes';
 import * as Contacts from 'expo-contacts';
@@ -65,6 +66,7 @@ import SettingsYambi from './src/pages/app/SettingsYambi';
 import Languages from './src/pages/app/Languages';
 import AudioCallScreen from './src/pages/call/AudioCallScreen';
 import VideoCallScreen from './src/pages/call/VideoCallScreen';
+import CallDetailScreen from './src/pages/call/Call';
 import IncomingCallOverlay from './src/components/call/IncomingCallOverlay';
 import ActiveCallFloatingPIP from './src/components/call/ActiveCallFloatingPIP';
 import { callManager } from './src/services/call/CallManager';
@@ -226,12 +228,13 @@ Notifications.setNotificationHandler({
 
 // Configure Android High-Priority Ongoing Call Channel
 if (Platform.OS === 'android') {
+    Notifications.deleteNotificationChannelAsync('incoming_calls').catch(() => {});
     Notifications.setNotificationChannelAsync('incoming_calls', {
         name: 'Incoming Calls',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#34C759',
-        sound: 'default',
+        sound: 'incoming_call.mp3',
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         bypassDnd: true,
     });
@@ -293,13 +296,15 @@ export const displayNotification = async (notification: any) => {
                     ...data,
                     notificationId,
                 },
-                sound: 'default',
+                sound: 'incoming_call.mp3',
                 priority: Notifications.AndroidNotificationPriority.MAX,
                 categoryIdentifier: 'incoming_call_category',
                 autoDismiss: false,
                 sticky: true,
             },
-            trigger: null,
+            trigger: {
+                channelId: 'incoming_calls',
+            } as any,
         });
         return;
     }
@@ -609,6 +614,12 @@ const Yambi = ({ navigation }: NavProps) => {
         BusinessUsers, users => {
             return users.filtered('user == $0 && user_active == $1', user_data.phone_number, 1);
         }, [user_data.phone_number]);
+
+    useEffect(() => {
+        if (user_data?.phone_number) {
+            sweepInactiveBusinessData(realm, user_data.phone_number);
+        }
+    }, [user_data?.phone_number, realm]);
 
     const chattt = useQuery(UserChats);
 
@@ -2429,7 +2440,7 @@ const Yambi = ({ navigation }: NavProps) => {
 
                 if (actionIdentifier === 'accept_call') {
                     if (notificationId) {
-                        Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+                        Notifications.dismissNotificationAsync(notificationId).catch(() => { });
                     }
                     await callManager.acceptCall();
                     if (notificationData?.callType === 'audio' || notificationData?.type === 'audio') {
@@ -2439,7 +2450,7 @@ const Yambi = ({ navigation }: NavProps) => {
                     }
                 } else if (actionIdentifier === 'decline_call') {
                     if (notificationId) {
-                        Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+                        Notifications.dismissNotificationAsync(notificationId).catch(() => { });
                     }
                     callManager.rejectCall();
                 } else {
@@ -3081,6 +3092,20 @@ const Yambi = ({ navigation }: NavProps) => {
 
                             <Stack.Screen name="AudioCallScreen" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} component={AudioCallScreen} />
                             <Stack.Screen name="VideoCallScreen" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} component={VideoCallScreen} />
+                            <Stack.Screen name="Call" component={CallDetailScreen} options={{
+                                headerShadowVisible: false,
+                                headerShown: true,
+                                headerStyle: {
+                                    backgroundColor: app_theme.colors.header_background_color
+                                },
+                                headerTintColor: app_theme.colors.header_foreground_color,
+                                animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
+                                title: strings.call_details || 'Call Details',
+                                headerTitleStyle: {
+                                    fontSize: app_description.title_font_size,
+                                    fontWeight: app_description.title_font_weight as any,
+                                },
+                            }} />
 
                             {/* <Stack.Screen name="profile" options={{ headerShown: false }} component={ProfileYambi} /> */}
                             {/* <Stack.Screen name="contacts" component={ContactsUser} options={{ headerShown: false }} /> */}

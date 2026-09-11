@@ -20,6 +20,7 @@ import * as ContextMenu from 'zeego/context-menu';
 import moment from 'moment';
 import { setShowModalApp } from "../../../store/reducers/appSlice";
 import ModalApp from "../../app/ModalApp";
+import { callManager } from "../../../services/call/CallManager";
 
 const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
@@ -438,6 +439,26 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
         setShowDeleteConfirm(true);
     };
 
+    const handleStartAudioCall = () => {
+        callManager.startCall(
+            item.phone_number,
+            'audio',
+            ShowUser(userr),
+            userr.user_profile || ''
+        );
+        RootNavigation.navigate('AudioCallScreen');
+    };
+
+    const handleStartVideoCall = () => {
+        callManager.startCall(
+            item.phone_number,
+            'video',
+            ShowUser(userr),
+            userr.user_profile || ''
+        );
+        RootNavigation.navigate('VideoCallScreen');
+    };
+
     const handleLongPress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setIsLongPressed(true);
@@ -478,26 +499,22 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                             />
                                 :
                                 <ExpoImage
-                                    style={{
-                                        height: 50,
-                                        width: 50,
-                                        borderRadius: 50
-                                    }}
-                                    contentFit="cover"
-                                    source={media_url + "/profile_pictures/" + userr.user_profile} />}
+                                    source={{ uri: media_url + "/profile_pictures/" + userr.user_profile }}
+                                    style={{ width: 50, height: 50, borderRadius: 50, borderWidth: 1, borderColor: app_theme.colors.border }}
+                                />}
                         </Pressable>
                         <View style={{
-                            flex: 1,
-                            marginLeft: 15
+                            marginLeft: 10,
+                            flex: 1
                         }}>
                             <View style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                marginBottom: -2
+                                justifyContent: 'space-between'
                             }}>
-                                <View style={{ marginBottom: 2, flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                    <YambiText bold text={ShowUser(userr)} size="normal" color="default" numberLines={1} />
-                                    {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.high_color} styles={{ marginLeft: 3, marginTop: 3 }} /> : null}
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <YambiText text={ShowUser(userr)} size="normal" bold style={{ width: 'auto' }} />
+                                    {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={15} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 3, marginTop: 3 }} /> : null}
                                 </View>
                                 {message !== null ?
                                     chat && chat.chat_read !== 0 ?
@@ -542,6 +559,26 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     </Pressable>
                 </ContextMenu.Trigger>
                 <ContextMenu.Content>
+                    {/* Audio Call */}
+                    <ContextMenu.Item
+                        key="audio_call"
+                        onSelect={handleStartAudioCall}>
+                        <ContextMenu.ItemTitle>
+                            {strings.audio_call || 'Audio Call'}
+                        </ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: 'phone' }} />
+                    </ContextMenu.Item>
+
+                    {/* Video Call */}
+                    <ContextMenu.Item
+                        key="video_call"
+                        onSelect={handleStartVideoCall}>
+                        <ContextMenu.ItemTitle>
+                            {strings.video_call || 'Video Call'}
+                        </ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: 'video' }} />
+                    </ContextMenu.Item>
+
                     {/* Pin/Unpin Chat */}
                     <ContextMenu.Item
                         key="pin"

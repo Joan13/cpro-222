@@ -351,7 +351,7 @@ const SettingsYambi = ({ navigation, route }: NavProps) => {
                                                   }} numberOfLines={2}>{user_data.user_names}</Text>
 
                                                   {user_data.user_verified === 1 && (
-                                                       <IconApp pack='MT' name="verified" size={16} color={theme.colors.high_color} styles={{ marginLeft: 6 }} />
+                                                       <IconApp pack='MT' name="verified" size={16} color={theme.colors.certified_badge || theme.colors.high_color} styles={{ marginLeft: 6 }} />
                                                   )}
                                              </View>
 

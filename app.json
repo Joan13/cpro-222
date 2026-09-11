@@ -107,6 +107,9 @@
         {
           "icon": "./src/assets/notification_icon.png",
           "color": "#780006",
+          "sounds": [
+            "./src/assets/sounds/incoming_call.mp3"
+          ],
           "defaultChannel": "default"
         }
       ],

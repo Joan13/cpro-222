@@ -177,6 +177,9 @@ const NewStory = ({ navigation, route }: NavProps) => {
                 formData.append('assemble', user_data.phone_number);
                 formData.append('caption', (captions[idx] || '').trim());
                 formData.append('privacy', "0");
+                formData.append('type_story', "1");
+                formData.append('status_type', "1");
+                formData.append('type_status', "1");
                 formData.append('reposts', "[]");
                 formData.append('only_with', JSON.stringify(contacts));
                 formData.append('image', {
@@ -199,8 +202,9 @@ const NewStory = ({ navigation, route }: NavProps) => {
                 responses.forEach(res => {
                     if (res.data && res.data.message === "1" && res.data.story) {
                         try {
-                            realm.create('Stories', res.data.story, true);
-                            SocketApp.emit('OnNewStory', res.data.story);
+                            const storyObj = { ...res.data.story, type_story: 1 };
+                            realm.create('Stories', storyObj, true);
+                            SocketApp.emit('OnNewStory', storyObj);
                         } catch (e) { }
                     }
                 });
@@ -229,12 +233,16 @@ const NewStory = ({ navigation, route }: NavProps) => {
             fontStyle,
             textAlign
         };
+        const stylesJson = JSON.stringify(stylesObj);
 
         const formData = new FormData();
         formData.append('assemble', user_data.phone_number);
         formData.append('caption', textStatus.trim());
         formData.append('text', textStatus.trim());
-        formData.append('styles', JSON.stringify(stylesObj));
+        formData.append('type_story', "0");
+        formData.append('status_type', "0");
+        formData.append('type_status', "0");
+        formData.append('styles', stylesJson);
         formData.append('privacy', "0");
         formData.append('reposts', "[]");
         formData.append('only_with', JSON.stringify(contacts));
@@ -248,13 +256,17 @@ const NewStory = ({ navigation, route }: NavProps) => {
             .then(response => {
                 setLoadingTextStatus(false);
                 if (response.data.message === "1" && response.data.story) {
-                    const story: TStory = response.data.story;
+                    const storyObj = { 
+                        ...response.data.story, 
+                        type_story: 0, 
+                        styles: response.data.story.styles || stylesJson 
+                    };
                     realm.write(() => {
                         try {
-                            realm.create('Stories', story, true);
+                            realm.create('Stories', storyObj, true);
                         } catch (e) { }
                     });
-                    SocketApp.emit('OnNewStory', story);
+                    SocketApp.emit('OnNewStory', storyObj);
                     navigation.goBack();
                 } else {
                     setShowInternetError(true);

@@ -1,10 +1,11 @@
 import { Pressable, View, ScrollView, TextInput } from "react-native";
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
 import ButtonNormal from "../../components/app/ButtonNormal";
 import { TextNormalYambi, TextNormalYambiError, TextNormalYambiGray, TextNormalYambiHighColor, TextSmallYambi, TextSmallYambiGray } from "../../components/app/Text";
 import ModalApp from "../../components/app/ModalApp";
+import BottomSheet from "../../components/app/BottomSheet";
 import { setLoadingButton, setShowModalApp } from "../../store/reducers/appSlice";
 import { randomString, remote_host, renderDateUpToMilliseconds } from "../../../GlobalVariables";
 import axios from "axios";
@@ -13,7 +14,6 @@ import { useObject, useQuery, useRealm } from "@realm/react";
 import { BusinessUsers, UserBusinesses, UserContacts, UserSellsPoints } from "../../store/database/Models";
 import { IconApp } from "../../components/app/IconApp";
 import moment from "moment";
-import { FlashList } from "@shopify/flash-list";
 import ContactsList from "../../components/lists/contacts/ContactsList";
 
 const NewBusinessUser = ({ navigation, route }: NavProps) => {
@@ -24,6 +24,7 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
     const theme = useAppSelector(state => state.app_theme.colors);
     const user_data = useAppSelector(state => state.user_data);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
+    const raw_contacts = useAppSelector(state => state.app.raw_contacts);
     const [name, setName] = useState<string>("");
     const [phone_number, setPhone_number] = useState<string>("");
     const [showError, setShowError] = useState<boolean>(false);
@@ -32,6 +33,7 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
     const [showInternetError, setShowInternetError] = useState<boolean>(false);
     const [showUsers, setShowUsers] = useState(false);
     const [showUserError, setShowUserError] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const [level, setLevel] = useState(3);
     const dispatch = useAppDispatch();
     const realm = useRealm();
@@ -134,6 +136,12 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
     const selectCon = (item: TUser) => {
         setPhone_number(item.phone_number);
 
+        const rawContact = raw_contacts.find(c => c.phoneNumber === item.phone_number);
+        const contactName = (rawContact?.displayName || item.user_names || "").trim();
+        if (contactName) {
+            setName(contactName);
+        }
+
         const user = businessUsers.find(element => element.user === item.phone_number);
 
         if (user === undefined) {
@@ -142,32 +150,19 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
             setRaiseAlert(false);
         }
 
-        setShowModalApp(false);
         setShowUsers(false);
     }
 
-    const Usersss = () => {
-        return (
-            <View style={{
-                width: '100%',
-                height: 300,
-                // backgroundColor: 'green',
-                marginTop: -15
-            }}>
-                <FlashList
-                    data={contacts as never}
-                    estimatedItemSize={50}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={({ item, index }: { item: TUser, index: number }) => (
-                        <ContactsList
-                            selectContact={selectCon}
-                            type={3}
-                            item={item}
-                            index={index} />)}
-                />
-            </View>
-        )
-    }
+    const filteredContacts = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        const list = Array.from(contacts) as TUser[];
+        if (!query) return list;
+        return list.filter(item => {
+            const nameMatch = item.user_names ? item.user_names.toLowerCase().includes(query) : false;
+            const phoneMatch = item.phone_number ? item.phone_number.toLowerCase().includes(query) : false;
+            return nameMatch || phoneMatch;
+        });
+    }, [contacts, searchQuery]);
 
     return (
         <ScrollView style={{
@@ -222,10 +217,63 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                         <TextNormalYambiGray text={strings.connection_failed} />
                     </ModalApp> : null}
 
-                {showUsers ?
-                    <ModalApp onClose={() => { dispatch(setShowModalApp(false)); setShowUsers(false) }} singleButton title={strings.contact_select}>
-                        <Usersss />
-                    </ModalApp> : null}
+                {showUsers ? (
+                    <BottomSheet onClose={() => setShowUsers(false)} visible={showUsers}>
+                        <View style={{
+                            width: '100%',
+                            paddingBottom: 20,
+                            paddingHorizontal: 20
+                        }}>
+                            {/* Search Bar */}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: theme.border + "40",
+                                borderRadius: 12,
+                                paddingHorizontal: 12,
+                                marginBottom: 12,
+                                height: 44,
+                                borderWidth: 1,
+                                borderColor: theme.border,
+                            }}>
+                                <IconApp pack="FI" name="search" size={18} color={theme.gray} styles={{ marginRight: 8 }} />
+                                <TextInput
+                                    placeholder={strings.search || "Rechercher..."}
+                                    placeholderTextColor={theme.gray}
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    style={{
+                                        flex: 1,
+                                        color: theme.text,
+                                        fontSize: 14,
+                                        paddingVertical: 0,
+                                    }}
+                                />
+                                {searchQuery !== "" ? (
+                                    <Pressable onPress={() => setSearchQuery("")} hitSlop={10}>
+                                        <IconApp pack="FI" name="x" size={16} color={theme.gray} />
+                                    </Pressable>
+                                ) : null}
+                            </View>
+
+                            {filteredContacts.map((item: TUser, index: number) => (
+                                <ContactsList
+                                    key={item.phone_number || index}
+                                    selectContact={selectCon}
+                                    type={3}
+                                    item={item}
+                                    index={index}
+                                />
+                            ))}
+
+                            {filteredContacts.length === 0 ? (
+                                <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                                    <TextNormalYambiGray text={(strings as any).no_results || "Aucun contact trouvé"} />
+                                </View>
+                            ) : null}
+                        </View>
+                    </BottomSheet>
+                ) : null}
 
                 {/* User Details Card */}
                 <View style={{
@@ -240,7 +288,7 @@ const NewBusinessUser = ({ navigation, route }: NavProps) => {
                     shadowRadius: 6,
                     elevation: 3,
                 }}>
-                    <Pressable onPress={() => { dispatch(setShowModalApp(true)); setShowUsers(true) }} style={{ marginBottom: 20 }}>
+                    <Pressable onPress={() => setShowUsers(true)} style={{ marginBottom: 20 }}>
                         <TextNormalYambiGray text={strings.user_details} styles={{ marginBottom: 8 }} />
                         <TextNormalYambiHighColor text={phone_number === "" ? strings.contact_select : phone_number} bold />
                     </Pressable>

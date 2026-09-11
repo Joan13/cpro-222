@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, Pressable, StatusBar, Animated, PanResponder } 
 import { RTCView } from 'react-native-webrtc';
 import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useKeepAwake } from 'expo-keep-awake';
 import { useAppSelector } from '../../store/app/hooks';
 import { IconApp } from '../../components/app/IconApp';
 import { callManager, ActiveCallData } from '../../services/call/CallManager';
 import { strings } from '../../lang/lang';
 import { media_url, formatPhoneInternational } from '../../../GlobalVariables';
 import { TUser } from '../../types/types';
-import { setAudioModeAsync } from 'expo-audio';
 import { useProximity } from '../../components/hooks/useProximity';
 import { useObject } from '@realm/react';
 import { UserContacts } from '../../store/database/Models';
@@ -24,6 +24,7 @@ import AnimatedReanimated, {
 } from 'react-native-reanimated';
 
 export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  useKeepAwake();
   const app_theme = useAppSelector((state) => state.app_theme);
   const contacts = useAppSelector((state) => state.app.raw_contacts);
   const [callData, setCallData] = useState<ActiveCallData | null>(callManager.getCallData());
@@ -120,6 +121,11 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
   const localStreamUrl = activeCall.localStream ? activeCall.localStream.toURL() : null;
   const remoteStreamUrl = activeCall.remoteStream ? activeCall.remoteStream.toURL() : null;
+  const remoteVideoTrackCount = activeCall.remoteStream ? activeCall.remoteStream.getVideoTracks().length : 0;
+  const remoteAudioTrackCount = activeCall.remoteStream ? activeCall.remoteStream.getAudioTracks().length : 0;
+  const remoteRtcKey = `remote_rtc_${remoteStreamUrl}_v${remoteVideoTrackCount}_a${remoteAudioTrackCount}`;
+  const localVideoTrackCount = activeCall.localStream ? activeCall.localStream.getVideoTracks().length : 0;
+  const localRtcKey = `local_rtc_${localStreamUrl}_v${localVideoTrackCount}`;
 
   const formatDuration = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -160,28 +166,6 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   const isProximityActive = isConnected && !activeCall.isSpeaker;
   const isNear = useProximity(isProximityActive);
 
-  useEffect(() => {
-    const updateCallAudioRoute = async () => {
-      if (isProximityActive) {
-        try {
-          if (isNear) {
-            await setAudioModeAsync({
-              shouldRouteThroughEarpiece: true,
-              allowsRecording: true,
-            });
-          } else {
-            await setAudioModeAsync({
-              shouldRouteThroughEarpiece: false,
-              allowsRecording: true,
-            });
-          }
-        } catch (e) {
-          console.warn('Failed to update call audio routing:', e);
-        }
-      }
-    };
-    updateCallAudioRoute();
-  }, [isNear, isProximityActive]);
 
   const primaryColor = app_theme.colors.primary || '#34C759';
   const activeBtnBg = app_theme.colors.button_background_color || primaryColor;
@@ -205,8 +189,9 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
       )}
 
       {/* Main Remote Video View */}
-      {remoteStreamUrl && isConnected ? (
+      {((activeCall.remoteStream && activeCall.remoteStream.getVideoTracks().length > 0) || remoteStreamUrl) && isConnected ? (
         <RTCView
+          key={remoteRtcKey}
           streamURL={remoteStreamUrl}
           style={styles.fullScreenVideo}
           objectFit="cover"
@@ -250,6 +235,7 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         >
           <View pointerEvents="none" style={styles.localVideoWrapper}>
             <RTCView
+              key={localRtcKey}
               streamURL={localStreamUrl}
               style={styles.localVideo}
               objectFit="cover"

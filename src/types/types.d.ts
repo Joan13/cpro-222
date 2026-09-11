@@ -125,6 +125,7 @@ export type TPersistedStore = {
     cart: TCartItem[],
     chatDrafts?: TChatDrafts,
     status_badge?: number,
+    calls_badge?: number,
     app_description: TAppDescription
 }
 
@@ -221,7 +222,7 @@ export type TTheme = {
         gray: string,
         high_color: string,
         primary_high_color: string,
-        primary_high_color_foreground?: string,
+        primary_high_color_foreground: string,
         high_color2: string,
         high_color3: string,
         chat_sent: string,
@@ -773,6 +774,8 @@ export type RootStackParamList = {
     Inbox: { user: string; highlight_message_token?: string; response_to?: string; message_type?: number };
     AudioCallScreen: undefined;
     VideoCallScreen: undefined;
+    Call: { callId: string };
+    CallHistory: undefined;
     Search: undefined;
     SplashStartYambi: undefined;
     Signup: undefined;
@@ -840,7 +843,7 @@ export type RootStackParamList = {
     UserProfileInfo: { user: TUser };
     AllMessages: { messages: TMessages };
     NewStory: { flag: number };
-    UserStories: { phone_number: string };
+    UserStories: { phone_number: string; story_id?: string };
     Stories: undefined;
     UpdateYambi: undefined;
     MakeDonation: undefined;

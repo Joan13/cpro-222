@@ -9,6 +9,7 @@ import { IconApp } from '../../components/app/IconApp';
 import SwitchApp from '../../components/app/SwitchApp';
 import { setPasswordExpenses, setRequirePasswordExpenses, setEnableExpenseReminderNotifications } from '../../store/reducers/persistedAppSlice';
 import ModalApp from '../../components/app/ModalApp';
+import BottomSheet from '../../components/app/BottomSheet';
 import { setShowModalApp, setExpensesOpened } from '../../store/reducers/appSlice';
 
 const CustomizeExpenses = () => {
@@ -170,117 +171,115 @@ const CustomizeExpenses = () => {
         <ScrollView style={{ backgroundColor: theme.colors.background, flex: 1, borderColor: theme.colors.border, borderTopWidth: 1 }}>
             <StatusBarYambi />
 
-            {showEnterCurrentPassword ?
-                <ModalApp onClose={() => {
-                    dispatch(setShowModalApp(false));
-                    setShowEnterCurrentPassword(false);
-                    setCp("");
-                    setFlag_pass(0);
-                }} singleButton title={strings.enter_password}>
-                    <View style={{
-                        alignItems: 'center',
-                        paddingVertical: 10,
-                    }}>
-                        {/* Icon */}
-                        <Animated.View
-                            entering={BounceIn}
-                            style={{
-                                width: 60,
-                                height: 60,
-                                borderRadius: 30,
-                                backgroundColor: theme.colors.high_color + '15',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginBottom: 20,
-                            }}>
-                            <IconApp name="lock" pack='FI' size={30} color={theme.colors.high_color} />
-                        </Animated.View>
+            <BottomSheet visible={showEnterCurrentPassword} onClose={() => {
+                setShowEnterCurrentPassword(false);
+                setCp("");
+                setFlag_pass(0);
+            }} title={strings.enter_password}>
+                <View style={{
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                }}>
+                    {/* Icon */}
+                    <Animated.View
+                        entering={BounceIn}
+                        style={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: 30,
+                            backgroundColor: theme.colors.high_color + '15',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginBottom: 20,
+                        }}>
+                        <IconApp name="lock" pack='FI' size={30} color={theme.colors.high_color} />
+                    </Animated.View>
 
-                        <TextNormalYambiGray
-                            text={strings.current_expenses_tab_password}
+                    <TextNormalYambiGray
+                        text={strings.current_expenses_tab_password}
+                        styles={{
+                            textAlign: 'center',
+                            marginBottom: 30
+                        }}
+                    />
+
+                    {/* Modern OTP Input */}
+                    <View style={{
+                        width: '100%',
+                        marginBottom: 15,
+                    }}>
+                        <Pressable
+                            onPress={() => passwordModalInputRef.current?.focus()}
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                marginBottom: 15,
+                            }}
+                        >
+                            {[0, 1, 2, 3, 4, 5].map((index) => (
+                                <Animated.View
+                                    key={index}
+                                    entering={FadeInUp.delay(100 + index * 50)}
+                                    style={{
+                                        width: 35,
+                                        height: 45,
+                                        borderRadius: 10,
+                                        borderWidth: 2,
+                                        borderColor: cp.length === index
+                                            ? theme.colors.high_color
+                                            : cp.length > index
+                                                ? theme.colors.success
+                                                : theme.colors.border,
+                                        backgroundColor: cp.length > index
+                                            ? theme.colors.success + '10'
+                                            : theme.colors.background,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}>
+                                    {cp[index] && (
+                                        <Animated.View entering={BounceIn}>
+                                            <IconApp
+                                                name="circle"
+                                                pack='FA'
+                                                size={10}
+                                                color={cp.length > index ? theme.colors.success : theme.colors.high_color}
+                                            />
+                                        </Animated.View>
+                                    )}
+                                </Animated.View>
+                            ))}
+                        </Pressable>
+
+                        {/* Hidden TextInput — positioned off-screen + caretHidden to fix keyboard issues */}
+                        <TextInput
+                            ref={passwordModalInputRef}
+                            style={{
+                                position: 'absolute',
+                                left: -9999,
+                                width: 100,
+                                height: 40,
+                            }}
+                            value={cp}
+                            onChangeText={SETCP}
+                            keyboardType="number-pad"
+                            maxLength={6}
+                            secureTextEntry={false}
+                            caretHidden={true}
+                        />
+                    </View>
+
+                    {/* Helper Text */}
+                    {cp.length > 0 && (
+                        <TextSmallYambiGray
+                            text={`${cp.length}/6`}
                             styles={{
                                 textAlign: 'center',
-                                marginBottom: 30
+                                marginTop: 5
                             }}
                         />
-
-                        {/* Modern OTP Input */}
-                        <View style={{
-                            width: '100%',
-                            marginBottom: 15,
-                        }}>
-                            <Pressable
-                                onPress={() => passwordModalInputRef.current?.focus()}
-                                style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    marginBottom: 15,
-                                }}
-                            >
-                                {[0, 1, 2, 3, 4, 5].map((index) => (
-                                    <Animated.View
-                                        key={index}
-                                        entering={FadeInUp.delay(100 + index * 50)}
-                                        style={{
-                                            width: 35,
-                                            height: 45,
-                                            borderRadius: 10,
-                                            borderWidth: 2,
-                                            borderColor: cp.length === index
-                                                ? theme.colors.high_color
-                                                : cp.length > index
-                                                    ? theme.colors.success
-                                                    : theme.colors.border,
-                                            backgroundColor: cp.length > index
-                                                ? theme.colors.success + '10'
-                                                : theme.colors.background,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                        }}>
-                                        {cp[index] && (
-                                            <Animated.View entering={BounceIn}>
-                                                <IconApp
-                                                    name="circle"
-                                                    pack='FA'
-                                                    size={10}
-                                                    color={cp.length > index ? theme.colors.success : theme.colors.high_color}
-                                                />
-                                            </Animated.View>
-                                        )}
-                                    </Animated.View>
-                                ))}
-                            </Pressable>
-
-                            {/* Hidden TextInput — positioned off-screen + caretHidden to fix keyboard issues */}
-                            <TextInput
-                                ref={passwordModalInputRef}
-                                style={{
-                                    position: 'absolute',
-                                    left: -9999,
-                                    width: 100,
-                                    height: 40,
-                                }}
-                                value={cp}
-                                onChangeText={SETCP}
-                                keyboardType="number-pad"
-                                maxLength={6}
-                                secureTextEntry={false}
-                                caretHidden={true}
-                            />
-                        </View>
-
-                        {/* Helper Text */}
-                        {cp.length > 0 && (
-                            <TextSmallYambiGray
-                                text={`${cp.length}/6`}
-                                styles={{
-                                    textAlign: 'center',
-                                    marginTop: 5
-                                }}
-                            />
-                        )}
-                    </View>
-                </ModalApp> : null}
+                    )}
+                </View>
+            </BottomSheet>
 
             <View style={{
                 flexDirection: 'row',

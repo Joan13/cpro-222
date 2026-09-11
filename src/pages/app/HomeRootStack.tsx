@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../store/app/hooks';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Chats from '../chat/Chats';
 import { setTitle } from '../../store/reducers/appSlice';
+import { setCallsBadge } from '../../store/reducers/persistedAppSlice';
 import { strings } from '../../lang/lang';
 import { IconApp } from '../../components/app/IconApp';
 import Businesses from '../business/Businesses';
@@ -18,6 +19,7 @@ import AdminDashboard from '../Admin/AdminDashboard';
 import Marketplace from '../marketplace/Marketplace';
 import ExpensesPage from '../expenses/Expenses';
 import NoticeBoard from '../notice_board/NoticeBoard';
+import CallHistory from '../call/CallHistory';
 import HeaderHome from '../../components/headers/HeaderHome';
 import HeaderRightHome from '../../components/headers/HeaderRightHome';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,6 +33,7 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
     const user_data = useAppSelector(state => state.user_data);
     const app_description = useAppSelector(state => state.persisted_app.app_description);
     const business_badge = useAppSelector(state => state.persisted_app.business_badge);
+    const calls_badge = useAppSelector(state => state.persisted_app.calls_badge || 0);
     const expenses_opened = useAppSelector(state => state.app.expenses_opened);
     const title = useAppSelector(state => state.app.title);
     const dispatch = useAppDispatch();
@@ -217,6 +220,15 @@ const HomeRootStack = ({ navigation, route }: NavProps) => {
                             tabBarIcon: ({ color, size }) => (<IconApp pack='SLI' name="bubbles" size={size} color={color} />)
                         }} component={Chats} />
                 )}
+
+                <Tab.Screen name={strings.calls || 'Calls'}
+                    listeners={{ tabPress: e => { dispatch(setTitle(strings.calls || 'Calls')); dispatch(setCallsBadge(0)); } }}
+                    options={{
+                        tabBarLabel: strings.calls || 'Calls',
+                        tabBarBadge: calls_badge === 0 ? undefined : calls_badge,
+                        headerShown: false,
+                        tabBarIcon: ({ color, size }) => (<IconApp pack='SLI' name="phone" size={size} color={color} />)
+                    }} component={CallHistory} />
 
                 {app_description.tab_visible_marketplace && (
                     <Tab.Screen name={strings.marketplace}

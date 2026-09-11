@@ -1,11 +1,14 @@
 import { webRTCManager } from './WebRTCManager';
 import { callSignaling, CallInvitePayload, CallSignalPayload } from './CallSignaling';
 import { MediaStream } from 'react-native-webrtc';
-import { PermissionsAndroid, Platform } from 'react-native';
+import { PermissionsAndroid, Platform, AppState, AppStateStatus } from 'react-native';
 import store from '../../store/app/store';
 import { setCallState } from '../../store/reducers/appSlice';
 import { strings } from '../../lang/lang';
 import * as Notifications from 'expo-notifications';
+import { recordCallHistory } from '../RealmInstance';
+import { callSoundManager } from './CallSoundManager';
+import { setSystemPipVideoCallActive } from './PipService';
 
 export type CallState =
   | 'IDLE'
@@ -52,6 +55,18 @@ class CallManager {
   private listeners: Set<CallStateListener> = new Set();
   private durationTimer: any = null;
   private ringTimeoutTimer: any = null;
+  private connectedTimestamp: number | null = null;
+  private appStateSubscription: any = null;
+
+  constructor() {
+    this.appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && this.currentCall && this.currentCall.status === 'CONNECTED' && this.connectedTimestamp) {
+        const elapsed = Math.floor((Date.now() - this.connectedTimestamp) / 1000);
+        this.currentCall.durationSeconds = elapsed;
+        this.notifyListeners();
+      }
+    });
+  }
 
   public init(userPhoneNumber: string, userName: string = '', userAvatar: string = '') {
     if (!userPhoneNumber) return;
@@ -103,6 +118,24 @@ class CallManager {
     } catch (e) {
       console.error('[CallManager] Error dispatching setCallState to store:', e);
     }
+
+    if (status === 'OUTGOING_CALLING' || status === 'OUTGOING_RINGING') {
+      callSoundManager.playOutgoingSound();
+    } else if (status === 'INCOMING_RINGING') {
+      callSoundManager.playIncomingSound();
+    } else if (status === 'ENDED' || status === 'FAILED' || status === 'BUSY') {
+      callSoundManager.playEndSound();
+    } else {
+      callSoundManager.stopSound();
+    }
+
+    const isOngoingVideoCall = Boolean(
+      this.currentCall &&
+      this.currentCall.type === 'video' &&
+      (this.currentCall.status === 'CONNECTED' || this.currentCall.status === 'RECONNECTING')
+    );
+    setSystemPipVideoCallActive(isOngoingVideoCall);
+
     this.listeners.forEach((listener) => listener(this.currentCall ? { ...this.currentCall } : null));
   }
 
@@ -333,6 +366,7 @@ class CallManager {
   }
 
   public async acceptCall(): Promise<boolean> {
+    this.ensureInitialized();
     if (!this.currentCall || this.currentCall.status !== 'INCOMING_RINGING') {
       return false;
     }
@@ -392,7 +426,7 @@ class CallManager {
     if (!this.currentCall || this.currentCall.callId !== payload.callId || !this.currentCall.isCaller) {
       return;
     }
-    if (this.currentCall.status !== 'OUTGOING_RINGING') {
+    if (this.currentCall.status !== 'OUTGOING_RINGING' && this.currentCall.status !== 'OUTGOING_CALLING') {
       console.log(`[CallManager] Ignoring duplicate call:accept in status: ${this.currentCall.status}`);
       return;
     }
@@ -506,6 +540,10 @@ class CallManager {
         console.log('[CallManager] Remote stream received and attached to active call');
         if (this.currentCall) {
           this.currentCall.remoteStream = stream;
+          if (this.currentCall.status !== 'CONNECTED' && this.currentCall.status !== 'ENDED' && this.currentCall.status !== 'FAILED') {
+            this.currentCall.status = 'CONNECTED';
+            this.startDurationCounter();
+          }
           this.notifyListeners();
         }
       },
@@ -514,16 +552,26 @@ class CallManager {
         if (!this.currentCall) return;
 
         if (state === 'connected') {
-          this.currentCall.status = 'CONNECTED';
-          this.startDurationCounter();
-          this.notifyListeners();
+          if (this.currentCall.status !== 'CONNECTED') {
+            this.currentCall.status = 'CONNECTED';
+            this.startDurationCounter();
+            this.notifyListeners();
+          }
         } else if (state === 'connecting') {
-          this.currentCall.status = 'CONNECTING';
-          this.notifyListeners();
+          if (this.currentCall.status !== 'CONNECTED') {
+            this.currentCall.status = 'CONNECTING';
+            this.notifyListeners();
+          }
         } else if (state === 'disconnected') {
-          this.currentCall.status = 'RECONNECTING';
-          this.notifyListeners();
+          if (this.currentCall.status === 'CONNECTED') {
+            this.currentCall.status = 'RECONNECTING';
+            this.notifyListeners();
+          }
         } else if (state === 'failed') {
+          if (this.currentCall.remoteStream && this.currentCall.remoteStream.getTracks().length > 0 && this.currentCall.status === 'CONNECTED') {
+            console.warn('[CallManager] PeerConnection state failed but active remoteStream exists. Keeping call connected.');
+            return;
+          }
           this.currentCall.status = 'FAILED';
           this.currentCall.errorMessage = strings.call_failed || 'Call Failed';
           this.notifyListeners();
@@ -534,18 +582,26 @@ class CallManager {
         console.log(`[CallManager] WebRTC ICE Connection State: ${state}`);
         if (!this.currentCall) return;
 
-        if (state === 'disconnected' || state === 'checking') {
+        if (state === 'disconnected') {
           if (this.currentCall.status === 'CONNECTED') {
             this.currentCall.status = 'RECONNECTING';
             this.notifyListeners();
           }
+        } else if (state === 'checking') {
+          if (this.currentCall.status !== 'CONNECTED') {
+            this.notifyListeners();
+          }
         } else if (state === 'completed' || state === 'connected') {
-          if (this.currentCall.status === 'RECONNECTING' || this.currentCall.status === 'CONNECTING') {
+          if (this.currentCall.status !== 'CONNECTED') {
             this.currentCall.status = 'CONNECTED';
             this.startDurationCounter();
             this.notifyListeners();
           }
         } else if (state === 'failed') {
+          if (this.currentCall.remoteStream && this.currentCall.remoteStream.getTracks().length > 0 && this.currentCall.status === 'CONNECTED') {
+            console.warn('[CallManager] ICE state failed but active remoteStream exists. Keeping call connected.');
+            return;
+          }
           this.currentCall.status = 'FAILED';
           this.currentCall.errorMessage = strings.call_failed || 'Call Failed';
           this.notifyListeners();
@@ -653,10 +709,17 @@ class CallManager {
 
   private startDurationCounter() {
     this.stopDurationCounter();
+    this.connectedTimestamp = Date.now();
+    if (this.currentCall) {
+      this.currentCall.durationSeconds = 0;
+    }
     this.durationTimer = setInterval(() => {
-      if (this.currentCall && this.currentCall.status === 'CONNECTED') {
-        this.currentCall.durationSeconds += 1;
-        this.notifyListeners();
+      if (this.currentCall && this.currentCall.status === 'CONNECTED' && this.connectedTimestamp) {
+        const elapsed = Math.floor((Date.now() - this.connectedTimestamp) / 1000);
+        if (this.currentCall.durationSeconds !== elapsed) {
+          this.currentCall.durationSeconds = elapsed;
+          this.notifyListeners();
+        }
       }
     }, 1000);
   }
@@ -666,6 +729,7 @@ class CallManager {
       clearInterval(this.durationTimer);
       this.durationTimer = null;
     }
+    this.connectedTimestamp = null;
   }
 
   private clearRingTimeout() {
@@ -680,6 +744,9 @@ class CallManager {
     this.stopDurationCounter();
     this.clearRingTimeout();
     webRTCManager.cleanupAll();
+    if (this.currentCall) {
+      recordCallHistory(this.currentCall);
+    }
     this.currentCall = null;
     this.notifyListeners();
     Notifications.dismissAllNotificationsAsync().catch(() => {});

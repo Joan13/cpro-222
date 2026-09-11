@@ -20,40 +20,21 @@ export interface RTCIceServer {
 export const getIceServers = (): RTCIceServer[] => {
   return [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:10.0.2.2:3478' },
+    { urls: 'stun:stun1.l.google.com:19302' },
     {
-      urls: 'turn:10.0.2.2:3478',
+      urls: 'turn:server.yambi.net:3478',
       username: 'yambi',
       credential: 'yambipassword',
     },
     {
-      urls: 'turn:10.0.2.2:3478?transport=tcp',
-      username: 'yambi',
-      credential: 'yambipassword',
-    },
-    { urls: 'stun:192.168.247.41:3478' },
-    {
-      urls: 'turn:192.168.247.41:3478',
+      urls: 'turn:server.yambi.net:3478?transport=udp',
       username: 'yambi',
       credential: 'yambipassword',
     },
     {
-      urls: 'turn:192.168.247.41:3478?transport=tcp',
+      urls: 'turn:server.yambi.net:3478?transport=tcp',
       username: 'yambi',
       credential: 'yambipassword',
-    },
-    { urls: 'stun:37.27.44.221:80' },
-    {
-      urls: [
-        'turn:37.27.44.221:80',
-        'turn:37.27.44.221:443',
-        'turn:37.27.44.221:443?transport=tcp',
-        'turn:openrelay.metered.ca:80',
-        'turn:openrelay.metered.ca:443',
-        'turn:openrelay.metered.ca:443?transport=tcp',
-      ],
-      username: 'openrelayproject',
-      credential: 'openrelayproject',
     },
   ];
 };
@@ -88,11 +69,9 @@ export class WebRTCManager {
         audio: true,
         video: isVideo
           ? {
-              mandatory: {
-                minWidth: 500,
-                minHeight: 300,
-                minFrameRate: 30,
-              },
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              frameRate: { ideal: 30 },
               facingMode: 'user',
             }
           : false,
@@ -122,6 +101,7 @@ export class WebRTCManager {
     console.log('[WebRTCManager] Creating RTCPeerConnection with STUN servers');
     this.peerConnection = new RTCPeerConnection(configuration);
     this.remoteStream = new MediaStream([]);
+    this.iceCandidateQueue = [];
 
     // Attach local stream tracks to PeerConnection
     if (this.localStream) {
@@ -143,14 +123,23 @@ export class WebRTCManager {
 
     // Handle remote tracks
     (this.peerConnection as any).addEventListener('track', (event: any) => {
-      console.log(`[WebRTCManager] Received remote track (${event.track?.kind})`);
+      console.log(`[WebRTCManager] Received remote track (${event.track?.kind}, enabled: ${event.track?.enabled})`);
+
       if (event.streams && event.streams[0]) {
+        // Always prefer the native stream object provided by WebRTC — it is bound to the native renderer
         this.remoteStream = event.streams[0];
       } else if (event.track) {
         if (!this.remoteStream) {
           this.remoteStream = new MediaStream([]);
         }
-        this.remoteStream.addTrack(event.track);
+        const existing = this.remoteStream.getTracks().find((t) => t.id === event.track.id);
+        if (!existing) {
+          this.remoteStream.addTrack(event.track);
+        }
+      }
+
+      if (this.remoteStream) {
+        console.log(`[WebRTCManager] Remote stream (URL: ${this.remoteStream.toURL()}): Audio = ${this.remoteStream.getAudioTracks().length}, Video = ${this.remoteStream.getVideoTracks().length}`);
       }
 
       if (this.onRemoteStreamCallback && this.remoteStream) {

@@ -278,14 +278,14 @@ const HeaderInbox = ({ navigation, user }: { navigation: any, user: string }) =>
                 text={ShowUserName(userr.phone_number)}
               />
 
-              {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={18} color={app_theme.colors.primary_high_color} styles={{ marginLeft: 3, marginTop: 2 }} /> : null}
+              {userr.user_verified === 1 ? <IconApp name="verified" pack="MT" size={18} color={app_theme.colors.certified_badge || app_theme.colors.high_color} styles={{ marginLeft: 3, marginTop: 2 }} /> : null}
             </View>
 
             {last_activity_status !== "" ?
               <Text numberOfLines={1} style={{
                 fontSize: app_description.small_general_font_size,
                 fontWeight: app_description.small_general_font_weight as any,
-                color: app_theme.colors.primary_high_color
+                color: app_theme.colors.certified_badge || app_theme.colors.high_color
               }}>{last_activity_status.toLowerCase()}</Text> : null}
 
           </Pressable>

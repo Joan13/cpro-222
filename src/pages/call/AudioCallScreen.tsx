@@ -8,7 +8,6 @@ import { media_url, formatPhoneInternational } from '../../../GlobalVariables';
 import { strings } from '../../lang/lang';
 import { TUser } from '../../types/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { setAudioModeAsync } from 'expo-audio';
 import { useProximity } from '../../components/hooks/useProximity';
 import { useObject } from '@realm/react';
 import { UserContacts } from '../../store/database/Models';
@@ -125,28 +124,6 @@ export const AudioCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   const isProximityActive = isConnected && !activeCall.isSpeaker;
   const isNear = useProximity(isProximityActive);
 
-  useEffect(() => {
-    const updateCallAudioRoute = async () => {
-      if (isProximityActive) {
-        try {
-          if (isNear) {
-            await setAudioModeAsync({
-              shouldRouteThroughEarpiece: true,
-              allowsRecording: true,
-            });
-          } else {
-            await setAudioModeAsync({
-              shouldRouteThroughEarpiece: false,
-              allowsRecording: true,
-            });
-          }
-        } catch (e) {
-          console.warn('Failed to update call audio routing:', e);
-        }
-      }
-    };
-    updateCallAudioRoute();
-  }, [isNear, isProximityActive]);
 
   const fullAvatarUri = avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `${media_url}/profile_pictures/${avatarUrl}`) : null;
   const primaryColor = app_theme.colors.primary || '#34C759';

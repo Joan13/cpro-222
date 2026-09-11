@@ -19,7 +19,7 @@ import { setRemoveBusinessBadge, setRemoveSalesPointBadge } from '../../store/re
 import { LegendList } from '@legendapp/list';
 import SalesList from '../../components/lists/business/SalesList';
 import { TItem, TItemPrices, TSale } from '../../types/types';
-import RNPrint from 'react-native-print';
+import * as Print from 'expo-print';
 
 const SalesModern = ({ navigation, route }: NavProps) => {
     const { business_id, sales_point_id, item_id } = route.params;
@@ -642,7 +642,7 @@ const SalesModern = ({ navigation, route }: NavProps) => {
             </html>
         `;
 
-        await RNPrint.print({ html });
+        await Print.printAsync({ html });
     };
 
     return (

@@ -1036,3 +1036,41 @@ export class Payments extends Realm.Object<Payments> {
         primaryKey: '_id',
     };
 }
+
+export class CallHistory extends Realm.Object<CallHistory> {
+    _id!: string;
+    callId!: string;
+    callerId!: string;
+    calleeId!: string;
+    callerName!: string;
+    callerAvatar!: string;
+    calleeName!: string;
+    calleeAvatar!: string;
+    type!: string;
+    direction!: string;
+    status!: string;
+    durationSeconds!: number;
+    createdAt!: string;
+    timestamp!: number;
+
+    static schema: ObjectSchema = {
+        name: 'CallHistory',
+        properties: {
+            _id: 'string',
+            callId: 'string',
+            callerId: 'string',
+            calleeId: 'string',
+            callerName: 'string',
+            callerAvatar: 'string',
+            calleeName: 'string',
+            calleeAvatar: 'string',
+            type: 'string',
+            direction: 'string',
+            status: 'string',
+            durationSeconds: { type: 'int', default: 0 },
+            createdAt: 'string',
+            timestamp: { type: 'int', indexed: true },
+        },
+        primaryKey: '_id',
+    };
+}

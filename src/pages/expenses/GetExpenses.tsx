@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from "../../store/app/hooks";
 import { strings } from "../../lang/lang";
 import { IconApp } from "../../components/app/IconApp";
-import { YambiText, TextNormalYambi, TextNormalYambiGray } from "../../components/app/Text";
+import { YambiText, TextNormalYambi, TextNormalYambiGray, TextSmallYambi, TextSmallYambiGray, TextNormalYambiHighColor } from "../../components/app/Text";
 import { NavProps, TExpense } from "../../types/types";
 import { useQuery, useRealm } from "@realm/react";
 import { Expenses, BusinessUsers, UserSellsPoints } from "../../store/database/Models";
@@ -16,9 +16,11 @@ import moment from "moment";
 import { global_currencies, renderCurrency, renderDateTime, SocketApp, remote_host } from "../../../GlobalVariables";
 import axios from "axios";
 import ModalApp from "../../components/app/ModalApp";
+import BottomSheet from "../../components/app/BottomSheet";
+import ButtonNormal from "../../components/app/ButtonNormal";
 import DateRangePicker from "../../components/app/DateRangePicker";
 import { formatAmount } from "../../util/formatAmount";
-import RNPrint from 'react-native-print';
+import * as Print from 'expo-print';
 import Reanimated, { FadeInUp, BounceIn } from "react-native-reanimated";
 
 const GetExpenses = ({ navigation, route }: NavProps) => {
@@ -41,6 +43,9 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
     const [debt_filter, setDebt_filter] = useState<number>(-1); // -1 = all, 0 = no debt, 1 = debt
     const [payment_type_filter, setPayment_type_filter] = useState<number>(-1); // -1 = all, 0 = undefined, 1 = cash, 2 = card, 3 = bank
     const [show_filters, setShow_filters] = useState<boolean>(false);
+    const [show_filters_sheet, setShow_filters_sheet] = useState<boolean>(false);
+    const [show_all_categories, setShow_all_categories] = useState<boolean>(false);
+    const [show_all_currencies, setShow_all_currencies] = useState<boolean>(false);
     const [date_selection_modal, setDate_selection_modal] = useState<boolean>(false);
     const [show_category_filter, setShow_category_filter] = useState<boolean>(false);
     const [show_currency_filter, setShow_currency_filter] = useState<boolean>(false);
@@ -225,6 +230,8 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
         payment_type_filter !== -1,
     ].filter(Boolean).length;
 
+
+
     // Calculate filtered total
     const filteredTotal = filteredExpenses.reduce((sum, exp) => sum + (parseFloat(exp.amount || "0") * (exp.quantity || 1)), 0);
 
@@ -406,7 +413,7 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
             </html>
         `;
 
-        await RNPrint.print({ html });
+        await Print.printAsync({ html });
     };
 
     const onRefresh = useCallback(async () => {
@@ -830,7 +837,7 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
                         <View style={{ marginBottom: 0 }}>
                             {/* Filters Toggle - Impressive Design */}
                             <Pressable
-                                onPress={() => setShow_filters(!show_filters)}
+                                onPress={() => setShow_filters_sheet(true)}
                                 style={{
                                     flexDirection: 'row',
                                     alignItems: 'center',
@@ -841,11 +848,6 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
                                     marginBottom: 12,
                                     borderWidth: 1,
                                     borderColor: activeFiltersCount > 0 ? theme.high_color : theme.border,
-                                    // shadowColor: theme.high_color,
-                                    // shadowOffset: { width: 0, height: 4 },
-                                    // shadowOpacity: activeFiltersCount > 0 ? 0.2 : 0.1,
-                                    // shadowRadius: 8,
-                                    // elevation: activeFiltersCount > 0 ? 4 : 2,
                                 }}
                             >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -894,361 +896,12 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
                                     )}
                                     <IconApp
                                         pack="FI"
-                                        name={show_filters ? "chevron-up" : "chevron-down"}
+                                        name="chevron-right"
                                         size={22}
                                         color={theme.high_color}
                                     />
                                 </View>
                             </Pressable>
-
-                            {/* Filters - Animated Collapsible */}
-                            <Animated.View style={{
-                                maxHeight: filtersHeight.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0, 700],
-                                }),
-                                opacity: filtersHeight,
-                                overflow: 'hidden',
-                                marginBottom: 15,
-                            }}>
-                                <View style={{
-                                    backgroundColor: theme.background,
-                                    borderRadius: 14,
-                                    padding: 12,
-                                    borderWidth: 1,
-                                    borderColor: theme.border,
-                                }}>
-                                    {/* Date Filter */}
-                                    <Pressable
-                                        onPress={() => {
-                                            dispatch(setShowModalApp(true));
-                                            setDate_selection_modal(true);
-                                        }}
-                                        style={{
-                                            backgroundColor: theme.background,
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            marginBottom: 12,
-                                            borderWidth: 1,
-                                            borderColor: date_start !== "" && date_end !== "" ? theme.high_color : theme.border,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <View style={{
-                                            backgroundColor: (date_start !== "" && date_end !== "") ? theme.high_color + "20" : theme.border,
-                                            borderRadius: 10,
-                                            width: 40,
-                                            height: 40,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12,
-                                        }}>
-                                            <IconApp pack="FI" name="calendar" size={18} color={(date_start !== "" && date_end !== "") ? theme.high_color : theme.gray} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <YambiText text={strings.filter_by_date || "Filter by date"} size="small" color="gray" style={{ marginBottom: 4 }} />
-                                            <YambiText
-                                                text={
-                                                    date_start !== "" && date_end !== ""
-                                                        ? `${renderDateTime(date_start, 3, true)} - ${renderDateTime(date_end, 3, true)}`
-                                                        : strings.all || "All"
-                                                }
-                                                size="normal"
-                                                color="high"
-                                                style={{ fontWeight: '600' }}
-                                            />
-                                        </View>
-                                        {date_start !== "" && date_end !== "" && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setDate_start("");
-                                                    setDate_end("");
-                                                }}
-                                                style={{
-                                                    padding: 8,
-                                                    backgroundColor: theme.error + "20",
-                                                    borderRadius: 8,
-                                                }}
-                                            >
-                                                <IconApp pack="FI" name="x" size={16} color={theme.error} />
-                                            </Pressable>
-                                        )}
-                                    </Pressable>
-
-                                    {/* Category Filter */}
-                                    <Pressable
-                                        onPress={() => {
-                                            dispatch(setShowModalApp(true));
-                                            setShow_category_filter(true);
-                                        }}
-                                        style={{
-                                            backgroundColor: theme.background,
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            marginBottom: 12,
-                                            borderWidth: 1,
-                                            borderColor: category_filter !== -1 ? theme.high_color : theme.border,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <View style={{
-                                            backgroundColor: category_filter !== -1 ? theme.high_color + "20" : theme.border,
-                                            borderRadius: 10,
-                                            width: 40,
-                                            height: 40,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12,
-                                        }}>
-                                            <IconApp pack="FI" name="folder" size={18} color={category_filter !== -1 ? theme.high_color : theme.gray} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <YambiText text={strings.filter_by_category || "Filter by category"} size="small" color="gray" style={{ marginBottom: 4 }} />
-                                            <YambiText
-                                                text={
-                                                    category_filter === -1
-                                                        ? strings.all || "All"
-                                                        : expenses_categories.find(c => c.id === category_filter)?.name || strings.all || "All"
-                                                }
-                                                size="normal"
-                                                color="high"
-                                                style={{ fontWeight: '600' }}
-                                            />
-                                        </View>
-                                        {category_filter !== -1 && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setCategory_filter(-1);
-                                                }}
-                                                style={{
-                                                    padding: 8,
-                                                    backgroundColor: theme.error + "20",
-                                                    borderRadius: 8,
-                                                }}
-                                            >
-                                                <IconApp pack="FI" name="x" size={16} color={theme.error} />
-                                            </Pressable>
-                                        )}
-                                    </Pressable>
-
-                                    {/* Currency Filter */}
-                                    <Pressable
-                                        onPress={() => {
-                                            dispatch(setShowModalApp(true));
-                                            setShow_currency_filter(true);
-                                        }}
-                                        style={{
-                                            backgroundColor: theme.background,
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            marginBottom: 12,
-                                            borderWidth: 1,
-                                            borderColor: currency_filter !== "" ? theme.high_color : theme.border,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <View style={{
-                                            backgroundColor: currency_filter !== "" ? theme.high_color + "20" : theme.border,
-                                            borderRadius: 10,
-                                            width: 40,
-                                            height: 40,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12,
-                                        }}>
-                                            <IconApp pack="FI" name="dollar-sign" size={18} color={currency_filter !== "" ? theme.high_color : theme.gray} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <YambiText text={strings.filter_by_currency || "Filter by currency"} size="small" color="gray" style={{ marginBottom: 4 }} />
-                                            <YambiText
-                                                text={
-                                                    currency_filter !== ""
-                                                        ? renderCurrency(parseInt(currency_filter), true)
-                                                        : strings.all || "All"
-                                                }
-                                                size="normal"
-                                                color="high"
-                                                style={{ fontWeight: '600' }}
-                                            />
-                                        </View>
-                                        {currency_filter !== "" && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setCurrency_filter("");
-                                                }}
-                                                style={{
-                                                    padding: 8,
-                                                    backgroundColor: theme.error + "20",
-                                                    borderRadius: 8,
-                                                }}
-                                            >
-                                                <IconApp pack="FI" name="x" size={16} color={theme.error} />
-                                            </Pressable>
-                                        )}
-                                    </Pressable>
-
-                                    {/* Debt Filter */}
-                                    <Pressable
-                                        onPress={() => {
-                                            dispatch(setShowModalApp(true));
-                                            setShow_debt_filter(true);
-                                        }}
-                                        style={{
-                                            backgroundColor: theme.background,
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            marginBottom: 12,
-                                            borderWidth: 1,
-                                            borderColor: debt_filter !== -1 ? theme.error : theme.border,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <View style={{
-                                            backgroundColor: debt_filter !== -1 ? theme.error + "20" : theme.border,
-                                            borderRadius: 10,
-                                            width: 40,
-                                            height: 40,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12,
-                                        }}>
-                                            <IconApp pack="FI" name="alert-circle" size={18} color={debt_filter !== -1 ? theme.error : theme.gray} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <YambiText text={(strings as any).filter_by_debt || "Filter by debt"} size="small" color="gray" style={{ marginBottom: 4 }} />
-                                            <YambiText
-                                                text={
-                                                    debt_filter === -1
-                                                        ? strings.all || "All"
-                                                        : debt_filter === 1
-                                                            ? strings.debt || "Debt"
-                                                            : (strings as any).no_debt || "No Debt"
-                                                }
-                                                size="normal"
-                                                color="high"
-                                                style={{ fontWeight: '600' }}
-                                            />
-                                        </View>
-                                        {debt_filter !== -1 && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setDebt_filter(-1);
-                                                }}
-                                                style={{
-                                                    padding: 8,
-                                                    backgroundColor: theme.error + "20",
-                                                    borderRadius: 8,
-                                                }}
-                                            >
-                                                <IconApp pack="FI" name="x" size={16} color={theme.error} />
-                                            </Pressable>
-                                        )}
-                                    </Pressable>
-
-                                    {/* Payment Type Filter */}
-                                    <Pressable
-                                        onPress={() => {
-                                            dispatch(setShowModalApp(true));
-                                            setShow_payment_type_filter(true);
-                                        }}
-                                        style={{
-                                            backgroundColor: theme.background,
-                                            padding: 16,
-                                            borderRadius: 12,
-                                            borderWidth: 1,
-                                            borderColor: payment_type_filter !== -1 ? theme.high_color : theme.border,
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <View style={{
-                                            backgroundColor: payment_type_filter !== -1 ? theme.high_color + "20" : theme.border,
-                                            borderRadius: 10,
-                                            width: 40,
-                                            height: 40,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12,
-                                        }}>
-                                            <IconApp pack="FI" name="credit-card" size={18} color={payment_type_filter !== -1 ? theme.high_color : theme.gray} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <YambiText text={(strings as any).filter_by_payment_type || "Filter by payment type"} size="small" color="gray" style={{ marginBottom: 4 }} />
-                                            <YambiText
-                                                text={
-                                                    payment_type_filter === -1
-                                                        ? strings.all || "All"
-                                                        : payment_type_filter === 0
-                                                            ? (strings as any).not_paid || "Not Paid"
-                                                            : payment_type_filter === 1
-                                                                ? strings.cash || "Cash"
-                                                                : payment_type_filter === 2
-                                                                    ? strings.card || "Card"
-                                                                    : strings.bank || "Bank"
-                                                }
-                                                size="normal"
-                                                color="high"
-                                                style={{ fontWeight: '600' }}
-                                            />
-                                        </View>
-                                        {payment_type_filter !== -1 && (
-                                            <Pressable
-                                                onPress={(e) => {
-                                                    e.stopPropagation();
-                                                    setPayment_type_filter(-1);
-                                                }}
-                                                style={{
-                                                    padding: 8,
-                                                    backgroundColor: theme.error + "20",
-                                                    borderRadius: 8,
-                                                }}
-                                            >
-                                                <IconApp pack="FI" name="x" size={16} color={theme.error} />
-                                            </Pressable>
-                                        )}
-                                    </Pressable>
-
-                                    {/* Filter Summary */}
-                                    {activeFiltersCount > 0 && (
-                                        <View style={{
-                                            marginTop: 15,
-                                            paddingTop: 15,
-                                            borderTopWidth: 1,
-                                            borderColor: theme.border,
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                        }}>
-                                            <View>
-                                                <YambiText text={(strings as any).filtered_results || "Filtered Results"} size="small" color="gray" />
-                                                <YambiText
-                                                    text={`${filteredExpenses.length} ${strings.expenses || 'expenses'}`}
-                                                    size="normal"
-                                                    color="high"
-                                                    style={{ fontWeight: '700', marginTop: 4 }}
-                                                />
-                                            </View>
-                                            <View style={{ alignItems: 'flex-end' }}>
-                                                <YambiText text={strings.total || "Total"} size="small" color="gray" />
-                                                <YambiText
-                                                    text={formatAmount(filteredTotal)}
-                                                    size="normal"
-                                                    color="high"
-                                                    style={{ fontWeight: '700', marginTop: 4 }}
-                                                />
-                                            </View>
-                                        </View>
-                                    )}
-                                </View>
-                            </Animated.View>
                         </View>
                     )}
 
@@ -1330,423 +983,344 @@ const GetExpenses = ({ navigation, route }: NavProps) => {
                 </View>
             </ScrollView>
 
-            {/* Date Range Modal */}
-            {date_selection_modal && (
-                <ModalApp
-                    onCancel={() => {
-                        dispatch(setShowModalApp(false));
-                        setDate_selection_modal(false);
-                        setDate_end("");
-                        setDate_start("");
-                    }}
-                    onClose={() => {
-                        dispatch(setShowModalApp(false));
-                        setDate_selection_modal(false);
-                    }}
-                    singleButton={false}
-                    paddings={false}
-                    textAction={strings.confirm || "Confirm"}
-                    onAction={() => {
-                        dispatch(setShowModalApp(false));
-                        setDate_selection_modal(false);
-                    }}
-                    title={strings.choose_date_range || "Choose a date range"}
-                >
-                    <DateRangePicker
-                        onSelectDateRange={(range) => {
-                            setDate_start(range.firstDate.toString());
-                            setDate_end(range.secondDate.toString());
-                        }}
-                        onClear={() => {
-                            setDate_start("");
-                            setDate_end("");
-                        }}
-                        ln={LLg()}
-                        blockSingleDateSelection={false}
-                        responseFormat="YYYY-MM-DD"
-                        selectedDateContainerStyle={{
-                            height: 35,
-                            width: 35,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: app_theme.colors.badge_background_color,
-                            borderRadius: 35,
-                            marginHorizontal: 5,
-                        }}
-                        selectedDateStyle={{
-                            color: app_theme.colors.badge_color
-                        }}
-                        confirmBtnTitle=""
-                        clearBtnTitle={strings.clear_selection || "Clear selection"}
-                    />
-                </ModalApp>
-            )}
+            {/* Bottom Sheet Filters Modal */}
+            <BottomSheet
+                visible={show_filters_sheet}
+                onClose={() => setShow_filters_sheet(false)}
+            >
+                <View style={{ paddingBottom: 20, paddingHorizontal: 20 }}>
+                    {/* Clear selection link if active filters exist */}
+                    {activeFiltersCount > 0 && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+                            <Pressable
+                                onPress={() => {
+                                    setDate_start("");
+                                    setDate_end("");
+                                    setCategory_filter(-1);
+                                    setCurrency_filter("");
+                                    setDebt_filter(-1);
+                                    setPayment_type_filter(-1);
+                                }}
+                                style={{ paddingHorizontal: 10, paddingVertical: 4 }}>
+                                <TextSmallYambi text={strings.clear_selection || "Clear"} styles={{ color: theme.error }} />
+                            </Pressable>
+                        </View>
+                    )}
 
-            {/* Category Filter Modal */}
-            {show_category_filter && (
-                <ModalApp
-                    onClose={() => {
-                        dispatch(setShowModalApp(false));
-                        setShow_category_filter(false);
-                    }}
-                    singleButton
-                    paddings={false}
-                    title={strings.category || "Category"}
-                >
-                    <View style={{ width: '100%' }}>
-                        <Pressable
-                            onPress={() => {
-                                setCategory_filter(-1);
-                                dispatch(setShowModalApp(false));
-                                setShow_category_filter(false);
+                    {/* 1. Date Filter Calendar directly in bottom sheet */}
+                    <View style={{
+                        backgroundColor: theme.border + '30',
+                        borderRadius: 16,
+                        padding: 10,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingHorizontal: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <IconApp pack="FI" name="calendar" size={18} color={theme.high_color} />
+                                <TextSmallYambiGray text={strings.filter_by_date} styles={{ marginLeft: 8 }} />
+                            </View>
+                            <TextNormalYambiHighColor text={
+                                date_start !== "" && date_end !== ""
+                                    ? `${renderDateTime(date_start, 3, true)} - ${renderDateTime(date_end, 3, true)}`
+                                    : strings.all
+                            } />
+                        </View>
+
+                        <DateRangePicker
+                            initialStartDate={date_start !== "" ? date_start : undefined}
+                            initialEndDate={date_end !== "" ? date_end : undefined}
+                            onSelectDateRange={(range) => {
+                                setDate_start(range.firstDate.toString());
+                                setDate_end(range.secondDate.toString());
                             }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                paddingVertical: 12,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
+                            onClear={() => {
+                                setDate_start("");
+                                setDate_end("");
                             }}
-                        >
-                            <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                        </Pressable>
-                        <LegendList
-                            data={expenses_categories as never}
-                            keyExtractor={(item: any) => item.id.toString()}
-                            showsVerticalScrollIndicator={true}
-                            renderItem={({ item }: { item: any }) => {
-                                const categoryColor = getCategoryColor(item.id);
-                                const categoryIcon = getCategoryIcon(item.id);
+                            ln={LLg()}
+                            blockSingleDateSelection={false}
+                            responseFormat="YYYY-MM-DD"
+                            selectedDateContainerStyle={{
+                                height: 35,
+                                width: 35,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: app_theme.colors.badge_background_color,
+                                borderRadius: 35,
+                                marginHorizontal: 5,
+                            }}
+                            selectedDateStyle={{
+                                color: app_theme.colors.badge_color
+                            }}
+                            confirmBtnTitle=""
+                            clearBtnTitle={strings.clear_selection}
+                        />
+                    </View>
+
+                    {/* 2. Category Filter */}
+                    <View style={{
+                        backgroundColor: theme.border + '30',
+                        borderRadius: 16,
+                        padding: 14,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <IconApp pack="FI" name="tag" size={18} color={theme.high_color} />
+                            <TextSmallYambiGray text={strings.category || "Category"} styles={{ marginLeft: 8 }} />
+                        </View>
+
+                        <View style={{ gap: 6 }}>
+                            {/* "All" Option */}
+                            <Pressable
+                                onPress={() => setCategory_filter(-1)}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 10,
+                                    backgroundColor: category_filter === -1 ? theme.high_color + "20" : 'transparent',
+                                    borderWidth: 1,
+                                    borderColor: category_filter === -1 ? theme.high_color : 'transparent',
+                                }}>
+                                <TextNormalYambi text={strings.all || "All"} bold={category_filter === -1} styles={{ color: category_filter === -1 ? theme.high_color : theme.text }} />
+                                {category_filter === -1 && (
+                                    <IconApp pack="IO" name="checkmark-circle" size={18} color={theme.high_color} />
+                                )}
+                            </Pressable>
+
+                            {/* List Categories */}
+                            {(show_all_categories ? expenses_categories : expenses_categories.slice(0, 4)).map((catItem: any) => {
+                                const isSelected = category_filter === catItem.id;
+                                const categoryColor = getCategoryColor(catItem.id);
+                                const categoryIcon = getCategoryIcon(catItem.id);
                                 return (
                                     <Pressable
-                                        onPress={() => {
-                                            setCategory_filter(item.id);
-                                            dispatch(setShowModalApp(false));
-                                            setShow_category_filter(false);
-                                        }}
+                                        key={catItem.id}
+                                        onPress={() => setCategory_filter(catItem.id)}
                                         style={{
-                                            backgroundColor: theme.background,
-                                            flex: 1,
                                             flexDirection: 'row',
-                                            borderRadius: 8,
-                                            paddingHorizontal: 15,
-                                            paddingVertical: 12,
                                             alignItems: 'center',
-                                            borderBottomWidth: 1,
-                                            borderColor: theme.border
-                                        }}
-                                    >
-                                        <View style={{
-                                            backgroundColor: categoryColor + "20",
-                                            borderRadius: 8,
-                                            width: 36,
-                                            height: 36,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 8,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 10,
+                                            backgroundColor: isSelected ? theme.high_color + "20" : 'transparent',
+                                            borderWidth: 1,
+                                            borderColor: isSelected ? theme.high_color : 'transparent',
                                         }}>
-                                            <IconApp pack="FI" name={categoryIcon} size={18} color={categoryColor} />
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <View style={{
+                                                backgroundColor: categoryColor + "20",
+                                                borderRadius: 6,
+                                                width: 28,
+                                                height: 28,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                marginRight: 10
+                                            }}>
+                                                <IconApp pack="FI" name={categoryIcon} size={14} color={categoryColor} />
+                                            </View>
+                                            <TextNormalYambi text={catItem.name} bold={isSelected} styles={{ color: isSelected ? theme.high_color : theme.text }} />
                                         </View>
-                                        <View style={{ flex: 1 }}>
-                                            <YambiText text={item.name} size="normal" color="default" style={{ marginBottom: 4 }} />
-                                            <YambiText text={item.items} size="small" color="gray" />
-                                        </View>
+                                        {isSelected && (
+                                            <IconApp pack="IO" name="checkmark-circle" size={18} color={theme.high_color} />
+                                        )}
                                     </Pressable>
                                 );
-                            }}
-                        />
-                    </View>
-                </ModalApp>
-            )}
+                            })}
 
-            {/* Currency Filter Modal */}
-            {show_currency_filter && (
-                <ModalApp
-                    onClose={() => {
-                        dispatch(setShowModalApp(false));
-                        setShow_currency_filter(false);
-                    }}
-                    singleButton
-                    paddings={false}
-                    title={strings.currency || "Currency"}
-                >
-                    <View style={{ width: '100%' }}>
-                        <Pressable
-                            onPress={() => {
-                                setCurrency_filter("");
-                                dispatch(setShowModalApp(false));
-                                setShow_currency_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1, fontStyle: 'italic' }} />
-                        </Pressable>
-                        <LegendList
-                            data={global_currencies as never}
-                            keyExtractor={(item: number) => item.toString()}
-                            showsVerticalScrollIndicator={true}
-                            renderItem={({ item, index }: { item: number, index: number }) => (
+                            {/* "Show all" toggle button if categories > 4 */}
+                            {expenses_categories.length > 4 && (
                                 <Pressable
-                                    onPress={() => {
-                                        setCurrency_filter(item.toString());
-                                        dispatch(setShowModalApp(false));
-                                        setShow_currency_filter(false);
-                                    }}
+                                    onPress={() => setShow_all_categories(!show_all_categories)}
                                     style={{
-                                        backgroundColor: theme.background,
-                                        flex: 1,
-                                        flexDirection: 'row',
-                                        borderRadius: 8,
-                                        paddingHorizontal: 15,
-                                        height: 50,
+                                        paddingVertical: 8,
                                         alignItems: 'center',
-                                        borderBottomWidth: 1,
-                                        borderColor: theme.border
-                                    }}
-                                >
-                                    <YambiText text={(index + 1) + "."} size="normal" color="default" style={{ width: 35 }} />
-                                    <YambiText text={renderCurrency(item, true)} size="normal" color="default" style={{ flex: 1 }} />
+                                        marginTop: 2,
+                                    }}>
+                                    <TextSmallYambi text={show_all_categories ? (strings as any).see_less || "See less" : `${(strings as any).view_all || "View all"} (${expenses_categories.length})`} styles={{ color: theme.high_color }} />
                                 </Pressable>
                             )}
-                        />
+                        </View>
                     </View>
-                </ModalApp>
-            )}
 
-            {/* Debt Filter Modal */}
-            {show_debt_filter && (
-                <ModalApp
-                    onClose={() => {
-                        dispatch(setShowModalApp(false));
-                        setShow_debt_filter(false);
-                    }}
-                    singleButton
-                    paddings={false}
-                    title={strings.debt || "Debt"}
-                >
-                    <View style={{ width: '100%' }}>
-                        <Pressable
-                            onPress={() => {
-                                setDebt_filter(-1);
-                                dispatch(setShowModalApp(false));
-                                setShow_debt_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                setDebt_filter(1);
-                                dispatch(setShowModalApp(false));
-                                setShow_debt_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={strings.debt || "Debt"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                setDebt_filter(0);
-                                dispatch(setShowModalApp(false));
-                                setShow_debt_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border
-                            }}
-                        >
-                            <YambiText text={(strings as any).no_debt || "No Debt"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
+                    {/* 3. Currency Filter */}
+                    <View style={{
+                        backgroundColor: theme.border + '30',
+                        borderRadius: 16,
+                        padding: 14,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <IconApp pack="FI" name="dollar-sign" size={18} color={theme.high_color} />
+                            <TextSmallYambiGray text={strings.currency || "Currency"} styles={{ marginLeft: 8 }} />
+                        </View>
+
+                        <View style={{ gap: 6 }}>
+                            {/* "All" Option */}
+                            <Pressable
+                                onPress={() => setCurrency_filter("")}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 10,
+                                    backgroundColor: currency_filter === "" ? theme.high_color + "20" : 'transparent',
+                                    borderWidth: 1,
+                                    borderColor: currency_filter === "" ? theme.high_color : 'transparent',
+                                }}>
+                                <TextNormalYambi text={strings.all || "All"} bold={currency_filter === ""} styles={{ color: currency_filter === "" ? theme.high_color : theme.text }} />
+                                {currency_filter === "" && (
+                                    <IconApp pack="IO" name="checkmark-circle" size={18} color={theme.high_color} />
+                                )}
+                            </Pressable>
+
+                            {/* List Currencies */}
+                            {(show_all_currencies ? global_currencies : global_currencies.slice(0, 4)).map((cu: number) => {
+                                const isSelected = currency_filter === cu.toString();
+                                return (
+                                    <Pressable
+                                        key={cu}
+                                        onPress={() => setCurrency_filter(cu.toString())}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 10,
+                                            backgroundColor: isSelected ? theme.high_color + "20" : 'transparent',
+                                            borderWidth: 1,
+                                            borderColor: isSelected ? theme.high_color : 'transparent',
+                                        }}>
+                                        <TextNormalYambi text={renderCurrency(cu, true)} bold={isSelected} styles={{ color: isSelected ? theme.high_color : theme.text }} />
+                                        {isSelected && (
+                                            <IconApp pack="IO" name="checkmark-circle" size={18} color={theme.high_color} />
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+
+                            {/* "Show all" toggle if currencies > 4 */}
+                            {global_currencies.length > 4 && (
+                                <Pressable
+                                    onPress={() => setShow_all_currencies(!show_all_currencies)}
+                                    style={{
+                                        paddingVertical: 8,
+                                        alignItems: 'center',
+                                        marginTop: 2,
+                                    }}>
+                                    <TextSmallYambi text={show_all_currencies ? (strings as any).see_less || "See less" : `${(strings as any).view_all || "View all"} (${global_currencies.length})`} styles={{ color: theme.high_color }} />
+                                </Pressable>
+                            )}
+                        </View>
                     </View>
-                </ModalApp>
-            )}
 
-            {/* Payment Type Filter Modal */}
-            {show_payment_type_filter && (
-                <ModalApp
-                    onClose={() => {
-                        dispatch(setShowModalApp(false));
-                        setShow_payment_type_filter(false);
-                    }}
-                    singleButton
-                    paddings={false}
-                    title={strings.payment_type || "Payment Type"}
-                >
-                    <View style={{ width: '100%' }}>
-                        <Pressable
-                            onPress={() => {
-                                setPayment_type_filter(-1);
-                                dispatch(setShowModalApp(false));
-                                setShow_payment_type_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={strings.all || "All"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                setPayment_type_filter(0);
-                                dispatch(setShowModalApp(false));
-                                setShow_payment_type_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={(strings as any).not_paid || "Not Paid"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                setPayment_type_filter(1);
-                                dispatch(setShowModalApp(false));
-                                setShow_payment_type_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={strings.cash || "Cash"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                setPayment_type_filter(2);
-                                dispatch(setShowModalApp(false));
-                                setShow_payment_type_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border,
-                                marginBottom: 8
-                            }}
-                        >
-                            <YambiText text={strings.card || "Card"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                setPayment_type_filter(3);
-                                dispatch(setShowModalApp(false));
-                                setShow_payment_type_filter(false);
-                            }}
-                            style={{
-                                backgroundColor: theme.background,
-                                flex: 1,
-                                flexDirection: 'row',
-                                borderRadius: 8,
-                                paddingHorizontal: 15,
-                                height: 50,
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: theme.border
-                            }}
-                        >
-                            <YambiText text={strings.bank || "Bank"} size="normal" color="default" style={{ flex: 1 }} />
-                        </Pressable>
+                    {/* 4. Debt Filter */}
+                    <View style={{
+                        backgroundColor: theme.border + '30',
+                        borderRadius: 16,
+                        padding: 14,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <IconApp pack="FI" name="alert-circle" size={18} color={theme.high_color} />
+                            <TextSmallYambiGray text={strings.debt || "Debt"} styles={{ marginLeft: 8 }} />
+                        </View>
+
+                        <View style={{ gap: 6 }}>
+                            {[
+                                { value: -1, label: strings.all || "All" },
+                                { value: 1, label: strings.debt || "Debt" },
+                                { value: 0, label: (strings as any).no_debt || "No Debt" },
+                            ].map(opt => {
+                                const isSelected = debt_filter === opt.value;
+                                return (
+                                    <Pressable
+                                        key={opt.value}
+                                        onPress={() => setDebt_filter(opt.value)}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 10,
+                                            backgroundColor: isSelected ? theme.high_color + "20" : 'transparent',
+                                            borderWidth: 1,
+                                            borderColor: isSelected ? theme.high_color : 'transparent',
+                                        }}>
+                                        <TextNormalYambi text={opt.label} bold={isSelected} styles={{ color: isSelected ? theme.high_color : theme.text }} />
+                                        {isSelected && (
+                                            <IconApp pack="IO" name="checkmark-circle" size={18} color={theme.high_color} />
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
                     </View>
-                </ModalApp>
-            )}
 
-            {/* Floating Action Button */}
-            {/* <Pressable
-                onPress={() => navigation.navigate('AddExpense', { business_id, sales_point_id })}
-                style={{
-                    position: 'absolute',
-                    bottom: 80,
-                    right: 15,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                    backgroundColor: theme.button_background_color,
-                    height: 50,
-                    width: 50,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 50,
-                    elevation: 0
-                }}
-            >
-                <IconApp pack="FI" name="plus" size={18} color={theme.button_foreground_color} />
-            </Pressable> */}
+                    {/* 5. Payment Type Filter */}
+                    <View style={{
+                        backgroundColor: theme.border + '30',
+                        borderRadius: 16,
+                        padding: 14,
+                        marginBottom: 16,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <IconApp pack="FI" name="credit-card" size={18} color={theme.high_color} />
+                            <TextSmallYambiGray text={strings.payment_type || "Payment Type"} styles={{ marginLeft: 8 }} />
+                        </View>
+
+                        <View style={{ gap: 6 }}>
+                            {[
+                                { value: -1, label: strings.all || "All" },
+                                { value: 1, label: strings.cash || "Cash" },
+                                { value: 2, label: strings.card || "Card" },
+                                { value: 3, label: strings.bank || "Bank" },
+                                { value: 0, label: (strings as any).not_paid || "Not Paid" },
+                            ].map(opt => {
+                                const isSelected = payment_type_filter === opt.value;
+                                return (
+                                    <Pressable
+                                        key={opt.value}
+                                        onPress={() => setPayment_type_filter(opt.value)}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 12,
+                                            borderRadius: 10,
+                                            backgroundColor: isSelected ? theme.high_color + "20" : 'transparent',
+                                            borderWidth: 1,
+                                            borderColor: isSelected ? theme.high_color : 'transparent',
+                                        }}>
+                                        <TextNormalYambi text={opt.label} bold={isSelected} styles={{ color: isSelected ? theme.high_color : theme.text }} />
+                                        {isSelected && (
+                                            <IconApp pack="IO" name="checkmark-circle" size={18} color={theme.high_color} />
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                    </View>
+                </View>
+            </BottomSheet>
         </View>
     );
 };

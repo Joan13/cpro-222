@@ -148,20 +148,20 @@ const BusinessesListModern = ({ businesses, currentBusinessIndex, onBusinessSwit
 
     const bu = useQuery(
         BusinessUsers, ss => {
-            return ss.filtered('business_id == $0 && user_active != $1', item._id, 2);
-        }, [item._id]);
+            return ss.filtered('business_id == $0 && user_active == $1', item?._id || "", 1);
+        }, [item?._id]);
 
     const bitems = useQuery(
         UserBusinessArticles, ss => {
-            return ss.filtered('item_active == $0 && business_id == $1', 1, item._id);
-        }, [item._id]);
+            return ss.filtered('item_active == $0 && business_id == $1', 1, item?._id || "");
+        }, [item?._id]);
 
     const uuser = useQuery(
         BusinessUsers, bss => {
-            return bss.filtered('user == $0 && business_id == $1 && user_active == $2', user_data.phone_number, item._id, 1)
-        }, [item._id]);
+            return bss.filtered('(user == $0 || phone_number == $0) && business_id == $1 && user_active == $2', user_data.phone_number, item?._id || "", 1)
+        }, [item?._id, user_data.phone_number]);
 
-    const oo = uuser.find(element => element.user === user_data.phone_number);
+    const oo = uuser.find(element => (element.user === user_data.phone_number || element.phone_number === user_data.phone_number) && element.user_active === 1);
 
     const lowStockItems = useMemo(() => {
         try {

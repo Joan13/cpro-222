@@ -536,6 +536,7 @@ const EditBusinessItem = ({ route, navigation }: NavProps) => {
 
             setTimeout(() => {
                 dispatch(setLoadingButton(false));
+                navigation.goBack();
             }, 300);
         }
     };

@@ -13,6 +13,7 @@ import PictureMessageItem from '../../chat/message/PictureMessageItem';
 import DocumentMessageItem from '../../chat/message/DocumentMessageItem';
 import ContactMessageItem from '../../chat/message/ContactMessageItem';
 import BusinessItemMessage from '../../chat/message/BusinessItemMessage';
+import StatusMessageItem from '../../chat/message/StatusMessageItem';
 import * as RootNavigation from '../../../services/Navigation_ref';
 import { displayDate } from '../../../../GlobalVariables';
 import { TextSmallYambiGray, TextSmallYambiHighColor, YambiText } from '../../app/Text';
@@ -400,9 +401,9 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                     : null}
 
                                 <View style={{
-                                    paddingHorizontal: item.response_to === "" ? 12 : 0,
+                                    paddingHorizontal: (item.response_to === "" || item.message_type === 5) ? 10 : 0,
                                     paddingVertical: 4,
-                                    width: item.message_type === 1 || item.message_type === 2 || item.message_type === 6 ? 260 : 'auto',
+                                    width: item.message_type === 1 || item.message_type === 2 || item.message_type === 5 || item.message_type === 6 ? 260 : 'auto',
                                     maxWidth: item.message_type === 1 ? 260 : '85%',
                                     borderRadius: 10,
                                     shadowColor: '#000',
@@ -414,12 +415,12 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                     marginRight: can_show_image_right ? 0 : app_description.inbox_appearance_style === 0 ? 10 : app_description.inbox_sender_image_size + 7,
                                     backgroundColor: item.receiver === user_data.phone_number ? app_theme.colors.chat_received : app_theme.colors.chat_sent
                                 }}>
-                                    {item.response_to !== "" ?
-                                        (message !== null || item.message_type === 5) ?
+                                    {item.response_to !== "" && item.message_type !== 5 ?
+                                        message !== null ?
                                             <View>
                                                 <Pressable
                                                     onPress={() => {
-                                                        if (scrollToMessage && item.response_to && item.message_type !== 5) {
+                                                        if (scrollToMessage && item.response_to) {
                                                             scrollToMessage(item.response_to);
                                                         }
                                                     }}
@@ -435,30 +436,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                         marginTop: 6
                                                     }}
                                                 >
-                                                    {item.message_type === 5 ? (
-                                                        <>
-                                                            <YambiText
-                                                                size="small"
-                                                                color="#f59f00"
-                                                                text={item.receiver === user_data.phone_number
-                                                                    ? "You . Status"
-                                                                    : `${ShowUserName(user, user)} . Status`}
-                                                                style={{
-                                                                    fontWeight: app_description.small_general_font_weight as any
-                                                                }}
-                                                            />
-                                                            <YambiText
-                                                                size="small"
-                                                                color="default"
-                                                                numberLines={3}
-                                                                text={item.caption || (strings as any).status || "Status"}
-                                                                style={{
-                                                                    fontWeight: app_description.small_general_font_weight as any,
-                                                                    marginTop: 2
-                                                                }}
-                                                            />
-                                                        </>
-                                                    ) : message !== null ? (
+                                                    {message !== null ? (
                                                         <>
                                                             <YambiText
                                                                 size="small"
@@ -534,7 +512,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                             </View>
                                             : null : null}
                                     <View style={{
-                                        marginHorizontal: item.response_to === "" ? 0 : 10
+                                        marginHorizontal: (item.response_to === "" || item.message_type === 5) ? 0 : 10
                                     }}>
                                         {item.deleted === 1 ?
                                             <YambiText
@@ -579,7 +557,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                     </View>
                                                     : null}
 
-                                                {item.message_type === 0 || item.message_type === 5 ? (
+                                                {item.message_type === 0 ? (
                                                     <YambiText
                                                         formatYambiText={true}
                                                         text={item.main_text_message.trim()}
@@ -588,7 +566,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                         style={{
                                                             flex: 1,
                                                             marginRight: item.main_text_message.length < 35 ? item.sender === user_data.phone_number ? lang === "en" ? 85 : 75 : lang === "en" ? 60 : 50 : 10,
-                                                            marginBottom: (item.caption === "" || item.message_type === 5) ? item.main_text_message.length < 35 ? -12 : 0 : 0,
+                                                            marginBottom: item.caption === "" ? item.main_text_message.length < 35 ? -12 : 0 : 0,
                                                             fontWeight: item.receiver === user_data.phone_number ? app_description.received_messages_font_weight : app_description.sent_messages_font_weight as any,
                                                             fontSize: item.receiver === user_data.phone_number ? app_description.received_messages_font_size : app_description.sent_messages_font_size
                                                         }}
@@ -605,6 +583,8 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                                 {item.message_type === 3 ? <DocumentMessageItem message={item} /> : null}
 
                                                 {item.message_type === 4 ? <ContactMessageItem message={item} /> : null}
+
+                                                {item.message_type === 5 ? <StatusMessageItem message={item} user={user} /> : null}
 
                                                 {item.message_type === 6 ? <BusinessItemMessage message={item} /> : null}
 

@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import { NavProps } from '../../types/types';
 import { useAppSelector } from '../../store/app/hooks';
 import { MediaGallery } from '../../components/lists/gallery/MediaGallery';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const GalleryScreen: React.FC<NavProps> = ({ navigation, route }) => {
     const theme = useAppSelector(state => state.app_theme);
