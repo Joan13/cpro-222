@@ -314,6 +314,7 @@ const FooterChat = ({ user }: { user: string }) => {
           justifyContent: 'flex-start',
           alignItems: 'center',
         }}>
+          <IconApp pack="MT" name="motion-photos-on" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 8 }} />
           <YambiText text={message.main_text_message} size="normal" color="default" numberLines={1} style={{ marginRight: 10, flex: 1 }} />
         </View>
       );

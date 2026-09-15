@@ -228,7 +228,7 @@ Notifications.setNotificationHandler({
 
 // Configure Android High-Priority Ongoing Call Channel
 if (Platform.OS === 'android') {
-    Notifications.deleteNotificationChannelAsync('incoming_calls').catch(() => {});
+    Notifications.deleteNotificationChannelAsync('incoming_calls').catch(() => { });
     Notifications.setNotificationChannelAsync('incoming_calls', {
         name: 'Incoming Calls',
         importance: Notifications.AndroidImportance.MAX,
@@ -314,12 +314,45 @@ export const displayNotification = async (notification: any) => {
         notification?.notification?.title ??
         '';
     const rawBody = data.body ?? notification?.notification?.body ?? '';
-    const body =
+    let body =
         rawBody === 'Audio'
             ? strings.voice_note
             : rawBody === 'photo'
                 ? strings.picture
                 : rawBody;
+
+    // Extract the token and message data of the current incoming message if present
+    let currentToken: string | null = null;
+    let parsedMsg: any = null;
+    if (typeof data.message === 'string') {
+        try {
+            const parsed = JSON.parse(data.message);
+            if (parsed.data) {
+                parsedMsg = parsed.data;
+                if (parsed.data.token) {
+                    currentToken = parsed.data.token;
+                }
+            }
+        } catch (_e) { }
+    }
+
+    if (parsedMsg) {
+        if (parsedMsg.message_type === 5 || parsedMsg.message_type === 0) {
+            if (parsedMsg.main_text_message) {
+                body = parsedMsg.main_text_message;
+            }
+        } else if (parsedMsg.message_type === 1) {
+            body = strings.voice_note;
+        } else if (parsedMsg.message_type === 2) {
+            body = parsedMsg.main_text_message || strings.picture;
+        } else if (parsedMsg.message_type === 3) {
+            body = strings.document_file || "Document";
+        } else if (parsedMsg.message_type === 4) {
+            body = (strings as any).contact || "Contact";
+        } else if (parsedMsg.message_type === 6) {
+            body = parsedMsg.main_text_message || strings.item || "Item";
+        }
+    }
 
     if (!title && !body) {
         return;
@@ -328,17 +361,6 @@ export const displayNotification = async (notification: any) => {
     // For chat messages, accumulate multiple messages in a single notification
     if (data.screen === 'Inbox') {
         const identifier = `chat_${data.user}`;
-
-        // Extract the token of the current incoming message
-        let currentToken: string | null = null;
-        if (typeof data.message === 'string') {
-            try {
-                const parsed = JSON.parse(data.message);
-                if (parsed.data?.token) {
-                    currentToken = parsed.data.token;
-                }
-            } catch (_e) { }
-        }
 
         // Check for an existing notification from this sender
         let accumulatedBody = body;
@@ -1015,10 +1037,27 @@ const Yambi = ({ navigation }: NavProps) => {
                     const isChatOpenWithSender = current_user === msg.sender;
 
                     if (!isAppActive || !isChatOpenWithSender) {
+                        let notificationBody = msg.main_text_message;
+                        if (msg.message_type === 1) {
+                            notificationBody = strings.voice_note;
+                        } else if (msg.message_type === 2) {
+                            notificationBody = msg.main_text_message || strings.picture;
+                        } else if (msg.message_type === 3) {
+                            notificationBody = strings.document_file || "Document";
+                        } else if (msg.message_type === 4) {
+                            notificationBody = (strings as any).contact || "Contact";
+                        } else if (msg.message_type === 5) {
+                            notificationBody = msg.main_text_message || ((strings as any).status || "Status");
+                        } else if (msg.message_type === 6) {
+                            notificationBody = msg.main_text_message || strings.item || "Item";
+                        } else if (msg.message_type === 0) {
+                            notificationBody = msg.main_text_message;
+                        }
+
                         displayNotification({
                             data: {
                                 title: msg.sender,
-                                body: msg.message_type === 0 ? msg.main_text_message : (msg.message_type === 1 ? strings.voice_note : strings.picture),
+                                body: notificationBody,
                                 user: msg.sender,
                                 screen: 'Inbox',
                                 message: JSON.stringify({ data: msg, tag: 0 })
@@ -4250,15 +4289,11 @@ const Yambi = ({ navigation }: NavProps) => {
 
                             <Stack.Screen name="UserStories" component={UserStories} options={({ navigation, route }) => ({
                                 headerShadowVisible: false,
-                                headerShown: true,
-                                // contentStyle: { backgroundColor: app_theme.colors.background },
-                                contentStyle: { backgroundColor: '#000000' },
-                                headerStyle: {
-                                    backgroundColor: app_theme.colors.header_background_color
-                                },
-                                headerTintColor: app_theme.colors.header_foreground_color,
+                                headerShown: false,
+                                presentation: 'transparentModal',
+                                contentStyle: { backgroundColor: 'transparent' },
+                                // animation: 'none',
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                                // title: strings.story,
                                 headerTitleStyle: {
                                     fontSize: app_description.title_font_size,
                                     fontWeight: app_description.title_font_weight as any,

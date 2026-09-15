@@ -113,9 +113,9 @@ const StatusMessageItem = ({ message, user }: StatusMessageProps) => {
 
     const handlePressStatus = () => {
         if (isStillOnStatus && story && story.isValid()) {
-            const targetPhone = message.receiver === user_data.phone_number
-                ? user_data.phone_number
-                : (story.phone_number || message.receiver || user);
+            const targetPhone = (story.phone_number && story.phone_number.trim() !== '')
+                ? story.phone_number
+                : (message.receiver === user_data.phone_number ? user_data.phone_number : (message.receiver || user));
             RootNavigation.navigate('UserStories', {
                 phone_number: targetPhone,
                 story_id: story._id,

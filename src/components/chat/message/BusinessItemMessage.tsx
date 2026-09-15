@@ -70,7 +70,15 @@ const BusinessItemMessage = ({ message }: { message: TMessage }) => {
         fetchItemDetails();
     }, [itemId]);
 
+    const isUnavailable = !loading && (
+        !cartItem ||
+        !cartItem.item ||
+        Number(cartItem.item.item_active) !== 1 ||
+        Number(cartItem.item.marketplace_visibility) !== 1
+    );
+
     const handlePressItem = () => {
+        if (isUnavailable) return;
         Haptics.selectionAsync();
         if (cartItem) {
             RootNavigation.navigate('BusinessItem', cartItem);
@@ -112,22 +120,58 @@ const BusinessItemMessage = ({ message }: { message: TMessage }) => {
     }, [cartItem?.prices?.retail_selling_price, cartItem?.item?.discount_percentage]);
 
     return (
-        <View style={{ width: 250, marginVertical: 4 }}>
+        <View style={{ width: '100%', marginVertical: 4 }}>
             <Pressable
-                onPress={handlePressItem}
+                onPress={isUnavailable ? undefined : handlePressItem}
                 onLongPress={handleLongPress}
+                disabled={isUnavailable}
                 style={{
                     backgroundColor: app_theme.colors.card,
                     borderRadius: 10,
                     overflow: 'hidden',
                     borderWidth: 1,
                     borderColor: app_theme.colors.border,
+                    opacity: isUnavailable ? 0.75 : 1,
                 }}>
                 {/* Header Item Card */}
                 <View style={{ padding: 10, flexDirection: 'row', alignItems: 'center' }}>
                     {loading ? (
                         <View style={{ padding: 10, alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                             <ActivityIndicator size="small" color={app_theme.colors.high_color} />
+                        </View>
+                    ) : isUnavailable ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, paddingVertical: 4 }}>
+                            <View style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 8,
+                                backgroundColor: app_theme.colors.border + '60',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginRight: 10
+                            }}>
+                                <IconApp pack="FI" name="slash" size={20} color={app_theme.colors.gray} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                {cartItem?.item?.item_name ? (
+                                    <YambiText
+                                        text={cartItem.item.item_name}
+                                        size="small"
+                                        color="gray"
+                                        bold
+                                        numberLines={1}
+                                    />
+                                ) : null}
+                                <YambiText
+                                    text={strings.item_unavailable || "Article indisponible"}
+                                    size="small"
+                                    color="gray"
+                                    style={{
+                                        fontStyle: 'italic',
+                                        marginTop: cartItem?.item?.item_name ? 2 : 0,
+                                    }}
+                                />
+                            </View>
                         </View>
                     ) : cartItem?.item ? (
                         <>

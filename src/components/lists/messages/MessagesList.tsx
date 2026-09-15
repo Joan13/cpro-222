@@ -401,7 +401,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                     : null}
 
                                 <View style={{
-                                    paddingHorizontal: (item.response_to === "" || item.message_type === 5) ? 10 : 0,
+                                    paddingHorizontal: (item.response_to === "" || item.message_type === 5 || item.message_type === 6) ? 10 : 0,
                                     paddingVertical: 4,
                                     width: item.message_type === 1 || item.message_type === 2 || item.message_type === 5 || item.message_type === 6 ? 260 : 'auto',
                                     maxWidth: item.message_type === 1 ? 260 : '85%',
@@ -415,7 +415,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                     marginRight: can_show_image_right ? 0 : app_description.inbox_appearance_style === 0 ? 10 : app_description.inbox_sender_image_size + 7,
                                     backgroundColor: item.receiver === user_data.phone_number ? app_theme.colors.chat_received : app_theme.colors.chat_sent
                                 }}>
-                                    {item.response_to !== "" && item.message_type !== 5 ?
+                                    {item.response_to !== "" && item.message_type !== 5 && item.message_type !== 6 ?
                                         message !== null ?
                                             <View>
                                                 <Pressable
@@ -512,7 +512,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
                                             </View>
                                             : null : null}
                                     <View style={{
-                                        marginHorizontal: (item.response_to === "" || item.message_type === 5) ? 0 : 10
+                                        marginHorizontal: (item.response_to === "" || item.message_type === 5 || item.message_type === 6) ? 0 : 10
                                     }}>
                                         {item.deleted === 1 ?
                                             <YambiText
@@ -588,7 +588,7 @@ const MessagesList = ({ item, index, selectMessage, messages, user, scrollToMess
 
                                                 {item.message_type === 6 ? <BusinessItemMessage message={item} /> : null}
 
-                                                {item.caption !== "" && item.message_type !== 4 && item.message_type !== 3 && item.message_type !== 5 ? (
+                                                {item.caption !== "" && item.message_type !== 4 && item.message_type !== 3 && item.message_type !== 5 && item.message_type !== 6 ? (
                                                     <YambiText
                                                         formatYambiText={true}
                                                         text={item.caption.trim()}

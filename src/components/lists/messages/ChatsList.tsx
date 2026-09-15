@@ -183,7 +183,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
 
         if (message === null) return;
 
-        if (message.message_type === 0 || message.message_type === 5) {
+        if (message.message_type === 0) {
             return (
                 <View style={{
                     flexDirection: 'row',
@@ -195,6 +195,24 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
                     {message.deleted > 0 ? <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} /> : null}
                     <YambiText formatYambiText={true} text={message.deleted === 0 ? message.main_text_message : strings.message_deleted} size="small" color="gray" numberLines={1} clickable_links={false} style={{ flex: 1, marginRight: 10 }} />
+                </View>
+            );
+        } else if (message.message_type === 5) {
+            return (
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flex: 1,
+                    marginTop: 3
+                }}>
+                    {message.sender === user_data.phone_number ? IconMessageRead(message.message_read) : null}
+                    {message.deleted > 0 ? (
+                        <IconApp pack="FI" name="minus-circle" size={14} color={app_theme.colors.gray} styles={{ marginRight: 5 }} />
+                    ) : (
+                        <IconApp pack="MT" name="motion-photos-on" size={16} color={app_theme.colors.high_color} styles={{ marginRight: 6 }} />
+                    )}
+                    <YambiText formatYambiText={true} text={message.deleted === 0 ? (message.main_text_message || (strings as any).status || "Status") : strings.message_deleted} size="small" color="gray" numberLines={1} clickable_links={false} style={{ flex: 1, marginRight: 10 }} />
                 </View>
             );
         } else if (message.message_type === 1) {

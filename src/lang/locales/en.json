@@ -1375,6 +1375,7 @@
   "post_not_found": "This post is unavailable or no longer exists.",
   "item_not_found": "This item is unavailable or no longer exists.",
   "item_not_found_title": "Item not found",
+  "item_unavailable": "Item unavailable",
   "business_not_found": "This business is unavailable or no longer exists.",
   "business_not_found_title": "Business not found",
   "publish_to_marketplace_description": "To publish to marketplace, you need to have an item picture, a selling price, items in store, and a category and subcategory.",

@@ -190,11 +190,6 @@ export const AudioCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
         {/* Live Timer Counter & Status */}
         <View style={styles.statusRow}>
-          {isConnected && (
-            <View style={[styles.hdBadge, { borderColor: subtitleColor }]}>
-              <Text style={[styles.hdBadgeText, { color: subtitleColor }]}>HD</Text>
-            </View>
-          )}
           <Text style={[styles.timerStatusText, { color: timerColor }]}>
             {getStatusText()}
           </Text>
@@ -328,18 +323,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
     marginBottom: 28,
-  },
-  hdBadge: {
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-  },
-  hdBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
   },
   timerStatusText: {
     fontSize: 18,

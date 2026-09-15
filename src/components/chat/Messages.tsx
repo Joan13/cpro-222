@@ -555,7 +555,7 @@ const Messages = ({ user, highlightMessageToken }: { user: string; highlightMess
                     showsVerticalScrollIndicator={false}
                     keyExtractor={(item) => item.token}
                     scrollEventThrottle={16}
-                    contentContainerStyle={{ paddingBottom: 24, paddingTop: 12 }}
+                    contentContainerStyle={{ paddingBottom: 3, paddingTop: 12 }}
                     onScroll={handleScroll}
                     onViewableItemsChanged={
                         updateStickyDate

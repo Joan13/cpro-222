@@ -1374,6 +1374,7 @@
   "post_not_found": "Cette publication est indisponible ou n'existe plus.",
   "item_not_found": "Cet article est indisponible ou n'existe plus.",
   "item_not_found_title": "Article introuvable",
+  "item_unavailable": "Article indisponible",
   "business_not_found": "Cette entreprise est indisponible ou n'existe plus.",
   "business_not_found_title": "Commerce introuvable",
   "publish_to_marketplace_description": "Pour publier sur la marketplace, vous devez avoir une photo d'article, un prix de vente, un stock en magasin, et une catégorie et une sous-catégorie.",

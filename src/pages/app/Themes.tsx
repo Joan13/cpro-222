@@ -97,7 +97,7 @@ const whiteTheme: TTheme = {
         bottom_navigation_active: '#000000',
         bottom_navigation_inactive: '#808080',
         modal_background: '#FFFFFF',
-        certified_badge: '#0095F6'
+        certified_badge: '#0050b4'
     },
 };
 
