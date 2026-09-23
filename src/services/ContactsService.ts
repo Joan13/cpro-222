@@ -1,6 +1,9 @@
 import parsePhoneNumberFromString, { getCountryCallingCode } from 'libphonenumber-js';
 import { TContact, TUser } from '../types/types';
 import { removeDuplicateNumbers } from '../../GlobalVariables';
+import store from '../store/app/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { openRealmInstance } from './RealmInstance';
 
 // Global registry mapping any phone number variant (string) to its display name (string)
 export const contactNameByPhoneRegistry: Record<string, string> = {};
@@ -157,3 +160,123 @@ export const processPhoneContacts = (
 
     return { allContacts };
 };
+
+/**
+ * Resolves the display name of a contact from the device's address book / repertoire.
+ * Searches in order:
+ * 1. Global in-memory registry (`contactNameByPhoneRegistry`)
+ * 2. Redux state (`persisted_app.raw_contacts` or `app.raw_contacts`)
+ * 3. AsyncStorage (`persist:root` -> `persisted_app.raw_contacts`) for cold-start background push tasks
+ * 4. Local Realm database (`UserContacts`)
+ */
+export const resolveContactDisplayName = async (phone: string): Promise<string | null> => {
+    if (!phone || typeof phone !== 'string') return null;
+
+    const trimmed = phone.trim();
+    if (!trimmed) return null;
+
+    // 1. Fast path: Direct in-memory lookup in registry
+    if (contactNameByPhoneRegistry[trimmed]) {
+        return contactNameByPhoneRegistry[trimmed];
+    }
+
+    const normalized = normalizePhoneNumber(trimmed);
+    if (normalized && contactNameByPhoneRegistry[normalized]) {
+        return contactNameByPhoneRegistry[normalized];
+    }
+
+    const cleanedNoPlus = normalized.startsWith('+') ? normalized.slice(1) : normalized;
+    if (cleanedNoPlus && contactNameByPhoneRegistry[cleanedNoPlus]) {
+        return contactNameByPhoneRegistry[cleanedNoPlus];
+    }
+
+    // 2. Look in Redux store
+    let rawContacts: TContact[] = [];
+    try {
+        const state: any = store.getState();
+        rawContacts = state?.persisted_app?.raw_contacts || state?.app?.raw_contacts || [];
+    } catch (_) {}
+
+    // Helper to find match in a contacts array
+    const findInContacts = (contactsList: TContact[]): string | null => {
+        if (!Array.isArray(contactsList) || contactsList.length === 0) return null;
+
+        // Exact variant or phoneNumber match
+        const exactMatch = contactsList.find(
+            (c) =>
+                c.phoneNumber === trimmed ||
+                c.phoneNumber === normalized ||
+                c.phoneNumber === cleanedNoPlus
+        );
+        if (exactMatch?.displayName) {
+            return exactMatch.displayName;
+        }
+
+        // Suffix/digit matching (at least 6 digits to match local vs international formats)
+        const digits = trimmed.replace(/\D/g, '');
+        if (digits.length >= 6) {
+            const suffixMatch = contactsList.find((c) => {
+                const cDigits = (c.phoneNumber || '').replace(/\D/g, '');
+                return cDigits.length >= 6 && (cDigits.endsWith(digits) || digits.endsWith(cDigits));
+            });
+            if (suffixMatch?.displayName) {
+                return suffixMatch.displayName;
+            }
+        }
+        return null;
+    };
+
+    if (rawContacts.length > 0) {
+        const matchedName = findInContacts(rawContacts);
+        if (matchedName) {
+            contactNameByPhoneRegistry[trimmed] = matchedName;
+            if (normalized) contactNameByPhoneRegistry[normalized] = matchedName;
+            return matchedName;
+        }
+    }
+
+    // 3. Look in AsyncStorage (cold-start headless background task where Redux is not yet hydrated)
+    try {
+        const rawRoot = await AsyncStorage.getItem('persist:root');
+        if (rawRoot) {
+            const parsedRoot = JSON.parse(rawRoot);
+            if (parsedRoot.persisted_app) {
+                const persistedApp =
+                    typeof parsedRoot.persisted_app === 'string'
+                        ? JSON.parse(parsedRoot.persisted_app)
+                        : parsedRoot.persisted_app;
+                const persistedContacts: TContact[] = persistedApp?.raw_contacts || [];
+                if (persistedContacts.length > 0) {
+                    const matchedName = findInContacts(persistedContacts);
+                    if (matchedName) {
+                        contactNameByPhoneRegistry[trimmed] = matchedName;
+                        if (normalized) contactNameByPhoneRegistry[normalized] = matchedName;
+                        return matchedName;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error reading raw_contacts from AsyncStorage in resolveContactDisplayName:', e);
+    }
+
+    // 4. Fallback to Realm UserContacts
+    try {
+        const realm = await openRealmInstance();
+        if (realm && !realm.isClosed) {
+            const realmContact: any =
+                realm.objectForPrimaryKey('UserContacts', trimmed) ||
+                realm.objectForPrimaryKey('UserContacts', normalized) ||
+                realm.objects('UserContacts').filtered('phone_number == $0', trimmed)[0] ||
+                realm.objects('UserContacts').filtered('phone_number == $0', normalized)[0];
+
+            if (realmContact?.user_names && realmContact.user_names !== trimmed && realmContact.user_names !== normalized) {
+                contactNameByPhoneRegistry[trimmed] = realmContact.user_names;
+                return realmContact.user_names;
+            }
+        }
+    } catch (e) {}
+
+    return null;
+};
+

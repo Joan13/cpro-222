@@ -9,7 +9,8 @@ import { strings } from '../../lang/lang';
 import { TUser } from '../../types/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProximity } from '../../components/hooks/useProximity';
-import { useObject } from '@realm/react';
+import { callSoundManager } from '../../services/call/CallSoundManager';
+import { useRealm } from '@realm/react';
 import { UserContacts } from '../../store/database/Models';
 
 import AnimatedReanimated, {
@@ -55,7 +56,7 @@ export const AudioCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
       if (data) {
         lastCallDataRef.current = data;
       }
-      if (!data || data.status === 'ENDED' || data.status === 'FAILED' || data.status === 'BUSY') {
+      if (!data || data.status === 'ENDED' || data.status === 'FAILED' || data.status === 'BUSY' || data.status === 'REJECTED') {
         if (!timer) {
           timer = setTimeout(() => {
             if (navigation.canGoBack()) {
@@ -78,7 +79,8 @@ export const AudioCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   }
 
   const targetPhoneNumber = activeCall.isCaller ? activeCall.calleeId : activeCall.callerId;
-  const realmContact = useObject(UserContacts, targetPhoneNumber || '');
+  const realm = useRealm();
+  const realmContact = targetPhoneNumber ? realm.objects<UserContacts>('UserContacts').filtered('phone_number == $0', targetPhoneNumber)[0] : null;
   const contact = contacts.find((c) => c.phoneNumber === targetPhoneNumber);
   const displayName = contact ? contact.displayName : formatPhoneInternational({ phone_number: targetPhoneNumber } as TUser);
   const peerAvatarFromCallData = activeCall.isCaller ? activeCall.calleeAvatar : activeCall.callerAvatar;
@@ -111,6 +113,8 @@ export const AudioCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         return strings.reconnecting || 'Reconnecting...';
       case 'BUSY':
         return strings.user_busy || 'User Busy';
+      case 'REJECTED':
+        return strings.call_rejected || 'Call Declined';
       case 'FAILED':
         return strings.call_failed || 'Call Failed';
       case 'ENDED':
@@ -209,78 +213,126 @@ export const AudioCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
 
       {/* Bottom Action Controls */}
       <View style={styles.bottomControlsSection}>
-        <View style={styles.actionGridRow}>
-          {/* Mute Button */}
-          <View style={styles.actionItem}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.actionCircleBtn,
-                {
-                  backgroundColor: activeCall.isMuted
-                    ? activeBtnBg
-                    : inactiveBtnBg,
-                  borderColor: activeCall.isMuted
-                    ? activeBtnBg
-                    : inactiveBtnBorder,
-                },
-                pressed && { opacity: 0.8 },
-              ]}
-              onPress={() => callManager.toggleMute()}
-            >
-              <IconApp
-                pack="MC"
-                name={activeCall.isMuted ? 'microphone-off' : 'microphone'}
-                size={26}
-                color={activeCall.isMuted ? activeBtnFg : inactiveBtnIconColor}
-              />
-            </Pressable>
-            <Text style={[styles.actionLabel, { color: textColor }]}>
-              {activeCall.isMuted ? strings.unmute || 'Unmute' : strings.mute || 'Mute'}
-            </Text>
-          </View>
+        {activeCall.status === 'INCOMING_RINGING' ? (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', paddingHorizontal: 30, alignItems: 'center' }}>
+            {/* Decline Call */}
+            <View style={styles.actionItem}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.endCallRedCircle,
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={() => {
+                  callSoundManager.stopRingtone();
+                  callManager.rejectCall();
+                  if (navigation.canGoBack()) {
+                    navigation.goBack();
+                  }
+                }}
+              >
+                <IconApp pack="MC" name="phone-hangup" size={34} color="#FFFFFF" />
+              </Pressable>
+              <Text style={[styles.actionLabel, { color: textColor }]}>
+                {strings.decline || 'Decline'}
+              </Text>
+            </View>
 
-          {/* Speaker Button */}
-          <View style={styles.actionItem}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.actionCircleBtn,
-                {
-                  backgroundColor: activeCall.isSpeaker
-                    ? activeBtnBg
-                    : inactiveBtnBg,
-                  borderColor: activeCall.isSpeaker
-                    ? activeBtnBg
-                    : inactiveBtnBorder,
-                },
-                pressed && { opacity: 0.8 },
-              ]}
-              onPress={() => callManager.toggleSpeaker()}
-            >
-              <IconApp
-                pack="MC"
-                name={activeCall.isSpeaker ? 'volume-high' : 'volume-medium'}
-                size={26}
-                color={activeCall.isSpeaker ? activeBtnFg : inactiveBtnIconColor}
-              />
-            </Pressable>
-            <Text style={[styles.actionLabel, { color: textColor }]}>
-              {activeCall.isSpeaker ? strings.speaker || 'Speaker' : strings.earpiece || 'Earpiece'}
-            </Text>
+            {/* Accept Call */}
+            <View style={styles.actionItem}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.endCallRedCircle,
+                  { backgroundColor: '#34C759', shadowColor: '#34C759' },
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={() => {
+                  callSoundManager.stopRingtone();
+                  callManager.acceptCall();
+                }}
+              >
+                <IconApp pack="MC" name="phone" size={34} color="#FFFFFF" />
+              </Pressable>
+              <Text style={[styles.actionLabel, { color: textColor }]}>
+                {strings.accept || 'Accept'}
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : (
+          <>
+            <View style={styles.actionGridRow}>
+              {/* Mute Button */}
+              <View style={styles.actionItem}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionCircleBtn,
+                    {
+                      backgroundColor: activeCall.isMuted
+                        ? activeBtnBg
+                        : inactiveBtnBg,
+                      borderColor: activeCall.isMuted
+                        ? activeBtnBg
+                        : inactiveBtnBorder,
+                    },
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={() => callManager.toggleMute()}
+                >
+                  <IconApp
+                    pack="MC"
+                    name={activeCall.isMuted ? 'microphone-off' : 'microphone'}
+                    size={26}
+                    color={activeCall.isMuted ? activeBtnFg : inactiveBtnIconColor}
+                  />
+                </Pressable>
+                <Text style={[styles.actionLabel, { color: textColor }]}>
+                  {activeCall.isMuted ? strings.unmute || 'Unmute' : strings.mute || 'Mute'}
+                </Text>
+              </View>
 
-        {/* End Call Red Circle Button */}
-        <View style={styles.endCallWrapper}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.endCallRedCircle,
-              pressed && { opacity: 0.85 },
-            ]}
-            onPress={handleEndCall}
-          >
-            <IconApp pack="MC" name="phone-hangup" size={32} color="#FFFFFF" />
-          </Pressable>
-        </View>
+              {/* Speaker Button */}
+              <View style={styles.actionItem}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionCircleBtn,
+                    {
+                      backgroundColor: activeCall.isSpeaker
+                        ? activeBtnBg
+                        : inactiveBtnBg,
+                      borderColor: activeCall.isSpeaker
+                        ? activeBtnBg
+                        : inactiveBtnBorder,
+                    },
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={() => callManager.toggleSpeaker()}
+                >
+                  <IconApp
+                    pack="MC"
+                    name={activeCall.isSpeaker ? 'volume-high' : 'volume-medium'}
+                    size={26}
+                    color={activeCall.isSpeaker ? activeBtnFg : inactiveBtnIconColor}
+                  />
+                </Pressable>
+                <Text style={[styles.actionLabel, { color: textColor }]}>
+                  {activeCall.isSpeaker ? strings.speaker || 'Speaker' : strings.earpiece || 'Earpiece'}
+                </Text>
+              </View>
+            </View>
+
+            {/* End Call Red Circle Button */}
+            <View style={styles.endCallWrapper}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.endCallRedCircle,
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={handleEndCall}
+              >
+                <IconApp pack="MC" name="phone-hangup" size={32} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   </AnimatedReanimated.View>

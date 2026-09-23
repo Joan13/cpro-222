@@ -11,7 +11,8 @@ import { strings } from '../../lang/lang';
 import { media_url, formatPhoneInternational } from '../../../GlobalVariables';
 import { TUser } from '../../types/types';
 import { useProximity } from '../../components/hooks/useProximity';
-import { useObject } from '@realm/react';
+import { callSoundManager } from '../../services/call/CallSoundManager';
+import { useRealm } from '@realm/react';
 import { UserContacts } from '../../store/database/Models';
 import AnimatedReanimated, {
   useSharedValue,
@@ -89,7 +90,7 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
       if (data) {
         lastCallDataRef.current = data;
       }
-      if (!data || data.status === 'ENDED' || data.status === 'FAILED' || data.status === 'BUSY') {
+      if (!data || data.status === 'ENDED' || data.status === 'FAILED' || data.status === 'BUSY' || data.status === 'REJECTED') {
         if (!timer) {
           timer = setTimeout(() => {
             if (navigation.canGoBack()) {
@@ -112,7 +113,8 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   }
 
   const targetPhoneNumber = activeCall.isCaller ? activeCall.calleeId : activeCall.callerId;
-  const realmContact = useObject(UserContacts, targetPhoneNumber || '');
+  const realm = useRealm();
+  const realmContact = targetPhoneNumber ? realm.objects<UserContacts>('UserContacts').filtered('phone_number == $0', targetPhoneNumber)[0] : null;
   const contact = contacts.find((c) => c.phoneNumber === targetPhoneNumber);
   const displayName = contact ? contact.displayName : formatPhoneInternational({ phone_number: targetPhoneNumber } as TUser);
   const peerAvatarFromCallData = activeCall.isCaller ? activeCall.calleeAvatar : activeCall.callerAvatar;
@@ -153,6 +155,8 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         return strings.reconnecting || 'Reconnecting...';
       case 'BUSY':
         return strings.user_busy || 'User Busy';
+      case 'REJECTED':
+        return strings.call_rejected || 'Call Declined';
       case 'FAILED':
         return strings.call_failed || 'Call Failed';
       case 'ENDED':
@@ -274,77 +278,106 @@ export const VideoCallScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         pointerEvents={areControlsVisible ? 'auto' : 'none'}
         style={[styles.overlayFooter, { opacity: controlsOpacity }]}
       >
-        <View style={styles.controlsGlassCard}>
-          {/* Mute Microphone */}
-          <Pressable
-            style={[
-              styles.controlBtn,
-              activeCall.isMuted
-                ? { backgroundColor: activeBtnBg, borderColor: activeBtnBg }
-                : { backgroundColor: 'rgba(255, 255, 255, 0.18)' },
-            ]}
-            onPress={() => callManager.toggleMute()}
-          >
-            <IconApp
-              pack="MC"
-              name={activeCall.isMuted ? 'microphone-off' : 'microphone'}
-              size={24}
-              color={activeCall.isMuted ? activeBtnFg : '#FFFFFF'}
-            />
-          </Pressable>
+        {activeCall.status === 'INCOMING_RINGING' ? (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', paddingHorizontal: 40, alignItems: 'center' }}>
+            {/* Decline Call */}
+            <Pressable
+              style={[styles.hangupBtn, { width: 68, height: 68, borderRadius: 34 }]}
+              onPress={() => {
+                callSoundManager.stopRingtone();
+                callManager.rejectCall();
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                }
+              }}
+            >
+              <IconApp pack="MC" name="phone-hangup" size={32} color="#FFFFFF" />
+            </Pressable>
 
-          {/* Toggle Video Camera */}
-          <Pressable
-            style={[
-              styles.controlBtn,
-              activeCall.isCameraOff
-                ? { backgroundColor: activeBtnBg, borderColor: activeBtnBg }
-                : { backgroundColor: 'rgba(255, 255, 255, 0.18)' },
-            ]}
-            onPress={() => callManager.toggleCamera()}
-          >
-            <IconApp
-              pack="MC"
-              name={activeCall.isCameraOff ? 'camera-off' : 'camera'}
-              size={24}
-              color={activeCall.isCameraOff ? activeBtnFg : '#FFFFFF'}
-            />
-          </Pressable>
+            {/* Accept Call */}
+            <Pressable
+              style={[styles.hangupBtn, { backgroundColor: '#34C759', width: 68, height: 68, borderRadius: 34 }]}
+              onPress={() => {
+                callSoundManager.stopRingtone();
+                callManager.acceptCall();
+              }}
+            >
+              <IconApp pack="MC" name="video" size={32} color="#FFFFFF" />
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.controlsGlassCard}>
+            {/* Mute Microphone */}
+            <Pressable
+              style={[
+                styles.controlBtn,
+                activeCall.isMuted
+                  ? { backgroundColor: activeBtnBg, borderColor: activeBtnBg }
+                  : { backgroundColor: 'rgba(255, 255, 255, 0.18)' },
+              ]}
+              onPress={() => callManager.toggleMute()}
+            >
+              <IconApp
+                pack="MC"
+                name={activeCall.isMuted ? 'microphone-off' : 'microphone'}
+                size={24}
+                color={activeCall.isMuted ? activeBtnFg : '#FFFFFF'}
+              />
+            </Pressable>
 
-          {/* Switch Front/Back Camera */}
-          <Pressable
-            style={styles.controlBtn}
-            onPress={() => callManager.switchCamera()}
-          >
-            <IconApp pack="MC" name="camera-flip" size={24} color="#FFFFFF" />
-          </Pressable>
+            {/* Toggle Video Camera */}
+            <Pressable
+              style={[
+                styles.controlBtn,
+                activeCall.isCameraOff
+                  ? { backgroundColor: activeBtnBg, borderColor: activeBtnBg }
+                  : { backgroundColor: 'rgba(255, 255, 255, 0.18)' },
+              ]}
+              onPress={() => callManager.toggleCamera()}
+            >
+              <IconApp
+                pack="MC"
+                name={activeCall.isCameraOff ? 'camera-off' : 'camera'}
+                size={24}
+                color={activeCall.isCameraOff ? activeBtnFg : '#FFFFFF'}
+              />
+            </Pressable>
 
-          {/* Speaker Button */}
-          <Pressable
-            style={[
-              styles.controlBtn,
-              activeCall.isSpeaker
-                ? { backgroundColor: activeBtnBg, borderColor: activeBtnBg }
-                : { backgroundColor: 'rgba(255, 255, 255, 0.18)' },
-            ]}
-            onPress={() => callManager.toggleSpeaker()}
-          >
-            <IconApp
-              pack="MC"
-              name={activeCall.isSpeaker ? 'volume-high' : 'volume-medium'}
-              size={24}
-              color={activeCall.isSpeaker ? activeBtnFg : '#FFFFFF'}
-            />
-          </Pressable>
+            {/* Switch Front/Back Camera */}
+            <Pressable
+              style={styles.controlBtn}
+              onPress={() => callManager.switchCamera()}
+            >
+              <IconApp pack="MC" name="camera-flip" size={24} color="#FFFFFF" />
+            </Pressable>
 
-          {/* Hangup Red Button */}
-          <Pressable
-            style={styles.hangupBtn}
-            onPress={handleEndCall}
-          >
-            <IconApp pack="MC" name="phone-hangup" size={26} color="#FFFFFF" />
-          </Pressable>
-        </View>
+            {/* Speaker Button */}
+            <Pressable
+              style={[
+                styles.controlBtn,
+                activeCall.isSpeaker
+                  ? { backgroundColor: activeBtnBg, borderColor: activeBtnBg }
+                  : { backgroundColor: 'rgba(255, 255, 255, 0.18)' },
+              ]}
+              onPress={() => callManager.toggleSpeaker()}
+            >
+              <IconApp
+                pack="MC"
+                name={activeCall.isSpeaker ? 'volume-high' : 'volume-medium'}
+                size={24}
+                color={activeCall.isSpeaker ? activeBtnFg : '#FFFFFF'}
+              />
+            </Pressable>
+
+            {/* Hangup Red Button */}
+            <Pressable
+              style={styles.hangupBtn}
+              onPress={handleEndCall}
+            >
+              <IconApp pack="MC" name="phone-hangup" size={26} color="#FFFFFF" />
+            </Pressable>
+          </View>
+        )}
       </Animated.View>
     </Pressable>
   </AnimatedReanimated.View>

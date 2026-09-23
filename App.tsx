@@ -28,7 +28,7 @@ import messaging from '@react-native-firebase/messaging';
 
 // import { Chats_model, Chat_status, Chat_type, Groups, Group_members, Messages_groups, Messages_users, User } from './src/database/models';
 import { KeyboardRegistry } from 'react-native-ui-lib/keyboard';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAppDispatch, useAppSelector } from './src/store/app/hooks';
 import { setTheme } from './src/store/reducers/themeSlice';
@@ -40,7 +40,7 @@ import { sweepInactiveBusinessData } from './src/utils/realmSweeper';
 import Signup from './src/pages/signup/Signup';
 import Themes, { themes, isThemeAligned } from './src/pages/app/Themes';
 import * as Contacts from 'expo-contacts';
-import { contactNameByPhoneRegistry, getDefaultCallingCode, processPhoneContacts } from './src/services/ContactsService';
+import { contactNameByPhoneRegistry, getDefaultCallingCode, processPhoneContacts, resolveContactDisplayName } from './src/services/ContactsService';
 import { setRawContacts, setTitle, setUserTypingStatus } from './src/store/reducers/appSlice';
 import HomeRootStack from './src/pages/app/HomeRootStack';
 // import HeaderLeftHome from './src/components/headers/HeaderHome';
@@ -57,9 +57,9 @@ import Inbox from './src/pages/chat/Inbox';
 import HeaderChat from './src/components/headers/HeaderInbox';
 import { useQuery, useRealm } from '@realm/react';
 import * as RootNavigation from './src/services/Navigation_ref';
-import { BusinessItemsSale, BusinessUsers, ItemPrices, UserBusinessArticles, UserBusinesses, UserChats, UserContacts, UsersMessages, Payments, Reservations } from './src/store/database/Models';
+import { BusinessItemsSale, BusinessUsers, ItemPrices, UserBusinessArticles, UserBusinesses, UserChats, UserContacts, UsersMessages, Payments, Reservations, CallHistory } from './src/store/database/Models';
 // import SocketActivity from './src/services/socket';
-import { navigationRef } from './src/services/Navigation_ref';
+import { navigationRef, flushPendingNavigation, navigateWithRetry } from './src/services/Navigation_ref';
 import RNBootSplash from 'react-native-bootsplash';
 import moment from 'moment';
 import SettingsYambi from './src/pages/app/SettingsYambi';
@@ -70,6 +70,7 @@ import CallDetailScreen from './src/pages/call/Call';
 import IncomingCallOverlay from './src/components/call/IncomingCallOverlay';
 import ActiveCallFloatingPIP from './src/components/call/ActiveCallFloatingPIP';
 import { callManager } from './src/services/call/CallManager';
+import { callSoundManager } from './src/services/call/CallSoundManager';
 import AboutYambi from './src/pages/app/AboutYambi';
 import MakeDonation from './src/pages/app/MakeDonation';
 import AddBusinessSubscription from './src/pages/business/AddBusinessSubscription';
@@ -87,7 +88,7 @@ import ViewFullInboxImage from './src/components/chat/ViewFullInboxImage';
 // import HeaderRightInbox from './src/components/headers/HaderRightInbox';
 // import YambiEmojiKeyboard from './src/components/app/YambiEmojiKeyboard';
 import NewBusinesses from './src/pages/business/NewBusiness';
-import { remote_host, removeDuplicateNumbers, removeWhiteSpaces, SocketApp, isRemoteAppVersionNewer } from './GlobalVariables';
+import { remote_host, removeDuplicateNumbers, removeWhiteSpaces, SocketApp, isRemoteAppVersionNewer, formatPhoneInternational } from './GlobalVariables';
 import HeaderHome from './src/components/headers/HeaderHome';
 import HeaderSettings from './src/components/headers/HeaderSettings';
 import Business from './src/pages/business/Business';
@@ -143,7 +144,7 @@ import {
 } from 'expo-notifications';
 // handleQuickReply and handleMarkAsReadAction are now handled in index.tsx at the top level
 import ViewPhoto from './src/pages/app/ViewPhoto';
-import { setAddBusinessBadge, setRemoveBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace, setThemeSet } from './src/store/reducers/persistedAppSlice';
+import { setAddBusinessBadge, setRemoveBusinessBadge, setDefaultMessageSettingsData, setLanguageApp, setRawContactsPersisted, setTabVisibleMarketplace, setThemeSet, setCallsBadge } from './src/store/reducers/persistedAppSlice';
 import ContactUs from './src/pages/app/ContactUs';
 import HeaderRightInbox from './src/components/headers/HeaderRightInbox';
 import HeaderInbox from './src/components/headers/HeaderInbox';
@@ -226,7 +227,7 @@ Notifications.setNotificationHandler({
     },
 });
 
-// Configure Android High-Priority Ongoing Call Channel
+// Configure Android Notification Channels
 if (Platform.OS === 'android') {
     Notifications.deleteNotificationChannelAsync('incoming_calls').catch(() => { });
     Notifications.setNotificationChannelAsync('incoming_calls', {
@@ -238,37 +239,111 @@ if (Platform.OS === 'android') {
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         bypassDnd: true,
     });
+    Notifications.setNotificationChannelAsync('chat_messages', {
+        name: 'Chat Messages',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#007AFF',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+    });
+    Notifications.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#007AFF',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+    });
 }
 
-export const setupIncomingCallNotificationCategory = () => {
-    Notifications.setNotificationCategoryAsync('incoming_call_category', [
+export const setupIncomingCallNotificationCategory = async () => {
+    try {
+        await Notifications.setNotificationCategoryAsync('incoming_call_category', [
+            {
+                identifier: 'accept_call',
+                buttonTitle: strings.accept || 'Accept',
+                options: {
+                    opensAppToForeground: true,
+                },
+            },
+            {
+                identifier: 'decline_call',
+                buttonTitle: strings.decline || 'Decline',
+                options: {
+                    opensAppToForeground: true,
+                    isDestructive: true,
+                },
+            },
+        ]);
+    } catch (err) {
+        console.log('Error setting notification category:', err);
+    }
+};
+
+setupIncomingCallNotificationCategory();
+
+export const setupMessageNotificationCategory = () => {
+    Notifications.setNotificationCategoryAsync('message_notification', [
         {
-            identifier: 'accept_call',
-            buttonTitle: strings.accept || 'Accept',
+            identifier: 'reply',
+            buttonTitle: (strings as any).reply || 'Reply',
             options: {
-                opensAppToForeground: true,
+                opensAppToForeground: false,
+            },
+            textInput: {
+                submitButtonTitle: (strings as any).send || 'Send',
+                placeholder: (strings as any).type_reply || 'Type a reply...',
             },
         },
         {
-            identifier: 'decline_call',
-            buttonTitle: strings.decline || 'Decline',
+            identifier: 'mark_as_read',
+            buttonTitle: (strings as any).mark_as_read || 'Mark as read',
             options: {
                 opensAppToForeground: false,
-                isDestructive: true,
             },
         },
     ]).catch((err) => console.log('Error setting notification category:', err));
 };
 
-setupIncomingCallNotificationCategory();
+setupMessageNotificationCategory();
 
-export const displayNotification = async (notification: any) => {
+// Resolves connected user even when app is launched in background/closed state
+export const getConnectedUser = async (): Promise<TUser | null> => {
     const state = store.getState();
     const userId = state.user_data?.user_id;
     const phoneNumber = state.user_data?.phone_number;
 
+    if (userId && userId !== "0" && phoneNumber) {
+        return state.user_data;
+    }
+
+    // In closed/killed state, Redux store in the background task has not rehydrated yet
+    try {
+        const rawRoot = await AsyncStorage.getItem('persist:root');
+        if (rawRoot) {
+            const parsedRoot = JSON.parse(rawRoot);
+            if (parsedRoot.user_data) {
+                const userData = typeof parsedRoot.user_data === 'string'
+                    ? JSON.parse(parsedRoot.user_data)
+                    : parsedRoot.user_data;
+                if (userData?.user_id && userData.user_id !== "0" && userData.phone_number) {
+                    return userData;
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Error reading user_data from AsyncStorage in background:", e);
+    }
+
+    return null;
+};
+
+export const displayNotification = async (notification: any) => {
+    const user = await getConnectedUser();
+
     // Do not show notifications if user is disconnected/logged out
-    if (!userId || userId === "0" || !phoneNumber) {
+    if (!user || user.user_id === "0" || !user.phone_number) {
         return;
     }
 
@@ -279,10 +354,18 @@ export const displayNotification = async (notification: any) => {
             return;
         }
 
-        setupIncomingCallNotificationCategory();
+        await setupIncomingCallNotificationCategory();
+
+        const callerPhone =
+            data.callerPhoneNumber ||
+            data.callerPhone ||
+            data.callerId ||
+            data.user ||
+            '';
+        const localCallerName = callerPhone ? await resolveContactDisplayName(callerPhone) : null;
 
         const notificationId = `call_invite_${data.callId || Date.now()}`;
-        const title = data.callerName ? `${data.callerName}` : (strings.incoming_call || 'Incoming Call');
+        const title = localCallerName || (data.callerName ? `${data.callerName}` : (strings.incoming_call || 'Incoming Call'));
         const body = data.callType === 'video'
             ? (strings.incoming_video_call || strings.video_call || 'Incoming Video Call')
             : (strings.incoming_audio_call || strings.audio_call || 'Incoming Audio Call');
@@ -309,18 +392,6 @@ export const displayNotification = async (notification: any) => {
         return;
     }
 
-    const title =
-        data.title ??
-        notification?.notification?.title ??
-        '';
-    const rawBody = data.body ?? notification?.notification?.body ?? '';
-    let body =
-        rawBody === 'Audio'
-            ? strings.voice_note
-            : rawBody === 'photo'
-                ? strings.picture
-                : rawBody;
-
     // Extract the token and message data of the current incoming message if present
     let currentToken: string | null = null;
     let parsedMsg: any = null;
@@ -335,6 +406,43 @@ export const displayNotification = async (notification: any) => {
             }
         } catch (_e) { }
     }
+
+    // Extract sender phone number to resolve contact name from device address book
+    let senderPhone =
+        data.user ||
+        parsedMsg?.sender ||
+        data.sender ||
+        data.phone_number ||
+        data.phoneNumber ||
+        data.callerPhoneNumber ||
+        data.callerPhone ||
+        data.callerId ||
+        '';
+    if (typeof senderPhone === 'object' && senderPhone?.phone_number) {
+        senderPhone = senderPhone.phone_number;
+    }
+
+    const localContactName = senderPhone ? await resolveContactDisplayName(senderPhone) : null;
+
+    const serverTitle =
+        data.title ??
+        notification?.notification?.title ??
+        '';
+
+    const title =
+        localContactName ||
+        serverTitle ||
+        (senderPhone ? formatPhoneInternational({ phone_number: senderPhone } as any) || senderPhone : '');
+
+    const rawBody = data.body ?? notification?.notification?.body ?? '';
+    let body =
+        data.type === 'MISSED_CALL'
+            ? (data.callType === 'video' ? ((strings as any).missed_video_call || strings.missed_call || 'Missed Video Call') : (strings.missed_call || 'Missed Call'))
+            : rawBody === 'Audio'
+                ? strings.voice_note
+                : rawBody === 'photo'
+                    ? strings.picture
+                    : rawBody;
 
     if (parsedMsg) {
         if (parsedMsg.message_type === 5 || parsedMsg.message_type === 0) {
@@ -355,6 +463,12 @@ export const displayNotification = async (notification: any) => {
     }
 
     if (!title && !body) {
+        return;
+    }
+
+    // Do not show notification if app is in foreground and user is already looking at this chat
+    const currentActiveChat = store.getState()?.app?.current_user;
+    if (AppState.currentState === 'active' && data.screen === 'Inbox' && currentActiveChat === data.user) {
         return;
     }
 
@@ -384,6 +498,8 @@ export const displayNotification = async (notification: any) => {
             }
         } catch (_e) { }
 
+        setupMessageNotificationCategory();
+
         await Notifications.scheduleNotificationAsync({
             identifier,
             content: {
@@ -395,7 +511,9 @@ export const displayNotification = async (notification: any) => {
                 },
                 categoryIdentifier: 'message_notification',
             },
-            trigger: null,
+            trigger: {
+                channelId: 'chat_messages',
+            } as any,
         });
     } else {
         // Non-chat notifications (business, expenses, etc.)
@@ -405,7 +523,9 @@ export const displayNotification = async (notification: any) => {
                 body: body || '',
                 data,
             },
-            trigger: null,
+            trigger: {
+                channelId: 'default',
+            } as any,
         });
     }
 };
@@ -1502,6 +1622,69 @@ const Yambi = ({ navigation }: NavProps) => {
             NewMessagesInsert(msgs);
         });
 
+        // Receive missed calls synchronized from server
+        SocketApp.on('missedCalls' + user_data.phone_number, async (missedCalls: any[]) => {
+            if (!Array.isArray(missedCalls) || missedCalls.length === 0) return;
+
+            let newMissedCount = 0;
+            for (const call of missedCalls) {
+                const callId = call.callId || call._id;
+                if (!callId) continue;
+
+                const historyId = `hist_${callId}`;
+                const existing = realm.objectForPrimaryKey('CallHistory', historyId);
+                if (!existing) {
+                    try {
+                        realm.write(() => {
+                            realm.create(
+                                'CallHistory',
+                                {
+                                    _id: historyId,
+                                    callId: String(callId),
+                                    callerId: call.caller,
+                                    calleeId: call.receiver,
+                                    callerName: call.callerName || call.caller,
+                                    callerAvatar: call.callerAvatar || '',
+                                    calleeName: '',
+                                    calleeAvatar: '',
+                                    type: call.call_type || 'audio',
+                                    direction: 'missed',
+                                    status: 'MISSED',
+                                    durationSeconds: 0,
+                                    createdAt: call.createdAt || new Date().toISOString(),
+                                    timestamp: new Date(call.createdAt || Date.now()).getTime(),
+                                },
+                                Realm.UpdateMode.Modified
+                            );
+                        });
+                        newMissedCount++;
+
+                        const bodyText = call.call_type === 'video'
+                            ? ((strings as any).missed_video_call || strings.missed_call || 'Missed Video Call')
+                            : (strings.missed_call || 'Missed Call');
+
+                        displayNotification({
+                            data: {
+                                title: call.callerName || call.caller,
+                                body: bodyText,
+                                user: call.caller,
+                                callerPhoneNumber: call.caller,
+                                screen: 'CallHistory',
+                                type: 'MISSED_CALL',
+                            }
+                        });
+                    } catch (e) {
+                        console.error('Error saving missed call to Realm:', e);
+                    }
+                }
+            }
+
+            if (newMissedCount > 0) {
+                const currentBadge = store.getState().persisted_app?.calls_badge || 0;
+                dispatch(setCallsBadge(currentBadge + newMissedCount));
+            }
+        });
+
 
 
         SocketApp.on("salesChanged" + user_data.phone_number, sals => {
@@ -2433,28 +2616,72 @@ const Yambi = ({ navigation }: NavProps) => {
         //     console.log('Notification received in foreground:', notification);
         //     });
 
+        // Unified call notification response handler (handles both cold-start and runtime responses)
+        const handleCallNotificationResponse = async (notificationData: any, actionIdentifier: string, notificationId?: string) => {
+            if (!notificationData) return false;
+
+            const isCallInvite = notificationData.type === 'CALL_INVITE' || notificationData.screen === 'AudioCallScreen' || notificationData.screen === 'VideoCallScreen';
+            if (!isCallInvite) return false;
+
+            console.log('[App.tsx] Processing call notification response:', { actionIdentifier, callId: notificationData.callId });
+
+            if (notificationId) {
+                Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+            }
+
+            callManager.handleIncomingInviteFromNotification(notificationData);
+
+            if (actionIdentifier === 'accept_call') {
+                const callType = notificationData?.callType || notificationData?.type || 'audio';
+                const targetScreen = callType === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
+
+                navigateWithRetry(targetScreen as any, {});
+                await callManager.acceptCall();
+                return true;
+            } else if (actionIdentifier === 'decline_call') {
+                callSoundManager.stopRingtone();
+                callManager.rejectCall(notificationData);
+                Notifications.dismissAllNotificationsAsync().catch(() => {});
+                try {
+                    const callId = notificationData?.callId;
+                    const callerId = notificationData?.callerId || notificationData?.callerPhone || notificationData?.callerPhoneNumber || notificationData?.user;
+                    const calleeId = notificationData?.calleeId || notificationData?.calleePhone || notificationData?.calleePhoneNumber || user_data?.phone_number;
+                    if (callId) {
+                        axios.post(`${remote_host}/yambi/API/reject_call`, {
+                            callId,
+                            callerId,
+                            calleeId,
+                        }).catch(() => {});
+                    }
+                } catch (e) {}
+                return true;
+            } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER || !actionIdentifier) {
+                const callType = notificationData?.callType || notificationData?.type || 'audio';
+                const targetScreen = callType === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
+                navigateWithRetry(targetScreen as any, {});
+                return true;
+            }
+            return false;
+        };
+
         // Check for cold-start initial call notification response
         Notifications.getLastNotificationResponseAsync().then(async (initialResponse) => {
             if (initialResponse) {
                 const notificationData = initialResponse.notification.request.content.data;
                 const actionIdentifier = initialResponse.actionIdentifier;
+                const notificationId = initialResponse.notification.request.identifier;
 
-                if (notificationData?.type === 'CALL_INVITE') {
-                    console.log('[App.tsx] Cold start call notification response detected:', notificationData, actionIdentifier);
-                    callManager.handleIncomingInviteFromNotification(notificationData);
-
-                    if (actionIdentifier === 'accept_call') {
-                        await callManager.acceptCall();
-                        const targetScreen = notificationData?.callType === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
-                        setTimeout(() => {
-                            if (navigationRef.current) {
-                                RootNavigation.navigate(targetScreen, {});
+                const handled = await handleCallNotificationResponse(notificationData, actionIdentifier, notificationId);
+                if (!handled) {
+                    if (notificationData?.type === 'MISSED_CALL' || notificationData?.screen === 'CallHistory') {
+                        const navigateWithRetry = (retries = 0) => {
+                            if (navigationRef.isReady()) {
+                                RootNavigation.navigate('CallHistory', {});
+                            } else if (retries < 20) {
+                                setTimeout(() => navigateWithRetry(retries + 1), 100);
                             }
-                        }, 600);
-                    } else if (actionIdentifier === 'decline_call') {
-                        callManager.rejectCall();
-                    } else {
-                        // Tapped notification body on cold start: IncomingCallOverlay renders in app automatically
+                        };
+                        navigateWithRetry();
                     }
                 }
             }
@@ -2464,37 +2691,21 @@ const Yambi = ({ navigation }: NavProps) => {
             const notificationData = response.notification.request.content.data;
             const screen = notificationData?.screen;
             const actionIdentifier = response.actionIdentifier;
+            const notificationId = response.notification.request.identifier;
 
             // Quick Reply and Mark as Read actions are handled at the top level in index.tsx
-            // so they work immediately without waiting for the React tree to mount
             if (actionIdentifier === 'reply' || actionIdentifier === 'mark_as_read') {
                 return;
             }
 
             // Handle incoming call notification tap or Accept/Decline action buttons
-            if (notificationData?.type === 'CALL_INVITE' || screen === 'AudioCallScreen' || screen === 'VideoCallScreen') {
-                const notificationId = response.notification.request.identifier;
+            const handled = await handleCallNotificationResponse(notificationData, actionIdentifier, notificationId);
+            if (handled) return;
 
-                callManager.handleIncomingInviteFromNotification(notificationData);
-
-                if (actionIdentifier === 'accept_call') {
-                    if (notificationId) {
-                        Notifications.dismissNotificationAsync(notificationId).catch(() => { });
-                    }
-                    await callManager.acceptCall();
-                    if (notificationData?.callType === 'audio' || notificationData?.type === 'audio') {
-                        RootNavigation.navigate('AudioCallScreen', {});
-                    } else {
-                        RootNavigation.navigate('VideoCallScreen', {});
-                    }
-                } else if (actionIdentifier === 'decline_call') {
-                    if (notificationId) {
-                        Notifications.dismissNotificationAsync(notificationId).catch(() => { });
-                    }
-                    callManager.rejectCall();
-                } else {
-                    // Notification body tapped: Simply open app & show IncomingCallOverlay for user action
-                    // Do NOT call acceptCall() yet! The notification remains pinned until Accept or Decline is clicked.
+            // Handle missed call notification
+            if (screen === 'CallHistory' || notificationData?.type === 'MISSED_CALL') {
+                if (navigationRef.isReady()) {
+                    RootNavigation.navigate('CallHistory', {});
                 }
                 return;
             }
@@ -3029,7 +3240,10 @@ const Yambi = ({ navigation }: NavProps) => {
                 <AudioPlayerProvider>
                     <NavigationContainer
                         linking={linking}
-                        onReady={() => RNBootSplash.hide({ fade: true })}
+                        onReady={() => {
+                            RNBootSplash.hide({ fade: true });
+                            flushPendingNavigation();
+                        }}
                         ref={navigationRef}>
                         <Stack.Navigator
                             id="RootStack"

@@ -11,7 +11,9 @@ import { TUser } from '../../types/types';
 
 import AnimatedReanimated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { useObject } from '@realm/react';
+import { callSoundManager } from '../../services/call/CallSoundManager';
+import { navigateWithRetry } from '../../services/Navigation_ref';
+import { useRealm } from '@realm/react';
 import { UserContacts } from '../../store/database/Models';
 
 export const IncomingCallOverlay: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -51,7 +53,8 @@ export const IncomingCallOverlay: React.FC<{ navigation: any }> = ({ navigation 
   }, [navigation]);
 
   const callerPhoneNumber = callData?.callerId || '';
-  const realmContact = useObject(UserContacts, callerPhoneNumber);
+  const realm = useRealm();
+  const realmContact = callerPhoneNumber ? realm.objects<UserContacts>('UserContacts').filtered('phone_number == $0', callerPhoneNumber)[0] : null;
 
   const isRinging = callData && (callData.status === 'INCOMING_RINGING' || (isAccepting && callData.status === 'CONNECTING'));
 
@@ -83,16 +86,15 @@ export const IncomingCallOverlay: React.FC<{ navigation: any }> = ({ navigation 
 
   const handleAccept = async () => {
     setIsAccepting(true);
-    if (callData.type === 'audio') {
-      navigation.navigate('AudioCallScreen');
-    } else {
-      navigation.navigate('VideoCallScreen');
-    }
+    callSoundManager.stopRingtone();
+    const target = callData.type === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
+    navigateWithRetry(target as any, {});
     await callManager.acceptCall();
   };
 
   const handleDecline = () => {
     setIsAccepting(false);
+    callSoundManager.stopRingtone();
     callManager.rejectCall();
   };
 

@@ -57,21 +57,24 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
     );
 
     const isOutgoing = item.direction === 'outgoing' || item.callerId === myPhone;
+    const isRejected = item.direction === 'rejected' || item.status === 'REJECTED';
     const isMissed =
-        item.direction === 'missed' ||
+        (item.direction === 'missed' ||
         item.status === 'MISSED' ||
-        item.status === 'REJECTED' ||
-        (item.durationSeconds === 0 && !isOutgoing);
+        (item.durationSeconds === 0 && !isOutgoing)) && !isRejected;
 
     const iconName = isOutgoing ? 'arrow-up-right' : 'arrow-down-left';
     const iconColor = isMissed
         ? theme.colors.error || '#FF3B30'
-        : isOutgoing
-            ? (theme.colors as any).success_color || theme.colors.success || theme.colors.primary || '#34C759'
-            : theme.colors.high_color || '#007AFF';
+        : isRejected
+            ? (theme.colors as any).error || '#FF3B30'
+            : isOutgoing
+                ? (theme.colors as any).success_color || theme.colors.success || theme.colors.primary || '#34C759'
+                : theme.colors.high_color || '#007AFF';
 
     const formatDuration = (secs: number) => {
         if (secs <= 0) {
+            if (isRejected) return strings.call_rejected || 'Declined';
             if (isMissed) return strings.missed || 'Missed';
             return strings.no_answer || 'No answer';
         }

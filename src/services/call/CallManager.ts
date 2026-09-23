@@ -21,7 +21,8 @@ export type CallState =
   | 'ENDING'
   | 'ENDED'
   | 'FAILED'
-  | 'BUSY';
+  | 'BUSY'
+  | 'REJECTED';
 
 export interface ActiveCallData {
   callId: string;
@@ -51,6 +52,7 @@ class CallManager {
   private currentUserName: string = '';
   private currentUserAvatar: string = '';
   private isStartingCall: boolean = false;
+  private isAcceptingCall: boolean = false;
 
   private listeners: Set<CallStateListener> = new Set();
   private durationTimer: any = null;
@@ -92,9 +94,11 @@ class CallManager {
   public ensureInitialized() {
     if (!this.currentUserPhoneNumber) {
       try {
-        const user = store.getState().user_data;
+        const user = store?.getState()?.user_data;
         if (user && user.phone_number) {
           this.init(user.phone_number, user.user_names || user.phone_number, user.user_profile || '');
+        } else if (this.currentCall?.calleeId) {
+          this.init(this.currentCall.calleeId, this.currentCall.calleeName || this.currentCall.calleeId, '');
         }
       } catch (e) {
         console.error('[CallManager] Error ensuring initialization:', e);
@@ -271,25 +275,31 @@ class CallManager {
   public handleIncomingInviteFromNotification(payload: any) {
     if (!payload || !payload.callId) return;
 
-    if (!this.currentUserPhoneNumber && store) {
-      const state = store.getState();
-      const userPhone = state.user_data?.phone_number;
-      const userName = state.user_data?.user_names || userPhone;
-      if (userPhone) {
-        this.init(userPhone, userName, '');
-      }
+    const myPhone =
+      this.currentUserPhoneNumber ||
+      payload.calleeId ||
+      payload.calleePhone ||
+      payload.calleePhoneNumber ||
+      store?.getState()?.user_data?.phone_number ||
+      '';
+
+    if (!this.currentUserPhoneNumber && myPhone) {
+      const userName = store?.getState()?.user_data?.user_names || myPhone;
+      this.init(myPhone, userName, '');
     }
 
-    if (!this.currentCall || this.currentCall.status === 'IDLE' || this.currentCall.status === 'ENDED') {
+    const callerPhone = payload.callerId || payload.callerPhone || payload.callerPhoneNumber || payload.user || '';
+
+    if (!this.currentCall || this.currentCall.status === 'IDLE' || this.currentCall.status === 'ENDED' || this.currentCall.status === 'REJECTED') {
       this.currentCall = {
         callId: payload.callId,
-        callerId: payload.callerId,
-        calleeId: payload.calleeId || this.currentUserPhoneNumber,
-        callerName: payload.callerName || payload.callerId,
-        callerAvatar: payload.callerAvatar,
+        callerId: callerPhone,
+        calleeId: myPhone,
+        callerName: payload.callerName || callerPhone,
+        callerAvatar: payload.callerAvatar || '',
         calleeName: this.currentUserName,
         calleeAvatar: this.currentUserAvatar,
-        type: payload.callType || 'audio',
+        type: payload.callType === 'video' || payload.type === 'video' ? 'video' : 'audio',
         isCaller: false,
         status: 'INCOMING_RINGING',
         durationSeconds: 0,
@@ -366,16 +376,27 @@ class CallManager {
   }
 
   public async acceptCall(): Promise<boolean> {
+    if (this.isAcceptingCall) {
+      console.log('[CallManager] Call is already being accepted, ignoring duplicate invocation');
+      return true;
+    }
     this.ensureInitialized();
-    if (!this.currentCall || this.currentCall.status !== 'INCOMING_RINGING') {
+    if (!this.currentCall) {
+      console.warn('[CallManager] Cannot accept call: No currentCall');
+      return false;
+    }
+    if (this.currentCall.status !== 'INCOMING_RINGING' && this.currentCall.status !== 'CONNECTING') {
+      console.warn(`[CallManager] Cannot accept call: status is ${this.currentCall.status}`);
       return false;
     }
 
+    this.isAcceptingCall = true;
     this.clearRingTimeout();
 
     const hasPermissions = await this.requestCallPermissions(this.currentCall.type);
     if (!hasPermissions) {
       console.warn('[CallManager] Cannot accept call: Permissions not granted');
+      this.isAcceptingCall = false;
       this.rejectCall();
       return false;
     }
@@ -394,30 +415,43 @@ class CallManager {
       callSignaling.sendAccept({
         callId: this.currentCall.callId,
         callerId: this.currentCall.callerId,
-        calleeId: this.currentCall.calleeId,
+        calleeId: this.currentCall.calleeId || this.currentUserPhoneNumber,
       });
 
       this.notifyListeners();
+      this.isAcceptingCall = false;
       return true;
     } catch (error: any) {
       console.error('[CallManager] Error accepting call:', error);
+      this.isAcceptingCall = false;
       this.endCall('FAILED');
       return false;
     }
   }
 
-  public rejectCall() {
-    if (!this.currentCall) return;
+  public rejectCall(fallbackData?: any) {
+    if (!this.currentCall && fallbackData) {
+      this.handleIncomingInviteFromNotification(fallbackData);
+    }
+    if (!this.currentCall) {
+      this.clearRingTimeout();
+      callSoundManager.stopRingtone();
+      callSoundManager.stopSound();
+      Notifications.dismissAllNotificationsAsync().catch(() => {});
+      return;
+    }
 
+    this.ensureInitialized();
     this.clearRingTimeout();
+    callSoundManager.stopRingtone();
 
     callSignaling.sendReject({
       callId: this.currentCall.callId,
       callerId: this.currentCall.callerId,
-      calleeId: this.currentCall.calleeId,
+      calleeId: this.currentCall.calleeId || this.currentUserPhoneNumber,
     });
 
-    this.currentCall.status = 'ENDED';
+    this.currentCall.status = 'REJECTED';
     this.notifyListeners();
     this.cleanupCallState();
   }
@@ -615,7 +649,7 @@ class CallManager {
     if (this.currentCall && this.currentCall.callId === payload.callId) {
       console.log('[CallManager] Call was declined by recipient');
       this.clearRingTimeout();
-      this.currentCall.status = 'ENDED';
+      this.currentCall.status = 'REJECTED';
       this.notifyListeners();
       setTimeout(() => this.cleanupCallState(), 2000);
     }
@@ -698,6 +732,7 @@ class CallManager {
           callId: this.currentCall.callId,
           callerId: this.currentCall.callerId,
           calleeId: this.currentCall.calleeId,
+          duration: this.currentCall.durationSeconds || 0,
         });
       }
     }

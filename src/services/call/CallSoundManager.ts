@@ -64,6 +64,10 @@ class CallSoundManager {
     this.stopAll();
   }
 
+  public stopRingtone() {
+    this.stopAll();
+  }
+
   public stopAll() {
     if (this.activePlayer) {
       try {

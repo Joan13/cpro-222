@@ -351,10 +351,12 @@ export const recordCallHistory = async (callData: any) => {
   try {
     const realm = await openRealmInstance();
     const isCaller = callData.isCaller;
-    let direction: 'outgoing' | 'incoming' | 'missed' = 'outgoing';
+    let direction: 'outgoing' | 'incoming' | 'missed' | 'rejected' = 'outgoing';
     if (!isCaller) {
       if (callData.durationSeconds > 0 || callData.status === 'CONNECTED') {
         direction = 'incoming';
+      } else if (callData.status === 'REJECTED') {
+        direction = 'rejected';
       } else {
         direction = 'missed';
       }
