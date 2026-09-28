@@ -15,6 +15,9 @@
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:replace="android:maxSdkVersion"/>
+  <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
+  <uses-permission android:name="android.permission.MANAGE_OWN_CALLS"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -84,5 +87,28 @@
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
+    <activity
+      android:name="com.yambi.call.IncomingCallActivity"
+      android:showWhenLocked="true"
+      android:turnScreenOn="true"
+      android:showForAllUsers="true"
+      android:excludeFromRecents="true"
+      android:keepScreenOn="true"
+      android:supportsPictureInPicture="true"
+      android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode|smallestScreenSize"
+      android:launchMode="singleTop"
+      android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+      android:exported="true" />
+    <service
+      android:name="com.yambi.call.YambiCallService"
+      android:foregroundServiceType="phoneCall"
+      android:exported="false" />
+    <receiver
+      android:name="com.yambi.call.OngoingCallDismissReceiver"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="com.yambi.call.ACTION_ONGOING_CALL_DISMISSED" />
+      </intent-filter>
+    </receiver>
   </application>
 </manifest>

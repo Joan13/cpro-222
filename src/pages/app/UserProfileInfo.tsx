@@ -37,6 +37,7 @@ import { callManager } from '../../services/call/CallManager';
 const UserProfileInfo = ({ navigation, route }: NavProps) => {
 
      const theme = useAppSelector(state => state.app_theme);
+     const call_active = useAppSelector(state => state.app.call_active);
      const { user } = route.params;
      const dispatch = useAppDispatch();
      const moi = useAppSelector(state => state.user_data);
@@ -280,17 +281,17 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
      };
 
      const handleStartAudioCall = () => {
+          if (call_active) return;
           const contact = raw_contacts.find((c: any) => c.phoneNumber === user_data.phone_number);
           const name = contact ? contact.displayName : (user_data.user_names || formattedPhoneNumber);
           callManager.startCall(user_data.phone_number, 'audio', name, user_data.user_profile || '');
-          navigation.navigate('AudioCallScreen');
      };
 
      const handleStartVideoCall = () => {
+          if (call_active) return;
           const contact = raw_contacts.find((c: any) => c.phoneNumber === user_data.phone_number);
           const name = contact ? contact.displayName : (user_data.user_names || formattedPhoneNumber);
           callManager.startCall(user_data.phone_number, 'video', name, user_data.user_profile || '');
-          navigation.navigate('VideoCallScreen');
      };
 
      return (
@@ -500,8 +501,9 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                    </Pressable>
 
                                    <Pressable
+                                        disabled={call_active}
                                         onPress={handleStartAudioCall}
-                                        style={{ alignItems: 'center' }}
+                                        style={{ alignItems: 'center', opacity: call_active ? 0.35 : 1 }}
                                    >
                                         <View style={{
                                              width: 40,
@@ -518,8 +520,9 @@ const UserProfileInfo = ({ navigation, route }: NavProps) => {
                                    </Pressable>
 
                                    <Pressable
+                                        disabled={call_active}
                                         onPress={handleStartVideoCall}
-                                        style={{ alignItems: 'center' }}
+                                        style={{ alignItems: 'center', opacity: call_active ? 0.35 : 1 }}
                                    >
                                         <View style={{
                                              width: 40,

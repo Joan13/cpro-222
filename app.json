@@ -101,15 +101,14 @@
       "favicon": "./src/assets/logo_icon.png"
     },
     "plugins": [
+      "./plugins/withYambiCall.js",
       "./plugins/withReactNativeVectorIcons.js",
       [
         "expo-notifications",
         {
           "icon": "./src/assets/notification_icon.png",
           "color": "#780006",
-          "sounds": [
-            "./src/assets/sounds/incoming_call.mp3"
-          ],
+          "sounds": [],
           "defaultChannel": "default"
         }
       ],

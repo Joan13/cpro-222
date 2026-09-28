@@ -21,6 +21,7 @@ import { setCallsBadge } from '../../store/reducers/persistedAppSlice';
 export const CallHistoryScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const theme = useAppSelector((state) => state.app_theme);
   const myUser = useAppSelector((state) => state.user_data);
+  const call_active = useAppSelector((state) => state.app.call_active);
   const dispatch = useAppDispatch();
   const realm = useRealm();
 
@@ -29,6 +30,7 @@ export const CallHistoryScreen: React.FC<{ navigation: any }> = ({ navigation })
 
   useEffect(() => {
     dispatch(setCallsBadge(0));
+    callManager.syncCallHistory();
   }, [dispatch]);
 
   const handlePressItem = (item: CallHistory) => {
@@ -36,13 +38,13 @@ export const CallHistoryScreen: React.FC<{ navigation: any }> = ({ navigation })
   };
 
   const handleAudioCall = (peerPhone: string, peerName: string, avatar: string) => {
+    if (call_active) return;
     callManager.startCall(peerPhone, 'audio', peerName, avatar);
-    navigation.navigate('AudioCallScreen');
   };
 
   const handleVideoCall = (peerPhone: string, peerName: string, avatar: string) => {
+    if (call_active) return;
     callManager.startCall(peerPhone, 'video', peerName, avatar);
-    navigation.navigate('VideoCallScreen');
   };
 
   const handleDeleteLog = (logId: string) => {

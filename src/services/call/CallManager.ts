@@ -1,14 +1,12 @@
-import { webRTCManager } from './WebRTCManager';
-import { callSignaling, CallInvitePayload, CallSignalPayload } from './CallSignaling';
-import { MediaStream } from 'react-native-webrtc';
-import { PermissionsAndroid, Platform, AppState, AppStateStatus } from 'react-native';
+import { AppState, PermissionsAndroid, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import store from '../../store/app/store';
-import { setCallState } from '../../store/reducers/appSlice';
-import { strings } from '../../lang/lang';
-import * as Notifications from 'expo-notifications';
-import { recordCallHistory } from '../RealmInstance';
-import { callSoundManager } from './CallSoundManager';
-import { setSystemPipVideoCallActive } from './PipService';
+import { setCallsBadge } from '../../store/reducers/persistedAppSlice';
+import { setCallActive } from '../../store/reducers/appSlice';
+import { openRealmInstance, safeRealmWrite } from '../RealmInstance';
+import Realm from 'realm';
+import YambiCall, { NativeCallHistoryEntry } from 'yambi-call';
+import { syncNativeCallStrings } from '../../lang/lang';
 
 export type CallState =
   | 'IDLE'
@@ -39,753 +37,317 @@ export interface ActiveCallData {
   isMuted: boolean;
   isSpeaker: boolean;
   isCameraOff: boolean;
-  localStream: MediaStream | null;
-  remoteStream: MediaStream | null;
+  localStream: any | null;
+  remoteStream: any | null;
   errorMessage?: string;
 }
 
 type CallStateListener = (callData: ActiveCallData | null) => void;
 
 class CallManager {
-  private currentCall: ActiveCallData | null = null;
   private currentUserPhoneNumber: string = '';
   private currentUserName: string = '';
   private currentUserAvatar: string = '';
-  private isStartingCall: boolean = false;
-  private isAcceptingCall: boolean = false;
-
   private listeners: Set<CallStateListener> = new Set();
-  private durationTimer: any = null;
-  private ringTimeoutTimer: any = null;
-  private connectedTimestamp: number | null = null;
-  private appStateSubscription: any = null;
+  private nativeListenersAttached: boolean = false;
+  private isSyncing: boolean = false;
 
   constructor() {
-    this.appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active' && this.currentCall && this.currentCall.status === 'CONNECTED' && this.connectedTimestamp) {
-        const elapsed = Math.floor((Date.now() - this.connectedTimestamp) / 1000);
-        this.currentCall.durationSeconds = elapsed;
-        this.notifyListeners();
-      }
-    });
+    this.setupNativeCallListeners();
   }
 
-  public init(userPhoneNumber: string, userName: string = '', userAvatar: string = '') {
+  /**
+   * Initialise le numéro de l'utilisateur et synchronise l'historique.
+   */
+  public async init(userPhoneNumber: string, userName: string = '', userAvatar: string = '') {
     if (!userPhoneNumber) return;
     this.currentUserPhoneNumber = userPhoneNumber;
     this.currentUserName = userName || userPhoneNumber;
     this.currentUserAvatar = userAvatar;
 
-    callSignaling.init(userPhoneNumber);
-    callSignaling.registerListeners({
-      onInvite: this.handleIncomingInvite.bind(this),
-      onRinging: this.handleCallRinging.bind(this),
-      onAccept: this.handleCallAccepted.bind(this),
-      onReject: this.handleCallRejected.bind(this),
-      onCancel: this.handleCallCancelled.bind(this),
-      onOffer: this.handleCallOffer.bind(this),
-      onAnswer: this.handleCallAnswer.bind(this),
-      onIceCandidate: this.handleRemoteIceCandidate.bind(this),
-      onBusy: this.handleCallBusy.bind(this),
-      onEnd: this.handleCallEnded.bind(this),
-    });
+    try {
+      YambiCall.setUserPhone(userPhoneNumber);
+      syncNativeCallStrings();
+      const active = await YambiCall.isCallActive();
+      store.dispatch(setCallActive(active));
+    } catch (e) {
+      console.warn('[CallManager] Error initializing native module:', e);
+    }
+
+    this.setupNativeCallListeners();
+    await this.syncCallHistory();
   }
 
-  public ensureInitialized() {
-    if (!this.currentUserPhoneNumber) {
-      try {
-        const user = store?.getState()?.user_data;
-        if (user && user.phone_number) {
-          this.init(user.phone_number, user.user_names || user.phone_number, user.user_profile || '');
-        } else if (this.currentCall?.calleeId) {
-          this.init(this.currentCall.calleeId, this.currentCall.calleeName || this.currentCall.calleeId, '');
+  /**
+   * Attache les écouteurs d'événements du module natif YambiCall.
+   */
+  public setupNativeCallListeners() {
+    if (this.nativeListenersAttached) return;
+    this.nativeListenersAttached = true;
+
+    try {
+      YambiCall.initialize();
+
+      YambiCall.addListener('onCallStarted', (event: any) => {
+        console.log('[CallManager] Native call started:', event);
+        store.dispatch(setCallActive(true));
+      });
+
+      YambiCall.addListener('onCallEnded', async (event: any) => {
+        console.log('[CallManager] Native call ended, syncing call history:', event);
+        store.dispatch(setCallActive(false));
+        await this.syncCallHistory();
+      });
+
+      YambiCall.addListener('onCallAnswered', (event: any) => {
+        console.log('[CallManager] Native call answered:', event);
+        store.dispatch(setCallActive(true));
+      });
+
+      YambiCall.addListener('onCallRejected', async (event: any) => {
+        console.log('[CallManager] Native call rejected:', event);
+        store.dispatch(setCallActive(false));
+        await this.syncCallHistory();
+      });
+
+      YambiCall.addListener('onVoIPTokenReceived', (event: { token: string }) => {
+        console.log('[CallManager] VoIP token received from native:', event.token);
+      });
+
+      AppState.addEventListener('change', async (state) => {
+        if (state === 'active') {
+          try {
+            const active = await YambiCall.isCallActive();
+            store.dispatch(setCallActive(active));
+          } catch (e) {}
         }
-      } catch (e) {
-        console.error('[CallManager] Error ensuring initialization:', e);
-      }
+      });
+    } catch (err) {
+      console.error('[CallManager] Error attaching native call listeners:', err);
     }
+  }
+
+  /**
+   * Demande les permissions microphone et caméra.
+   */
+  private async requestCallPermissions(type: 'audio' | 'video'): Promise<boolean> {
+    if (Platform.OS !== 'android') return true;
+
+    try {
+      const permissions = [PermissionsAndroid.PERMISSIONS.RECORD_AUDIO];
+      if (type === 'video') {
+        permissions.push(PermissionsAndroid.PERMISSIONS.CAMERA);
+      }
+
+      const granted = await PermissionsAndroid.requestMultiple(permissions);
+      const micGranted = granted[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
+      const camGranted =
+        type === 'video'
+          ? granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED
+          : true;
+
+      return micGranted && camGranted;
+    } catch (err) {
+      console.error('[CallManager] Error requesting permissions:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Démarre un appel sortant en déléguant intégralement au module natif (ActiveCallActivity / CallKit).
+   */
+  public async startCall(
+    calleeId: string,
+    type: 'audio' | 'video',
+    calleeName = '',
+    calleeAvatar = ''
+  ): Promise<string | null> {
+    if (!calleeId) {
+      console.warn('[CallManager] Cannot start call: missing calleeId');
+      return null;
+    }
+
+    if (store.getState()?.app?.call_active) {
+      console.warn('[CallManager] Cannot start call: another call is already active');
+      return null;
+    }
+
+    try {
+      const nativeActive = await YambiCall.isCallActive();
+      if (nativeActive) {
+        store.dispatch(setCallActive(true));
+        console.warn('[CallManager] Cannot start call: native call session is already active');
+        return null;
+      }
+    } catch (e) {}
+
+    if (!this.currentUserPhoneNumber) {
+      await this.resolveConnectedUserAsync();
+    }
+
+    const hasPermissions = await this.requestCallPermissions(type);
+    if (!hasPermissions) {
+      console.warn('[CallManager] Cannot start call: permissions denied');
+      return null;
+    }
+
+    try {
+      console.log(`[CallManager] Starting native ${type} call to ${calleeId} (${calleeName})`);
+      store.dispatch(setCallActive(true));
+      const callId = await YambiCall.startOutgoingCall({
+        calleeId,
+        calleeName: calleeName || calleeId,
+        calleeAvatar: calleeAvatar || '',
+        callerId: this.currentUserPhoneNumber,
+        callerName: this.currentUserName,
+        callerAvatar: this.currentUserAvatar,
+        callType: type,
+      });
+
+      if (!callId) {
+        store.dispatch(setCallActive(false));
+        return null;
+      }
+
+      return callId;
+    } catch (err) {
+      store.dispatch(setCallActive(false));
+      console.error('[CallManager] Error starting native outgoing call:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Synchronise l'historique d'appels natif (SQLite) vers la base Realm locale de l'application.
+   */
+  public async syncCallHistory(): Promise<void> {
+    if (this.isSyncing) return;
+    this.isSyncing = true;
+
+    try {
+      const entries: NativeCallHistoryEntry[] = await YambiCall.getUnsyncedCallHistory();
+      if (!entries || entries.length === 0) {
+        return;
+      }
+
+      console.log(`[CallManager] Syncing ${entries.length} call history entries from SQLite to Realm...`);
+      const realm = await openRealmInstance();
+      const syncedIds: string[] = [];
+      let missedCount = 0;
+
+      await safeRealmWrite(realm, () => {
+        for (const entry of entries) {
+          realm.create(
+            'CallHistory',
+            {
+              _id: entry.id,
+              callId: entry.callId,
+              callerId: entry.callerId,
+              calleeId: entry.calleeId,
+              callerName: entry.callerName || entry.callerId,
+              callerAvatar: entry.callerAvatar || '',
+              calleeName: entry.calleeName || entry.calleeId,
+              calleeAvatar: entry.calleeAvatar || '',
+              type: entry.type || 'audio',
+              direction: entry.direction,
+              status: entry.status,
+              durationSeconds: entry.durationSeconds || 0,
+              createdAt: entry.createdAt || new Date().toISOString(),
+              timestamp: entry.timestamp || Date.now(),
+            },
+            Realm.UpdateMode.Modified
+          );
+
+          if (entry.direction === 'missed') {
+            missedCount++;
+          }
+          syncedIds.push(entry.id);
+        }
+      });
+
+      await YambiCall.markCallHistorySynced(syncedIds);
+      console.log(`[CallManager] Successfully synced and marked ${syncedIds.length} entries`);
+
+      if (missedCount > 0) {
+        const currentBadge = store.getState()?.persisted_app?.calls_badge || 0;
+        store.dispatch(setCallsBadge(currentBadge + missedCount));
+      }
+    } catch (err) {
+      console.error('[CallManager] Error syncing call history:', err);
+    } finally {
+      this.isSyncing = false;
+    }
+  }
+
+  private async resolveConnectedUserAsync(): Promise<{ phone?: string; name?: string } | null> {
+    try {
+      const state = store.getState();
+      const phone = state?.user_data?.phone_number;
+      const name = state?.user_data?.user_names;
+      if (phone) {
+        this.currentUserPhoneNumber = phone;
+        this.currentUserName = name || phone;
+        YambiCall.setUserPhone(phone);
+        return { phone, name };
+      }
+
+      const cachedUser = await AsyncStorage.getItem('user_data');
+      if (cachedUser) {
+        const parsed = JSON.parse(cachedUser);
+        if (parsed?.phone_number) {
+          this.currentUserPhoneNumber = parsed.phone_number;
+          this.currentUserName = parsed.user_names || parsed.phone_number;
+          YambiCall.setUserPhone(parsed.phone_number);
+          return { phone: parsed.phone_number, name: parsed.user_names };
+        }
+      }
+    } catch (e) {
+      console.error('[CallManager] Error resolving connected user:', e);
+    }
+    return null;
+  }
+
+  // ─── Rétrocompatibilité UI React Native ─────────────────────────────────────
+
+  public getCallData(): ActiveCallData | null {
+    return null;
   }
 
   public subscribe(listener: CallStateListener): () => void {
     this.listeners.add(listener);
-    listener(this.currentCall);
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return () => this.listeners.delete(listener);
   }
 
-  private notifyListeners() {
-    const status = this.currentCall ? this.currentCall.status : 'IDLE';
-    console.log(`[CallManager] State updated -> ${status}`);
-    try {
-      store.dispatch(setCallState(status));
-    } catch (e) {
-      console.error('[CallManager] Error dispatching setCallState to store:', e);
-    }
-
-    if (status === 'OUTGOING_CALLING' || status === 'OUTGOING_RINGING') {
-      callSoundManager.playOutgoingSound();
-    } else if (status === 'INCOMING_RINGING') {
-      callSoundManager.playIncomingSound();
-    } else if (status === 'ENDED' || status === 'FAILED' || status === 'BUSY') {
-      callSoundManager.playEndSound();
-    } else {
-      callSoundManager.stopSound();
-    }
-
-    const isOngoingVideoCall = Boolean(
-      this.currentCall &&
-      this.currentCall.type === 'video' &&
-      (this.currentCall.status === 'CONNECTED' || this.currentCall.status === 'RECONNECTING')
-    );
-    setSystemPipVideoCallActive(isOngoingVideoCall);
-
-    this.listeners.forEach((listener) => listener(this.currentCall ? { ...this.currentCall } : null));
-  }
-
-  public getCallData(): ActiveCallData | null {
-    return this.currentCall;
-  }
-
-  public async requestCallPermissions(type: 'audio' | 'video'): Promise<boolean> {
-    if (Platform.OS === 'android') {
-      try {
-        const permissions = [PermissionsAndroid.PERMISSIONS.RECORD_AUDIO];
-        if (type === 'video') {
-          permissions.push(PermissionsAndroid.PERMISSIONS.CAMERA);
-        }
-
-        const granted = await PermissionsAndroid.requestMultiple(permissions);
-        const micGranted = granted[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] === PermissionsAndroid.RESULTS.GRANTED;
-        const camGranted = type === 'video' ? granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED : true;
-
-        return micGranted && camGranted;
-      } catch (err) {
-        console.error('[CallManager] Android permission request error:', err);
-        return false;
-      }
-    }
-    return true;
-  }
-
-  public async startCall(
-    calleeId: string,
-    type: 'audio' | 'video',
-    calleeName: string = '',
-    calleeAvatar: string = ''
-  ): Promise<boolean> {
-    this.ensureInitialized();
-    const isReduxCallActive = store.getState().app.call_active;
-    if (this.isStartingCall || isReduxCallActive || (this.currentCall && this.currentCall.status !== 'IDLE' && this.currentCall.status !== 'ENDED')) {
-      console.warn('[CallManager] Cannot start new call: Another call is already active or starting');
-      return false;
-    }
-
-    this.isStartingCall = true;
-
-    const callId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-
-    this.currentCall = {
-      callId,
-      callerId: this.currentUserPhoneNumber,
-      calleeId,
-      callerName: this.currentUserName,
-      callerAvatar: this.currentUserAvatar,
-      calleeName: calleeName || calleeId,
-      calleeAvatar,
-      type,
-      isCaller: true,
-      status: 'OUTGOING_CALLING',
-      durationSeconds: 0,
-      isMuted: false,
-      isSpeaker: type === 'video',
-      isCameraOff: false,
-      localStream: null,
-      remoteStream: null,
-    };
-
-    this.notifyListeners();
-
-    const hasPermissions = await this.requestCallPermissions(type);
-    if (!hasPermissions) {
-      console.warn('[CallManager] Call cancelled: Required media permissions not granted');
-      this.currentCall.status = 'FAILED';
-      this.currentCall.errorMessage = 'Permissions not granted';
-      this.notifyListeners();
-      setTimeout(() => this.cleanupCallState(), 2000);
-      this.isStartingCall = false;
-      return false;
-    }
-
-    try {
-      // Get local stream
-      const localStream = await webRTCManager.getLocalStream(type);
-      if (this.currentCall) {
-        this.currentCall.localStream = localStream;
-        this.notifyListeners();
-      }
-
-      this.setupWebRTCListeners();
-      webRTCManager.createPeerConnection();
-
-      // Send signaling invite
-      const invitePayload: CallInvitePayload = {
-        callId,
-        callerId: this.currentUserPhoneNumber,
-        calleeId,
-        callerName: this.currentUserName,
-        callerAvatar: this.currentUserAvatar,
-        type,
-        timestamp: Date.now(),
-      };
-
-      callSignaling.sendInvite(invitePayload);
-
-      // Transition from OUTGOING_CALLING ("Calling...") to OUTGOING_RINGING ("Ringing...")
-      setTimeout(() => {
-        if (this.currentCall && this.currentCall.callId === callId && this.currentCall.status === 'OUTGOING_CALLING') {
-          this.currentCall.status = 'OUTGOING_RINGING';
-          this.notifyListeners();
-        }
-      }, 1000);
-
-      // Start 45s ringing timeout
-      this.clearRingTimeout();
-      const currentCallId = callId;
-      this.ringTimeoutTimer = setTimeout(() => {
-        if (this.currentCall && this.currentCall.callId === currentCallId && this.currentCall.status === 'OUTGOING_RINGING') {
-          console.log(`[CallManager] Outgoing call (${currentCallId}) timed out (no answer)`);
-          this.endCall('NO_ANSWER');
-        }
-      }, 45000);
-
-      return true;
-    } catch (error: any) {
-      console.error('[CallManager] Error starting call:', error);
-      this.currentCall.status = 'FAILED';
-      this.currentCall.errorMessage = error?.message || 'Failed to acquire media stream';
-      this.notifyListeners();
-      setTimeout(() => this.cleanupCallState(), 3000);
-      return false;
-    } finally {
-      this.isStartingCall = false;
-    }
-  }
-
-  public handleIncomingInviteFromNotification(payload: any) {
-    if (!payload || !payload.callId) return;
-
-    const myPhone =
-      this.currentUserPhoneNumber ||
-      payload.calleeId ||
-      payload.calleePhone ||
-      payload.calleePhoneNumber ||
-      store?.getState()?.user_data?.phone_number ||
-      '';
-
-    if (!this.currentUserPhoneNumber && myPhone) {
-      const userName = store?.getState()?.user_data?.user_names || myPhone;
-      this.init(myPhone, userName, '');
-    }
-
-    const callerPhone = payload.callerId || payload.callerPhone || payload.callerPhoneNumber || payload.user || '';
-
-    if (!this.currentCall || this.currentCall.status === 'IDLE' || this.currentCall.status === 'ENDED' || this.currentCall.status === 'REJECTED') {
-      this.currentCall = {
-        callId: payload.callId,
-        callerId: callerPhone,
-        calleeId: myPhone,
-        callerName: payload.callerName || callerPhone,
-        callerAvatar: payload.callerAvatar || '',
-        calleeName: this.currentUserName,
-        calleeAvatar: this.currentUserAvatar,
-        type: payload.callType === 'video' || payload.type === 'video' ? 'video' : 'audio',
-        isCaller: false,
-        status: 'INCOMING_RINGING',
-        durationSeconds: 0,
-        isMuted: false,
-        isSpeaker: (payload.callType || payload.type) === 'video',
-        isCameraOff: false,
-        localStream: null,
-        remoteStream: null,
-      };
-      this.notifyListeners();
-    }
-  }
-
-  private handleIncomingInvite(payload: CallInvitePayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId) {
-      console.log(`[CallManager] Duplicate incoming invite received for active call ${payload.callId}, ignoring.`);
-      return;
-    }
-
-    if (this.currentCall && this.currentCall.status !== 'IDLE' && this.currentCall.status !== 'ENDED') {
-      console.log(`[CallManager] Incoming call from ${payload.callerId} rejected: User is busy`);
-      callSignaling.sendBusy({
-        callId: payload.callId,
-        callerId: payload.callerId,
-        calleeId: payload.calleeId,
-      });
-      return;
-    }
-
-    console.log(`[CallManager] Receiving incoming call invite from ${payload.callerName || payload.callerId}`);
-
-    this.currentCall = {
-      callId: payload.callId,
-      callerId: payload.callerId,
-      calleeId: payload.calleeId,
-      callerName: payload.callerName || payload.callerId,
-      callerAvatar: payload.callerAvatar,
-      calleeName: this.currentUserName,
-      calleeAvatar: this.currentUserAvatar,
-      type: payload.type,
-      isCaller: false,
-      status: 'INCOMING_RINGING',
-      durationSeconds: 0,
-      isMuted: false,
-      isSpeaker: payload.type === 'video',
-      isCameraOff: false,
-      localStream: null,
-      remoteStream: null,
-    };
-
-    this.notifyListeners();
-
-    // Send ringing confirmation back to caller
-    callSignaling.sendRinging({
-      callId: payload.callId,
-      callerId: payload.callerId,
-      calleeId: payload.calleeId,
-    });
-
-    // 45s incoming ring timeout
-    this.clearRingTimeout();
-    this.ringTimeoutTimer = setTimeout(() => {
-      if (this.currentCall && this.currentCall.status === 'INCOMING_RINGING') {
-        console.log('[CallManager] Incoming call timed out');
-        this.cleanupCallState();
-      }
-    }, 45000);
-  }
-
-  private handleCallRinging(payload: CallSignalPayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId) {
-      console.log('[CallManager] Outgoing call is ringing on callee device');
-    }
+  public async checkPendingCall(): Promise<boolean> {
+    await this.syncCallHistory();
+    return false;
   }
 
   public async acceptCall(): Promise<boolean> {
-    if (this.isAcceptingCall) {
-      console.log('[CallManager] Call is already being accepted, ignoring duplicate invocation');
-      return true;
-    }
-    this.ensureInitialized();
-    if (!this.currentCall) {
-      console.warn('[CallManager] Cannot accept call: No currentCall');
-      return false;
-    }
-    if (this.currentCall.status !== 'INCOMING_RINGING' && this.currentCall.status !== 'CONNECTING') {
-      console.warn(`[CallManager] Cannot accept call: status is ${this.currentCall.status}`);
-      return false;
-    }
-
-    this.isAcceptingCall = true;
-    this.clearRingTimeout();
-
-    const hasPermissions = await this.requestCallPermissions(this.currentCall.type);
-    if (!hasPermissions) {
-      console.warn('[CallManager] Cannot accept call: Permissions not granted');
-      this.isAcceptingCall = false;
-      this.rejectCall();
-      return false;
-    }
-
-    this.currentCall.status = 'CONNECTING';
-    this.notifyListeners();
-
-    try {
-      const localStream = await webRTCManager.getLocalStream(this.currentCall.type);
-      this.currentCall.localStream = localStream;
-
-      this.setupWebRTCListeners();
-      webRTCManager.createPeerConnection();
-
-      // Send accept signal to caller
-      callSignaling.sendAccept({
-        callId: this.currentCall.callId,
-        callerId: this.currentCall.callerId,
-        calleeId: this.currentCall.calleeId || this.currentUserPhoneNumber,
-      });
-
-      this.notifyListeners();
-      this.isAcceptingCall = false;
-      return true;
-    } catch (error: any) {
-      console.error('[CallManager] Error accepting call:', error);
-      this.isAcceptingCall = false;
-      this.endCall('FAILED');
-      return false;
-    }
+    return true;
   }
 
-  public rejectCall(fallbackData?: any) {
-    if (!this.currentCall && fallbackData) {
-      this.handleIncomingInviteFromNotification(fallbackData);
-    }
-    if (!this.currentCall) {
-      this.clearRingTimeout();
-      callSoundManager.stopRingtone();
-      callSoundManager.stopSound();
-      Notifications.dismissAllNotificationsAsync().catch(() => {});
-      return;
-    }
+  public rejectCall(_payload?: any) {}
 
-    this.ensureInitialized();
-    this.clearRingTimeout();
-    callSoundManager.stopRingtone();
-
-    callSignaling.sendReject({
-      callId: this.currentCall.callId,
-      callerId: this.currentCall.callerId,
-      calleeId: this.currentCall.calleeId || this.currentUserPhoneNumber,
-    });
-
-    this.currentCall.status = 'REJECTED';
-    this.notifyListeners();
-    this.cleanupCallState();
-  }
-
-  private async handleCallAccepted(payload: CallSignalPayload) {
-    if (!this.currentCall || this.currentCall.callId !== payload.callId || !this.currentCall.isCaller) {
-      return;
-    }
-    if (this.currentCall.status !== 'OUTGOING_RINGING' && this.currentCall.status !== 'OUTGOING_CALLING') {
-      console.log(`[CallManager] Ignoring duplicate call:accept in status: ${this.currentCall.status}`);
-      return;
-    }
-
-    console.log('[CallManager] Callee accepted call. Initiating WebRTC offer...');
-    this.clearRingTimeout();
-    this.currentCall.status = 'CONNECTING';
-    this.notifyListeners();
-
-    try {
-      this.setupWebRTCListeners();
-      if (!webRTCManager.getPeerConnectionInstance()) {
-        webRTCManager.createPeerConnection();
-      }
-
-      const offer = await webRTCManager.createOffer();
-      callSignaling.sendOffer({
-        callId: this.currentCall.callId,
-        callerId: this.currentCall.callerId,
-        calleeId: this.currentCall.calleeId,
-        offer,
-      });
-    } catch (error) {
-      console.error('[CallManager] Error generating SDP offer:', error);
-      this.endCall('FAILED');
-    }
-  }
-
-  private isProcessingOffer: boolean = false;
-
-  private async handleCallOffer(payload: CallSignalPayload) {
-    if (!this.currentCall || this.currentCall.callId !== payload.callId || this.currentCall.isCaller) {
-      return;
-    }
-    if (this.isProcessingOffer) {
-      console.log('[CallManager] Already processing SDP offer, ignoring concurrent offer event.');
-      return;
-    }
-    const pc = webRTCManager.getPeerConnectionInstance();
-    if (pc && pc.signalingState !== 'stable' && pc.signalingState !== 'have-remote-offer') {
-      console.log(`[CallManager] Ignoring duplicate call:offer in signaling state: ${pc.signalingState}`);
-      return;
-    }
-
-    this.isProcessingOffer = true;
-    console.log('[CallManager] Received SDP offer. Generating SDP answer...');
-    try {
-      const answer = await webRTCManager.handleOfferAndCreateAnswer(payload.offer);
-      callSignaling.sendAnswer({
-        callId: this.currentCall.callId,
-        callerId: this.currentCall.callerId,
-        calleeId: this.currentCall.calleeId,
-        answer,
-      });
-    } catch (error: any) {
-      const state = webRTCManager.getPeerConnectionInstance()?.signalingState;
-      if (state === 'stable') {
-        console.warn('[CallManager] Handled duplicate SDP offer error while connection state is already stable.');
-      } else {
-        console.error('[CallManager] Error creating SDP answer:', error);
-        this.endCall('FAILED');
-      }
-    } finally {
-      this.isProcessingOffer = false;
-    }
-  }
-
-  private async handleCallAnswer(payload: CallSignalPayload) {
-    if (!this.currentCall || this.currentCall.callId !== payload.callId || !this.currentCall.isCaller) {
-      return;
-    }
-    const pc = webRTCManager.getPeerConnectionInstance();
-    if (pc && pc.signalingState !== 'have-local-offer') {
-      console.log(`[CallManager] Ignoring call:answer because signaling state is ${pc.signalingState}`);
-      return;
-    }
-
-    console.log('[CallManager] Received SDP answer from callee.');
-    try {
-      await webRTCManager.handleAnswer(payload.answer);
-    } catch (error: any) {
-      const state = webRTCManager.getPeerConnectionInstance()?.signalingState;
-      if (state === 'stable') {
-        console.warn('[CallManager] Handled duplicate SDP answer error while connection state is already stable.');
-      } else {
-        console.error('[CallManager] Error handling SDP answer:', error);
-        this.endCall('FAILED');
-      }
-    }
-  }
-
-  private async handleRemoteIceCandidate(payload: CallSignalPayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId && payload.candidate) {
-      await webRTCManager.addIceCandidate(payload.candidate);
-    }
-  }
-
-  private setupWebRTCListeners() {
-    webRTCManager.setCallbacks({
-      onIceCandidate: (candidate) => {
-        if (this.currentCall) {
-          callSignaling.sendIceCandidate({
-            callId: this.currentCall.callId,
-            callerId: this.currentCall.callerId,
-            calleeId: this.currentCall.calleeId,
-            candidate,
-          });
-        }
-      },
-      onRemoteStream: (stream) => {
-        console.log('[CallManager] Remote stream received and attached to active call');
-        if (this.currentCall) {
-          this.currentCall.remoteStream = stream;
-          if (this.currentCall.status !== 'CONNECTED' && this.currentCall.status !== 'ENDED' && this.currentCall.status !== 'FAILED') {
-            this.currentCall.status = 'CONNECTED';
-            this.startDurationCounter();
-          }
-          this.notifyListeners();
-        }
-      },
-      onConnectionStateChange: (state) => {
-        console.log(`[CallManager] WebRTC Peer Connection State: ${state}`);
-        if (!this.currentCall) return;
-
-        if (state === 'connected') {
-          if (this.currentCall.status !== 'CONNECTED') {
-            this.currentCall.status = 'CONNECTED';
-            this.startDurationCounter();
-            this.notifyListeners();
-          }
-        } else if (state === 'connecting') {
-          if (this.currentCall.status !== 'CONNECTED') {
-            this.currentCall.status = 'CONNECTING';
-            this.notifyListeners();
-          }
-        } else if (state === 'disconnected') {
-          if (this.currentCall.status === 'CONNECTED') {
-            this.currentCall.status = 'RECONNECTING';
-            this.notifyListeners();
-          }
-        } else if (state === 'failed') {
-          if (this.currentCall.remoteStream && this.currentCall.remoteStream.getTracks().length > 0 && this.currentCall.status === 'CONNECTED') {
-            console.warn('[CallManager] PeerConnection state failed but active remoteStream exists. Keeping call connected.');
-            return;
-          }
-          this.currentCall.status = 'FAILED';
-          this.currentCall.errorMessage = strings.call_failed || 'Call Failed';
-          this.notifyListeners();
-          setTimeout(() => this.cleanupCallState(), 4000);
-        }
-      },
-      onIceConnectionStateChange: (state) => {
-        console.log(`[CallManager] WebRTC ICE Connection State: ${state}`);
-        if (!this.currentCall) return;
-
-        if (state === 'disconnected') {
-          if (this.currentCall.status === 'CONNECTED') {
-            this.currentCall.status = 'RECONNECTING';
-            this.notifyListeners();
-          }
-        } else if (state === 'checking') {
-          if (this.currentCall.status !== 'CONNECTED') {
-            this.notifyListeners();
-          }
-        } else if (state === 'completed' || state === 'connected') {
-          if (this.currentCall.status !== 'CONNECTED') {
-            this.currentCall.status = 'CONNECTED';
-            this.startDurationCounter();
-            this.notifyListeners();
-          }
-        } else if (state === 'failed') {
-          if (this.currentCall.remoteStream && this.currentCall.remoteStream.getTracks().length > 0 && this.currentCall.status === 'CONNECTED') {
-            console.warn('[CallManager] ICE state failed but active remoteStream exists. Keeping call connected.');
-            return;
-          }
-          this.currentCall.status = 'FAILED';
-          this.currentCall.errorMessage = strings.call_failed || 'Call Failed';
-          this.notifyListeners();
-          setTimeout(() => this.cleanupCallState(), 4000);
-        }
-      },
-    });
-  }
-
-  private handleCallRejected(payload: CallSignalPayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId) {
-      console.log('[CallManager] Call was declined by recipient');
-      this.clearRingTimeout();
-      this.currentCall.status = 'REJECTED';
-      this.notifyListeners();
-      setTimeout(() => this.cleanupCallState(), 2000);
-    }
-  }
-
-  private handleCallCancelled(payload: CallSignalPayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId) {
-      console.log('[CallManager] Call was cancelled by caller');
-      this.clearRingTimeout();
-      this.currentCall.status = 'ENDED';
-      this.notifyListeners();
-      this.cleanupCallState();
-    }
-  }
-
-  private handleCallBusy(payload: CallSignalPayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId) {
-      console.log('[CallManager] Target user is busy');
-      this.clearRingTimeout();
-      this.currentCall.status = 'BUSY';
-      this.notifyListeners();
-      setTimeout(() => this.cleanupCallState(), 3000);
-    }
-  }
-
-  private handleCallEnded(payload: CallSignalPayload) {
-    if (this.currentCall && this.currentCall.callId === payload.callId) {
-      console.log('[CallManager] Call ended by remote peer');
-      this.endCall('REMOTE_ENDED', false);
-    }
-  }
+  public endCall(_reason?: string) {}
 
   public toggleMute(): boolean {
-    if (!this.currentCall) return false;
-    const newMuted = !this.currentCall.isMuted;
-    webRTCManager.toggleMute(newMuted);
-    this.currentCall.isMuted = newMuted;
-    this.notifyListeners();
-    return newMuted;
+    return false;
   }
 
   public toggleSpeaker(): boolean {
-    if (!this.currentCall) return false;
-    const newSpeaker = !this.currentCall.isSpeaker;
-    this.currentCall.isSpeaker = newSpeaker;
-    this.notifyListeners();
-    return newSpeaker;
+    return false;
   }
 
   public toggleCamera(): boolean {
-    if (!this.currentCall) return false;
-    const newCameraOff = !this.currentCall.isCameraOff;
-    webRTCManager.toggleCamera(newCameraOff);
-    this.currentCall.isCameraOff = newCameraOff;
-    this.notifyListeners();
-    return newCameraOff;
+    return false;
   }
 
-  public switchCamera(): void {
-    webRTCManager.switchCamera();
+  public switchCamera(): boolean {
+    return false;
   }
 
-  public endCall(reason: string = 'USER_ENDED', sendSignal: boolean = true) {
-    if (!this.currentCall) return;
-
-    console.log(`[CallManager] Ending call (${this.currentCall.callId}) - Reason: ${reason}`);
-
-    this.clearRingTimeout();
-    this.stopDurationCounter();
-
-    if (sendSignal && this.currentCall.status !== 'IDLE' && this.currentCall.status !== 'ENDED') {
-      if (this.currentCall.status === 'OUTGOING_RINGING') {
-        callSignaling.sendCancel({
-          callId: this.currentCall.callId,
-          callerId: this.currentCall.callerId,
-          calleeId: this.currentCall.calleeId,
-        });
-      } else {
-        callSignaling.sendEnd({
-          callId: this.currentCall.callId,
-          callerId: this.currentCall.callerId,
-          calleeId: this.currentCall.calleeId,
-          duration: this.currentCall.durationSeconds || 0,
-        });
-      }
-    }
-
-    this.currentCall.status = 'ENDED';
-    this.notifyListeners();
-    this.cleanupCallState();
-  }
-
-  private startDurationCounter() {
-    this.stopDurationCounter();
-    this.connectedTimestamp = Date.now();
-    if (this.currentCall) {
-      this.currentCall.durationSeconds = 0;
-    }
-    this.durationTimer = setInterval(() => {
-      if (this.currentCall && this.currentCall.status === 'CONNECTED' && this.connectedTimestamp) {
-        const elapsed = Math.floor((Date.now() - this.connectedTimestamp) / 1000);
-        if (this.currentCall.durationSeconds !== elapsed) {
-          this.currentCall.durationSeconds = elapsed;
-          this.notifyListeners();
-        }
-      }
-    }, 1000);
-  }
-
-  private stopDurationCounter() {
-    if (this.durationTimer) {
-      clearInterval(this.durationTimer);
-      this.durationTimer = null;
-    }
-    this.connectedTimestamp = null;
-  }
-
-  private clearRingTimeout() {
-    if (this.ringTimeoutTimer) {
-      clearTimeout(this.ringTimeoutTimer);
-      this.ringTimeoutTimer = null;
-    }
-  }
-
-  private cleanupCallState() {
-    console.log('[CallManager] Cleaning up call state and WebRTC connections');
-    this.stopDurationCounter();
-    this.clearRingTimeout();
-    webRTCManager.cleanupAll();
-    if (this.currentCall) {
-      recordCallHistory(this.currentCall);
-    }
-    this.currentCall = null;
-    this.notifyListeners();
-    Notifications.dismissAllNotificationsAsync().catch(() => {});
-  }
+  public handleIncomingInviteFromNotification(_payload: any) {}
 }
 
 export const callManager = new CallManager();

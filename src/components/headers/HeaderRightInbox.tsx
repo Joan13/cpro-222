@@ -230,7 +230,6 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
               const contact = contacts.find((c) => c.phoneNumber === user);
               const name = contact ? contact.displayName : user;
               callManager.startCall(user, 'audio', name, userrr?.user_profile || '');
-              navigation.navigate('AudioCallScreen');
             }}
             style={{
               height: 36,
@@ -250,7 +249,6 @@ const HeaderRightInbox = ({ navigation, user }: { navigation: any, user: string 
               const contact = contacts.find((c) => c.phoneNumber === user);
               const name = contact ? contact.displayName : user;
               callManager.startCall(user, 'video', name, userrr?.user_profile || '');
-              navigation.navigate('VideoCallScreen');
             }}
             style={{
               height: 36,

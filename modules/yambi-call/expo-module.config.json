@@ -1,0 +1,9 @@
+{
+  "platforms": ["android", "apple"],
+  "apple": {
+    "modules": ["YambiCallModule"]
+  },
+  "android": {
+    "modules": ["com.yambi.call.YambiCallModule"]
+  }
+}

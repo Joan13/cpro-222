@@ -28,6 +28,7 @@ export const CallDetailScreen: React.FC<{ navigation: any; route: any }> = ({
     const myUser = useAppSelector((state) => state.user_data);
     const contacts = useAppSelector((state) => state.app.raw_contacts);
     const langApp = useAppSelector((state) => state.persisted_app.langApp);
+    const call_active = useAppSelector((state) => state.app.call_active);
     const dispatch = useAppDispatch();
     const realm = useRealm();
 
@@ -121,13 +122,13 @@ export const CallDetailScreen: React.FC<{ navigation: any; route: any }> = ({
     const formattedTime = moment(callLog.timestamp || callLog.createdAt).format('HH:mm:ss');
 
     const handleStartAudioCall = () => {
+        if (call_active) return;
         callManager.startCall(peerPhone, 'audio', displayName, avatar);
-        navigation.navigate('AudioCallScreen');
     };
 
     const handleStartVideoCall = () => {
+        if (call_active) return;
         callManager.startCall(peerPhone, 'video', displayName, avatar);
-        navigation.navigate('VideoCallScreen');
     };
 
     const handleGoInbox = () => {
@@ -183,14 +184,22 @@ export const CallDetailScreen: React.FC<{ navigation: any; route: any }> = ({
                         <YambiText text={strings.message || 'Message'} size="small" color="high" />
                     </Pressable>
 
-                    <Pressable onPress={handleStartAudioCall} style={styles.quickActionItem}>
+                    <Pressable
+                        disabled={call_active}
+                        onPress={handleStartAudioCall}
+                        style={[styles.quickActionItem, { opacity: call_active ? 0.35 : 1 }]}
+                    >
                         <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.high_color + '20' }]}>
                             <IconApp pack="MC" name="phone" size={20} color={theme.colors.high_color} />
                         </View>
                         <YambiText text={strings.audio || 'Audio'} size="small" color="high" />
                     </Pressable>
 
-                    <Pressable onPress={handleStartVideoCall} style={styles.quickActionItem}>
+                    <Pressable
+                        disabled={call_active}
+                        onPress={handleStartVideoCall}
+                        style={[styles.quickActionItem, { opacity: call_active ? 0.35 : 1 }]}
+                    >
                         <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.high_color + '20' }]}>
                             <IconApp pack="MC" name="video" size={20} color={theme.colors.high_color} />
                         </View>

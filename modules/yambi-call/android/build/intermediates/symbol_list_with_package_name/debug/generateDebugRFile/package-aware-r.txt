@@ -1,0 +1,11 @@
+com.yambi.call
+drawable ic_call_accept
+drawable ic_call_decline
+drawable ic_call_flip_camera
+drawable ic_call_mic_off
+drawable ic_call_mic_on
+drawable ic_call_speaker_off
+drawable ic_call_speaker_on
+drawable ic_call_video
+drawable ic_default_avatar
+drawable ic_verified_badge

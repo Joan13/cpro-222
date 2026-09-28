@@ -28,6 +28,7 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
 }) => {
     const theme = useAppSelector((state) => state.app_theme);
     const contacts = useAppSelector((state) => state.app.raw_contacts);
+    const call_active = useAppSelector((state) => state.app.call_active);
 
     const peerPhone = item.callerId === myPhone ? item.calleeId : item.callerId;
     const realmContact = useObject(UserContacts, peerPhone || '');
@@ -156,15 +157,17 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
             {/* Right Action Buttons */}
             <View style={styles.actionsRow}>
                 <Pressable
+                    disabled={call_active}
                     onPress={() => onAudioCall(peerPhone, displayName, avatar)}
-                    style={[styles.actionBtn, { backgroundColor: theme.colors.high_color + '15' }]}
+                    style={[styles.actionBtn, { backgroundColor: theme.colors.high_color + '15', opacity: call_active ? 0.35 : 1 }]}
                 >
                     <IconApp pack="MC" name="phone" size={18} color={theme.colors.high_color} />
                 </Pressable>
 
                 <Pressable
+                    disabled={call_active}
                     onPress={() => onVideoCall(peerPhone, displayName, avatar)}
-                    style={[styles.actionBtn, { backgroundColor: theme.colors.high_color + '15', marginLeft: 8 }]}
+                    style={[styles.actionBtn, { backgroundColor: theme.colors.high_color + '15', marginLeft: 8, opacity: call_active ? 0.35 : 1 }]}
                 >
                     <IconApp pack="MC" name="video" size={18} color={theme.colors.high_color} />
                 </Pressable>

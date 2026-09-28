@@ -30,6 +30,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
     const contacts = useAppSelector(state => state.app.raw_contacts);
     const user_data = useAppSelector(state => state.user_data);
     const show_favorite_chats = useAppSelector(state => state.app.show_favorite_chats);
+    const call_active = useAppSelector(state => state.app.call_active);
     const dispatch = useAppDispatch();
     const message = useObject(UsersMessages, item.last_message);
     const userrr = useObject(UserContacts, item._id);
@@ -458,23 +459,23 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
     };
 
     const handleStartAudioCall = () => {
+        if (call_active) return;
         callManager.startCall(
             item.phone_number,
             'audio',
             ShowUser(userr),
             userr.user_profile || ''
         );
-        RootNavigation.navigate('AudioCallScreen');
     };
 
     const handleStartVideoCall = () => {
+        if (call_active) return;
         callManager.startCall(
             item.phone_number,
             'video',
             ShowUser(userr),
             userr.user_profile || ''
         );
-        RootNavigation.navigate('VideoCallScreen');
     };
 
     const handleLongPress = () => {
@@ -580,6 +581,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     {/* Audio Call */}
                     <ContextMenu.Item
                         key="audio_call"
+                        disabled={call_active}
                         onSelect={handleStartAudioCall}>
                         <ContextMenu.ItemTitle>
                             {strings.audio_call || 'Audio Call'}
@@ -590,6 +592,7 @@ const RenderChats = ({ item, GoInbox }: { item: TChat, GoInbox }) => {
                     {/* Video Call */}
                     <ContextMenu.Item
                         key="video_call"
+                        disabled={call_active}
                         onSelect={handleStartVideoCall}>
                         <ContextMenu.ItemTitle>
                             {strings.video_call || 'Video Call'}

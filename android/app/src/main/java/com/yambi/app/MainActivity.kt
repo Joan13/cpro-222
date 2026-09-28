@@ -23,7 +23,12 @@ class MainActivity : ReactActivity() {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    RNBootSplash.init(this, R.style.BootTheme)
+    val isCallContext = intent?.getBooleanExtra("IS_CALL_CONTEXT", false) == true
+    if (!isCallContext) {
+      RNBootSplash.init(this, R.style.BootTheme)
+    } else {
+      setTheme(R.style.AppTheme)
+    }
     super.onCreate(null)
     currentInstance = this
   }

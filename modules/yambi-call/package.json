@@ -1,0 +1,10 @@
+{
+  "name": "yambi-call",
+  "version": "1.0.0",
+  "description": "Native Call Management for Yambi (PushKit, CallKit, Android Fullscreen & Telecom)",
+  "main": "index.ts",
+  "types": "index.ts",
+  "peerDependencies": {
+    "expo": "*"
+  }
+}

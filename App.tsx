@@ -25,6 +25,7 @@ import { setRootViewBackgroundColor } from '@pnthach95/react-native-root-view-ba
 // import YambiEmojis from './src/pages/includes/emojis';
 // import Realm, { BSON } from 'realm';
 import messaging from '@react-native-firebase/messaging';
+import YambiCall from 'yambi-call';
 
 // import { Chats_model, Chat_status, Chat_type, Groups, Group_members, Messages_groups, Messages_users, User } from './src/database/models';
 import { KeyboardRegistry } from 'react-native-ui-lib/keyboard';
@@ -41,6 +42,7 @@ import Signup from './src/pages/signup/Signup';
 import Themes, { themes, isThemeAligned } from './src/pages/app/Themes';
 import * as Contacts from 'expo-contacts';
 import { contactNameByPhoneRegistry, getDefaultCallingCode, processPhoneContacts, resolveContactDisplayName } from './src/services/ContactsService';
+import { openRealmInstance } from './src/services/RealmInstance';
 import { setRawContacts, setTitle, setUserTypingStatus } from './src/store/reducers/appSlice';
 import HomeRootStack from './src/pages/app/HomeRootStack';
 // import HeaderLeftHome from './src/components/headers/HeaderHome';
@@ -64,13 +66,8 @@ import RNBootSplash from 'react-native-bootsplash';
 import moment from 'moment';
 import SettingsYambi from './src/pages/app/SettingsYambi';
 import Languages from './src/pages/app/Languages';
-import AudioCallScreen from './src/pages/call/AudioCallScreen';
-import VideoCallScreen from './src/pages/call/VideoCallScreen';
 import CallDetailScreen from './src/pages/call/Call';
-import IncomingCallOverlay from './src/components/call/IncomingCallOverlay';
-import ActiveCallFloatingPIP from './src/components/call/ActiveCallFloatingPIP';
 import { callManager } from './src/services/call/CallManager';
-import { callSoundManager } from './src/services/call/CallSoundManager';
 import AboutYambi from './src/pages/app/AboutYambi';
 import MakeDonation from './src/pages/app/MakeDonation';
 import AddBusinessSubscription from './src/pages/business/AddBusinessSubscription';
@@ -229,16 +226,8 @@ Notifications.setNotificationHandler({
 
 // Configure Android Notification Channels
 if (Platform.OS === 'android') {
+    // Delete legacy incoming_calls channel so native yambi-call manages incoming calls with the user's default phone ringtone
     Notifications.deleteNotificationChannelAsync('incoming_calls').catch(() => { });
-    Notifications.setNotificationChannelAsync('incoming_calls', {
-        name: 'Incoming Calls',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#34C759',
-        sound: 'incoming_call.mp3',
-        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-        bypassDnd: true,
-    });
     Notifications.setNotificationChannelAsync('chat_messages', {
         name: 'Chat Messages',
         importance: Notifications.AndroidImportance.MAX,
@@ -349,11 +338,6 @@ export const displayNotification = async (notification: any) => {
 
     const data = notification?.data ?? {};
     if (data.type === 'CALL_INVITE') {
-        // Only show system notification if app is in background/closed
-        if (AppState.currentState === 'active') {
-            return;
-        }
-
         await setupIncomingCallNotificationCategory();
 
         const callerPhone =
@@ -364,32 +348,86 @@ export const displayNotification = async (notification: any) => {
             '';
         const localCallerName = callerPhone ? await resolveContactDisplayName(callerPhone) : null;
 
-        const notificationId = `call_invite_${data.callId || Date.now()}`;
-        const title = localCallerName || (data.callerName ? `${data.callerName}` : (strings.incoming_call || 'Incoming Call'));
-        const body = data.callType === 'video'
-            ? (strings.incoming_video_call || strings.video_call || 'Incoming Video Call')
-            : (strings.incoming_audio_call || strings.audio_call || 'Incoming Audio Call');
+        const isVideo =
+            data.callType === 'video' ||
+            data.type === 'video' ||
+            data.screen === 'VideoCallScreen';
+        const callType = isVideo ? 'video' : 'audio';
+        const defaultTitle = isVideo
+            ? (strings.incoming_video_call || 'Appel vidéo entrant...')
+            : (strings.incoming_audio_call || 'Appel audio entrant...');
+        const title = localCallerName || (data.callerName ? `${data.callerName}` : defaultTitle);
 
-        await Notifications.scheduleNotificationAsync({
-            identifier: notificationId,
-            content: {
-                title,
-                body,
-                data: {
-                    ...data,
-                    notificationId,
-                },
-                sound: 'incoming_call.mp3',
-                priority: Notifications.AndroidNotificationPriority.MAX,
-                categoryIdentifier: 'incoming_call_category',
-                autoDismiss: false,
-                sticky: true,
-            },
-            trigger: {
-                channelId: 'incoming_calls',
-            } as any,
-        });
+        const rawAvatar = data.callerAvatar || data.user_profile || data.avatar || '';
+        let fullAvatar = rawAvatar
+            ? (rawAvatar.startsWith('http') ? rawAvatar : `https://server.yambi.net/media/profile_pictures/${rawAvatar}`)
+            : '';
+
+        let isVerified = false;
+        try {
+            const realm = await openRealmInstance();
+            if (realm && !realm.isClosed && callerPhone) {
+                const contact = realm.objects('UserContacts').filtered('phone_number == $0', callerPhone)[0] as any;
+                if (contact) {
+                    if (contact.user_verified === 1) isVerified = true;
+                    if (!fullAvatar && contact.user_profile) {
+                        const profile = contact.user_profile;
+                        fullAvatar = profile.startsWith('http') ? profile : `https://server.yambi.net/media/profile_pictures/${profile}`;
+                    }
+                }
+            }
+        } catch (_e) {}
+
+        try {
+            await YambiCall.reportIncomingCall({
+                callId: data.callId || `call_${Date.now()}`,
+                callerId: callerPhone,
+                calleeId: user.phone_number,
+                callerName: title,
+                callerAvatar: fullAvatar,
+                callType,
+                hasVideo: isVideo,
+                isVerified,
+            });
+        } catch (e) {
+            console.error('[App.tsx] Exception calling YambiCall.reportIncomingCall:', e);
+        }
         return;
+    }
+
+    if (data.type === 'CALL_END') {
+        const callId = data.callId || (data as any)?.call_id;
+        if (callId) {
+            YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => {});
+            YambiCall.dismissNotification(String(callId)).catch(() => {});
+        }
+        callManager.syncCallHistory();
+        return; // An ended call must NEVER trigger any notification!
+    }
+
+    if (data.type === 'MISSED_CALL' || data.type === 'CALL_CANCEL') {
+        const callId = data.callId || (data as any)?.call_id;
+        if (callId) {
+            const wasAnswered = await YambiCall.wasCallAnswered(String(callId)).catch(() => false);
+            if (wasAnswered) {
+                YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => {});
+                YambiCall.dismissNotification(String(callId)).catch(() => {});
+                callManager.syncCallHistory();
+                return; // User was in this call, NEVER display missed call notification!
+            }
+
+            try {
+                const realm = await openRealmInstance();
+                const existing = realm.objectForPrimaryKey('CallHistory', `hist_${callId}`);
+                if (existing && ((existing as any).direction === 'incoming' || (existing as any).direction === 'outgoing' || (existing as any).durationSeconds > 0 || (existing as any).status === 'ENDED')) {
+                    return;
+                }
+            } catch (_e) {}
+
+            YambiCall.reportCallEnded(String(callId), 'MISSED').catch(() => {});
+            YambiCall.dismissNotification(String(callId)).catch(() => {});
+        }
+        callManager.syncCallHistory();
     }
 
     // Extract the token and message data of the current incoming message if present
@@ -687,6 +725,7 @@ const Yambi = ({ navigation }: NavProps) => {
                 user_data.user_names || user_data.phone_number,
                 user_data.user_profile || ''
             );
+            callManager.checkPendingCall().catch(() => {});
         }
     }, [user_data?.phone_number, user_data?.user_names, user_data?.user_profile]);
 
@@ -1631,8 +1670,16 @@ const Yambi = ({ navigation }: NavProps) => {
                 const callId = call.callId || call._id;
                 if (!callId) continue;
 
+                const wasAnswered = await YambiCall.wasCallAnswered(String(callId)).catch(() => false);
+                if (wasAnswered) {
+                    continue;
+                }
+
                 const historyId = `hist_${callId}`;
                 const existing = realm.objectForPrimaryKey('CallHistory', historyId);
+                if (existing && ((existing as any).direction === 'incoming' || (existing as any).direction === 'outgoing' || (existing as any).durationSeconds > 0 || (existing as any).status === 'ENDED')) {
+                    continue;
+                }
                 if (!existing) {
                     try {
                         realm.write(() => {
@@ -2629,18 +2676,7 @@ const Yambi = ({ navigation }: NavProps) => {
                 Notifications.dismissNotificationAsync(notificationId).catch(() => {});
             }
 
-            callManager.handleIncomingInviteFromNotification(notificationData);
-
-            if (actionIdentifier === 'accept_call') {
-                const callType = notificationData?.callType || notificationData?.type || 'audio';
-                const targetScreen = callType === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
-
-                navigateWithRetry(targetScreen as any, {});
-                await callManager.acceptCall();
-                return true;
-            } else if (actionIdentifier === 'decline_call') {
-                callSoundManager.stopRingtone();
-                callManager.rejectCall(notificationData);
+            if (actionIdentifier === 'decline_call') {
                 Notifications.dismissAllNotificationsAsync().catch(() => {});
                 try {
                     const callId = notificationData?.callId;
@@ -2654,13 +2690,13 @@ const Yambi = ({ navigation }: NavProps) => {
                         }).catch(() => {});
                     }
                 } catch (e) {}
-                return true;
-            } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER || !actionIdentifier) {
-                const callType = notificationData?.callType || notificationData?.type || 'audio';
-                const targetScreen = callType === 'video' ? 'VideoCallScreen' : 'AudioCallScreen';
-                navigateWithRetry(targetScreen as any, {});
+                callManager.syncCallHistory();
                 return true;
             }
+
+            // Pour accept_call ou tap sur la notif, l'appel est géré nativement
+            callManager.syncCallHistory();
+            return true;
             return false;
         };
 
@@ -3060,6 +3096,7 @@ const Yambi = ({ navigation }: NavProps) => {
                     }
                     SocketApp.emit("assemble", user_data.phone_number);
                 }
+                callManager.checkPendingCall().catch(() => {});
             } else if (state === "background" || state === "inactive") {
                 if (user_data.phone_number && SocketApp.connected) {
                     SocketApp.emit("assemble_background", user_data.phone_number);
@@ -3343,8 +3380,7 @@ const Yambi = ({ navigation }: NavProps) => {
                                     gestureEnabled: true,
                                 })} component={Inbox} />
 
-                            <Stack.Screen name="AudioCallScreen" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} component={AudioCallScreen} />
-                            <Stack.Screen name="VideoCallScreen" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} component={VideoCallScreen} />
+
                             <Stack.Screen name="Call" component={CallDetailScreen} options={{
                                 headerShadowVisible: false,
                                 headerShown: true,
@@ -4689,8 +4725,6 @@ const Yambi = ({ navigation }: NavProps) => {
 
                             <Stack.Screen name="SplashStartYambi" options={{ headerShown: false }} component={SplashYambiStart} />
                         </Stack.Navigator>
-                        <IncomingCallOverlay navigation={navigationRef} />
-                        <ActiveCallFloatingPIP navigation={navigationRef} />
                     </NavigationContainer>
                 </AudioPlayerProvider>
             </KeyboardRootView>
