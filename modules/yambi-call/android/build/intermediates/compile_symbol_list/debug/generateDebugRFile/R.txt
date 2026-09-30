@@ -6,5 +6,9 @@ int drawable ic_call_mic_on 0x0
 int drawable ic_call_speaker_off 0x0
 int drawable ic_call_speaker_on 0x0
 int drawable ic_call_video 0x0
+int drawable ic_call_video_off 0x0
 int drawable ic_default_avatar 0x0
 int drawable ic_verified_badge 0x0
+int drawable profile_black 0x0
+int raw end_call 0x0
+int raw outgoing_call 0x0

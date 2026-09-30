@@ -42,6 +42,11 @@ export const syncNativeCallStrings = (lang?: string) => {
       end_call: dict.end_call || dict.btn_end || 'Raccrocher',
       btn_end: dict.btn_end || dict.end_call || 'Fin',
       switch_camera: dict.btn_flip || 'Bascule',
+      video_paused: dict.video_paused || 'Vidéo en pause',
+      pause_video: dict.pause_video || 'Pause',
+      resume_video: dict.resume_video || 'Reprendre',
+      camera: dict.camera || 'Caméra',
+      camera_off: dict.camera_off || 'Caméra désactivée',
     };
     YambiCall.setCallStrings(callStrings);
   } catch (e) {

@@ -20,7 +20,8 @@ data class ActiveCallSession(
     val userPhone: String = "",
     var connectedAt: Long = 0L,
     var isMuted: Boolean = false,
-    var isSpeakerOn: Boolean = false
+    var isSpeakerOn: Boolean = false,
+    var isCameraOff: Boolean = false
 )
 
 class YambiCallService : Service() {
@@ -153,6 +154,13 @@ class YambiCallService : Service() {
             isVerified,
             calleeId
           )
+
+          if (callerId.isNotBlank() && calleeId.isNotBlank()) {
+            try {
+              NativeSignalingManager.instance.connect(calleeId)
+              NativeSignalingManager.instance.sendRinging(callId, callerId, calleeId)
+            } catch (_: Exception) {}
+          }
 
           try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

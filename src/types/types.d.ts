@@ -79,6 +79,7 @@ export type TStore = {
     typing_statuses: Record<string, string>,
     call_active: boolean,
     call_state: string,
+    search_call_history: boolean,
     // message_photo_view: TMessage
 }
 

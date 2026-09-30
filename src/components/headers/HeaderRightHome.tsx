@@ -8,7 +8,7 @@ import { strings } from "../../lang/lang";
 import { useEffect, useState } from "react";
 import ModalApp from "../app/ModalApp";
 import { YambiText } from "../app/Text";
-import { setShowFavoriteChats, setShowModalApp } from "../../store/reducers/appSlice";
+import { setShowFavoriteChats, setShowModalApp, setSearchCallHistory } from "../../store/reducers/appSlice";
 import { setBusinessSubscriptions } from "../../store/reducers/persistedAppSlice";
 import axios from "axios";
 import { useQuery, useRealm } from "@realm/react";
@@ -28,6 +28,7 @@ const HeaderRightHome = () => {
     const cart = useAppSelector(state => state.persisted_app.cart);
     const status_badge = useAppSelector(state => state.persisted_app.status_badge || 0);
     const loading_header = useAppSelector(state => state.app.loading_header);
+    const search_call_history = useAppSelector(state => state.app.search_call_history);
     const [loading, setLoading] = useState(false);
     const [showInternetError, setShowInternetError] = useState(false);
     const dispatch = useDispatch();
@@ -585,6 +586,21 @@ const HeaderRightHome = () => {
                         </Animated.View>
                     )}
                 </>
+            )}
+
+            {(title === strings.calls || title === 'Calls') && (
+                <Animated.View entering={FadeIn}>
+                    <Pressable
+                        onPress={() => { dispatch(setSearchCallHistory(!search_call_history)) }}
+                        style={iconPressableStyle}>
+                        <IconApp
+                            pack="FI"
+                            name="search"
+                            size={20}
+                            color={search_call_history ? (theme.colors.high_color || theme.colors.header_foreground_color) : theme.colors.header_foreground_color}
+                        />
+                    </Pressable>
+                </Animated.View>
             )}
 
             {(title === strings.business || title === strings.expenses) && (

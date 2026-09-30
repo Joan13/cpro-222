@@ -7,5 +7,9 @@ drawable ic_call_mic_on
 drawable ic_call_speaker_off
 drawable ic_call_speaker_on
 drawable ic_call_video
+drawable ic_call_video_off
 drawable ic_default_avatar
 drawable ic_verified_badge
+drawable profile_black
+raw end_call
+raw outgoing_call

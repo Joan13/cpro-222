@@ -41,7 +41,7 @@ const RootYambi = () => {
 };
 
 registerRootComponent(RootYambi);
-callManager.checkPendingCall().catch(() => {});
+callManager.checkPendingCall().catch(() => { });
 
 const backgroundMessageHandler = async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
   const user = await getConnectedUser();
@@ -71,8 +71,8 @@ const backgroundMessageHandler = async (remoteMessage: FirebaseMessagingTypes.Re
       const callData = remoteMessage.data;
       const callId = callData.callId || (callData as any).call_id;
       if (callId) {
-        YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => {});
-        YambiCall.dismissNotification(String(callId)).catch(() => {});
+        YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => { });
+        YambiCall.dismissNotification(String(callId)).catch(() => { });
       }
       callManager.syncCallHistory();
       return;
@@ -84,14 +84,14 @@ const backgroundMessageHandler = async (remoteMessage: FirebaseMessagingTypes.Re
       if (callId) {
         const wasAnswered = await YambiCall.wasCallAnswered(String(callId)).catch(() => false);
         if (wasAnswered) {
-          YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => {});
-          YambiCall.dismissNotification(String(callId)).catch(() => {});
+          YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => { });
+          YambiCall.dismissNotification(String(callId)).catch(() => { });
           callManager.syncCallHistory();
           return;
         }
 
-        YambiCall.reportCallEnded(String(callId), 'MISSED').catch(() => {});
-        YambiCall.dismissNotification(String(callId)).catch(() => {});
+        YambiCall.reportCallEnded(String(callId), 'MISSED').catch(() => { });
+        YambiCall.dismissNotification(String(callId)).catch(() => { });
       }
       callManager.syncCallHistory();
 

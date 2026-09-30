@@ -1,5 +1,5 @@
-import { Pressable, View, Dimensions, Image } from "react-native";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Pressable, View, Dimensions, Image, StyleSheet } from "react-native";
 import { Image as ExpoImage } from 'expo-image';
 import { useAppSelector } from "../../store/app/hooks";
 import { NavProps } from "../../types/types";
@@ -10,22 +10,41 @@ import Animated, {
     useSharedValue, 
     useAnimatedStyle, 
     withTiming,
+    withSpring,
     runOnJS,
-    Easing
+    Easing,
+    cancelAnimation,
+    interpolate,
+    Extrapolation,
+    type SharedValue,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppActivityIndicator from "../../components/app/AppActivityIndicator";
+import { StoryUserPage } from "../../components/stories/StoryCubeFace";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 /** Rest / “fit” zoom level after pinch ends. */
 const BASE_ZOOM = 1;
 /** Allow pinch to zoom out slightly below fit (rubber band), then spring back on release. */
-const PINCH_MIN_SCALE = 0.88;
+const PINCH_MIN_SCALE = 0.7;
 const MAX_ZOOM = 4;
+const DISMISS_THRESHOLD = 120;
 
 /** Pinch-to-zoom + one-finger pan when zoomed; pan clamped from contain layout so background never shows. */
-const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundColor: string }) => {
+const ZoomablePhotoItem = ({
+    uri,
+    backgroundColor,
+    isZoomedShared,
+    isPinchingShared,
+    isActive,
+}: {
+    uri: string;
+    backgroundColor: string;
+    isZoomedShared: SharedValue<boolean>;
+    isPinchingShared: SharedValue<boolean>;
+    isActive?: boolean;
+}) => {
     const [loading, setLoading] = useState(true);
     const scale = useSharedValue(1);
     const savedScale = useSharedValue(1);
@@ -75,20 +94,42 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
     useEffect(() => {
         natW.value = 0;
         natH.value = 0;
+        scale.value = 1;
+        savedScale.value = 1;
+        translateX.value = 0;
+        translateY.value = 0;
+        savedTx.value = 0;
+        savedTy.value = 0;
+        isZoomedShared.value = false;
         recomputeRef.current();
+
         let cancelled = false;
-        Image.getSize(
-            uri,
-            (w, h) => {
-                if (cancelled || !w || !h) return;
-                natW.value = w;
-                natH.value = h;
-                recomputeRef.current();
-            },
-            () => { }
-        );
+        if (uri.startsWith('http')) {
+            Image.getSize(
+                uri,
+                (w, h) => {
+                    if (cancelled || !w || !h) return;
+                    natW.value = w;
+                    natH.value = h;
+                    recomputeRef.current();
+                },
+                () => { }
+            );
+        }
         return () => { cancelled = true; };
     }, [uri]);
+
+    // Reset zoom state if this slide becomes inactive (e.g. user swiped to another photo)
+    useEffect(() => {
+        if (isActive === false) {
+            scale.value = 1;
+            savedScale.value = 1;
+            translateX.value = 0;
+            translateY.value = 0;
+            savedTx.value = 0;
+            savedTy.value = 0;
+        }
+    }, [isActive]);
 
     const zoomGestures = useMemo(() => {
         const maxPan = (disp: number, box: number, s: number) => {
@@ -96,54 +137,59 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
             return Math.max(0, (disp * s - box) / 2);
         };
 
-        const clampPanToScale = () => {
+        const clampPanToScale = (s?: number) => {
             'worklet';
-            const s = scale.value;
-            if (s <= BASE_ZOOM + 0.001) {
+            const currentScale = s !== undefined ? s : scale.value;
+            if (currentScale <= BASE_ZOOM) {
                 translateX.value = 0;
                 translateY.value = 0;
-                savedTx.value = 0;
-                savedTy.value = 0;
                 return;
             }
-            const padX = maxPan(dispW.value, boxW.value, s);
-            const padY = maxPan(dispH.value, boxH.value, s);
+            const padX = maxPan(dispW.value, boxW.value, currentScale);
+            const padY = maxPan(dispH.value, boxH.value, currentScale);
             translateX.value = Math.min(Math.max(translateX.value, -padX), padX);
             translateY.value = Math.min(Math.max(translateY.value, -padY), padY);
-            savedTx.value = translateX.value;
-            savedTy.value = translateY.value;
         };
 
         const pinchGesture = Gesture.Pinch()
             .onStart(() => {
+                isPinchingShared.value = true;
+                isZoomedShared.value = true;
                 savedScale.value = scale.value;
             })
             .onUpdate((e) => {
                 const next = savedScale.value * e.scale;
                 scale.value = Math.min(Math.max(next, PINCH_MIN_SCALE), MAX_ZOOM);
-                clampPanToScale();
+                clampPanToScale(scale.value);
             })
-            .onEnd(() => {
-                savedScale.value = scale.value;
-                if (scale.value < BASE_ZOOM - 0.001) {
-                    scale.value = withTiming(BASE_ZOOM, { duration: 200, easing: Easing.out(Easing.quad) });
+            .onFinalize(() => {
+                isPinchingShared.value = false;
+                if (scale.value < BASE_ZOOM + 0.05) {
+                    scale.value = withTiming(BASE_ZOOM, { duration: 200, easing: Easing.out(Easing.quad) }, (finished) => {
+                        if (finished) {
+                            isZoomedShared.value = false;
+                        }
+                    });
                     savedScale.value = BASE_ZOOM;
                     translateX.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
                     translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
                     savedTx.value = 0;
                     savedTy.value = 0;
                 } else {
-                    clampPanToScale();
+                    savedScale.value = scale.value;
+                    isZoomedShared.value = true;
+                    clampPanToScale(scale.value);
+                    savedTx.value = translateX.value;
+                    savedTy.value = translateY.value;
                 }
             });
 
-        /** Do not activate on first finger down — wait for movement or fail when 2nd finger joins (pinch). */
         const panGesture = Gesture.Pan()
             .maxPointers(1)
             .manualActivation(true)
             .onTouchesDown((e, state) => {
                 panActivatedThisStroke.value = 0;
-                if (e.numberOfTouches > 1) {
+                if (e.numberOfTouches > 1 || isPinchingShared.value) {
                     state.fail();
                     return;
                 }
@@ -154,7 +200,7 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
                 }
             })
             .onTouchesMove((e, state) => {
-                if (e.numberOfTouches > 1) {
+                if (e.numberOfTouches > 1 || isPinchingShared.value) {
                     state.fail();
                     return;
                 }
@@ -180,6 +226,7 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
                 savedTy.value = translateY.value;
             })
             .onUpdate((e) => {
+                if (isPinchingShared.value) return;
                 const s = scale.value;
                 if (s <= BASE_ZOOM + 0.02) {
                     return;
@@ -195,7 +242,7 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
                     padY
                 );
             })
-            .onEnd(() => {
+            .onFinalize(() => {
                 savedTx.value = translateX.value;
                 savedTy.value = translateY.value;
             });
@@ -207,23 +254,28 @@ const ZoomablePhotoItem = ({ uri, backgroundColor }: { uri: string; backgroundCo
             .onEnd(() => {
                 'worklet';
                 if (scale.value > BASE_ZOOM + 0.05) {
-                    scale.value = withTiming(BASE_ZOOM, { duration: 200, easing: Easing.out(Easing.quad) });
+                    scale.value = withTiming(BASE_ZOOM, { duration: 200, easing: Easing.out(Easing.quad) }, (finished) => {
+                        if (finished) {
+                            isZoomedShared.value = false;
+                        }
+                    });
                     savedScale.value = BASE_ZOOM;
                     translateX.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
                     translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
                     savedTx.value = 0;
                     savedTy.value = 0;
                 } else {
-                    scale.value = MAX_ZOOM;
-                    savedScale.value = MAX_ZOOM;
-                    clampPanToScale();
+                    const targetZoom = 2.5;
+                    scale.value = withTiming(targetZoom, { duration: 200, easing: Easing.out(Easing.quad) });
+                    savedScale.value = targetZoom;
+                    isZoomedShared.value = true;
+                    clampPanToScale(targetZoom);
                 }
             });
 
         return Gesture.Simultaneous(pinchGesture, panGesture, doubleTapGesture);
-    }, []);
+    }, [isZoomedShared, isPinchingShared]);
 
-    /** Pan moves this layer; scale only applies to the exact contain rect so image edges match limits. */
     const panStyle = useAnimatedStyle(() => ({
         transform: [
             { translateX: translateX.value },
@@ -311,278 +363,395 @@ const ViewPhoto = ({ route, navigation }: NavProps) => {
     };
 
     // Determine if we have multiple images
-    const imageArray = images && images.length > 0 ? images : (source ? [source] : []);
+    const imageArray = useMemo(() => {
+        if (images && images.length > 0) return images;
+        if (source) return [source];
+        return [];
+    }, [images, source]);
+
     const hasMultipleImages = imageArray.length > 1;
-    const initialIdx = initialIndex !== undefined ? initialIndex : 0;
+    const initialIdx = initialIndex !== undefined ? Math.min(Math.max(0, initialIndex), Math.max(0, imageArray.length - 1)) : 0;
     const [currentIndex, setCurrentIndex] = useState(initialIdx);
 
-    // Shared values for animations
-    const translateY = useSharedValue(0);
-    const translateX = useSharedValue(-initialIdx * SCREEN_WIDTH);
-    const opacity = useSharedValue(1);
+    // Shared values for 3D Cube (scrollX) and swipe-down dismiss (translateY)
+    const scrollX = useSharedValue<number>(initialIdx * SCREEN_WIDTH);
+    const translateY = useSharedValue<number>(0);
 
-    // Update translateX when currentIndex changes programmatically
+    // Shared values to track gesture and zoom state
+    const gestureDirection = useSharedValue<number>(0); // 0: none, 1: horizontal (cube), 2: vertical (dismiss)
+    const gestureStartScrollX = useSharedValue<number>(initialIdx * SCREEN_WIDTH);
+    const isDismissing = useSharedValue<boolean>(false);
+    const isZoomedShared = useSharedValue<boolean>(false);
+    const isPinchingShared = useSharedValue<boolean>(false);
+
     useEffect(() => {
-        translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
-            duration: 250,
-            easing: Easing.out(Easing.quad),
-        });
-    }, [currentIndex]);
+        navigation.setOptions({ headerShown: false });
+    }, [navigation]);
 
-    const closePhoto = () => {
+    const handleDismiss = useCallback(() => {
         navigation.goBack();
-    };
+    }, [navigation]);
 
-    const goToNextImage = () => {
-        if (currentIndex < imageArray.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-        }
-    };
-
-    const goToPreviousImage = () => {
-        if (currentIndex > 0) {
-            setCurrentIndex(currentIndex - 1);
-        }
-    };
-
-    // Horizontal pan gesture for left/right navigation (1 finger only so pinch can use 2)
-    const horizontalPanGesture = Gesture.Pan()
-        .maxPointers(1)
-        .enabled(hasMultipleImages)
-        .activeOffsetX([-10, 10]) // Require horizontal movement
-        .onUpdate((event) => {
-            // Only allow horizontal movement if it's the primary direction
-            if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
-                const newTranslateX = -currentIndex * SCREEN_WIDTH + event.translationX;
-                // Clamp the translation to prevent over-scrolling
-                const minX = -(imageArray.length - 1) * SCREEN_WIDTH;
-                const maxX = 0;
-                translateX.value = Math.max(minX, Math.min(maxX, newTranslateX));
+    const goToIndex = useCallback((targetIdx: number) => {
+        if (targetIdx === currentIndex || targetIdx < 0 || targetIdx >= imageArray.length) return;
+        cancelAnimation(scrollX);
+        isZoomedShared.value = false;
+        scrollX.value = withTiming(
+            targetIdx * SCREEN_WIDTH,
+            { duration: 220, easing: Easing.out(Easing.cubic) },
+            (finished) => {
+                if (finished) {
+                    runOnJS(setCurrentIndex)(targetIdx);
+                }
             }
-        })
-        .onEnd((event) => {
-            // Only process if horizontal movement was primary
-            if (Math.abs(event.translationX) > Math.abs(event.translationY)) {
-                const threshold = SCREEN_WIDTH * 0.3;
-                const shouldSwipe = Math.abs(event.translationX) > threshold || Math.abs(event.velocityX) > 500;
+        );
+    }, [currentIndex, imageArray.length, scrollX, isZoomedShared]);
 
-                if (shouldSwipe) {
-                    if (event.translationX > 0 && currentIndex > 0) {
-                        // Swipe right - go to previous image
-                        runOnJS(goToPreviousImage)();
-                    } else if (event.translationX < 0 && currentIndex < imageArray.length - 1) {
-                        // Swipe left - go to next image
-                        runOnJS(goToNextImage)();
-                    } else {
-                        // Snap back to current position
-                        translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
-                            duration: 200,
+    // Gesture Handler for 3D Cube pan and swipe-down dismiss (mirroring UserStories.tsx)
+    const panGesture = useMemo(
+        () =>
+            Gesture.Pan()
+                .maxPointers(1)
+                .activeOffsetX([-15, 15])
+                .activeOffsetY([-15, 15])
+                .onBegin(() => {
+                    if (isZoomedShared.value || isPinchingShared.value) return;
+                    if (!isDismissing.value) {
+                        cancelAnimation(scrollX);
+                        cancelAnimation(translateY);
+                        gestureDirection.value = 0;
+                        gestureStartScrollX.value = scrollX.value;
+                    }
+                })
+                .onUpdate((event) => {
+                    if (isDismissing.value || isZoomedShared.value || isPinchingShared.value) return;
+
+                    const absX = Math.abs(event.translationX);
+                    const absY = Math.abs(event.translationY);
+
+                    // Determine lock direction once movement starts:
+                    // Downward swipe (translationY > 10 and absY > absX * 1.2) locks vertical dismiss
+                    // Horizontal swipe (absX > 10 and absX > absY * 1.2) locks 3D cube slider
+                    if (gestureDirection.value === 0) {
+                        if (absY > absX * 1.2 && event.translationY > 10) {
+                            gestureDirection.value = 2; // Vertical dismiss
+                        } else if (absX > absY * 1.2 && absX > 10) {
+                            gestureDirection.value = 1; // Horizontal 3D cube
+                        }
+                    }
+
+                    if (gestureDirection.value === 2) {
+                        // Vertical drag down (Pull-to-dismiss)
+                        if (event.translationY > 0) {
+                            translateY.value = event.translationY;
+                        }
+                    } else if (gestureDirection.value === 1) {
+                        // Horizontal 3D cube rotation with elastic resistance at edges
+                        const minScroll = 0;
+                        const maxScroll = Math.max(0, (imageArray.length - 1) * SCREEN_WIDTH);
+                        const currentTarget = gestureStartScrollX.value - event.translationX;
+                        if (currentTarget < minScroll) {
+                            scrollX.value = minScroll + (currentTarget - minScroll) * 0.35;
+                        } else if (currentTarget > maxScroll) {
+                            scrollX.value = maxScroll + (currentTarget - maxScroll) * 0.35;
+                        } else {
+                            scrollX.value = currentTarget;
+                        }
+                    }
+                })
+                .onEnd((event) => {
+                    if (isDismissing.value || isZoomedShared.value || isPinchingShared.value) return;
+
+                    if (gestureDirection.value === 2) {
+                        // Dismiss if dragged down > DISMISS_THRESHOLD OR downward velocity > 600
+                        if (event.translationY > DISMISS_THRESHOLD || event.velocityY > 600) {
+                            isDismissing.value = true;
+                            translateY.value = withTiming(
+                                SCREEN_HEIGHT,
+                                { duration: 260, easing: Easing.out(Easing.cubic) },
+                                (finished) => {
+                                    if (finished) {
+                                        runOnJS(handleDismiss)();
+                                    }
+                                }
+                            );
+                        } else {
+                            translateY.value = withTiming(0, {
+                                duration: 180,
+                                easing: Easing.out(Easing.cubic),
+                            });
+                        }
+                    } else if (gestureDirection.value === 1) {
+                        // Horizontal 3D Cube snap
+                        const maxIdx = Math.max(0, imageArray.length - 1);
+                        let targetIdx = currentIndex;
+
+                        const velocityThreshold = 400;
+                        const distanceThreshold = SCREEN_WIDTH * 0.25;
+
+                        if (event.velocityX < -velocityThreshold) {
+                            targetIdx = Math.min(maxIdx, currentIndex + 1);
+                        } else if (event.velocityX > velocityThreshold) {
+                            targetIdx = Math.max(0, currentIndex - 1);
+                        } else if (event.translationX < -distanceThreshold) {
+                            targetIdx = Math.min(maxIdx, currentIndex + 1);
+                        } else if (event.translationX > distanceThreshold) {
+                            targetIdx = Math.max(0, currentIndex - 1);
+                        } else {
+                            targetIdx = currentIndex;
+                        }
+
+                        if (targetIdx !== currentIndex) {
+                            scrollX.value = withTiming(
+                                targetIdx * SCREEN_WIDTH,
+                                { duration: 220, easing: Easing.out(Easing.cubic) },
+                                (finished) => {
+                                    if (finished) {
+                                        runOnJS(setCurrentIndex)(targetIdx);
+                                    }
+                                }
+                            );
+                        } else {
+                            scrollX.value = withTiming(
+                                currentIndex * SCREEN_WIDTH,
+                                { duration: 180, easing: Easing.out(Easing.cubic) }
+                            );
+                        }
+                    }
+                    gestureDirection.value = 0;
+                })
+                .onFinalize(() => {
+                    if (!isDismissing.value && !isZoomedShared.value && !isPinchingShared.value) {
+                        translateY.value = withTiming(0, {
+                            duration: 160,
                             easing: Easing.out(Easing.quad),
                         });
                     }
-                } else {
-                    // Snap back to current position
-                    translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
-                        duration: 200,
-                        easing: Easing.out(Easing.quad),
-                    });
-                }
-            } else {
-                // Reset if gesture was cancelled
-                translateX.value = withTiming(-currentIndex * SCREEN_WIDTH, {
-                    duration: 200,
-                    easing: Easing.out(Easing.quad),
-                });
-            }
-        });
+                }),
+        [
+            currentIndex,
+            imageArray.length,
+            handleDismiss,
+            gestureDirection,
+            gestureStartScrollX,
+            translateY,
+            scrollX,
+            isZoomedShared,
+            isPinchingShared,
+            isDismissing,
+        ]
+    );
 
-    // Vertical pan gesture for closing (downward swipe) — 1 finger only
-    const verticalPanGesture = Gesture.Pan()
-        .maxPointers(1)
-        .activeOffsetY([20, SCREEN_HEIGHT]) // Require a noticeable downward swipe
-        .onUpdate((event) => {
-            // Only allow downward swipes and prioritize vertical over horizontal
-            if (event.translationY > 0 && Math.abs(event.translationY) > Math.abs(event.translationX)) {
-                translateY.value = event.translationY;
-                // Reduce opacity as user swipes down
-                opacity.value = 1 - (event.translationY / SCREEN_HEIGHT) * 0.8;
-            }
-        })
-        .onEnd((event) => {
-            // Only process if vertical movement was primary
-            if (Math.abs(event.translationY) > Math.abs(event.translationX) && event.translationY > 0) {
-                if (event.translationY > SCREEN_HEIGHT * 0.3 || event.velocityY > 500) {
-                    // Smooth slideDown animation
-                    translateY.value = withTiming(SCREEN_HEIGHT, { 
-                        duration: 300,
-                        easing: Easing.out(Easing.quad),
-                    });
-                    opacity.value = withTiming(0, { 
-                        duration: 300,
-                        easing: Easing.out(Easing.quad),
-                    }, () => {
-                        runOnJS(closePhoto)();
-                    });
-                } else {
-                    // Snap back to original position
-                    translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
-                    opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) });
-                }
-            } else {
-                // Reset if gesture was cancelled
-                translateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
-                opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) });
-            }
-        });
+    const containerAnimatedStyle = useAnimatedStyle(() => {
+        const dismissScale = interpolate(
+            translateY.value,
+            [0, SCREEN_HEIGHT * 0.6],
+            [1, 0.88],
+            Extrapolation.CLAMP
+        );
+        const dismissRadius = interpolate(
+            translateY.value,
+            [0, SCREEN_HEIGHT * 0.3],
+            [0, 20],
+            Extrapolation.CLAMP
+        );
 
-    // Combined gesture - both horizontal and vertical can work
-    const combinedGesture = Gesture.Simultaneous(horizontalPanGesture, verticalPanGesture);
-
-    const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [
-                { translateX: translateX.value },
-                { translateY: translateY.value }
-            ],
-            opacity: opacity.value,
-        } as any;
+                { translateY: translateY.value },
+                { scale: dismissScale },
+            ] as any,
+            borderRadius: dismissRadius,
+            overflow: 'hidden',
+        };
     });
 
-    const renderImageItem = useCallback(({ item, index: _index }: { item: string; index: number }) => {
-        if (item === "") {
-            return (
-                    <Pressable onPress={() => navigation.goBack()} style={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                    }}>
-                        <TextNormalYambiGray text={strings.no_picture} />
-                </Pressable>
-            );
-        }
-
-        return (
-            <ZoomablePhotoItem uri={item} backgroundColor={app_theme.colors.background} />
+    const animatedBackgroundStyle = useAnimatedStyle(() => {
+        const bgOpacity = interpolate(
+            translateY.value,
+            [0, SCREEN_HEIGHT / 2],
+            [1, 0],
+            Extrapolation.CLAMP
         );
-    }, [navigation, app_theme.colors.background]);
 
+        return {
+            backgroundColor: `rgba(0, 0, 0, ${bgOpacity})`,
+        };
+    });
 
-    if (imageArray.length === 0) {
-        return (
-            <View style={{
-                flex: 1,
-                backgroundColor: app_theme.colors.background,
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
-                <TextNormalYambiGray text={strings.no_picture} />
-            </View>
+    const controlsAnimatedStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            translateY.value,
+            [0, 60],
+            [1, 0],
+            Extrapolation.CLAMP
         );
-    }
 
-    // Render all images in a horizontal row for multiple images
-    const renderImagesContainer = () => {
-        if (hasMultipleImages) {
-            return (
-                <Animated.View style={{
-                    flexDirection: 'row',
-                    width: SCREEN_WIDTH * imageArray.length,
-                    height: '100%',
-                }}>
-                    {imageArray.map((item, idx) => (
-                        <View key={idx} style={{ width: SCREEN_WIDTH, height: '100%' }}>
-                            {renderImageItem({ item, index: idx })}
-                        </View>
-                    ))}
-                </Animated.View>
-            );
-        } else {
-            return renderImageItem({ item: imageArray[0], index: 0 });
-        }
-    };
+        return {
+            opacity,
+        };
+    });
 
-    return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{
-                flex: 1,
-                backgroundColor: app_theme.colors.background
-            }}>
-                {/* Header overlay */}
-                <View style={{
-                    position: 'absolute',
-                    top: 40,
-                    left: 0,
-                    right: 0,
-                    zIndex: 10,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 16,
-                }}>
+    if (imageArray.length === 0 || (imageArray.length === 1 && imageArray[0] === "")) {
+        return (
+            <GestureHandlerRootView style={styles.root}>
+                <View style={[styles.root, { backgroundColor: '#000000', justifyContent: 'center', alignItems: 'center' }]}>
                     <Pressable
-                        onPress={closePhoto}
-                        hitSlop={12}
+                        onPress={handleDismiss}
                         style={{
+                            position: 'absolute',
+                            top: 40,
+                            left: 16,
                             width: 40,
                             height: 40,
                             borderRadius: 20,
-                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            backgroundColor: 'rgba(255,255,255,0.2)',
                             justifyContent: 'center',
                             alignItems: 'center',
-                        }}>
+                            zIndex: 10,
+                        }}
+                    >
                         <IconApp pack="FI" name="x" size={22} color="#FFFFFF" />
                     </Pressable>
-
-                    {hasMultipleImages && (
-                        <View style={{
-                            backgroundColor: 'rgba(0,0,0,0.5)',
-                            paddingHorizontal: 14,
-                            paddingVertical: 6,
-                            borderRadius: 16,
-                        }}>
-                            <YambiText size="small" color="white" bold text={`${currentIndex + 1} / ${imageArray.length}`} />
-                        </View>
-                    )}
+                    <TextNormalYambiGray text={strings.no_picture} />
                 </View>
+            </GestureHandlerRootView>
+        );
+    }
 
-                {/* Main photo carousel */}
-                <GestureDetector gesture={combinedGesture}>
-                    <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-                        {renderImagesContainer()}
+    return (
+        <GestureHandlerRootView style={styles.root}>
+            <Animated.View style={[StyleSheet.absoluteFill, animatedBackgroundStyle]}>
+                <GestureDetector gesture={panGesture}>
+                    <Animated.View style={[styles.container, containerAnimatedStyle]}>
+                        {/* Header Overlay */}
+                        <Animated.View style={[styles.headerOverlay, controlsAnimatedStyle]}>
+                            <Pressable
+                                onPress={handleDismiss}
+                                hitSlop={12}
+                                style={styles.closeBtn}
+                            >
+                                <IconApp pack="FI" name="x" size={22} color="#FFFFFF" />
+                            </Pressable>
+
+                            {hasMultipleImages && (
+                                <View style={styles.counterBadge}>
+                                    <YambiText
+                                        size="small"
+                                        color="white"
+                                        bold
+                                        text={`${currentIndex + 1} / ${imageArray.length}`}
+                                    />
+                                </View>
+                            )}
+                        </Animated.View>
+
+                        {/* StoryUserPage 3D Cube Faces for Photos */}
+                        {imageArray.map((item, idx) => {
+                            if (Math.abs(idx - currentIndex) > 1) {
+                                return null;
+                            }
+
+                            return (
+                                <StoryUserPage
+                                    key={idx}
+                                    index={idx}
+                                    currentUserIndex={currentIndex}
+                                    scrollX={scrollX}
+                                    width={SCREEN_WIDTH}
+                                    height={SCREEN_HEIGHT}
+                                    pointerEvents={idx === currentIndex ? 'auto' : 'none'}
+                                >
+                                    <ZoomablePhotoItem
+                                        uri={item}
+                                        backgroundColor="transparent"
+                                        isZoomedShared={isZoomedShared}
+                                        isPinchingShared={isPinchingShared}
+                                        isActive={idx === currentIndex}
+                                    />
+                                </StoryUserPage>
+                            );
+                        })}
+
+                        {/* Bottom Pagination Dots */}
+                        {hasMultipleImages && (
+                            <Animated.View style={[styles.footerOverlay, controlsAnimatedStyle]}>
+                                {imageArray.map((_, idx) => (
+                                    <Pressable
+                                        key={idx}
+                                        onPress={() => goToIndex(idx)}
+                                        hitSlop={10}
+                                        style={[
+                                            styles.dot,
+                                            {
+                                                width: currentIndex === idx ? 22 : 8,
+                                                backgroundColor:
+                                                    currentIndex === idx
+                                                        ? (app_theme.colors.high_color || '#FFFFFF')
+                                                        : 'rgba(255,255,255,0.4)',
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </Animated.View>
+                        )}
                     </Animated.View>
                 </GestureDetector>
-
-                {/* Bottom pagination dots for multiple images */}
-                {hasMultipleImages && (
-                    <View style={{
-                        position: 'absolute',
-                        bottom: 36,
-                        left: 0,
-                        right: 0,
-                        zIndex: 10,
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}>
-                        {imageArray.map((_, idx) => (
-                            <Pressable
-                                key={idx}
-                                onPress={() => setCurrentIndex(idx)}
-                                hitSlop={10}
-                                style={{
-                                    width: currentIndex === idx ? 22 : 8,
-                                    height: 8,
-                                    borderRadius: 4,
-                                    backgroundColor: currentIndex === idx ? (app_theme.colors.high_color || '#FFFFFF') : 'rgba(255,255,255,0.4)',
-                                    marginHorizontal: 4,
-                                }}
-                            />
-                        ))}
-                    </View>
-                )}
-            </View>
+            </Animated.View>
         </GestureHandlerRootView>
-    )
-}
+    );
+};
+
+const styles = StyleSheet.create({
+    root: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        overflow: 'hidden',
+    },
+    container: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
+    headerOverlay: {
+        position: 'absolute',
+        top: 40,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+    },
+    closeBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    counterBadge: {
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    footerOverlay: {
+        position: 'absolute',
+        bottom: 36,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dot: {
+        height: 8,
+        borderRadius: 4,
+        marginHorizontal: 4,
+    },
+});
 
 export default ViewPhoto;

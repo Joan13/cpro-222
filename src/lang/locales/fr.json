@@ -2388,6 +2388,10 @@
   "accept": "Accepter",
   "camera_off": "Caméra désactivée",
   "camera_on": "Caméra activée",
+  "video_paused": "Vidéo en pause",
+  "pause_video": "Pause",
+  "resume_video": "Reprendre",
+  "camera": "Caméra",
   "switch_camera": "Changer de caméra",
   "btn_speaker": "HP",
   "btn_flip": "Bascule",
@@ -2410,5 +2414,15 @@
   "revenue_variance": "Différence de chiffre d'affaires",
   "see_less": "Voir moins",
   "view_all": "Voir tout",
-  "validate_filter": "Valider le filtre"
+  "validate_filter": "Valider le filtre",
+  "search_calls": "Rechercher des appels...",
+  "filter_all": "Tous",
+  "filter_missed": "Manqués",
+  "filter_incoming": "Entrants",
+  "filter_outgoing": "Sortants",
+  "filter_audio": "Audio",
+  "filter_video": "Vidéo",
+  "no_calls_found": "Aucun appel trouvé",
+  "no_calls_found_desc": "Essayez de modifier votre recherche ou vos filtres",
+  "clear_filters": "Effacer les filtres"
 }

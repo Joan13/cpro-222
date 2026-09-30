@@ -76,7 +76,8 @@ const initialState: TStore = {
     category: "",
     typing_statuses: {},
     call_active: false,
-    call_state: 'IDLE'
+    call_state: 'IDLE',
+    search_call_history: false,
 }
 
 export const appSlice = createSlice({
@@ -89,6 +90,9 @@ export const appSlice = createSlice({
         setCallState: (state, action: PayloadAction<string>) => {
             state.call_state = action.payload;
             state.call_active = action.payload !== 'IDLE' && action.payload !== 'ENDED' && action.payload !== 'FAILED' && action.payload !== 'BUSY';
+        },
+        setSearchCallHistory: (state, action: PayloadAction<boolean>) => {
+            state.search_call_history = action.payload;
         },
         setRootNavigation: (state, action: PayloadAction) => {
             state.rootNavigation = action.payload;
@@ -302,7 +306,8 @@ export const {
     setScrollToEnd,
     setUserTypingStatus,
     setCallActive,
-    setCallState } = appSlice.actions;
+    setCallState,
+    setSearchCallHistory } = appSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectApp = (state: RootState) => state.app;

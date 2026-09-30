@@ -97,7 +97,7 @@
       android:supportsPictureInPicture="true"
       android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode|smallestScreenSize"
       android:launchMode="singleTop"
-      android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+      android:theme="@style/IncomingCallTheme"
       android:exported="true" />
     <service
       android:name="com.yambi.call.YambiCallService"
@@ -108,6 +108,7 @@
       android:exported="false">
       <intent-filter>
         <action android:name="com.yambi.call.ACTION_ONGOING_CALL_DISMISSED" />
+        <action android:name="com.yambi.call.ACTION_INCOMING_CALL_DISMISSED" />
       </intent-filter>
     </receiver>
   </application>

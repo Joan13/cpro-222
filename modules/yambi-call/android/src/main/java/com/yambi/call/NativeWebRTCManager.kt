@@ -43,6 +43,7 @@ class NativeWebRTCManager private constructor() {
 
     // Core WebRTC objects
     private var factory: PeerConnectionFactory? = null
+    private var audioDeviceModule: org.webrtc.audio.JavaAudioDeviceModule? = null
     private var peerConnection: PeerConnection? = null
     private var localStream: MediaStream? = null
     private var localVideoTrack: VideoTrack? = null
@@ -88,12 +89,20 @@ class NativeWebRTCManager private constructor() {
         val encoderFactory = DefaultVideoEncoderFactory(eglBase!!.eglBaseContext, true, true)
         val decoderFactory = DefaultVideoDecoderFactory(eglBase!!.eglBaseContext)
 
+        val adm = org.webrtc.audio.JavaAudioDeviceModule.builder(context.applicationContext)
+            .setUseHardwareAcousticEchoCanceler(org.webrtc.audio.JavaAudioDeviceModule.isBuiltInAcousticEchoCancelerSupported())
+            .setUseHardwareNoiseSuppressor(org.webrtc.audio.JavaAudioDeviceModule.isBuiltInNoiseSuppressorSupported())
+            .setUseLowLatency(true)
+            .createAudioDeviceModule()
+        audioDeviceModule = adm
+
         factory = PeerConnectionFactory.builder()
+            .setAudioDeviceModule(adm)
             .setVideoEncoderFactory(encoderFactory)
             .setVideoDecoderFactory(decoderFactory)
             .createPeerConnectionFactory()
 
-        Log.d(TAG, "NativeWebRTCManager initialized")
+        Log.d(TAG, "NativeWebRTCManager initialized with JavaAudioDeviceModule (low-latency)")
     }
 
     // ─── Stream local ─────────────────────────────────────────────────────────
@@ -101,12 +110,14 @@ class NativeWebRTCManager private constructor() {
     fun getLocalStream(context: Context, isVideo: Boolean): MediaStream {
         val f = factory ?: throw IllegalStateException("WebRTC not initialized — call initialize() first")
 
-        // Audio track avec echo cancellation
+        // Audio track avec echo cancellation et faible latence
         val audioConstraints = MediaConstraints().apply {
             mandatory.add(MediaConstraints.KeyValuePair("googEchoCancellation", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("googAutoGainControl",  "true"))
             mandatory.add(MediaConstraints.KeyValuePair("googNoiseSuppression", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("googHighpassFilter",   "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("googAudioMirroring",    "false"))
+            mandatory.add(MediaConstraints.KeyValuePair("googTypingNoiseDetection", "false"))
         }
         val audioSource = f.createAudioSource(audioConstraints)
         val audioTrack  = f.createAudioTrack("audio_yambi_0", audioSource)
@@ -415,6 +426,9 @@ class NativeWebRTCManager private constructor() {
 
     fun toggleMute(muted: Boolean) {
         localAudioTrack?.setEnabled(!muted)
+        try {
+            audioDeviceModule?.setMicrophoneMute(muted)
+        } catch (_: Exception) {}
         Log.d(TAG, "Audio muted: $muted")
     }
 
@@ -538,6 +552,10 @@ class NativeWebRTCManager private constructor() {
         cleanup()
         factory?.dispose()
         factory = null
+        try {
+            audioDeviceModule?.release()
+        } catch (_: Exception) {}
+        audioDeviceModule = null
         eglBase?.release()
         eglBase = null
         initialize(context)

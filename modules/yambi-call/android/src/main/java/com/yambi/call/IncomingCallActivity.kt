@@ -25,7 +25,9 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.Icon
 import android.view.ViewOutlineProvider
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -34,6 +36,7 @@ import android.text.TextUtils
 import android.util.Log
 import android.util.Rational
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -43,7 +46,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -140,6 +146,17 @@ class IncomingCallActivity : Activity() {
     private var callerAvatar: String = ""
     private var calleeName: String = ""
     private var calleeAvatar: String = ""
+
+    private fun isValidAvatar(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val lower = url.trim().lowercase()
+        return lower != "null" && lower != "undefined" && lower != "none" && lower != "default" && !lower.endsWith("profile_black.jpg")
+    }
+
+    private fun getOtherAvatar(): String {
+        val target = if (isCaller) calleeAvatar else callerAvatar
+        return if (isValidAvatar(target)) target.trim() else ""
+    }
     private var callType: String = "audio"
     private var isVerified: Boolean = false
     private var isCaller: Boolean = false
@@ -172,8 +189,10 @@ class IncomingCallActivity : Activity() {
     private var avatarImageView: ImageView? = null
     private var subtitleView: TextView? = null
     private var nameView: TextView? = null
+    private var nameRowLayout: LinearLayout? = null
     private var bottomControlsContainer: FrameLayout? = null
     private var foregroundContentLayout: LinearLayout? = null  // ref to the foreground content (name, avatar, buttons)
+    private var isControlsVisible: Boolean = true
 
     // Contrôles actifs
     private var muteBtnBg: FrameLayout? = null
@@ -181,6 +200,9 @@ class IncomingCallActivity : Activity() {
     private var speakerBtnBg: FrameLayout? = null
     private var speakerIconView: ImageView? = null
     private var camBtnBg: FrameLayout? = null
+    private var videoPauseBtnBg: FrameLayout? = null
+    private var videoPauseIconView: ImageView? = null
+    private var videoPauseLabel: TextView? = null
 
     // Vidéo
     private var remoteRenderer: SurfaceViewRenderer? = null
@@ -190,6 +212,14 @@ class IncomingCallActivity : Activity() {
     private var isRemoteRendererInitialized = false
     private var isLocalRendererInitialized = false
     private var isInPipMode = false
+    private var remoteVideoPausedOverlay: LinearLayout? = null
+    private var remoteVideoPausedText: TextView? = null
+    private var localPipPausedOverlay: FrameLayout? = null
+    private var isRemoteVideoPaused = false
+
+    // Sons
+    private var outgoingRingtonePlayer: MediaPlayer? = null
+    private var endCallPlayer: MediaPlayer? = null
 
     // ─── Runnables & Receivers ────────────────────────────────────────────────
     private val durationTick = object : Runnable {
@@ -241,7 +271,8 @@ class IncomingCallActivity : Activity() {
         super.onCreate(savedInstanceState)
         activeActivityRef = WeakReference(this)
 
-        setupWindowFlags()
+        // callType not yet extracted here; re-apply after extractIntentData in setupUI
+        setupWindowFlags(false)
         extractIntentData(intent)
 
         try {
@@ -323,9 +354,10 @@ class IncomingCallActivity : Activity() {
             wasAnswered = true
             YambiCallModule.markCallAnswered(callId)
             callState = CallState.CONNECTING
-            updateSubtitle(getCallString("calling", "Appel en cours..."))
+            updateSubtitle(getCallString("calling", "Appel..."))
             showActiveControls()
             val otherName = calleeName.ifBlank { calleeId }
+            val otherAvatar = getOtherAvatar()
             YambiCallService.activeSession = ActiveCallSession(
                 callId = callId,
                 callerId = callerId,
@@ -341,13 +373,24 @@ class IncomingCallActivity : Activity() {
                 isMuted = isMuted,
                 isSpeakerOn = isSpeakerOn
             )
-            YambiCallService.startOngoing(this, callId, otherName, callType, 0L)
+            YambiCallService.startOngoing(this, callId, otherName, callType, 0L, otherAvatar)
             mainHandler.postDelayed(timeoutRunnable, OUTGOING_TIMEOUT_MS)
             startCallSession()
         } else {
             // Appel entrant : faire sonner et attendre décrochage
             callState = CallState.RINGING
+            setupSignalingCallbacks()
+            signaling.sendRinging(callId, callerId, calleeId)
             mainHandler.postDelayed(timeoutRunnable, INCOMING_TIMEOUT_MS)
+
+            // Pré-initialiser WebRTC en tâche de fond pour réchauffer le sous-système audio sans latence au décrochage
+            scope.launch(Dispatchers.IO) {
+                try {
+                    webRTC.initialize(this@IncomingCallActivity)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Pre-initialize WebRTC error: ${e.message}")
+                }
+            }
         }
     }
 
@@ -370,6 +413,9 @@ class IncomingCallActivity : Activity() {
                 } else {
                     resumeExistingCall()
                 }
+            }
+            else -> {
+                Log.d(TAG, "Activity resumed with action=${intent.action}, callState=$callState")
             }
         }
     }
@@ -403,7 +449,7 @@ class IncomingCallActivity : Activity() {
             CallState.CONNECTED, CallState.CONNECTING -> {
                 val isVideo = callType.equals("video", ignoreCase = true)
                 val otherName = if (isCaller) calleeName.ifBlank { calleeId } else callerName.ifBlank { callerId }
-                YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp)
+                YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp, getOtherAvatar())
 
                 if (isVideo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     // Video call → enter PiP directly (underlying app screen remains in place)
@@ -418,9 +464,11 @@ class IncomingCallActivity : Activity() {
                 if (isCaller) {
                     endCall("CANCELLED", remote = false)
                 } else {
-                    IncomingCallNotificationManager.stopRinging()
-                    returnToMainActivity()
-                    finish()
+                    Log.d(TAG, "Back pressed while ringing: keeping incoming notification alive in taskbar, moving activity to background")
+                    val moved = moveTaskToBack(true)
+                    if (!moved) {
+                        returnToMainActivity()
+                    }
                 }
             }
             CallState.IDLE, CallState.ENDED -> {
@@ -434,16 +482,17 @@ class IncomingCallActivity : Activity() {
         Log.d(TAG, "IncomingCallActivity onStop, callState=$callState, isInPipMode=$isInPipMode")
         if (!isInPipMode && (callState == CallState.CONNECTED || callState == CallState.CONNECTING)) {
             val otherName = if (isCaller) calleeName.ifBlank { calleeId } else callerName.ifBlank { callerId }
-            YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp)
+            YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp, getOtherAvatar())
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        stopOutgoingRingtone()
         mainHandler.removeCallbacks(durationTick)
         mainHandler.removeCallbacks(timeoutRunnable)
 
-        val callIsActive = callState == CallState.CONNECTED || callState == CallState.CONNECTING
+        val callIsActive = callState == CallState.CONNECTED || callState == CallState.CONNECTING || callState == CallState.RINGING
 
         if (callIsActive) {
             // Call is still ongoing — only detach UI renderers (tied to this Activity's Surface views).
@@ -459,6 +508,12 @@ class IncomingCallActivity : Activity() {
                 }
                 pipContainer?.removeAllViews()
                 pipContainer = null
+                remoteVideoPausedOverlay = null
+                remoteVideoPausedText = null
+                localPipPausedOverlay = null
+                videoPauseBtnBg = null
+                videoPauseIconView = null
+                videoPauseLabel = null
             }
             // Keep the ongoing service alive so the notification stays visible
         } else {
@@ -476,6 +531,12 @@ class IncomingCallActivity : Activity() {
                 }
                 pipContainer?.removeAllViews()
                 pipContainer = null
+                remoteVideoPausedOverlay = null
+                remoteVideoPausedText = null
+                localPipPausedOverlay = null
+                videoPauseBtnBg = null
+                videoPauseIconView = null
+                videoPauseLabel = null
             }
             webRTC.cleanup()
             restoreAudioMode()
@@ -503,13 +564,21 @@ class IncomingCallActivity : Activity() {
     }
 
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Re-apply immersive mode when focus is restored for video calls
+        if (hasFocus && callType.equals("video", ignoreCase = true)) {
+            applyImmersiveMode()
+        }
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         val isActiveCall = callState == CallState.CONNECTED || callState == CallState.CONNECTING
         if (!isActiveCall) return
 
         val otherName = if (isCaller) calleeName.ifBlank { calleeId } else callerName.ifBlank { callerId }
-        YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp)
+        YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp, getOtherAvatar())
 
         val isVideo = callType.equals("video", ignoreCase = true)
         if (isVideo && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -617,7 +686,21 @@ class IncomingCallActivity : Activity() {
             // Returning from PiP — restore ongoing notification if still connected
             if (callState == CallState.CONNECTED || callState == CallState.CONNECTING) {
                 val otherName = if (isCaller) calleeName.ifBlank { calleeId } else callerName.ifBlank { callerId }
-                YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp)
+                YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp, getOtherAvatar())
+            }
+            if (callType.equals("video", ignoreCase = true)) {
+                if (isControlsVisible) {
+                    subtitleView?.visibility = View.VISIBLE
+                    subtitleView?.alpha = 1f
+                    nameRowLayout?.visibility = View.VISIBLE
+                    nameRowLayout?.alpha = 1f
+                    bottomControlsContainer?.visibility = View.VISIBLE
+                    bottomControlsContainer?.alpha = 1f
+                } else {
+                    subtitleView?.visibility = View.GONE
+                    nameRowLayout?.visibility = View.GONE
+                    bottomControlsContainer?.visibility = View.GONE
+                }
             }
         }
     }
@@ -643,14 +726,19 @@ class IncomingCallActivity : Activity() {
         val rawCallerName = intent.getStringExtra("callerName") ?: ""
         callerName = if (rawCallerName.isNotEmpty()) rawCallerName else (if (sameSession) session!!.callerName.ifEmpty { callerId } else callerName.ifEmpty { callerId })
 
-        val rawCallerAvatar = intent.getStringExtra("callerAvatar") ?: ""
+        val rawCallerAvatar = intent.getStringExtra("callerAvatar")
+            ?: (if (!isCaller) intent.getStringExtra("avatar") ?: intent.getStringExtra("user_profile") ?: "" else "")
         callerAvatar = if (rawCallerAvatar.isNotEmpty()) rawCallerAvatar else (if (sameSession) session!!.callerAvatar else callerAvatar)
 
         val rawCalleeName = intent.getStringExtra("calleeName") ?: ""
         calleeName = if (rawCalleeName.isNotEmpty()) rawCalleeName else (if (sameSession) session!!.calleeName.ifEmpty { calleeId } else calleeName.ifEmpty { calleeId })
 
-        val rawCalleeAvatar = intent.getStringExtra("calleeAvatar") ?: ""
+        val rawCalleeAvatar = intent.getStringExtra("calleeAvatar")
+            ?: (if (isCaller) intent.getStringExtra("avatar") ?: intent.getStringExtra("user_profile") ?: "" else "")
         calleeAvatar = if (rawCalleeAvatar.isNotEmpty()) rawCalleeAvatar else (if (sameSession) session!!.calleeAvatar else calleeAvatar)
+
+        if (!isValidAvatar(callerAvatar)) callerAvatar = ""
+        if (!isValidAvatar(calleeAvatar)) calleeAvatar = ""
 
         val rawType = intent.getStringExtra("callType")
             ?: intent.getStringExtra("type")
@@ -672,7 +760,8 @@ class IncomingCallActivity : Activity() {
         }
     }
 
-    private fun setupWindowFlags() {
+    private fun setupWindowFlags(isVideo: Boolean = false) {
+        // ── Keyguard / screen-on (unchanged) ───────────────────────────────────
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -689,12 +778,51 @@ class IncomingCallActivity : Activity() {
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // ── Edge-to-edge : draw under system bars ──────────────────────────────
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = Color.TRANSPARENT
-            window.navigationBarColor = Color.TRANSPARENT
+        window.statusBarColor   = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
+        }
+
+        if (isVideo) {
+            // ── VIDEO : full immersive — both bars completely hidden ─────────
+            applyImmersiveMode()
+        } else {
+            // ── AUDIO : bars stay visible but drawn transparently over the page background ─
+            val controller = WindowInsetsControllerCompat(window, window.decorView)
+            controller.isAppearanceLightStatusBars   = false
+            controller.isAppearanceLightNavigationBars = false
+
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            )
+        }
+    }
+
+    /** Re-applies full immersive mode (video calls). Safe to call multiple times. */
+    private fun applyImmersiveMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val controller = WindowInsetsControllerCompat(window, window.decorView)
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -720,8 +848,12 @@ class IncomingCallActivity : Activity() {
     private fun setupUI() {
         val density = resources.displayMetrics.density
         val isVideo = callType.equals("video", ignoreCase = true)
+
+        // Re-apply window flags now that callType is known
+        setupWindowFlags(isVideo)
+
         val displayName = if (isCaller) (if (calleeName.isNotBlank()) calleeName else calleeId) else (if (callerName.isNotBlank()) callerName else callerId)
-        val displayAvatar = if (isCaller) calleeAvatar else callerAvatar
+        val displayAvatar = getOtherAvatar()
 
         val rootFrame = FrameLayout(this).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -738,7 +870,8 @@ class IncomingCallActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             scaleType = ImageView.ScaleType.CENTER_CROP
-            visibility = View.GONE
+            setImageResource(R.drawable.profile_black)
+            visibility = View.VISIBLE
         }
         rootFrame.addView(backgroundImageView)
 
@@ -749,7 +882,7 @@ class IncomingCallActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             setBackgroundColor(Color.parseColor("#A6000000"))
-            visibility = View.GONE
+            visibility = View.VISIBLE
         }
         rootFrame.addView(backgroundOverlayView)
 
@@ -766,15 +899,55 @@ class IncomingCallActivity : Activity() {
             }
             rootFrame.addView(remoteRenderer)
 
+            remoteVideoPausedOverlay = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setBackgroundColor(Color.parseColor("#E6000000"))
+                visibility = if (isRemoteVideoPaused) View.VISIBLE else View.GONE
+
+                val pauseIcon = ImageView(context).apply {
+                    val sz = (48 * density).toInt()
+                    layoutParams = LinearLayout.LayoutParams(sz, sz).apply {
+                        gravity = Gravity.CENTER_HORIZONTAL
+                        bottomMargin = (16 * density).toInt()
+                    }
+                    setImageResource(R.drawable.ic_call_video_off)
+                }
+                addView(pauseIcon)
+
+                remoteVideoPausedText = TextView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        gravity = Gravity.CENTER_HORIZONTAL
+                    }
+                    text = getCallString("video_paused", "Vidéo en pause")
+                    setTextColor(Color.WHITE)
+                    textSize = 16f
+                    typeface = Typeface.DEFAULT_BOLD
+                }
+                addView(remoteVideoPausedText)
+            }
+            rootFrame.addView(remoteVideoPausedOverlay)
+
             val pipW = (112 * density).toInt()
             val pipH = (160 * density).toInt()
-            val pipRadius = 16 * density
+            val pipRadius = 10 * density   // 10dp border radius as requested
+
+            // Initial position: top-right corner (will be updated once screen size is known)
+            val pipInitialLeft = resources.displayMetrics.widthPixels - pipW - (16 * density).toInt()
+            val pipInitialTop  = (72 * density).toInt()   // below status bar area
 
             pipContainer = FrameLayout(this).apply {
                 layoutParams = FrameLayout.LayoutParams(pipW, pipH).apply {
-                    gravity = Gravity.TOP or Gravity.END
-                    topMargin = (56 * density).toInt()
-                    marginEnd = (16 * density).toInt()
+                    // No gravity — absolute position via leftMargin/topMargin
+                    leftMargin = pipInitialLeft
+                    topMargin  = pipInitialTop
                 }
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
@@ -792,7 +965,52 @@ class IncomingCallActivity : Activity() {
                     clipToOutline = true
                 }
                 visibility = View.VISIBLE
-                setOnClickListener { switchCamera() }
+
+                // ── Drag logic ────────────────────────────────────────────────
+                var dragStartRawX = 0f
+                var dragStartRawY = 0f
+                var dragStartLeftMargin = 0
+                var dragStartTopMargin  = 0
+                var totalMovePx = 0f
+
+                setOnTouchListener { view, event ->
+                    val params = view.layoutParams as? FrameLayout.LayoutParams ?: return@setOnTouchListener false
+                    val screenW = resources.displayMetrics.widthPixels
+                    val screenH = resources.displayMetrics.heightPixels
+
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            view.bringToFront()
+                            dragStartRawX     = event.rawX
+                            dragStartRawY     = event.rawY
+                            dragStartLeftMargin = params.leftMargin
+                            dragStartTopMargin  = params.topMargin
+                            totalMovePx = 0f
+                            true
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            val dx = event.rawX - dragStartRawX
+                            val dy = event.rawY - dragStartRawY
+                            totalMovePx += Math.abs(dx) + Math.abs(dy)
+                            val newLeft = (dragStartLeftMargin + dx).toInt()
+                                .coerceIn(0, screenW - view.width)
+                            val newTop  = (dragStartTopMargin  + dy).toInt()
+                                .coerceIn(0, screenH - view.height)
+                            params.leftMargin = newLeft
+                            params.topMargin  = newTop
+                            view.layoutParams = params
+                            true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            if (totalMovePx < 15f) {
+                                // Treat as a tap → switch camera
+                                switchCamera()
+                            }
+                            true
+                        }
+                        else -> false
+                    }
+                }
             }
 
             localRenderer = SurfaceViewRenderer(this).apply {
@@ -806,6 +1024,24 @@ class IncomingCallActivity : Activity() {
                 visibility = View.VISIBLE
             }
             pipContainer?.addView(localRenderer)
+
+            localPipPausedOverlay = FrameLayout(this).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setBackgroundColor(Color.parseColor("#CC111827"))
+                visibility = if (isCameraOff) View.VISIBLE else View.GONE
+
+                val icon = ImageView(context).apply {
+                    val sz = (28 * density).toInt()
+                    layoutParams = FrameLayout.LayoutParams(sz, sz).apply { gravity = Gravity.CENTER }
+                    setImageResource(R.drawable.ic_call_video_off)
+                }
+                addView(icon)
+            }
+            pipContainer?.addView(localPipPausedOverlay)
+
             rootFrame.addView(pipContainer)
 
             webRTC.attachLocalRenderer(localRenderer!!)
@@ -813,6 +1049,7 @@ class IncomingCallActivity : Activity() {
         }
 
         // 4. Layout vertical de premier plan
+        val padHoriz = (24 * density).toInt()
         val contentLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
@@ -820,18 +1057,32 @@ class IncomingCallActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            // Initial padding — bottom will be updated via window insets below
             val padTop = (72 * density).toInt()
             val padBottom = (54 * density).toInt()
-            val padHoriz = (24 * density).toInt()
             setPadding(padHoriz, padTop, padHoriz, padBottom)
         }
         foregroundContentLayout = contentLayout
 
+        if (!isVideo) {
+            // Pour les appels audio : écouter les insets pour que le contenu se place au-dessus
+            // de la barre de navigation système sans masquer le fond plein écran.
+            ViewCompat.setOnApplyWindowInsetsListener(contentLayout) { v, insets ->
+                val navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+                val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+                val minBottomPad = (36 * density).toInt()
+                val bottomPad = maxOf(navBarHeight + (20 * density).toInt(), minBottomPad)
+                val topPad = maxOf(statusBarHeight + (16 * density).toInt(), (56 * density).toInt())
+                v.setPadding(padHoriz, topPad, padHoriz, bottomPad)
+                insets
+            }
+        }
+
         // Sous-titre initial
         val initialSubtitle = if (isCaller) {
-            getCallString("calling", "APPEL EN COURS...")
+            getCallString("calling", "Appel...")
         } else {
-            if (isVideo) getCallString("incoming_video_call", "APPEL VIDÉO ENTRANT...") else getCallString("incoming_audio_call", "APPEL AUDIO ENTRANT...")
+            if (isVideo) getCallString("incoming_video_call", "Appel vidéo entrant") else getCallString("incoming_audio_call", "Appel audio entrant")
         }
 
         subtitleView = TextView(this).apply {
@@ -861,6 +1112,7 @@ class IncomingCallActivity : Activity() {
                 bottomMargin = (36 * density).toInt()
             }
         }
+        nameRowLayout = nameRow
 
         nameView = TextView(this).apply {
             text = displayName
@@ -914,10 +1166,13 @@ class IncomingCallActivity : Activity() {
                 shape = GradientDrawable.OVAL
                 setColor(Color.parseColor("#1E293B"))
             }
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            setImageResource(R.drawable.ic_default_avatar)
-            val p = (24 * density).toInt()
-            setPadding(p, p, p, p)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            val defaultBitmap = BitmapFactory.decodeResource(resources, R.drawable.profile_black)
+            if (defaultBitmap != null) {
+                setImageBitmap(getCircularBitmap(defaultBitmap))
+            } else {
+                setImageResource(R.drawable.profile_black)
+            }
         }
         avatarRingLayout?.addView(avatarImageView)
         contentLayout.addView(avatarRingLayout)
@@ -940,6 +1195,19 @@ class IncomingCallActivity : Activity() {
         contentLayout.addView(bottomControlsContainer)
         rootFrame.addView(contentLayout)
 
+        if (isVideo) {
+            pipContainer?.bringToFront()
+            contentLayout.setOnClickListener {
+                toggleControlsVisibility()
+            }
+            remoteRenderer?.setOnClickListener {
+                toggleControlsVisibility()
+            }
+            remoteVideoPausedOverlay?.setOnClickListener {
+                toggleControlsVisibility()
+            }
+        }
+
         setContentView(rootFrame)
 
         // Afficher les contrôles initiaux selon entrant ou sortant
@@ -952,6 +1220,8 @@ class IncomingCallActivity : Activity() {
         // Charger la photo de profil en fond et dans l'avatar
         if (displayAvatar.isNotBlank()) {
             loadAvatarImage(displayAvatar)
+        } else {
+            loadDefaultAvatar()
         }
     }
 
@@ -1070,10 +1340,11 @@ class IncomingCallActivity : Activity() {
 
         val density = resources.displayMetrics.density
         val isVideo = callType.equals("video", ignoreCase = true)
-        val btnSize = (64 * density).toInt()
-        val iconSize = (28 * density).toInt()
-        val endBtnSize = (72 * density).toInt()
-        val endIconSize = (34 * density).toInt()
+        val btnSize = if (isVideo) (54 * density).toInt() else (64 * density).toInt()
+        val iconSize = if (isVideo) (24 * density).toInt() else (28 * density).toInt()
+        val endBtnSize = if (isVideo) (60 * density).toInt() else (72 * density).toInt()
+        val endIconSize = if (isVideo) (28 * density).toInt() else (34 * density).toInt()
+        val labelSize = if (isVideo) 11f else 12f
 
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1082,7 +1353,7 @@ class IncomingCallActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            val padH = (16 * density).toInt()
+            val padH = if (isVideo) (8 * density).toInt() else (16 * density).toInt()
             setPadding(padH, 0, padH, 0)
         }
 
@@ -1111,7 +1382,7 @@ class IncomingCallActivity : Activity() {
         muteCol.addView(muteBtnBg)
         val muteLabel = TextView(this).apply {
             text = getCallString("mute", "Muet")
-            textSize = 12f
+            textSize = labelSize
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
             layoutParams = LinearLayout.LayoutParams(
@@ -1146,7 +1417,7 @@ class IncomingCallActivity : Activity() {
         speakerCol.addView(speakerBtnBg)
         val speakerLabel = TextView(this).apply {
             text = getCallString("speaker", "HP")
-            textSize = 12f
+            textSize = labelSize
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
             layoutParams = LinearLayout.LayoutParams(
@@ -1156,8 +1427,43 @@ class IncomingCallActivity : Activity() {
         speakerCol.addView(speakerLabel)
         row.addView(speakerCol)
 
-        // 3. Bouton Bascule Caméra (si vidéo)
+        // 3. Bouton Pause Vidéo (si vidéo)
         if (isVideo) {
+            val pauseCol = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f)
+            }
+            videoPauseBtnBg = FrameLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(btnSize, btnSize).apply { gravity = Gravity.CENTER_HORIZONTAL }
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(if (isCameraOff) Color.parseColor("#EF4444") else Color.parseColor("#3A3A3C"))
+                }
+                elevation = 4 * density
+                isClickable = true
+                isFocusable = true
+                videoPauseIconView = ImageView(context).apply {
+                    layoutParams = FrameLayout.LayoutParams(iconSize, iconSize).apply { gravity = Gravity.CENTER }
+                    setImageResource(if (isCameraOff) R.drawable.ic_call_video_off else R.drawable.ic_call_video)
+                }
+                addView(videoPauseIconView)
+                setOnClickListener { toggleVideoPause() }
+            }
+            pauseCol.addView(videoPauseBtnBg)
+            videoPauseLabel = TextView(this).apply {
+                text = if (isCameraOff) getCallString("resume_video", "Reprendre") else getCallString("pause_video", "Pause")
+                textSize = labelSize
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = (8 * density).toInt() }
+            }
+            pauseCol.addView(videoPauseLabel)
+            row.addView(pauseCol)
+
+            // 4. Bouton Bascule Caméra (si vidéo)
             val camCol = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
@@ -1182,7 +1488,7 @@ class IncomingCallActivity : Activity() {
             camCol.addView(camBtnBg)
             val camLabel = TextView(this).apply {
                 text = getCallString("switch_camera", "Bascule")
-                textSize = 12f
+                textSize = labelSize
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(Color.WHITE)
                 layoutParams = LinearLayout.LayoutParams(
@@ -1193,7 +1499,7 @@ class IncomingCallActivity : Activity() {
             row.addView(camCol)
         }
 
-        // 4. Bouton Raccrocher (Rouge)
+        // 5. Bouton Raccrocher (Rouge)
         val endCol = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
@@ -1218,7 +1524,7 @@ class IncomingCallActivity : Activity() {
         endCol.addView(endBtn)
         val endLabel = TextView(this).apply {
             text = getCallString("end_call", "Fin")
-            textSize = 12f
+            textSize = labelSize
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
             layoutParams = LinearLayout.LayoutParams(
@@ -1229,6 +1535,14 @@ class IncomingCallActivity : Activity() {
         row.addView(endCol)
 
         container.addView(row)
+
+        if (!isControlsVisible && isVideo) {
+            container.visibility = View.GONE
+            container.alpha = 0f
+        } else {
+            container.visibility = View.VISIBLE
+            container.alpha = 1f
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1250,6 +1564,7 @@ class IncomingCallActivity : Activity() {
         callState = CallState.CONNECTING
         updateSubtitle(getCallString("connecting", "Connexion..."))
         showActiveControls()
+        setAudioModeInCall()
 
         val otherName = if (isCaller) calleeName.ifBlank { calleeId } else callerName.ifBlank { callerId }
         YambiCallService.activeSession = ActiveCallSession(
@@ -1296,7 +1611,8 @@ class IncomingCallActivity : Activity() {
         )
         YambiCallModule.clearPendingCallData()
         YambiCallModule.emitCallRejected(callData)
-        finish()
+        playEndCallSound()
+        mainHandler.postDelayed({ finish() }, 800)
     }
 
     private fun toggleMute() {
@@ -1330,8 +1646,102 @@ class IncomingCallActivity : Activity() {
         YambiCallService.activeSession?.isSpeakerOn = isSpeakerOn
     }
 
+    private fun startOutgoingRingtone() {
+        if (callState == CallState.CONNECTED || callState == CallState.ENDED) return
+        if (outgoingRingtonePlayer != null) return
+
+        try {
+            stopOutgoingRingtone()
+            outgoingRingtonePlayer = MediaPlayer.create(applicationContext, R.raw.outgoing_call)?.apply {
+                isLooping = true
+                val audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION_SIGNALLING)
+                    .build()
+                setAudioAttributes(audioAttributes)
+                setVolume(1.0f, 1.0f)
+                start()
+                Log.d(TAG, "Outgoing ringtone started")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting outgoing ringtone: ${e.message}", e)
+        }
+    }
+
+    private fun stopOutgoingRingtone() {
+        try {
+            outgoingRingtonePlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping outgoing ringtone: ${e.message}", e)
+        } finally {
+            outgoingRingtonePlayer = null
+        }
+    }
+
+    private fun playEndCallSound() {
+        try {
+            stopOutgoingRingtone()
+            IncomingCallNotificationManager.stopRinging()
+            endCallPlayer = MediaPlayer.create(applicationContext, R.raw.end_call)?.apply {
+                val audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .build()
+                setAudioAttributes(audioAttributes)
+                setVolume(1.0f, 1.0f)
+                setOnCompletionListener { mp ->
+                    try {
+                        mp.release()
+                    } catch (_: Exception) {}
+                    if (endCallPlayer == mp) {
+                        endCallPlayer = null
+                    }
+                }
+                start()
+                Log.d(TAG, "End call sound started")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing end call sound: ${e.message}", e)
+        }
+    }
+
     private fun switchCamera() {
         webRTC.switchCamera()
+    }
+
+    private fun toggleVideoPause() {
+        val isVideo = callType.equals("video", ignoreCase = true)
+        if (!isVideo) return
+
+        isCameraOff = !isCameraOff
+        Log.d(TAG, "toggleVideoPause: isCameraOff=$isCameraOff")
+
+        webRTC.toggleCamera(isCameraOff)
+
+        videoPauseBtnBg?.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(if (isCameraOff) Color.parseColor("#EF4444") else Color.parseColor("#3A3A3C"))
+        }
+        videoPauseIconView?.setImageResource(
+            if (isCameraOff) R.drawable.ic_call_video_off else R.drawable.ic_call_video
+        )
+        videoPauseLabel?.text = if (isCameraOff) {
+            getCallString("resume_video", "Reprendre")
+        } else {
+            getCallString("pause_video", "Pause")
+        }
+
+        localPipPausedOverlay?.visibility = if (isCameraOff) View.VISIBLE else View.GONE
+
+        val target = if (isCaller) calleeId else callerId
+        signaling.sendVideoState(callId, target, enabled = !isCameraOff)
+
+        YambiCallService.activeSession?.isCameraOff = isCameraOff
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1413,12 +1823,17 @@ class IncomingCallActivity : Activity() {
     private fun setupSignalingCallbacks() {
         signaling.onCallRinging = { cId ->
             if (cId == callId && isCaller) {
-                mainHandler.post { updateSubtitle(getCallString("ringing", "Sonnerie...")) }
+                mainHandler.post {
+                    Log.d(TAG, "Callee is ringing for $cId — updating to 'ringing' and starting outgoing ringtone")
+                    updateSubtitle(getCallString("ringing", "Appel en cours..."))
+                    startOutgoingRingtone()
+                }
             }
         }
 
         signaling.onCallAccepted = { cId ->
             if (cId == callId && isCaller) {
+                mainHandler.post { stopOutgoingRingtone() }
                 if (!hasCreatedOffer) {
                     hasCreatedOffer = true
                     Log.d(TAG, "Call accepted by remote peer, creating offer")
@@ -1509,6 +1924,25 @@ class IncomingCallActivity : Activity() {
                 mainHandler.post { endCall(reason = "BUSY", remote = true) }
             }
         }
+
+        signaling.onVideoStateChanged = { cId, enabled ->
+            if (cId == callId) {
+                mainHandler.post {
+                    Log.d(TAG, "Remote video state changed: enabled=$enabled")
+                    isRemoteVideoPaused = !enabled
+                    val isVideo = callType.equals("video", ignoreCase = true)
+                    if (isVideo) {
+                        remoteVideoPausedText?.text = getCallString("video_paused", "Vidéo en pause")
+                        remoteVideoPausedOverlay?.visibility = if (isRemoteVideoPaused) View.VISIBLE else View.GONE
+                        if (isRemoteVideoPaused) {
+                            remoteVideoPausedOverlay?.bringToFront()
+                            foregroundContentLayout?.bringToFront()
+                            pipContainer?.bringToFront()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun setupWebRTCCallbacks() {
@@ -1563,7 +1997,15 @@ class IncomingCallActivity : Activity() {
                         avatarRingLayout?.visibility = View.GONE
                         backgroundImageView?.visibility = View.GONE
                         backgroundOverlayView?.visibility = View.GONE
+                        if (isRemoteVideoPaused) {
+                            remoteVideoPausedOverlay?.visibility = View.VISIBLE
+                            remoteVideoPausedOverlay?.bringToFront()
+                            foregroundContentLayout?.bringToFront()
+                        } else {
+                            remoteVideoPausedOverlay?.visibility = View.GONE
+                        }
                         pipContainer?.visibility = View.VISIBLE
+                        pipContainer?.bringToFront()
                     }
                 }
             }
@@ -1571,6 +2013,7 @@ class IncomingCallActivity : Activity() {
     }
 
     private fun onCallConnected() {
+        stopOutgoingRingtone()
         wasAnswered = true
         YambiCallModule.markCallAnswered(callId)
         if (callState == CallState.CONNECTED) return
@@ -1578,6 +2021,7 @@ class IncomingCallActivity : Activity() {
         Log.d(TAG, "Call CONNECTED — starting duration timer")
         mainHandler.removeCallbacks(timeoutRunnable)
         setAudioModeInCall()
+        webRTC.toggleMute(isMuted)
 
         if (callConnectedTimestamp == 0L) {
             callConnectedTimestamp = System.currentTimeMillis()
@@ -1608,6 +2052,7 @@ class IncomingCallActivity : Activity() {
     }
 
     private fun resumeExistingCall() {
+        stopOutgoingRingtone()
         Log.d(TAG, "resumeExistingCall: callId=$callId, caller=$callerName, callee=$calleeName, connectedAt=$callConnectedTimestamp")
         wasAnswered = true
         YambiCallModule.markCallAnswered(callId)
@@ -1652,6 +2097,23 @@ class IncomingCallActivity : Activity() {
                     am?.isSpeakerphoneOn = isSpeakerOn
                 } catch (_: Exception) {}
             }
+            if (session.isCameraOff != isCameraOff) {
+                isCameraOff = session.isCameraOff
+                webRTC.toggleCamera(isCameraOff)
+                videoPauseBtnBg?.background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(if (isCameraOff) Color.parseColor("#EF4444") else Color.parseColor("#3A3A3C"))
+                }
+                videoPauseIconView?.setImageResource(
+                    if (isCameraOff) R.drawable.ic_call_video_off else R.drawable.ic_call_video
+                )
+                videoPauseLabel?.text = if (isCameraOff) {
+                    getCallString("resume_video", "Reprendre")
+                } else {
+                    getCallString("pause_video", "Pause")
+                }
+                localPipPausedOverlay?.visibility = if (isCameraOff) View.VISIBLE else View.GONE
+            }
         }
 
         // Reconnecter les renderers vidéo si appel vidéo
@@ -1669,6 +2131,7 @@ class IncomingCallActivity : Activity() {
                 backgroundImageView?.visibility = View.GONE
                 backgroundOverlayView?.visibility = View.GONE
                 pipContainer?.visibility = View.VISIBLE
+                pipContainer?.bringToFront()
             }
             if (localRenderer != null && !isLocalRendererInitialized) {
                 webRTC.attachLocalRenderer(localRenderer!!)
@@ -1679,7 +2142,39 @@ class IncomingCallActivity : Activity() {
         setupSignalingCallbacks()
         setupWebRTCCallbacks()
 
-        YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp)
+        YambiCallService.startOngoing(this, callId, otherName, callType, callConnectedTimestamp, getOtherAvatar())
+    }
+
+    private fun toggleControlsVisibility() {
+        if (!callType.equals("video", ignoreCase = true)) return
+        if (isInPipMode) return
+        if (callState != CallState.CONNECTED && callState != CallState.CONNECTING) return
+
+        isControlsVisible = !isControlsVisible
+
+        subtitleView?.animate()?.cancel()
+        nameRowLayout?.animate()?.cancel()
+        bottomControlsContainer?.animate()?.cancel()
+
+        if (isControlsVisible) {
+            subtitleView?.visibility = View.VISIBLE
+            nameRowLayout?.visibility = View.VISIBLE
+            bottomControlsContainer?.visibility = View.VISIBLE
+
+            subtitleView?.animate()?.alpha(1f)?.setDuration(200)?.start()
+            nameRowLayout?.animate()?.alpha(1f)?.setDuration(200)?.start()
+            bottomControlsContainer?.animate()?.alpha(1f)?.setDuration(200)?.start()
+        } else {
+            subtitleView?.animate()?.alpha(0f)?.setDuration(200)?.start()
+            nameRowLayout?.animate()?.alpha(0f)?.setDuration(200)?.start()
+            bottomControlsContainer?.animate()?.alpha(0f)?.setDuration(200)?.withEndAction {
+                if (!isControlsVisible) {
+                    subtitleView?.visibility = View.GONE
+                    nameRowLayout?.visibility = View.GONE
+                    bottomControlsContainer?.visibility = View.GONE
+                }
+            }?.start()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1724,7 +2219,10 @@ class IncomingCallActivity : Activity() {
 
         notifyRNCallEnded(reason)
 
-        mainHandler.postDelayed({ finish() }, 700)
+        stopOutgoingRingtone()
+        playEndCallSound()
+
+        mainHandler.postDelayed({ finish() }, 800)
     }
 
     private fun saveCallHistory(reason: String) {
@@ -1784,12 +2282,35 @@ class IncomingCallActivity : Activity() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Audio Routing
+    // Audio Routing & Focus
     // ─────────────────────────────────────────────────────────────────────────
+
+    private var audioFocusRequest: Any? = null
 
     private fun setAudioModeInCall() {
         try {
             val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+
+            // Demande d'audio focus immédiate pour communication vocale VoIP
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (audioFocusRequest == null) {
+                    val playbackAttributes = AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                    val focusReq = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                        .setAudioAttributes(playbackAttributes)
+                        .setAcceptsDelayedFocusGain(false)
+                        .setOnAudioFocusChangeListener { /* garder le focus */ }
+                        .build()
+                    audioFocusRequest = focusReq
+                    am.requestAudioFocus(focusReq)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                am.requestAudioFocus(null, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+            }
+
             am.mode = AudioManager.MODE_IN_COMMUNICATION
             if (callType.equals("video", ignoreCase = true)) {
                 isSpeakerOn = true
@@ -1798,7 +2319,8 @@ class IncomingCallActivity : Activity() {
                 am.isSpeakerphoneOn = isSpeakerOn
             }
             am.isMicrophoneMute = isMuted
-            Log.d(TAG, "Audio mode set to MODE_IN_COMMUNICATION (speaker: $isSpeakerOn, muted: $isMuted)")
+            webRTC.toggleMute(isMuted)
+            Log.d(TAG, "Audio mode set to MODE_IN_COMMUNICATION with audio focus (speaker: $isSpeakerOn, muted: $isMuted)")
         } catch (e: Exception) {
             Log.e(TAG, "Error setting audio mode: ${e.message}", e)
         }
@@ -1807,6 +2329,13 @@ class IncomingCallActivity : Activity() {
     private fun restoreAudioMode() {
         try {
             val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                (audioFocusRequest as? android.media.AudioFocusRequest)?.let { am.abandonAudioFocusRequest(it) }
+                audioFocusRequest = null
+            } else {
+                @Suppress("DEPRECATION")
+                am.abandonAudioFocus(null)
+            }
             am.isSpeakerphoneOn = false
             am.isMicrophoneMute = false
             am.mode = AudioManager.MODE_NORMAL
@@ -1830,16 +2359,25 @@ class IncomingCallActivity : Activity() {
         return String.format(Locale.US, "%02d:%02d", m, s)
     }
 
+    private fun resolveAvatarUrl(avatarUrl: String): String {
+        if (avatarUrl.isBlank()) return ""
+        if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
+            return avatarUrl
+        }
+        val clean = avatarUrl.trimStart('/')
+        return when {
+            clean.startsWith("media/profile_pictures/") -> "https://server.yambi.net/$clean"
+            clean.startsWith("profile_pictures/") -> "https://server.yambi.net/media/$clean"
+            else -> "https://server.yambi.net/media/profile_pictures/$clean"
+        }
+    }
+
     private fun loadAvatarImage(avatarUrl: String) {
         if (avatarUrl.isBlank()) return
+        val fullUrl = resolveAvatarUrl(avatarUrl)
         val executor = Executors.newSingleThreadExecutor()
         executor.execute {
             try {
-                val fullUrl = if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
-                    avatarUrl
-                } else {
-                    "https://server.yambi.net/medias/$avatarUrl"
-                }
                 val url = URL(fullUrl)
                 val conn = url.openConnection() as HttpURLConnection
                 conn.connectTimeout = 6000
@@ -1881,10 +2419,44 @@ class IncomingCallActivity : Activity() {
                             avatarUrl
                         )
                     }
+                } else {
+                    runOnUiThread {
+                        if (!isFinishing && !isDestroyed) {
+                            loadDefaultAvatar()
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading avatar image: ${e.message}")
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed) {
+                        loadDefaultAvatar()
+                    }
+                }
             }
+        }
+    }
+
+    private fun loadDefaultAvatar() {
+        try {
+            val bitmap = BitmapFactory.decodeResource(resources, R.drawable.profile_black)
+            if (bitmap != null) {
+                val circular = getCircularBitmap(bitmap)
+                IncomingCallNotificationManager.setCachedAvatarBitmap("default_profile_black", circular)
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed) {
+                        avatarImageView?.setPadding(0, 0, 0, 0)
+                        avatarImageView?.scaleType = ImageView.ScaleType.CENTER_CROP
+                        avatarImageView?.setImageBitmap(circular)
+
+                        backgroundImageView?.setImageBitmap(bitmap)
+                        backgroundImageView?.visibility = View.VISIBLE
+                        backgroundOverlayView?.visibility = View.VISIBLE
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading default profile_black avatar: ${e.message}")
         }
     }
 

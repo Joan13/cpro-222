@@ -1,13 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Image, StyleSheet, Pressable } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useObject } from '@realm/react';
 import { useAppSelector } from '../../../store/app/hooks';
 import { CallHistory, UserContacts } from '../../../store/database/Models';
 import { IconApp } from '../../app/IconApp';
-import { media_url, formatPhoneInternational } from '../../../../GlobalVariables';
+import { media_url, formatPhoneInternational, renderDateTime } from '../../../../GlobalVariables';
 import { strings } from '../../../lang/lang';
-import moment from 'moment';
+import { YambiText } from '../../app/Text';
+import * as RootNavigation from '../../../services/Navigation_ref';
 
 interface CallHistoryItemProps {
     item: CallHistory;
@@ -64,6 +65,8 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
         item.status === 'MISSED' ||
         (item.durationSeconds === 0 && !isOutgoing)) && !isRejected;
 
+    const isVideo = item.type === 'video';
+
     const iconName = isOutgoing ? 'arrow-up-right' : 'arrow-down-left';
     const iconColor = isMissed
         ? theme.colors.error || '#FF3B30'
@@ -87,12 +90,16 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
         return `${remainingSecs}s`;
     };
 
-    const formattedTime = moment(item.timestamp || item.createdAt).calendar(null, {
-        sameDay: '[Today], HH:mm',
-        lastDay: '[Yesterday], HH:mm',
-        lastWeek: 'ddd, HH:mm',
-        sameElse: 'DD MMM, HH:mm',
-    });
+    const rawDate = item.createdAt || (item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString());
+    const formattedTime = renderDateTime(rawDate, 1, true);
+
+    const handleViewPhoto = () => {
+        if (fullAvatarUri) {
+            RootNavigation.navigate("ViewPhoto", { source: fullAvatarUri });
+        } else {
+            RootNavigation.navigate("ViewPhoto", { source: "" });
+        }
+    };
 
     return (
         <Pressable
@@ -101,40 +108,43 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
             style={({ pressed }) => [
                 styles.logCard,
                 {
-                    backgroundColor: theme.colors.background,
-                    borderColor: theme.colors.border,
-                    //   opacity: pressed ? 0.75 : 1,
+                    backgroundColor: pressed ? theme.colors.high_color + '15' : theme.colors.background,
                 },
             ]}
         >
             {/* Profile Picture */}
-            <View style={styles.avatarContainer}>
-                <ExpoImage
-                    source={
-                        fullAvatarUri
-                            ? { uri: fullAvatarUri }
-                            : require('../../../assets/profile_black.jpg')
-                    }
-                    style={styles.avatar}
-                    contentFit="cover"
-                />
-            </View>
+            <Pressable onPress={handleViewPhoto}>
+                {!fullAvatarUri ? (
+                    <Image
+                        source={require('../../../assets/profile_black.jpg')}
+                        style={[styles.avatar, { borderColor: theme.colors.border }]}
+                    />
+                ) : (
+                    <ExpoImage
+                        source={{ uri: fullAvatarUri }}
+                        style={[styles.avatar, { borderColor: theme.colors.border }]}
+                        contentFit="cover"
+                    />
+                )}
+            </Pressable>
 
             {/* Center Details */}
             <View style={styles.detailsContainer}>
                 <View style={styles.nameRow}>
-                    <Text
-                        style={[styles.displayName, { color: theme.colors.text }]}
-                        numberOfLines={1}
-                    >
-                        {displayName}
-                    </Text>
+                    <YambiText
+                        text={displayName}
+                        size="normal"
+                        bold
+                        numberLines={1}
+                        color="default"
+                        style={{ maxWidth: '80%' }}
+                    />
                     {isVerified && (
                         <IconApp
                             pack="MT"
                             name="verified"
-                            size={16}
-                            color={theme.colors.high_color}
+                            size={15}
+                            color={(theme.colors as any).certified_badge || theme.colors.high_color}
                             styles={{ marginLeft: 4 }}
                         />
                     )}
@@ -148,29 +158,46 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
                         color={iconColor}
                         styles={{ marginRight: 4 }}
                     />
-                    <Text style={[styles.subText, { color: isMissed ? (theme.colors.error || '#FF3B30') : theme.colors.gray }]}>
-                        {formatDuration(item.durationSeconds)} • {formattedTime}
-                    </Text>
+                    <YambiText
+                        text={`${formatDuration(item.durationSeconds)} • ${formattedTime}`}
+                        size="small"
+                        color={isMissed ? "error" : "gray"}
+                        numberLines={1}
+                    />
                 </View>
             </View>
 
-            {/* Right Action Buttons */}
+            {/* Right Action Button: Only video call icon for video, only audio call icon for audio */}
             <View style={styles.actionsRow}>
-                <Pressable
-                    disabled={call_active}
-                    onPress={() => onAudioCall(peerPhone, displayName, avatar)}
-                    style={[styles.actionBtn, { backgroundColor: theme.colors.high_color + '15', opacity: call_active ? 0.35 : 1 }]}
-                >
-                    <IconApp pack="MC" name="phone" size={18} color={theme.colors.high_color} />
-                </Pressable>
-
-                <Pressable
-                    disabled={call_active}
-                    onPress={() => onVideoCall(peerPhone, displayName, avatar)}
-                    style={[styles.actionBtn, { backgroundColor: theme.colors.high_color + '15', marginLeft: 8, opacity: call_active ? 0.35 : 1 }]}
-                >
-                    <IconApp pack="MC" name="video" size={18} color={theme.colors.high_color} />
-                </Pressable>
+                {isVideo ? (
+                    <Pressable
+                        disabled={call_active}
+                        onPress={() => onVideoCall(peerPhone, displayName, avatar)}
+                        style={[
+                            styles.actionBtn,
+                            {
+                                backgroundColor: theme.colors.high_color + '15',
+                                opacity: call_active ? 0.35 : 1,
+                            },
+                        ]}
+                    >
+                        <IconApp pack="MC" name="video" size={18} color={theme.colors.high_color} />
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        disabled={call_active}
+                        onPress={() => onAudioCall(peerPhone, displayName, avatar)}
+                        style={[
+                            styles.actionBtn,
+                            {
+                                backgroundColor: theme.colors.high_color + '15',
+                                opacity: call_active ? 0.35 : 1,
+                            },
+                        ]}
+                    >
+                        <IconApp pack="MC" name="phone" size={18} color={theme.colors.high_color} />
+                    </Pressable>
+                )}
             </View>
         </Pressable>
     );
@@ -180,20 +207,19 @@ const styles = StyleSheet.create({
     logCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        // borderBottomWidth: 0.5,
-    },
-    avatarContainer: {
-        marginRight: 14,
+        paddingVertical: 15,
+        paddingHorizontal: 15,
+        width: '100%',
     },
     avatar: {
         width: 50,
         height: 50,
-        borderRadius: 25,
+        borderRadius: 50,
+        borderWidth: 1,
     },
     detailsContainer: {
         flex: 1,
+        marginLeft: 10,
         justifyContent: 'center',
     },
     nameRow: {
@@ -201,17 +227,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 4,
     },
-    displayName: {
-        fontSize: 16,
-        fontWeight: '600',
-        maxWidth: '80%',
-    },
     subInfoRow: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    subText: {
-        fontSize: 13,
     },
     actionsRow: {
         flexDirection: 'row',

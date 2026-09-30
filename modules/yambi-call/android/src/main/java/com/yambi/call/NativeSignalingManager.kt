@@ -32,6 +32,7 @@ class NativeSignalingManager private constructor() {
         private const val EV_ANSWER   = "call:answer"
         private const val EV_ICE      = "call:ice-candidate"
         private const val EV_END      = "call:end"
+        private const val EV_VIDEO_STATE = "call:video-state"
         private const val SERVER_URL  = "https://server.yambi.net"
         private const val SERVER_PATH = "/ws"
 
@@ -78,6 +79,7 @@ class NativeSignalingManager private constructor() {
     var onAnswer:        ((callId: String, sdp: String, type: String) -> Unit)? = null
     var onIceCandidate:  ((callId: String, candidate: String, sdpMid: String?, sdpMLineIndex: Int) -> Unit)? = null
     var onCallEnd:       ((callId: String) -> Unit)? = null
+    var onVideoStateChanged: ((callId: String, enabled: Boolean) -> Unit)? = null
 
     fun connect(userPhone: String) {
         val clean = cleanPhone(userPhone)
@@ -264,6 +266,16 @@ class NativeSignalingManager private constructor() {
             }
         }
 
+        val handleVideoState = { data: JSONObject ->
+            val senderId = data.optString("senderId")
+            if (!phoneMatches(senderId, userPhone)) {
+                val callId = data.optString("callId")
+                val enabled = if (data.has("enabled")) data.optBoolean("enabled", true) else !data.optBoolean("disabled", false)
+                Log.d(TAG, "<- call:video-state callId=$callId enabled=$enabled sender=$senderId")
+                onVideoStateChanged?.invoke(callId, enabled)
+            }
+        }
+
         // Generic event listeners
         s.on(EV_RINGING) { args -> (args.getOrNull(0) as? JSONObject)?.let(handleRinging) }
         s.on(EV_ACCEPT)  { args -> (args.getOrNull(0) as? JSONObject)?.let(handleAccept) }
@@ -274,6 +286,8 @@ class NativeSignalingManager private constructor() {
         s.on(EV_ANSWER)  { args -> (args.getOrNull(0) as? JSONObject)?.let(handleAnswer) }
         s.on(EV_ICE)     { args -> (args.getOrNull(0) as? JSONObject)?.let(handleIce) }
         s.on(EV_END)     { args -> (args.getOrNull(0) as? JSONObject)?.let(handleEnd) }
+        s.on(EV_VIDEO_STATE) { args -> (args.getOrNull(0) as? JSONObject)?.let(handleVideoState) }
+        s.on("call:toggle-camera") { args -> (args.getOrNull(0) as? JSONObject)?.let(handleVideoState) }
 
         // Specific targeted event listeners
         val phoneVariants = listOf(userPhone, cleanPhone(userPhone)).filter { it.isNotBlank() }.distinct()
@@ -287,6 +301,8 @@ class NativeSignalingManager private constructor() {
             s.on("$EV_ANSWER:$variant")  { args -> (args.getOrNull(0) as? JSONObject)?.let(handleAnswer) }
             s.on("$EV_ICE:$variant")     { args -> (args.getOrNull(0) as? JSONObject)?.let(handleIce) }
             s.on("$EV_END:$variant")     { args -> (args.getOrNull(0) as? JSONObject)?.let(handleEnd) }
+            s.on("$EV_VIDEO_STATE:$variant") { args -> (args.getOrNull(0) as? JSONObject)?.let(handleVideoState) }
+            s.on("call:toggle-camera:$variant") { args -> (args.getOrNull(0) as? JSONObject)?.let(handleVideoState) }
         }
     }
 
@@ -316,6 +332,7 @@ class NativeSignalingManager private constructor() {
             put("callId", callId)
             put("callerId", callerId)
             put("calleeId", calleeId)
+            put("target", callerId)
             put("senderId", userPhone)
         }
         emitSafely(EV_RINGING, payload)
@@ -458,6 +475,29 @@ class NativeSignalingManager private constructor() {
         }
     }
 
+    fun sendVideoState(callId: String, targetPhone: String, enabled: Boolean) {
+        val payload = buildJson {
+            put("callId", callId)
+            put("target", targetPhone)
+            put("calleeId", targetPhone)
+            put("callerId", userPhone)
+            put("senderId", userPhone)
+            put("enabled", enabled)
+            put("disabled", !enabled)
+        }
+        emitSafely(EV_VIDEO_STATE, payload)
+        emitSafely("$EV_VIDEO_STATE:$targetPhone", payload)
+        val cleanTarget = cleanPhone(targetPhone)
+        if (cleanTarget.isNotBlank() && cleanTarget != targetPhone) {
+            emitSafely("$EV_VIDEO_STATE:$cleanTarget", payload)
+        }
+        emitSafely("call:toggle-camera", payload)
+        emitSafely("call:toggle-camera:$targetPhone", payload)
+        if (cleanTarget.isNotBlank() && cleanTarget != targetPhone) {
+            emitSafely("call:toggle-camera:$cleanTarget", payload)
+        }
+    }
+
     private fun emitSafely(event: String, payload: JSONObject) {
         val s = socket
         if (s != null && s.connected()) {
@@ -487,6 +527,7 @@ class NativeSignalingManager private constructor() {
         onAnswer        = null
         onIceCandidate  = null
         onCallEnd       = null
+        onVideoStateChanged = null
     }
 
     fun getUserPhone() = userPhone

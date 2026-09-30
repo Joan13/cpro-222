@@ -2391,6 +2391,10 @@
   "accept": "Accept",
   "camera_off": "Camera Off",
   "camera_on": "Camera On",
+  "video_paused": "Video paused",
+  "pause_video": "Pause",
+  "resume_video": "Resume",
+  "camera": "Camera",
   "switch_camera": "Switch Camera",
   "btn_speaker": "Speaker",
   "btn_flip": "Flip",
@@ -2413,5 +2417,15 @@
   "revenue_variance": "Revenue Difference",
   "see_less": "See less",
   "view_all": "View all",
-  "validate_filter": "Validate filter"
+  "validate_filter": "Validate filter",
+  "search_calls": "Search calls...",
+  "filter_all": "All",
+  "filter_missed": "Missed",
+  "filter_incoming": "Incoming",
+  "filter_outgoing": "Outgoing",
+  "filter_audio": "Audio",
+  "filter_video": "Video",
+  "no_calls_found": "No calls found",
+  "no_calls_found_desc": "Try adjusting your search or filter",
+  "clear_filters": "Clear filters"
 }

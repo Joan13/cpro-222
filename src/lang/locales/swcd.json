@@ -2387,6 +2387,10 @@
   "accept": "Accepter",
   "camera_off": "Kamera imezimwa",
   "camera_on": "Kamera imewashwa",
+  "video_paused": "Video imesitishwa",
+  "pause_video": "Sitisha",
+  "resume_video": "Endelea",
+  "camera": "Kamera",
   "switch_camera": "Badilisha kamera",
   "btn_speaker": "Kipaza",
   "btn_flip": "Badilisha",
@@ -2408,5 +2412,15 @@
   "revenue_variance": "Tofauti ya Mapato",
   "see_less": "Ona kidogo",
   "view_all": "Ona zote",
-  "validate_filter": "Thibitisha chujio"
+  "validate_filter": "Thibitisha chujio",
+  "search_calls": "Tafuta simu...",
+  "filter_all": "Zote",
+  "filter_missed": "Zilizokosekana",
+  "filter_incoming": "Zinazoingia",
+  "filter_outgoing": "Zinazotoka",
+  "filter_audio": "Sauti",
+  "filter_video": "Video",
+  "no_calls_found": "Hakuna simu zilizopatikana",
+  "no_calls_found_desc": "Jaribu kubadilisha utafutaji au kichujio chako",
+  "clear_filters": "Futa vichujio"
 }

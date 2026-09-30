@@ -294,11 +294,11 @@ const UserStories = ({ navigation, route }: NavProps) => {
                             );
                         } else {
                             // Si le seuil n'est pas atteint, on annule et on ramène le statut à 0
-                            translateY.value = withSpring(
+                            translateY.value = withTiming(
                                 0,
                                 {
-                                    damping: 20,
-                                    stiffness: 180,
+                                    duration: 180,
+                                    easing: Easing.out(Easing.cubic),
                                 },
                                 (finished) => {
                                     if (finished) {
@@ -318,8 +318,8 @@ const UserStories = ({ navigation, route }: NavProps) => {
                         const maxIdx = allUsersWithStories.length - 1;
                         let targetIdx = currentUserIndex;
 
-                        const velocityThreshold = 500;
-                        const distanceThreshold = SCREEN_WIDTH * 0.35;
+                        const velocityThreshold = 400;
+                        const distanceThreshold = SCREEN_WIDTH * 0.25;
 
                         // Check flick velocity first, then distance threshold
                         if (event.velocityX < -velocityThreshold) {
@@ -331,7 +331,7 @@ const UserStories = ({ navigation, route }: NavProps) => {
                         } else if (event.translationX > distanceThreshold) {
                             targetIdx = Math.max(0, currentUserIndex - 1);
                         } else {
-                            targetIdx = currentUserIndex; // Clean return on small swipe (< 35%)
+                            targetIdx = currentUserIndex; // Clean return on small swipe (< 25%)
                         }
 
                         if (targetIdx > currentUserIndex) {
@@ -345,7 +345,7 @@ const UserStories = ({ navigation, route }: NavProps) => {
                             runOnJS(setSwipeUpEvent)(null);
                             scrollX.value = withTiming(
                                 targetIdx * SCREEN_WIDTH,
-                                { duration: 280, easing: Easing.out(Easing.cubic) },
+                                { duration: 220, easing: Easing.out(Easing.cubic) },
                                 (finished) => {
                                     if (finished) {
                                         runOnJS(setCurrentUserIndex)(targetIdx);
@@ -354,12 +354,11 @@ const UserStories = ({ navigation, route }: NavProps) => {
                                 }
                             );
                         } else {
-                            scrollX.value = withSpring(
+                            scrollX.value = withTiming(
                                 currentUserIndex * SCREEN_WIDTH,
                                 {
-                                    damping: 24,
-                                    stiffness: 180,
-                                    mass: 0.8,
+                                    duration: 180,
+                                    easing: Easing.out(Easing.cubic),
                                 },
                                 (finished) => {
                                     if (finished) {
@@ -375,7 +374,10 @@ const UserStories = ({ navigation, route }: NavProps) => {
                 })
                 .onFinalize(() => {
                     if (!isDismissing.value) {
-                        translateY.value = withSpring(0);
+                        translateY.value = withTiming(0, {
+                            duration: 160,
+                            easing: Easing.out(Easing.quad),
+                        });
                         if (gestureDirection.value === 0) {
                             runOnJS(setIsInteracting)(false);
                         }

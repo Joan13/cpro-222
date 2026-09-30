@@ -192,12 +192,46 @@ class CallManager {
     }
 
     try {
-      console.log(`[CallManager] Starting native ${type} call to ${calleeId} (${calleeName})`);
+      let finalCalleeAvatar = calleeAvatar || '';
+      let finalCalleeName = calleeName || '';
+      try {
+        const realm = await openRealmInstance();
+        if (realm && !realm.isClosed && calleeId) {
+          const contact = realm.objects('UserContacts').filtered('phone_number == $0', calleeId)[0] as any;
+          if (contact) {
+            if (!finalCalleeAvatar && contact.user_profile) {
+              finalCalleeAvatar = contact.user_profile;
+            }
+            if (!finalCalleeName && (contact.user_names || contact.displayName)) {
+              finalCalleeName = contact.displayName || contact.user_names;
+            }
+          }
+        }
+      } catch (_e) {}
+
+      if (
+        finalCalleeAvatar &&
+        (finalCalleeAvatar === 'null' ||
+          finalCalleeAvatar === 'undefined' ||
+          finalCalleeAvatar === 'none' ||
+          finalCalleeAvatar.includes('profile_black'))
+      ) {
+        finalCalleeAvatar = '';
+      }
+
+      if (finalCalleeAvatar && !finalCalleeAvatar.startsWith('http')) {
+        const cleanAvatar = finalCalleeAvatar.startsWith('/') ? finalCalleeAvatar.slice(1) : finalCalleeAvatar;
+        finalCalleeAvatar = cleanAvatar.startsWith('profile_pictures/')
+          ? `https://server.yambi.net/media/${cleanAvatar}`
+          : `https://server.yambi.net/media/profile_pictures/${cleanAvatar}`;
+      }
+
+      console.log(`[CallManager] Starting native ${type} call to ${calleeId} (${finalCalleeName}) avatar=${finalCalleeAvatar}`);
       store.dispatch(setCallActive(true));
       const callId = await YambiCall.startOutgoingCall({
         calleeId,
-        calleeName: calleeName || calleeId,
-        calleeAvatar: calleeAvatar || '',
+        calleeName: finalCalleeName || calleeId,
+        calleeAvatar: finalCalleeAvatar,
         callerId: this.currentUserPhoneNumber,
         callerName: this.currentUserName,
         callerAvatar: this.currentUserAvatar,

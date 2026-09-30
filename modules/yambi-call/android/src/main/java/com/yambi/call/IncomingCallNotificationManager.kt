@@ -82,7 +82,23 @@ object IncomingCallNotificationManager {
     avatarUrl: String?,
     onLoaded: (Bitmap) -> Unit
   ) {
-    if (avatarUrl.isNullOrBlank()) return
+    if (avatarUrl.isNullOrBlank()) {
+      val cached = getCachedAvatarBitmap("default_profile_black")
+      if (cached != null) {
+        onLoaded(cached)
+        return
+      }
+      try {
+        val rawBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.profile_black)
+        if (rawBitmap != null) {
+          val circular = createCircularBitmap(rawBitmap)
+          avatarBitmapCache["default_profile_black"] = circular
+          onLoaded(circular)
+        }
+      } catch (_: Exception) {}
+      return
+    }
+
     val cached = getCachedAvatarBitmap(avatarUrl)
     if (cached != null) {
       onLoaded(cached)
@@ -91,10 +107,12 @@ object IncomingCallNotificationManager {
 
     Executors.newSingleThreadExecutor().execute {
       try {
-        val fullUrl = if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
-          avatarUrl
-        } else {
-          "https://server.yambi.net/medias/$avatarUrl"
+        val clean = avatarUrl.trimStart('/')
+        val fullUrl = when {
+          avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://") -> avatarUrl
+          clean.startsWith("media/profile_pictures/") -> "https://server.yambi.net/$clean"
+          clean.startsWith("profile_pictures/") -> "https://server.yambi.net/media/$clean"
+          else -> "https://server.yambi.net/media/profile_pictures/$clean"
         }
 
         val url = java.net.URL(fullUrl)
@@ -114,9 +132,30 @@ object IncomingCallNotificationManager {
           android.os.Handler(android.os.Looper.getMainLooper()).post {
             onLoaded(circular)
           }
+        } else {
+          try {
+            val defaultBmp = BitmapFactory.decodeResource(context.resources, R.drawable.profile_black)
+            if (defaultBmp != null) {
+              val circular = createCircularBitmap(defaultBmp)
+              avatarBitmapCache["default_profile_black"] = circular
+              android.os.Handler(android.os.Looper.getMainLooper()).post {
+                onLoaded(circular)
+              }
+            }
+          } catch (_: Exception) {}
         }
       } catch (e: Exception) {
         android.util.Log.w("IncomingCallNotif", "Error loading avatar bitmap: ${e.message}")
+        try {
+          val defaultBmp = BitmapFactory.decodeResource(context.resources, R.drawable.profile_black)
+          if (defaultBmp != null) {
+            val circular = createCircularBitmap(defaultBmp)
+            avatarBitmapCache["default_profile_black"] = circular
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+              onLoaded(circular)
+            }
+          }
+        } catch (_: Exception) {}
       }
     }
   }
@@ -247,6 +286,24 @@ object IncomingCallNotificationManager {
       piFlags
     )
 
+    // DeleteIntent pour intercepter et bloquer toute tentative de glissement/effacement de l'appel entrant
+    val deleteIntent = Intent(context, OngoingCallDismissReceiver::class.java).apply {
+      action = OngoingCallDismissReceiver.ACTION_INCOMING_CALL_DISMISSED
+      putExtra("callId", callId)
+      putExtra("callerId", callerId)
+      putExtra("callerName", callerName)
+      putExtra("callerAvatar", callerAvatar ?: "")
+      putExtra("callType", callType)
+      putExtra("isVerified", isVerified)
+      putExtra("calleeId", calleeId)
+    }
+    val deletePendingIntent = PendingIntent.getBroadcast(
+      context,
+      NOTIFICATION_ID + 3,
+      deleteIntent,
+      piFlags
+    )
+
     val title = if (callerName.isNotBlank()) callerName else callerId
     val isVideo = callType.equals("video", ignoreCase = true)
     val subtitle = if (isVideo) {
@@ -273,22 +330,82 @@ object IncomingCallNotificationManager {
       .setSound(null)
       .setContentIntent(fullScreenPendingIntent)
       .setFullScreenIntent(fullScreenPendingIntent, true)
-      .addAction(android.R.drawable.ic_menu_close_clear_cancel, getCallString(context, "decline", "Refuser"), rejectPendingIntent)
-      .addAction(android.R.drawable.ic_menu_call, getCallString(context, "accept", "Accepter"), acceptPendingIntent)
+      .setDeleteIntent(deletePendingIntent)
 
     if (cachedAvatar != null) {
       notificationBuilder.setLargeIcon(cachedAvatar)
-    } else if (!callerAvatar.isNullOrBlank()) {
+    }
+
+    // CallStyle officiel Android pour appel entrant (verrouille le swipe-dismiss et affiche les boutons natifs)
+    var callStyleApplied = false
+    try {
+      val callerPersonBuilder = Person.Builder()
+        .setName(title)
+        .setImportant(true)
+
+      if (cachedAvatar != null) {
+        callerPersonBuilder.setIcon(IconCompat.createWithBitmap(cachedAvatar))
+      } else {
+        callerPersonBuilder.setIcon(IconCompat.createWithResource(context, iconResId))
+      }
+
+      val callerPerson = callerPersonBuilder.build()
+      val callStyle = NotificationCompat.CallStyle.forIncomingCall(
+        callerPerson,
+        rejectPendingIntent,
+        acceptPendingIntent
+      )
+      notificationBuilder.setStyle(callStyle)
+      callStyleApplied = true
+    } catch (t: Throwable) {
+      android.util.Log.w("IncomingCallNotificationManager", "Could not apply CallStyle: ${t.message}")
+    }
+
+    // Boutons de secours si CallStyle non supporté par la version de la bibliothèque
+    if (!callStyleApplied) {
+      notificationBuilder.addAction(
+        android.R.drawable.ic_menu_close_clear_cancel,
+        getCallString(context, "decline", "Refuser"),
+        rejectPendingIntent
+      )
+      notificationBuilder.addAction(
+        android.R.drawable.ic_menu_call,
+        getCallString(context, "accept", "Accepter"),
+        acceptPendingIntent
+      )
+    }
+
+    if (cachedAvatar == null && !callerAvatar.isNullOrBlank()) {
       loadAvatarBitmapAsync(context, callerAvatar) { loadedBitmap ->
         try {
           notificationBuilder.setLargeIcon(loadedBitmap)
+          try {
+            val callerPerson = Person.Builder()
+              .setName(title)
+              .setImportant(true)
+              .setIcon(IconCompat.createWithBitmap(loadedBitmap))
+              .build()
+            notificationBuilder.setStyle(
+              NotificationCompat.CallStyle.forIncomingCall(
+                callerPerson,
+                rejectPendingIntent,
+                acceptPendingIntent
+              )
+            )
+          } catch (_: Throwable) {}
+          val updatedNotification = notificationBuilder.build().apply {
+            flags = flags or Notification.FLAG_ONGOING_EVENT or Notification.FLAG_NO_CLEAR
+          }
           val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-          nm.notify(NOTIFICATION_ID, notificationBuilder.build())
+          nm.notify(NOTIFICATION_ID, updatedNotification)
         } catch (_: Exception) {}
       }
     }
 
-    val notification = notificationBuilder.build()
+    // Sécurisation stricte : interdire toute suppression (swipe ou 'Tout effacer')
+    val notification = notificationBuilder.build().apply {
+      flags = flags or Notification.FLAG_ONGOING_EVENT or Notification.FLAG_NO_CLEAR
+    }
 
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.notify(NOTIFICATION_ID, notification)

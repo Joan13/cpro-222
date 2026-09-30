@@ -376,7 +376,7 @@ export const displayNotification = async (notification: any) => {
                     }
                 }
             }
-        } catch (_e) {}
+        } catch (_e) { }
 
         try {
             await YambiCall.reportIncomingCall({
@@ -398,8 +398,8 @@ export const displayNotification = async (notification: any) => {
     if (data.type === 'CALL_END') {
         const callId = data.callId || (data as any)?.call_id;
         if (callId) {
-            YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => {});
-            YambiCall.dismissNotification(String(callId)).catch(() => {});
+            YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => { });
+            YambiCall.dismissNotification(String(callId)).catch(() => { });
         }
         callManager.syncCallHistory();
         return; // An ended call must NEVER trigger any notification!
@@ -410,8 +410,8 @@ export const displayNotification = async (notification: any) => {
         if (callId) {
             const wasAnswered = await YambiCall.wasCallAnswered(String(callId)).catch(() => false);
             if (wasAnswered) {
-                YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => {});
-                YambiCall.dismissNotification(String(callId)).catch(() => {});
+                YambiCall.reportCallEnded(String(callId), 'ENDED').catch(() => { });
+                YambiCall.dismissNotification(String(callId)).catch(() => { });
                 callManager.syncCallHistory();
                 return; // User was in this call, NEVER display missed call notification!
             }
@@ -422,10 +422,10 @@ export const displayNotification = async (notification: any) => {
                 if (existing && ((existing as any).direction === 'incoming' || (existing as any).direction === 'outgoing' || (existing as any).durationSeconds > 0 || (existing as any).status === 'ENDED')) {
                     return;
                 }
-            } catch (_e) {}
+            } catch (_e) { }
 
-            YambiCall.reportCallEnded(String(callId), 'MISSED').catch(() => {});
-            YambiCall.dismissNotification(String(callId)).catch(() => {});
+            YambiCall.reportCallEnded(String(callId), 'MISSED').catch(() => { });
+            YambiCall.dismissNotification(String(callId)).catch(() => { });
         }
         callManager.syncCallHistory();
     }
@@ -725,7 +725,7 @@ const Yambi = ({ navigation }: NavProps) => {
                 user_data.user_names || user_data.phone_number,
                 user_data.user_profile || ''
             );
-            callManager.checkPendingCall().catch(() => {});
+            callManager.checkPendingCall().catch(() => { });
         }
     }, [user_data?.phone_number, user_data?.user_names, user_data?.user_profile]);
 
@@ -2673,11 +2673,11 @@ const Yambi = ({ navigation }: NavProps) => {
             console.log('[App.tsx] Processing call notification response:', { actionIdentifier, callId: notificationData.callId });
 
             if (notificationId) {
-                Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+                Notifications.dismissNotificationAsync(notificationId).catch(() => { });
             }
 
             if (actionIdentifier === 'decline_call') {
-                Notifications.dismissAllNotificationsAsync().catch(() => {});
+                Notifications.dismissAllNotificationsAsync().catch(() => { });
                 try {
                     const callId = notificationData?.callId;
                     const callerId = notificationData?.callerId || notificationData?.callerPhone || notificationData?.callerPhoneNumber || notificationData?.user;
@@ -2687,9 +2687,9 @@ const Yambi = ({ navigation }: NavProps) => {
                             callId,
                             callerId,
                             calleeId,
-                        }).catch(() => {});
+                        }).catch(() => { });
                     }
-                } catch (e) {}
+                } catch (e) { }
                 callManager.syncCallHistory();
                 return true;
             }
@@ -3096,7 +3096,7 @@ const Yambi = ({ navigation }: NavProps) => {
                     }
                     SocketApp.emit("assemble", user_data.phone_number);
                 }
-                callManager.checkPendingCall().catch(() => {});
+                callManager.checkPendingCall().catch(() => { });
             } else if (state === "background" || state === "inactive") {
                 if (user_data.phone_number && SocketApp.connected) {
                     SocketApp.emit("assemble_background", user_data.phone_number);
@@ -4152,21 +4152,14 @@ const Yambi = ({ navigation }: NavProps) => {
 
                             <Stack.Screen name="ViewPhoto" component={ViewPhoto} options={({ navigation, route }) => ({
                                 headerShadowVisible: false,
-                                headerShown: true, headerStyle: {
-                                    backgroundColor: app_theme.colors.header_background_color
-                                },
-                                // presentation: 'modal',
-                                gestureEnabled: true,
-                                headerTintColor: app_theme.colors.header_foreground_color,
+                                headerShown: false,
+                                presentation: 'transparentModal',
+                                contentStyle: { backgroundColor: 'transparent' },
                                 animation: Platform.OS === 'android' ? 'fade_from_bottom' : 'default',
-                                title: strings.picture,
                                 headerTitleStyle: {
                                     fontSize: app_description.title_font_size,
                                     fontWeight: app_description.title_font_weight as any,
                                 },
-                                // headerRight: (props) => (
-                                //     <HeaderSale {...props} navigation={navigation} route={route} />
-                                // ),
                             })} />
 
                             <Stack.Screen name="EditBusinessUser" component={EditBusinessUser} options={({ navigation, route }) => ({
