@@ -104,7 +104,7 @@ export const SingleUserStories: React.FC<SingleUserStoriesProps> = ({
 
     const [isKeyboardVisible, setIsKeyboardVisible] = useState<boolean>(false);
     const isKeyboardVisibleRef = useRef<boolean>(false);
-    const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid: true });
+    const keyboard = useAnimatedKeyboard();
     const keyboardOffset = useSharedValue<number>(0);
 
     const replyInputRef = useRef<TextInput>(null);
