@@ -2424,5 +2424,9 @@
   "filter_video": "Vidéo",
   "no_calls_found": "Aucun appel trouvé",
   "no_calls_found_desc": "Essayez de modifier votre recherche ou vos filtres",
-  "clear_filters": "Effacer les filtres"
+  "clear_filters": "Effacer les filtres",
+  "tap_to_download": "Appuyer pour télécharger",
+  "open_in_reader": "Ouvrir",
+  "pending_tap_to_retry": "En attente • Réessayer",
+  "uploading": "Envoi en cours..."
 }

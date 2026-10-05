@@ -130,36 +130,64 @@ export const formatPhoneInternational = (user_data: TUser) => {
     return user_data.phone_number;
 };
 
-const isYesterday = (date: string) => {
-    const yesterday = moment().subtract(1, 'days').startOf('day');
-    return moment(date).isSame(yesterday, 'day');
+export const parseToMoment = (date: string | number | Date | null | undefined): moment.Moment => {
+    if (!date) return moment();
+    if (typeof date === "number") return moment(date);
+    if (typeof date === "string") {
+        const trimmed = date.trim();
+        if (!trimmed) return moment();
+        if (/^\d{10,13}$/.test(trimmed)) {
+            return moment(parseInt(trimmed, 10));
+        }
+        const normalized = trimmed.replace(/\//g, "-").replace(" ", "T");
+        const m = moment(normalized, moment.ISO_8601, true);
+        if (m.isValid()) return m;
+        const d = new Date(trimmed);
+        if (!isNaN(d.getTime())) return moment(d);
+        return moment(trimmed);
+    }
+    const d = new Date(date as any);
+    return !isNaN(d.getTime()) ? moment(d) : moment();
 };
 
-export const renderDateTime = (date: string, full: number, condensed: boolean, showHoursIfToday?: boolean) => {
+const isYesterday = (m: moment.Moment) => {
+    const yesterday = moment().subtract(1, 'days').startOf('day');
+    return m.isSame(yesterday, 'day');
+};
+
+export const renderDateTime = (date: string | number | Date, full: number, condensed: boolean, showHoursIfToday?: boolean) => {
+    if (!date) return "";
+    const m = parseToMoment(date);
+    const now = moment();
+    const isToday = m.isSame(now, 'day');
+    const isYest = isYesterday(m);
+    const atStr = (strings.at || "at").toLowerCase();
+
     if (full === 0) {
-        if (moment(date).format("L") === moment().format("L")) {
+        if (isToday) {
             if (showHoursIfToday) {
-                return moment(date).format("LT");
+                return m.format("LT");
             } else {
-                return strings.today;
+                return strings.today || "Today";
             }
-        } else if (isYesterday(date)) {
-            return strings.yesterday;
+        } else if (isYest) {
+            return strings.yesterday || "Yesterday";
         } else {
-            return moment(date).format(condensed ? "L" : "LL");
+            return m.format(condensed ? "L" : "LL");
         }
     } else if (full === 1) {
-        if (moment(date).format("L") === moment().format("L")) {
-            return strings.today + " " + strings.at.toLowerCase() + " " + moment(date).format("HH:mm");
-        } else if (isYesterday(date)) {
-            return strings.yesterday + "" + " " + strings.at.toLowerCase() + " " + moment(date).format("HH:mm");
+        const timeStr = m.format("HH:mm");
+        if (isToday) {
+            return (strings.today || "Today") + " " + atStr + " " + timeStr;
+        } else if (isYest) {
+            return (strings.yesterday || "Yesterday") + " " + atStr + " " + timeStr;
         } else {
-            return moment(date).format(condensed ? "L" : "LL") + " " + strings.at.toLowerCase() + " " + moment(date).format("HH:mm");
+            return m.format(condensed ? "L" : "LL") + " " + atStr + " " + timeStr;
         }
     } else if (full === 2) {
-        return moment(date).format(condensed ? "L" : "LL") + " " + strings.at.toLowerCase() + " " + moment(date).format("HH:mm");
+        return m.format(condensed ? "L" : "LL") + " " + atStr + " " + m.format("HH:mm");
     } else {
-        return moment(date).format(condensed ? "L" : "LL");
+        return m.format(condensed ? "L" : "LL");
     }
 }
 

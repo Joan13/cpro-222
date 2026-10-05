@@ -2,16 +2,19 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View, Linking, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import RNFS from "react-native-fs";
 import { TMessage } from "../../../types/types";
 import { useAppSelector } from "../../../store/app/hooks";
 import { useRealm } from "@realm/react";
 import axios from "axios";
-import moment from "moment";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { YambiText } from "../../app/Text";
 import { strings } from "../../../lang/lang";
-import { randomString, remote_host, renderDateUpToMilliseconds, SocketApp, media_url } from "../../../../GlobalVariables";
+import ENG from "../../../lang/locales/en.json";
+import FRC from "../../../lang/locales/fr.json";
+import SW_CD from "../../../lang/locales/swcd.json";
+import { remote_host, SocketApp, media_url } from "../../../../GlobalVariables";
 
 const formatFileSize = (bytes: number) => {
     if (bytes <= 0) return '';
@@ -31,19 +34,76 @@ const getFileIconName = (fileName: string) => {
     return { icon: 'file-document-outline', color: '#757575' };
 };
 
-const getCleanFileName = (mainText: string, caption?: string) => {
-    let base = mainText.split('/').pop() || 'document.pdf';
-    const hasExt = base.includes('.') && (base.split('.').pop()?.length || 0) <= 5;
-    if (hasExt) return base;
+const getFileMimeType = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    switch (ext) {
+        case 'pdf': return 'application/pdf';
+        case 'doc': return 'application/msword';
+        case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        case 'xls': return 'application/vnd.ms-excel';
+        case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        case 'ppt': return 'application/vnd.ms-powerpoint';
+        case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+        case 'txt': return 'text/plain';
+        case 'csv': return 'text/csv';
+        case 'zip': return 'application/zip';
+        case 'rar': return 'application/x-rar-compressed';
+        case '7z': return 'application/x-7z-compressed';
+        case 'tar': return 'application/x-tar';
+        case 'gz': return 'application/gzip';
+        case 'json': return 'application/json';
+        case 'jpg':
+        case 'jpeg': return 'image/jpeg';
+        case 'png': return 'image/png';
+        default: return 'application/octet-stream';
+    }
+};
 
+const getFileUTI = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    switch (ext) {
+        case 'pdf': return 'com.adobe.pdf';
+        case 'doc': return 'com.microsoft.word.doc';
+        case 'docx': return 'org.openxmlformats.wordprocessingml.document';
+        case 'xls': return 'com.microsoft.excel.xls';
+        case 'xlsx': return 'org.openxmlformats.spreadsheetml.sheet';
+        case 'ppt': return 'com.microsoft.powerpoint.ppt';
+        case 'pptx': return 'org.openxmlformats.presentationml.presentation';
+        case 'txt': return 'public.plain-text';
+        case 'json': return 'public.json';
+        case 'zip': return 'public.zip-archive';
+        default: return 'public.data';
+    }
+};
+
+const getCleanFileName = (mainText: string, caption?: string) => {
     if (caption) {
-        const firstWord = caption.split(' ')[0] || '';
-        const capExt = firstWord.includes('.') ? firstWord.split('.').pop() : '';
-        if (capExt && capExt.length <= 5) {
-            return `${base}.${capExt}`;
+        const cleanedCaption = caption.replace(/\s*\([^)]*\)\s*$/, '').trim();
+        if (cleanedCaption && cleanedCaption.includes('.')) {
+            const ext = cleanedCaption.split('.').pop();
+            if (ext && ext.length <= 6) {
+                return cleanedCaption;
+            }
         }
     }
+    let base = mainText.split('/').pop() || 'document.pdf';
+    base = base.split('?')[0];
+    const hasExt = base.includes('.') && (base.split('.').pop()?.length || 0) <= 6;
+    if (hasExt) return base;
+
     return `${base}.pdf`;
+};
+
+const DOCUMENTS_DIR = `${FileSystem.documentDirectory}YambiDownloadedDocuments`;
+
+const ensureDocumentDirExists = async () => {
+    try {
+        const dirInfo = await FileSystem.getInfoAsync(DOCUMENTS_DIR);
+        if (!dirInfo.exists) {
+            await FileSystem.makeDirectoryAsync(DOCUMENTS_DIR, { intermediates: true });
+        }
+    } catch (e) { }
+    return DOCUMENTS_DIR;
 };
 
 const documentSizeCacheMap = new Map<string, string>();
@@ -51,43 +111,113 @@ const documentSizeCacheMap = new Map<string, string>();
 const DocumentMessageItem = ({ message }: { message: TMessage }) => {
     const user_data = useAppSelector(state => state.user_data);
     const app_theme = useAppSelector(state => state.app_theme);
+    const lang = useAppSelector(state => state.persisted_app.langApp);
     const realm = useRealm();
 
     const [uploading, setUploading] = useState<boolean>(false);
     const [downloading, setDownloading] = useState<boolean>(false);
+    const [isDownloaded, setIsDownloaded] = useState<boolean>(false);
+    const [localFilePath, setLocalFilePath] = useState<string>('');
     const [fileSizeStr, setFileSizeStr] = useState<string>(() => message.main_text_message ? documentSizeCacheMap.get(message.main_text_message) || '' : '');
 
+    const getI18nText = (key: string, fallback: string): string => {
+        const localized = (strings as any)[key];
+        if (localized && typeof localized === 'string' && localized.trim() !== '') {
+            return localized;
+        }
+        const currentLang = (lang || strings.getLanguage() || 'fr').toLowerCase();
+        if (currentLang.startsWith('fr')) {
+            return (FRC as any)[key] || fallback;
+        }
+        if (currentLang.startsWith('sw')) {
+            return (SW_CD as any)[key] || fallback;
+        }
+        return (ENG as any)[key] || fallback;
+    };
+
+    // Check if document exists locally in YambiDownloadedDocuments or on device
     useEffect(() => {
         let isMounted = true;
-        const checkSize = async () => {
-            if (!message.main_text_message) return;
-            if (documentSizeCacheMap.has(message.main_text_message)) {
-                setFileSizeStr(documentSizeCacheMap.get(message.main_text_message)!);
+
+        const checkLocalDocument = async () => {
+            const raw = message.main_text_message;
+            if (!raw) return;
+
+            await ensureDocumentDirExists();
+
+            // 1. If it's a local uri (pending upload or local device path)
+            if (raw.startsWith('file://') || raw.startsWith('/data/') || raw.startsWith('/storage/') || raw.startsWith('content://')) {
+                try {
+                    const info = await FileSystem.getInfoAsync(raw);
+                    if (info.exists) {
+                        if (isMounted) {
+                            setLocalFilePath(raw);
+                            setIsDownloaded(true);
+                            if (info.size && info.size > 0) {
+                                const formatted = formatFileSize(info.size);
+                                documentSizeCacheMap.set(raw, formatted);
+                                setFileSizeStr(formatted);
+                            }
+                        }
+                        return;
+                    }
+                } catch (e) { }
+
+                if (isMounted) {
+                    setLocalFilePath(raw);
+                    setIsDownloaded(true);
+                }
                 return;
             }
-            if (message.main_text_message.startsWith('file://') || message.main_text_message.startsWith('/storage/') || message.main_text_message.startsWith('/data/')) {
+
+            // 2. If it's a remote file name, check in YambiDownloadedDocuments
+            const serverFileName = raw.split('/').pop()?.split('?')[0] || '';
+            const cleanName = getCleanFileName(raw, message.caption);
+
+            const candidatePaths = [
+                `${DOCUMENTS_DIR}/${serverFileName}`,
+                `${DOCUMENTS_DIR}/${cleanName}`,
+                `${RNFS.DocumentDirectoryPath}/YambiDownloadedDocuments/${serverFileName}`,
+                `${RNFS.DocumentDirectoryPath}/YambiDownloadedDocuments/${cleanName}`
+            ];
+
+            for (const cPath of candidatePaths) {
                 try {
-                    const fileStat = await RNFS.stat(message.main_text_message);
-                    if (isMounted && fileStat && fileStat.size) {
-                        const formatted = formatFileSize(fileStat.size);
-                        documentSizeCacheMap.set(message.main_text_message, formatted);
-                        setFileSizeStr(formatted);
+                    const info = await FileSystem.getInfoAsync(cPath);
+                    if (info.exists && info.size && info.size > 0) {
+                        if (isMounted) {
+                            setLocalFilePath(cPath);
+                            setIsDownloaded(true);
+                            const formatted = formatFileSize(info.size);
+                            documentSizeCacheMap.set(raw, formatted);
+                            setFileSizeStr(formatted);
+                        }
+                        return;
                     }
                 } catch (e) { }
             }
+
+            if (isMounted) {
+                setLocalFilePath(`${DOCUMENTS_DIR}/${serverFileName}`);
+                setIsDownloaded(false);
+            }
         };
-        checkSize();
+
+        checkLocalDocument();
+
         return () => { isMounted = false; };
-    }, [message.main_text_message]);
+    }, [message.main_text_message, message.message_read]);
 
     const upload_document = async () => {
         setUploading(true);
 
-        const fileName = message.main_text_message.split('/').pop() || 'document';
-        let base_url = remote_host + "/yambi/API/upload_document";
-        let formData = new FormData();
+        const fileName = getCleanFileName(message.main_text_message, message.caption);
+        const mimeType = getFileMimeType(fileName);
+        const base_url = remote_host + "/yambi/API/upload_document";
+
+        const formData = new FormData();
         formData.append('document', {
-            type: 'application/octet-stream',
+            type: mimeType,
             uri: message.main_text_message,
             name: fileName
         } as any);
@@ -100,39 +230,36 @@ const DocumentMessageItem = ({ message }: { message: TMessage }) => {
                 }
             });
 
-            if (response.data && response.data.file_name) {
-                sendMessage(response.data.file_name);
-                setUploading(false);
-            } else {
-                upload_document_fallback();
-            }
-        } catch (error) {
-            upload_document_fallback();
-        }
-    };
+            const isSuccess = response.data && (response.data.message === "1" || parseInt(response.data.message) === 1) && response.data.file_name;
 
-    const upload_document_fallback = async () => {
-        const fileName = message.main_text_message.split('/').pop() || 'document';
-        let base_url = remote_host + "/yambi/API/upload_picture";
-        let formData = new FormData();
-        formData.append('image', {
-            type: 'application/octet-stream',
-            uri: message.main_text_message,
-            name: fileName
-        } as any);
+            if (isSuccess) {
+                const serverFileName = response.data.file_name;
 
-        try {
-            const response = await axios.post(base_url, formData, {
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            if (response.data && response.data.file_name) {
-                sendMessage(response.data.file_name);
+                // Copy original sent file into YambiDownloadedDocuments so sender can read it locally without re-downloading
+                try {
+                    await ensureDocumentDirExists();
+                    const destPath = `${DOCUMENTS_DIR}/${serverFileName}`;
+                    const sourceUri = message.main_text_message;
+
+                    await FileSystem.copyAsync({
+                        from: sourceUri,
+                        to: destPath
+                    });
+
+                    // Also copy under clean name for extra compatibility
+                    const cleanDestPath = `${DOCUMENTS_DIR}/${fileName}`;
+                    await FileSystem.copyAsync({
+                        from: sourceUri,
+                        to: cleanDestPath
+                    }).catch(() => {});
+
+                    setLocalFilePath(destPath);
+                    setIsDownloaded(true);
+                } catch (copyErr) { }
+
+                sendMessage(serverFileName);
             }
-        } catch (e) {
-        } finally {
+        } catch (error) { } finally {
             setUploading(false);
         }
     };
@@ -183,131 +310,174 @@ const DocumentMessageItem = ({ message }: { message: TMessage }) => {
         }
     }, []);
 
-    const downloadRemoteFile = async (remoteFileName: string, targetPath: string): Promise<boolean> => {
-        const urlsToTry = [
-            `${media_url}/document_messages/${remoteFileName}`,
-            `${media_url}/picture_messages/${remoteFileName}`
-        ];
+    const downloadRemoteDocument = async (): Promise<string | null> => {
+        setDownloading(true);
 
-        for (const url of urlsToTry) {
-            try {
-                const exists = await RNFS.exists(targetPath);
-                if (exists) {
-                    await RNFS.unlink(targetPath).catch(() => {});
-                }
+        try {
+            await ensureDocumentDirExists();
 
-                const res = await RNFS.downloadFile({
-                    fromUrl: url,
-                    toFile: targetPath
-                }).promise;
+            const raw = message.main_text_message || '';
+            const serverFileName = raw.split('/').pop()?.split('?')[0] || '';
 
-                if (res.statusCode === 200) {
-                    const stat = await RNFS.stat(targetPath);
-                    if (stat && stat.size > 0) {
-                        return true;
-                    }
-                }
-                await RNFS.unlink(targetPath).catch(() => {});
-            } catch (e) {
-                await RNFS.unlink(targetPath).catch(() => {});
+            if (!serverFileName) {
+                return null;
             }
+
+            const targetPath = `${DOCUMENTS_DIR}/${serverFileName}`;
+
+            const urlsToTry: string[] = [];
+            if (raw.startsWith('http://') || raw.startsWith('https://')) {
+                urlsToTry.push(raw);
+            } else {
+                urlsToTry.push(`${media_url}/document_messages/${serverFileName}`);
+                urlsToTry.push(`${remote_host}/media/document_messages/${serverFileName}`);
+                urlsToTry.push(`${media_url}/picture_messages/${serverFileName}`);
+            }
+
+            for (const url of urlsToTry) {
+                try {
+                    const existingInfo = await FileSystem.getInfoAsync(targetPath);
+                    if (existingInfo.exists) {
+                        await FileSystem.deleteAsync(targetPath, { idempotent: true }).catch(() => {});
+                    }
+
+                    const res = await FileSystem.downloadAsync(url, targetPath);
+
+                    if (res.status === 200) {
+                        const fileInfo = await FileSystem.getInfoAsync(targetPath);
+
+                        if (fileInfo.exists && fileInfo.size && fileInfo.size > 0) {
+                            setLocalFilePath(targetPath);
+                            setIsDownloaded(true);
+                            const formatted = formatFileSize(fileInfo.size);
+                            documentSizeCacheMap.set(raw, formatted);
+                            setFileSizeStr(formatted);
+                            return targetPath;
+                        }
+                    }
+
+                    await FileSystem.deleteAsync(targetPath, { idempotent: true }).catch(() => {});
+                } catch (urlErr) {
+                    await FileSystem.deleteAsync(targetPath, { idempotent: true }).catch(() => {});
+                }
+            }
+
+            return null;
+        } catch (fatalErr) {
+            return null;
+        } finally {
+            setDownloading(false);
         }
-        return false;
     };
 
     const openDocumentInSystemReader = async () => {
         Haptics.selectionAsync();
 
-        let rawPath = message.main_text_message;
-        if (!rawPath) return;
+        let pathToOpen = localFilePath;
+
+        // Check if the file really exists locally on disk
+        let fileExistsLocally = false;
+        if (isDownloaded && pathToOpen) {
+            try {
+                if (pathToOpen.startsWith('content://')) {
+                    fileExistsLocally = true;
+                } else {
+                    const info = await FileSystem.getInfoAsync(pathToOpen);
+                    fileExistsLocally = info.exists && (info.size ?? 0) > 0;
+                }
+            } catch (e) {
+                fileExistsLocally = false;
+            }
+        }
+
+        // If not present locally on device, download from server first
+        if (!fileExistsLocally) {
+            const downloadedPath = await downloadRemoteDocument();
+            if (!downloadedPath) {
+                return;
+            }
+            pathToOpen = downloadedPath;
+        }
 
         try {
-            let localPath = rawPath;
+            const displayName = message.caption || message.main_text_message.split('/').pop() || 'Document';
+            const friendlyName = getCleanFileName(pathToOpen, message.caption);
+            const mimeType = getFileMimeType(friendlyName);
+            const uti = getFileUTI(friendlyName);
 
-            // 1. Handle content:// URIs by copying to cache directory
-            if (rawPath.startsWith('content://')) {
-                const fileName = getCleanFileName(rawPath, message.caption);
-                const cachePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+            // Copy to cache with friendly name so system readers show the proper document title
+            let fileUriToShare = pathToOpen;
+            if (!pathToOpen.startsWith('content://')) {
+                const tempCachePath = `${FileSystem.cacheDirectory}${friendlyName}`;
                 try {
-                    const cacheExists = await RNFS.exists(cachePath);
-                    if (!cacheExists) {
-                        await RNFS.copyFile(rawPath, cachePath);
-                    }
-                    localPath = cachePath;
-                } catch (e) {
-                    localPath = rawPath;
+                    await FileSystem.copyAsync({
+                        from: pathToOpen,
+                        to: tempCachePath
+                    });
+                    fileUriToShare = tempCachePath;
+                } catch (copyErr) {
+                    fileUriToShare = pathToOpen;
                 }
             }
 
-            const isRemote = !localPath.startsWith('file://') && !localPath.startsWith('/storage/') && !localPath.startsWith('/data/') && !localPath.startsWith('content://');
+            // Primary: expo-sharing (opens native system viewer / open-with with proper MIME type and permissions)
+            const sharingAvailable = await Sharing.isAvailableAsync();
 
-            if (isRemote) {
-                const fileName = getCleanFileName(localPath, message.caption);
-                const targetDir = `${RNFS.DocumentDirectoryPath}/YambiDownloadedDocuments`;
-                await RNFS.mkdir(targetDir).catch(() => {});
-                const cachedFilePath = `${targetDir}/${fileName}`;
-
-                let fileReady = false;
-                const fileExists = await RNFS.exists(cachedFilePath);
-                if (fileExists) {
-                    const stat = await RNFS.stat(cachedFilePath).catch(() => null);
-                    if (stat && stat.size > 0) {
-                        fileReady = true;
-                        localPath = cachedFilePath;
-                    }
-                }
-
-                if (!fileReady) {
-                    setDownloading(true);
-                    const success = await downloadRemoteFile(localPath, cachedFilePath);
-                    setDownloading(false);
-                    if (success) {
-                        localPath = cachedFilePath;
-                    } else {
-                        console.error('Failed to download remote document file.');
-                        return;
-                    }
-                }
-            }
-
-            // 2. Ensure file:// scheme for local files
-            let fileUri = localPath;
-            if (!fileUri.startsWith('file://') && !fileUri.startsWith('content://') && !fileUri.startsWith('http://') && !fileUri.startsWith('https://')) {
-                fileUri = 'file://' + (fileUri.startsWith('/') ? fileUri : '/' + fileUri);
-            }
-
-            // If content:// URI, open directly
-            if (fileUri.startsWith('content://')) {
-                await Linking.openURL(fileUri);
+            if (sharingAvailable && !fileUriToShare.startsWith('content://')) {
+                await Sharing.shareAsync(fileUriToShare, {
+                    mimeType: mimeType,
+                    dialogTitle: displayName,
+                    UTI: uti
+                });
                 return;
             }
 
-            // On Android, convert file:// URI to content:// URI using legacy FileSystem (FileProvider)
-            if (Platform.OS === 'android') {
+            // Fallback for content:// or when Sharing is not available
+            let linkUri = fileUriToShare;
+            if (Platform.OS === 'android' && !linkUri.startsWith('content://')) {
                 try {
-                    const contentUri = await FileSystem.getContentUriAsync(fileUri);
+                    const contentUri = await FileSystem.getContentUriAsync(linkUri);
                     if (contentUri) {
-                        await Linking.openURL(contentUri);
-                        return;
+                        linkUri = contentUri;
                     }
-                } catch (err) {
-                    console.log('getContentUriAsync error:', err);
-                }
+                } catch (cErr) { }
             }
 
-            await Linking.openURL(fileUri);
-        } catch (err) {
-            console.error('Error opening document in system reader:', err);
-            setDownloading(false);
-        }
+            await Linking.openURL(linkUri);
+        } catch (err) { }
     };
 
     const displayName = message.caption || message.main_text_message.split('/').pop() || 'Document';
     const iconInfo = getFileIconName(displayName);
 
+    const isPendingSender = message.message_read === 5 && message.sender === user_data.phone_number;
+
+    const handlePress = () => {
+        if (isPendingSender && !uploading) {
+            upload_document();
+        } else {
+            openDocumentInSystemReader();
+        }
+    };
+
+    let statusText = '';
+    if (uploading) {
+        statusText = getI18nText('uploading', 'Uploading...');
+    } else if (isPendingSender) {
+        statusText = getI18nText('pending_tap_to_retry', 'Pending • Tap to retry');
+    } else if (downloading) {
+        statusText = getI18nText('downloading', 'Downloading...');
+    } else if (!isDownloaded) {
+        const tapText = getI18nText('tap_to_download', 'Tap to download');
+        statusText = fileSizeStr ? `${fileSizeStr} • ${tapText}` : tapText;
+    } else {
+        const openText = getI18nText('open_in_reader', 'Open');
+        statusText = fileSizeStr ? `${fileSizeStr} • ${openText}` : openText;
+    }
+
     return (
         <Pressable
-            onPress={openDocumentInSystemReader}
+            onPress={handlePress}
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -324,22 +494,18 @@ const DocumentMessageItem = ({ message }: { message: TMessage }) => {
             <View style={{ flex: 1, marginLeft: 10, marginRight: 6 }}>
                 <YambiText text={displayName} size="normal" color="default" bold numberLines={1} />
                 <YambiText
-                    text={
-                        uploading
-                            ? ((strings as any).uploading || "Uploading...")
-                            : downloading
-                            ? (strings.downloading || "Downloading...")
-                            : fileSizeStr
-                            ? `${fileSizeStr} • ${(strings as any).open_in_reader || "Open in reader"}`
-                            : `${(strings as any).document_file || "Document"} • ${(strings as any).open_in_reader || "Open in reader"}`
-                    }
+                    text={statusText}
                     size="small"
-                    color="gray"
+                    color={isPendingSender && !uploading ? "high" : !isDownloaded ? "high" : "gray"}
                     style={{ marginTop: 2 }}
                 />
             </View>
             {uploading || downloading ? (
                 <ActivityIndicator size="small" color={app_theme.colors.high_color} />
+            ) : isPendingSender ? (
+                <MaterialCommunityIcons name="cloud-upload-outline" size={20} color={app_theme.colors.high_color} />
+            ) : !isDownloaded ? (
+                <MaterialCommunityIcons name="arrow-down-circle-outline" size={22} color={app_theme.colors.high_color} />
             ) : (
                 <MaterialCommunityIcons name="open-in-new" size={20} color={app_theme.colors.gray} />
             )}

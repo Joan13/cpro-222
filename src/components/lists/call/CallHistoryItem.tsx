@@ -90,7 +90,9 @@ export const CallHistoryItem: React.FC<CallHistoryItemProps> = ({
         return `${remainingSecs}s`;
     };
 
-    const rawDate = item.createdAt || (item.timestamp ? new Date(item.timestamp).toISOString() : new Date().toISOString());
+    const rawDate = item.timestamp
+        ? item.timestamp
+        : (item.createdAt || new Date().toISOString());
     const formattedTime = renderDateTime(rawDate, 1, true);
 
     const handleViewPhoto = () => {

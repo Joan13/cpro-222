@@ -2427,5 +2427,9 @@
   "filter_video": "Video",
   "no_calls_found": "No calls found",
   "no_calls_found_desc": "Try adjusting your search or filter",
-  "clear_filters": "Clear filters"
+  "clear_filters": "Clear filters",
+  "tap_to_download": "Tap to download",
+  "open_in_reader": "Open",
+  "pending_tap_to_retry": "Pending • Tap to retry",
+  "uploading": "Uploading..."
 }

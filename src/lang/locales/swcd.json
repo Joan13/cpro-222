@@ -2422,5 +2422,9 @@
   "filter_video": "Video",
   "no_calls_found": "Hakuna simu zilizopatikana",
   "no_calls_found_desc": "Jaribu kubadilisha utafutaji au kichujio chako",
-  "clear_filters": "Futa vichujio"
+  "clear_filters": "Futa vichujio",
+  "tap_to_download": "Bofya kupakua",
+  "open_in_reader": "Fungua",
+  "pending_tap_to_retry": "Inasubiri • Bofya kujaribu tena",
+  "uploading": "Inatuma..."
 }

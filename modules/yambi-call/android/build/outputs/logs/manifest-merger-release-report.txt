@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml:2:13-83
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml:2:13-83
+	package
+		INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml
+	xmlns:android
+		ADDED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml:2:23-81
+uses-sdk
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml reason: use-sdk injection requested
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml
+INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml
+	android:targetSdkVersion
+		INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml
+	android:minSdkVersion
+		INJECTED from /home/joan/Documents/Data/Projects/ReactNative/cpro-222/modules/yambi-call/android/build/intermediates/tmp/ProcessLibraryManifest/release/tempAndroidManifest4749080313790216671.xml
